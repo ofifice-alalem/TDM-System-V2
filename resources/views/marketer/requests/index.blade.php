@@ -8,8 +8,8 @@
     <div class="max-w-[1600px] mx-auto space-y-8 px-2">
         
         {{-- Header & Quick Actions --}}
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 animate-fade-in-down">
-            <div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-down">
+            <div class="lg:col-span-8">
                 <div class="flex items-center gap-3 mb-2">
                     <span class="bg-primary-100 dark:bg-primary-600/20 text-primary-600 dark:text-primary-400 px-3 py-1 rounded-lg text-xs font-bold border border-primary-100 dark:border-primary-600/30">
                         إدارة الطلبات
@@ -20,8 +20,8 @@
                 </h1>
             </div>
 
-            <div class="flex gap-3 w-full md:w-auto">
-                <a href="{{ route('marketer.requests.create') }}" class="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2 flex-1 md:flex-auto">
+            <div class="lg:col-span-4 lg:translate-y-[30px]">
+                <a href="{{ route('marketer.requests.create') }}" class="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2 w-full">
                     <i data-lucide="plus-circle" class="w-5 h-5"></i>
                     طلب جديد
                 </a>
@@ -32,6 +32,36 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {{-- Main List --}}
             <div class="lg:col-span-8">
+                {{-- Status Tabs --}}
+                <div class="bg-white dark:bg-dark-card rounded-2xl p-2 shadow-lg shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6">
+                    <div class="flex flex-wrap gap-2">
+                        <a href="{{ route('marketer.requests.index', ['status' => 'pending']) }}" class="{{ !request('all') && (!request('status') || request('status') === 'pending') ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-2 border-amber-200 dark:border-amber-800' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(33.333%-0.5rem)] md:basis-auto justify-center">
+                            <i data-lucide="clock" class="w-4 h-4"></i>
+                            قيد الانتظار
+                        </a>
+                        <a href="{{ route('marketer.requests.index', ['status' => 'approved']) }}" class="{{ request('status') === 'approved' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-2 border-blue-200 dark:border-blue-800' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(33.333%-0.5rem)] md:basis-auto md:flex-[1.2] justify-center">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i>
+                            تمت الموافقة
+                        </a>
+                        <a href="{{ route('marketer.requests.index', ['status' => 'documented']) }}" class="{{ request('status') === 'documented' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-200 dark:border-emerald-800' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(33.333%-0.5rem)] md:basis-auto justify-center">
+                            <i data-lucide="file-check" class="w-4 h-4"></i>
+                            موثق
+                        </a>
+                        <a href="{{ route('marketer.requests.index', ['status' => 'rejected']) }}" class="{{ request('status') === 'rejected' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-2 border-red-200 dark:border-red-800' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(33.333%-0.5rem)] md:basis-auto justify-center">
+                            <i data-lucide="x-circle" class="w-4 h-4"></i>
+                            مرفوض
+                        </a>
+                        <a href="{{ route('marketer.requests.index', ['status' => 'cancelled']) }}" class="{{ request('status') === 'cancelled' ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(33.333%-0.5rem)] md:basis-auto justify-center">
+                            <i data-lucide="slash" class="w-4 h-4"></i>
+                            ملغي
+                        </a>
+                        <a href="{{ route('marketer.requests.index', ['all' => '1']) }}" class="{{ request('all') ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(33.333%-0.5rem)] md:basis-auto justify-center">
+                            <i data-lucide="list" class="w-4 h-4"></i>
+                            الكل
+                        </a>
+                    </div>
+                </div>
+
                 <div class="bg-white dark:bg-dark-card rounded-[2rem] p-4 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
             @forelse($requests as $request)
                 <div class="bg-gray-50 dark:bg-dark-bg/60 rounded-2xl border border-gray-200 dark:border-dark-border mb-3 first:mt-4 md:first:mt-0 last:mb-4 md:last:mb-0 hover:shadow-md transition-all overflow-hidden">

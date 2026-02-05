@@ -22,12 +22,18 @@ class MarketerRequestController extends Controller
         }
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $requests = MarketerRequest::with('items.product')
-            ->where('marketer_id', auth()->id())
-            ->latest()
-            ->paginate(20);
+        $query = MarketerRequest::with('items.product')
+            ->where('marketer_id', auth()->id());
+
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        } elseif (!$request->has('all')) {
+            $query->where('status', 'pending');
+        }
+
+        $requests = $query->latest()->paginate(20)->withQueryString();
 
         return view('marketer.requests.index', compact('requests'));
     }
