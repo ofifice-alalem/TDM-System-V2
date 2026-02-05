@@ -203,15 +203,18 @@
                                 موافقة وتجهيز
                             </button>
                         </form>
+                        </div>
+                        @endif
 
-                        <div x-data="{ showReject: false }">
+                        @if(in_array($request->status, ['pending', 'approved']))
+                        <div x-data="{ showReject: false }" class="mt-3">
                             <button x-show="!showReject" @click="showReject = true" type="button" class="w-full bg-white dark:bg-dark-card border-2 border-red-100 dark:border-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group">
                                 <i data-lucide="x-circle" class="w-5 h-5"></i>
                                 رفض الطلب
                             </button>
                             
                             {{-- Inline Reject Form --}}
-                            <div x-show="showReject" x-transition class="bg-red-50 dark:bg-red-900/10 rounded-2xl p-4 border border-red-100 dark:border-red-900/30 mt-2">
+                            <div x-show="showReject" x-transition class="bg-red-50 dark:bg-red-900/10 rounded-2xl p-4 border border-red-100 dark:border-red-900/30">
                                 <form action="{{ route('warehouse.requests.reject', $request) }}" method="POST">
                                     @csrf
                                     @method('PATCH')
@@ -223,7 +226,6 @@
                                     </div>
                                 </form>
                             </div>
-                        </div>
                         </div>
                         @endif
                     </div>
