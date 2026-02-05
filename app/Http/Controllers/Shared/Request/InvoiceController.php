@@ -57,7 +57,11 @@ class InvoiceController extends Controller
             ]
         ];
 
-        $pdf = Pdf::loadView('shared.requests.invoice-pdf', $data)->setPaper('a4');
+        $pdf = Pdf::loadView('shared.requests.invoice-pdf', $data)
+            ->setPaper('a4')
+            ->setOption('isRemoteEnabled', false)
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isFontSubsettingEnabled', true);
         return $pdf->download('request-' . $request->invoice_number . '.pdf');
     }
 }
