@@ -24,7 +24,7 @@
         }
         @page { margin: 10px; }
         * { font-family: 'Cairo', 'DejaVu Sans', sans-serif; }
-        body { font-family: 'Cairo', 'DejaVu Sans', sans-serif; color: #333; font-size: 13px; margin: 0; position: relative; }
+        body { font-family: 'Cairo', 'DejaVu Sans', sans-serif; color: #333; font-size: 11px; margin: 0; position: relative; }
         @if($isInvalid)
         body::before {
             content: "{{ $labels['invalidInvoice'] }}";
@@ -40,22 +40,22 @@
             white-space: nowrap;
         }
         @endif
-        .header { margin-bottom: 8px; background-color: #333; color: white; padding: 8px; border-radius: 4px; display: table; width: 100%; }
+        .header { margin-bottom: 5px; background-color: #333; color: white; padding: 5px; border-radius: 3px; display: table; width: 100%; }
         .header-right { display: table-cell; text-align: right; width: 50%; vertical-align: middle; }
         .header-left { display: table-cell; text-align: left; width: 50%; vertical-align: middle; }
-        .header h1 { margin: 0; font-size: 18px; font-weight: bold; }
-        .header h2 { margin: 0; font-size: 20px; font-weight: 900; color: white; letter-spacing: 0.5px; }
-        .info-box { background-color: #f8f9fa; padding: 6px 10px; border-radius: 4px; margin-bottom: 8px; border: 1px solid #333; text-align: right; }
-        .info-row { display: inline-block; width: 48%; margin-bottom: 3px; font-size: 12px; text-align: right; font-weight: bold; }
-        .label { font-weight: bold; color: #333; font-size: 12px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-        th { background-color: #333; color: white; padding: 6px; text-align: center; font-weight: bold; font-size: 13px; }
-        td { border: 1px solid #333; padding: 5px; background-color: #ffffff; font-size: 12px; text-align: center; }
-        td.product-name { text-align: right; padding-right: 8px; }
+        .header h1 { margin: 0; font-size: 16px; font-weight: bold; }
+        .header h2 { margin: 0; font-size: 18px; font-weight: 900; color: white; letter-spacing: 0.5px; }
+        .info-box { background-color: #f8f9fa; padding: 4px 8px; border-radius: 3px; margin-bottom: 5px; border: 1px solid #333; text-align: right; }
+        .info-row { display: inline-block; width: 48%; margin-bottom: 2px; font-size: 11px; text-align: right; font-weight: bold; }
+        .label { font-weight: bold; color: #333; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 3px; }
+        th { background-color: #333; color: white; padding: 4px; text-align: center; font-weight: bold; font-size: 12px; }
+        td { border: 1px solid #333; padding: 3px; background-color: #ffffff; font-size: 11px; text-align: center; }
+        td.product-name { text-align: right; padding-right: 6px; }
         td.quantity { font-family: 'DejaVu Sans', sans-serif; direction: ltr; }
         tr:nth-child(even) td { background-color: #f5f5f5; }
         .signatures { position: fixed; bottom: 10px; left: 10px; right: 10px; }
-        .signature-box { display: inline-block; width: 45%; text-align: center; border-top: 1px solid #000; padding-top: 15px; margin: 0 2%; font-size: 11px; }
+        .signature-box { display: inline-block; width: 45%; text-align: center; border-top: 1px solid #000; padding-top: 10px; margin: 0 2%; font-size: 10px; }
     </style>
 </head>
 <body>
