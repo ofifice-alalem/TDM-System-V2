@@ -21,9 +21,11 @@ class WarehouseRequestController extends Controller
     {
         $query = MarketerRequest::with('marketer', 'items.product');
 
-        if ($request->has('status')) {
+        $hasDateFilter = $request->filled('from_date') || $request->filled('to_date');
+
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
-        } elseif (!$request->has('all')) {
+        } elseif (!$request->has('all') && !$hasDateFilter) {
             $query->where('status', 'pending');
         }
 
