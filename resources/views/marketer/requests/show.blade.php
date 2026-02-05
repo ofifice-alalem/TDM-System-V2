@@ -177,7 +177,14 @@
                             <i data-lucide="{{ $statusConfig['icon'] }}" class="w-8 h-8"></i>
                         </div>
                         <h2 class="text-2xl font-black {{ $statusConfig['text'] }}">{{ $statusConfig['label'] }}</h2>
-                        <p class="text-xs text-gray-400 dark:text-dark-muted mt-2 font-medium">آخر تحديث: {{ $request->updated_at->diffForHumans() }}</p>
+                        <p class="text-xs text-gray-400 dark:text-dark-muted mt-2 font-medium mb-4">آخر تحديث: {{ $request->updated_at->diffForHumans() }}</p>
+
+                        @if($request->status === 'documented' && $request->stamped_image)
+                            <a href="{{ route('warehouse.requests.documentation', $request->id) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-bg border border-blue-200 dark:border-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors shadow-sm mb-2">
+                                <i data-lucide="image" class="w-4 h-4"></i>
+                                عرض صورة التوثيق
+                            </a>
+                        @endif
                     </div>
 
                     {{-- Actions Area --}}
