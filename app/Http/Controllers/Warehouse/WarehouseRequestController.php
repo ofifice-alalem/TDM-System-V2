@@ -17,14 +17,50 @@ class WarehouseRequestController extends Controller
         }
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $requests = MarketerRequest::with('marketer', 'items.product')
-            ->whereIn('status', ['pending', 'approved'])
-            ->latest()
-            ->paginate(20);
+        $query = MarketerRequest::with('marketer', 'items.product');
 
-        return view('warehouse.requests.index', compact('requests'));
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        } elseif (!$request->has('all')) {
+            $query->where('status', 'pending');
+        }
+
+        if ($request->filled('from_date')) {
+            try {
+                $fromDate = \Carbon\Carbon::parse($request->from_date)->format('Y-m-d');
+                $query->whereDate('created_at', '>=', $fromDate);
+            } catch (\Exception $e) {
+                // Invalid date format, skip filter
+            }
+        }
+
+        if ($request->filled('to_date')) {
+            try {
+                $toDate = \Carbon\Carbon::parse($request->to_date)->format('Y-m-d');
+                $query->whereDate('created_at', '<=', $toDate);
+            } catch (\Exception $e) {
+                // Invalid date format, skip filter
+            }
+        }
+
+        if ($request->filled('marketer_id')) {
+            $marketerName = $request->marketer_id;
+            $query->whereHas('marketer', function($q) use ($marketerName) {
+                $q->where('full_name', 'like', '%' . $marketerName . '%');
+            });
+        }
+
+        $requests = $query->latest()->paginate(20)->withQueryString();
+        $marketers = \App\Models\MarketerRequest::with('marketer')
+            ->select('marketer_id')
+            ->distinct()
+            ->get()
+            ->pluck('marketer')
+            ->unique('id');
+
+        return view('warehouse.requests.index', compact('requests', 'marketers'));
     }
 
     public function show($id)

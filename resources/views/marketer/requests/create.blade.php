@@ -69,7 +69,7 @@
                                 </div>
                             </div>
                             <div class="hidden md:flex md:col-span-1 items-end">
-                                <button type="button" class="remove-item hidden w-full px-3 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all">
+                                <button type="button" class="remove-item w-full px-3 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all">
                                     <i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i>
                                 </button>
                             </div>
