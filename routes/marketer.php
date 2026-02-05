@@ -11,6 +11,7 @@ Route::middleware(['web'])->group(function () {
             Route::get('/create', [MarketerRequestController::class, 'create'])->name('create');
             Route::post('/', [MarketerRequestController::class, 'store'])->name('store');
             Route::get('/{request}', [MarketerRequestController::class, 'show'])->name('show');
+            Route::get('/{request}/pdf', [MarketerRequestController::class, 'pdf'])->name('pdf');
             Route::patch('/{request}/cancel', [MarketerRequestController::class, 'cancel'])->name('cancel');
         });
     });

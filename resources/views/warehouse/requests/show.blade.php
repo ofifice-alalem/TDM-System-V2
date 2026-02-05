@@ -15,9 +15,21 @@
                         <span class="badge bg-warning">قيد الانتظار</span>
                     @elseif($request->status === 'approved')
                         <span class="badge bg-info">تمت الموافقة</span>
+                    @elseif($request->status === 'documented')
+                        <span class="badge bg-success">موثق</span>
                     @endif
                 </p>
                 <p><strong>التاريخ:</strong> {{ $request->created_at->format('Y-m-d H:i') }}</p>
+            </div>
+            <div class="col-md-6">
+                @if($request->approved_by)
+                    <p><strong>تمت الموافقة بواسطة:</strong> {{ $request->approver->full_name }}</p>
+                    <p><strong>تاريخ الموافقة:</strong> {{ $request->approved_at->format('Y-m-d H:i') }}</p>
+                @endif
+                @if($request->documented_by)
+                    <p><strong>تم التوثيق بواسطة:</strong> {{ $request->documenter->full_name }}</p>
+                    <p><strong>تاريخ التوثيق:</strong> {{ $request->documented_at->format('Y-m-d H:i') }}</p>
+                @endif
             </div>
         </div>
     </div>
@@ -66,13 +78,36 @@
         <h5>توثيق الطلب</h5>
         <form action="{{ route('warehouse.requests.document', $request) }}" method="POST" enctype="multipart/form-data">
             @csrf
-            @method('PATCH')
             <div class="mb-3">
                 <label class="form-label">صورة الفاتورة الموقعة</label>
-                <input type="file" name="stamped_image" class="form-control" required>
+                <input type="file" name="stamped_image" class="form-control" accept="image/*" required>
             </div>
             <button type="submit" class="btn btn-primary">توثيق</button>
         </form>
+    </div>
+</div>
+@endif
+
+@if($request->status === 'documented' && $request->stamped_image)
+<div class="card">
+    <div class="card-body">
+        <h5>صورة التوثيق</h5>
+        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#documentModal">عرض الصورة</button>
+    </div>
+</div>
+
+<!-- Document Modal -->
+<div class="modal fade" id="documentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">صورة التوثيق</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img src="{{ route('warehouse.requests.documentation', $request->id) }}" class="img-fluid" alt="صورة التوثيق">
+            </div>
+        </div>
     </div>
 </div>
 @endif

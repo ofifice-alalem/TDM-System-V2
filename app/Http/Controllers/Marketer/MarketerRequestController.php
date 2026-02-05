@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Services\Marketer\MarketerRequestService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class MarketerRequestController extends Controller
 {
@@ -59,7 +60,7 @@ class MarketerRequestController extends Controller
 
     public function show(MarketerRequest $request)
     {
-        return view('marketer.requests.show', ['request' => $request->load('items.product')]);
+        return view('marketer.requests.show', ['request' => $request->load('items.product', 'approver', 'documenter')]);
     }
 
     public function cancel(MarketerRequest $request)
@@ -68,5 +69,46 @@ class MarketerRequestController extends Controller
 
         return redirect()->route('marketer.requests.index')
             ->with('success', 'تم إلغاء الطلب بنجاح');
+    }
+
+    public function pdf(MarketerRequest $request)
+    {
+        $request->load('items.product', 'marketer', 'approver');
+        
+        $arabic = new \ArPHP\I18N\Arabic();
+        
+        $toEnglishNumbers = function($str) {
+            $western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+            $eastern = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            return str_replace($eastern, $western, $str);
+        };
+
+        $data = [
+            'invoiceNumber' => $request->invoice_number,
+            'date' => $request->created_at->format('Y-m-d H:i'),
+            'marketerName' => $arabic->utf8Glyphs($request->marketer->full_name),
+            'approvedBy' => $request->approver ? $arabic->utf8Glyphs($request->approver->full_name) : null,
+            'items' => $request->items->map(function($item) use ($arabic, $toEnglishNumbers) {
+                return (object)[
+                    'name' => $toEnglishNumbers($arabic->utf8Glyphs($item->product->name)),
+                    'quantity' => $item->quantity
+                ];
+            }),
+            'title' => $arabic->utf8Glyphs('طلب بضاعة'),
+            'labels' => [
+                'marketer' => $arabic->utf8Glyphs('المسوق'),
+                'date' => $arabic->utf8Glyphs('التاريخ'),
+                'status' => $arabic->utf8Glyphs('الحالة'),
+                'approved' => $arabic->utf8Glyphs('تم الموافقة'),
+                'approvedBy' => $arabic->utf8Glyphs('اعتمد بواسطة'),
+                'keeper' => $arabic->utf8Glyphs('أمين المخزن'),
+                'product' => $arabic->utf8Glyphs('المنتج'),
+                'quantity' => $arabic->utf8Glyphs('الكمية'),
+                'total' => $arabic->utf8Glyphs('الإجمالي'),
+            ]
+        ];
+
+        $pdf = Pdf::loadView('marketer.requests.invoice-pdf', $data)->setPaper('a4');
+        return $pdf->download('request-' . $request->invoice_number . '.pdf');
     }
 }

@@ -12,7 +12,6 @@ class WarehouseRequestController extends Controller
 {
     public function __construct(private WarehouseRequestService $service) 
     {
-        // Temporary: Auto-login as warehouse keeper (ID=2)
         if (!Auth::check()) {
             Auth::loginUsingId(2);
         }
@@ -28,42 +27,65 @@ class WarehouseRequestController extends Controller
         return view('warehouse.requests.index', compact('requests'));
     }
 
-    public function show(MarketerRequest $request)
+    public function show($id)
     {
-        return view('warehouse.requests.show', ['request' => $request->load('items.product', 'marketer')]);
+        $request = MarketerRequest::with('items.product', 'marketer', 'approver', 'documenter')->findOrFail($id);
+        return view('warehouse.requests.show', ['request' => $request]);
     }
 
-    public function approve(MarketerRequest $request)
+    public function approve($id)
     {
         try {
-            $this->service->approveRequest($request->id, auth()->id());
+            $this->service->approveRequest($id, auth()->id());
             return redirect()->back()->with('success', 'تمت الموافقة على الطلب');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
 
-    public function reject(Request $request, MarketerRequest $marketerRequest)
+    public function reject(Request $request, $id)
     {
         $validated = $request->validate(['notes' => 'required|string']);
 
-        $this->service->rejectRequest($marketerRequest->id, auth()->id(), $validated['notes']);
+        $this->service->rejectRequest($id, auth()->id(), $validated['notes']);
 
         return redirect()->route('warehouse.requests.index')
             ->with('success', 'تم رفض الطلب');
     }
 
-    public function document(Request $request, MarketerRequest $marketerRequest)
+    public function document(Request $request, $id)
     {
         $validated = $request->validate([
             'stamped_image' => 'required|image|max:2048',
         ]);
 
-        $path = $request->file('stamped_image')->store('requests', 'public');
+        $marketerRequest = MarketerRequest::findOrFail($id);
+        
+        $path = $request->file('stamped_image')->store(
+            'requests/' . $marketerRequest->invoice_number,
+            'public'
+        );
 
-        $this->service->documentRequest($marketerRequest->id, auth()->id(), $path);
+        $this->service->documentRequest($id, auth()->id(), $path);
 
         return redirect()->route('warehouse.requests.index')
             ->with('success', 'تم توثيق الطلب بنجاح');
+    }
+
+    public function viewDocumentation($id)
+    {
+        $request = MarketerRequest::findOrFail($id);
+        
+        if ($request->status !== 'documented' || !$request->stamped_image) {
+            abort(404, 'لا توجد صورة توثيق');
+        }
+
+        $imagePath = storage_path('app/public/' . $request->stamped_image);
+        
+        if (!file_exists($imagePath)) {
+            abort(404, 'الصورة غير موجودة');
+        }
+
+        return response()->file($imagePath);
     }
 }

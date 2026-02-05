@@ -25,6 +25,14 @@
                 <p><strong>التاريخ:</strong> {{ $request->created_at->format('Y-m-d H:i') }}</p>
             </div>
             <div class="col-md-6">
+                @if($request->approved_by)
+                    <p><strong>تمت الموافقة بواسطة:</strong> {{ $request->approver->full_name }}</p>
+                    <p><strong>تاريخ الموافقة:</strong> {{ $request->approved_at->format('Y-m-d H:i') }}</p>
+                @endif
+                @if($request->documented_by)
+                    <p><strong>تم التوثيق بواسطة:</strong> {{ $request->documenter->full_name }}</p>
+                    <p><strong>تاريخ التوثيق:</strong> {{ $request->documented_at->format('Y-m-d H:i') }}</p>
+                @endif
                 @if($request->notes)
                     <p><strong>ملاحظات:</strong> {{ $request->notes }}</p>
                 @endif
@@ -60,5 +68,8 @@
 
 <div class="mt-3">
     <a href="{{ route('marketer.requests.index') }}" class="btn btn-secondary">رجوع</a>
+    @if($request->status !== 'pending')
+        <a href="{{ route('marketer.requests.pdf', $request) }}" class="btn btn-primary" target="_blank">تحميل PDF</a>
+    @endif
 </div>
 @endsection
