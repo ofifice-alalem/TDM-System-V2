@@ -24,7 +24,7 @@
             </div>
 
             <div class="flex gap-3 w-full md:w-auto">
-                <a href="{{ route('marketer.requests.index') }}" class="px-6 py-3.5 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors shadow-sm flex items-center justify-center gap-2 flex-1 md:flex-auto">
+                <a href="{{ route('marketer.requests.index') }}" class="px-6 py-3.5 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors shadow-lg shadow-gray-200/50 dark:shadow-none flex items-center justify-center gap-2 flex-1 md:flex-auto">
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                     عودة
                 </a>
@@ -38,7 +38,7 @@
             <div class="lg:col-span-8 space-y-6 animate-slide-up">
                 
                 {{-- Products Table Container --}}
-                <div class="bg-white dark:bg-dark-card rounded-[2rem] p-8 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] dark:shadow-none border border-gray-100 dark:border-dark-border relative overflow-hidden">
+                <div class="bg-white dark:bg-dark-card rounded-[2rem] p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border relative overflow-hidden">
                     <div class="flex items-center justify-between mb-8">
                         <div>
                             <h2 class="font-bold text-xl text-gray-900 dark:text-white flex items-center gap-3">
@@ -47,9 +47,9 @@
                                 </span>
                                 المنتجات المطلوبة
                             </h2>
-                            <p class="text-sm text-gray-400 dark:text-dark-muted mt-2 mr-14 font-medium">قائمة الأصناف المطلوب تجهيزها من المستودع</p>
+                            <p class="text-sm text-gray-500 dark:text-dark-muted mt-2 mr-14 font-medium">قائمة الأصناف المطلوب تجهيزها من المستودع</p>
                         </div>
-                        <span class="bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-600 dark:text-gray-300 px-4 py-2 rounded-xl text-xs font-black shadow-sm">
+                        <span class="bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-300 px-4 py-2 rounded-xl text-xs font-black shadow-sm">
                             {{ $request->items->count() }} أصناف
                         </span>
                     </div>
@@ -154,7 +154,7 @@
             <div class="lg:col-span-4 space-y-6 animate-slide-up" style="animation-delay: 0.1s">
                 
                 {{-- Current Status Card --}}
-                <div class="bg-gray-50 dark:bg-dark-card/50 rounded-[1.5rem] border border-gray-200 dark:border-dark-border p-6 relative overflow-hidden">
+                <div class="bg-gray-50 dark:bg-dark-card/50 rounded-[1.5rem] border-2 border-dashed border-gray-200 dark:border-dark-border p-6 relative overflow-hidden">
                     <div class="absolute top-0 right-0 w-32 h-32 bg-gray-200 dark:bg-dark-bg rounded-full mix-blend-multiply dark:mix-blend-overlay filter blur-3xl opacity-40 -translate-y-1/2 translate-x-1/2"></div>
 
                     <h3 class="text-gray-800 dark:text-gray-200 font-bold text-lg mb-6 flex items-center gap-2 relative z-10">
@@ -241,8 +241,8 @@
                 </div>
 
                 {{-- Activity Timeline --}}
-                <div class="bg-white dark:bg-dark-card rounded-[1.5rem] border border-gray-100 dark:border-dark-border p-6 shadow-sm">
-                    <h3 class="font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                <div class="bg-white dark:bg-dark-card rounded-[1.5rem] border border-gray-200 dark:border-dark-border p-6 shadow-lg shadow-gray-200/50 dark:shadow-sm">
+                    <h3 class="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                         <i data-lucide="list" class="w-5 h-5 text-primary-500"></i>
                          سجل العمليات
                     </h3>

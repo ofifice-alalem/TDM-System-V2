@@ -33,7 +33,7 @@
         }
     </script>
 </head>
-<body class="bg-slate-50 dark:bg-[#0b1121] font-sans antialiased text-gray-900 dark:text-gray-100 transition-colors duration-300 overflow-x-hidden">
+<body class="bg-[#f1f5f9] dark:bg-[#0b1121] font-sans antialiased text-gray-900 dark:text-gray-100 transition-colors duration-300 overflow-x-hidden">
 
     {{-- SIDEBAR --}}
     <aside class="fixed top-0 right-0 h-screen w-72 bg-white dark:bg-[#151f32] border-l border-gray-100 dark:border-[#2a354c] z-50 flex flex-col transition-all hidden lg:flex shadow-sm dark:shadow-none">
@@ -113,10 +113,10 @@
     </aside>
 
     {{-- MAIN CONTENT WRAPPER --}}
-    <div class="lg:mr-72 min-h-screen flex flex-col transition-all bg-[#f8fafc] dark:bg-[#0b1121]">
+    <div class="lg:mr-72 min-h-screen flex flex-col transition-all bg-[#f1f5f9] dark:bg-[#0b1121]">
         
         {{-- NAVBAR --}}
-        <header class="h-24 px-8 flex items-center justify-between sticky top-0 z-40 bg-white/80 dark:bg-[#0b1121]/90 backdrop-blur-xl border-b border-gray-100/50 dark:border-[#2a354c] transition-all">
+        <header class="h-24 px-8 flex items-center justify-between sticky top-0 z-40 bg-white/90 dark:bg-[#0b1121]/90 backdrop-blur-md border-b border-gray-200 dark:border-[#2a354c] transition-all shadow-sm dark:shadow-none">
             
             {{-- Right: Mobile Menu & Search --}}
             <div class="flex items-center gap-4">
@@ -130,11 +130,11 @@
                 
                 {{-- Actions --}}
                 <div class="flex items-center gap-3">
-                    <button id="theme-toggle" class="w-11 h-11 bg-white dark:bg-dark-card rounded-full flex items-center justify-center text-amber-500 dark:text-accent-400 hover:bg-amber-50 dark:hover:bg-accent-500/10 hover:scale-105 shadow-sm border border-gray-100 dark:border-dark-border transition-all duration-300">
+                    <button id="theme-toggle" class="w-11 h-11 bg-white dark:bg-dark-card rounded-full flex items-center justify-center text-amber-500 dark:text-accent-400 hover:bg-amber-50 dark:hover:bg-accent-500/10 hover:scale-105 shadow-sm hover:shadow-md border border-gray-200 dark:border-dark-border transition-all duration-300">
                         <i data-lucide="sun" class="w-5 h-5 fill-current opacity-100 dark:hidden"></i>
                         <i data-lucide="moon" class="w-5 h-5 hidden dark:block fill-current"></i>
                     </button>
-                    <button class="w-11 h-11 bg-white dark:bg-dark-card rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-amber-600 dark:hover:text-accent-400 hover:bg-amber-50 dark:hover:bg-accent-500/10 hover:scale-105 shadow-sm border border-gray-100 dark:border-dark-border transition-all duration-300 relative group">
+                    <button class="w-11 h-11 bg-white dark:bg-dark-card rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-amber-600 dark:hover:text-accent-400 hover:bg-amber-50 dark:hover:bg-accent-500/10 hover:scale-105 shadow-sm hover:shadow-md border border-gray-200 dark:border-dark-border transition-all duration-300 relative group">
                         <i data-lucide="bell" class="w-5 h-5 group-hover:animate-swing"></i>
                         <span class="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-dark-card"></span>
                     </button>
@@ -143,14 +143,14 @@
                 <div class="w-px h-8 bg-gray-200/60"></div>
 
                 {{-- User Info --}}
-                <div class="flex items-center gap-3 pl-2 p-1.5 pr-4 rounded-full hover:bg-white hover:shadow-sm hover:ring-1 hover:ring-gray-100 transition-all cursor-pointer group">
+                <div class="flex items-center gap-3 pl-2 p-1.5 pr-4 rounded-full hover:bg-gray-50/80 hover:shadow-md border border-transparent hover:border-gray-200 transition-all cursor-pointer group">
                     <div class="hidden md:block text-left">
-                        <div class="text-sm font-black text-gray-800 group-hover:text-amber-600 transition-colors">
+                        <div class="text-sm font-black text-gray-800 dark:text-gray-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                             {{ Auth::user()->full_name ?? 'المسوق' }}
                         </div>
                         <div class="text-[0.65rem] text-gray-400 font-bold text-right uppercase tracking-wider">Top Seller</div>
                     </div>
-                    <div class="w-10 h-10 bg-gradient-to-br from-amber-100 to-orange-100 rounded-full flex items-center justify-center text-amber-600 border-2 border-white shadow-md ring-1 ring-gray-100 group-hover:ring-amber-100 transition-all">
+                    <div class="w-10 h-10 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40 rounded-full flex items-center justify-center text-amber-600 dark:text-amber-400 border-2 border-white dark:border-dark-card shadow-md ring-1 ring-gray-100 dark:ring-gray-700 group-hover:ring-amber-200 transition-all">
                         <i data-lucide="user" class="w-5 h-5"></i>
                     </div>
                     <i data-lucide="chevron-down" class="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors"></i>
