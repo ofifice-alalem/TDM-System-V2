@@ -5,7 +5,7 @@
 @section('content')
 
 <div class="min-h-screen py-8">
-    <div class="max-w-7xl mx-auto space-y-8">
+    <div class="max-w-7xl mx-auto space-y-8 px-4 lg:px-8">
         
         {{-- Header & Quick Actions --}}
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 animate-fade-in-down">
@@ -34,11 +34,11 @@
         {{-- Main Layout Grid --}}
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {{-- Right Column (Main Content - Table) - ORDER 1 --}}
-            <div class="lg:col-span-8 space-y-6 animate-slide-up">
+            {{-- Right Column (Main Content - Table) - ORDER 2 on mobile, ORDER 1 on desktop --}}
+            <div class="lg:col-span-8 space-y-6 animate-slide-up order-2 lg:order-1">
                 
                 {{-- Products Table Container --}}
-                <div class="bg-white dark:bg-dark-card rounded-[2rem] p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border relative overflow-hidden">
+                <div class="bg-white dark:bg-dark-card rounded-[2rem] p-4 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border relative overflow-hidden">
                     <div class="flex items-center justify-between mb-8">
                         <div>
                             <h2 class="font-bold text-xl text-gray-900 dark:text-white flex items-center gap-3">
@@ -58,8 +58,8 @@
                         <table class="w-full border-separate border-spacing-y-3">
                             <thead>
                                 <tr class="text-xs text-gray-400 dark:text-dark-muted font-bold uppercase tracking-wider">
-                                    <th class="px-6 py-2 text-right">المنتج</th>
-                                    <th class="px-6 py-2 text-center w-40">الكمية المطلوبة</th>
+                                    <th class="px-4 md:px-6 py-2 text-right w-[65%]">المنتج</th>
+                                    <th class="px-4 md:px-6 py-2 text-center w-[35%]">الكمية المطلوبة</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -70,13 +70,13 @@
                                 @endphp
                                 <tr class="group hover:-translate-y-0.5 transition-transform duration-300">
                                     {{-- Product Info --}}
-                                    <td class="px-6 py-5 bg-gray-50/50 dark:bg-dark-bg/60 rounded-r-2xl border border-gray-100 dark:border-dark-border group-hover:bg-white dark:group-hover:bg-dark-card group-hover:shadow-md group-hover:border-primary-100 dark:group-hover:border-accent-500/30 transition-all">
+                                    <td class="px-4 md:px-6 py-4 md:py-5 bg-gray-50/50 dark:bg-dark-bg/60 rounded-r-2xl border border-gray-100 dark:border-dark-border group-hover:bg-white dark:group-hover:bg-dark-card group-hover:shadow-md group-hover:border-primary-100 dark:group-hover:border-accent-500/30 transition-all">
                                         <div class="flex items-center gap-4">
-                                            <div class="w-12 h-12 rounded-xl bg-white dark:bg-dark-card flex items-center justify-center text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-dark-border shadow-sm group-hover:text-primary-600 dark:group-hover:text-accent-400 transition-colors shrink-0">
+                                            <div class="hidden md:flex w-12 h-12 rounded-xl bg-white dark:bg-dark-card items-center justify-center text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-dark-border shadow-sm group-hover:text-primary-600 dark:group-hover:text-accent-400 transition-colors shrink-0">
                                                 <i data-lucide="package" class="w-6 h-6"></i>
                                             </div>
-                                            <div>
-                                                <div class="font-bold text-gray-900 dark:text-gray-100 text-lg">{{ $item->product->name }}</div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-bold text-gray-900 dark:text-gray-100 text-base md:text-lg truncate">{{ $item->product->name }}</div>
                                                 <div class="text-xs text-gray-400 dark:text-dark-muted mt-1 font-mono flex items-center gap-2">
                                                     <span>{{ $item->product->barcode ?? '---' }}</span>
                                                 </div>
@@ -85,7 +85,7 @@
                                     </td>
 
                                     {{-- Quantity --}}
-                                    <td class="px-6 py-5 bg-gray-50/50 dark:bg-dark-bg/60 rounded-l-2xl border border-gray-100 dark:border-dark-border group-hover:bg-white dark:group-hover:bg-dark-card group-hover:shadow-md group-hover:border-primary-100 dark:group-hover:border-accent-500/30 transition-all text-center">
+                                    <td class="px-4 md:px-6 py-4 md:py-5 bg-gray-50/50 dark:bg-dark-bg/60 rounded-l-2xl border border-gray-100 dark:border-dark-border group-hover:bg-white dark:group-hover:bg-dark-card group-hover:shadow-md group-hover:border-primary-100 dark:group-hover:border-accent-500/30 transition-all text-center">
                                         <span class="inline-flex items-center justify-center bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 font-black px-8 py-2 rounded-xl text-xl shadow-sm group-hover:border-primary-200 dark:group-hover:border-accent-500/50 group-hover:text-primary-700 dark:group-hover:text-accent-400 transition-all">
                                             {{ $item->quantity }}
                                         </span>
@@ -130,19 +130,19 @@
                         $icon = $isRejected ? 'shield-alert' : 'sticky-note';
                     @endphp
 
-                    <div class="{{ $bgClass }} rounded-[1.5rem] shadow-sm border p-8 relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                    <div class="{{ $bgClass }} rounded-[1.5rem] shadow-sm border p-4 md:p-8 relative overflow-hidden group hover:shadow-md transition-all duration-300">
                         {{-- Decorative Blur --}}
                         <div class="absolute top-0 right-0 w-32 h-32 {{ $isRejected ? 'bg-red-100 dark:bg-red-900/20' : 'bg-primary-50 dark:bg-primary-900/20' }} rounded-full mix-blend-multiply dark:mix-blend-overlay filter blur-3xl opacity-40 -translate-y-1/2 translate-x-1/2 transition-transform group-hover:scale-110"></div>
 
                         <div class="relative z-10">
-                            <h3 class="{{ $titleColor }} font-bold text-2xl mb-6 flex items-center gap-4">
-                                <span class="p-3 rounded-xl {{ $iconBg }} shadow-sm">
-                                    <i data-lucide="{{ $icon }}" class="w-7 h-7"></i>
+                            <h3 class="{{ $titleColor }} font-bold text-lg md:text-2xl mb-4 md:mb-6 flex items-center gap-3 md:gap-4">
+                                <span class="p-2 md:p-3 rounded-xl {{ $iconBg }} shadow-sm">
+                                    <i data-lucide="{{ $icon }}" class="w-5 h-5 md:w-7 md:h-7"></i>
                                 </span>
                                 {{ $noteTitle }}
                             </h3>
                             
-                            <div class="{{ $isRejected ? 'bg-white/60 dark:bg-dark-bg/50 border-red-100 dark:border-red-900/30' : 'bg-gray-50/50 dark:bg-dark-bg/50 border-gray-100 dark:border-dark-border' }} border backdrop-blur-sm rounded-2xl p-6 {{ $textColor }} text-lg font-medium leading-loose">
+                            <div class="{{ $isRejected ? 'bg-white/60 dark:bg-dark-bg/50 border-red-100 dark:border-red-900/30' : 'bg-gray-50/50 dark:bg-dark-bg/50 border-gray-100 dark:border-dark-border' }} border backdrop-blur-sm rounded-2xl p-4 md:p-6 {{ $textColor }} text-sm md:text-lg font-medium leading-loose">
                                 {{ $request->notes }}
                             </div>
                         </div>
@@ -150,8 +150,8 @@
                 @endif
             </div>
 
-            {{-- Left Column (Status & Actions) - ORDER 2 --}}
-            <div class="lg:col-span-4 space-y-6 animate-slide-up" style="animation-delay: 0.1s">
+            {{-- Left Column (Status & Actions) - ORDER 1 on mobile, ORDER 2 on desktop --}}
+            <div class="lg:col-span-4 space-y-6 animate-slide-up order-1 lg:order-2" style="animation-delay: 0.1s">
                 
                 {{-- Current Status Card --}}
                 <div class="bg-gray-50 dark:bg-dark-card/50 rounded-[1.5rem] border-2 border-dashed border-gray-200 dark:border-dark-border p-6 relative overflow-hidden">
