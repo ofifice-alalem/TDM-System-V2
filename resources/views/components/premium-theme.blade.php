@@ -10,6 +10,14 @@
                     display: ['Tajawal', 'sans-serif'],
                 },
                 colors: {
+                    // Modern Dark Mode Palette (Cyber/Tech)
+                    dark: {
+                        bg: '#0b1121',      // Deepest Navy (Main Background)
+                        card: '#151f32',    // Lighter Navy (Cards)
+                        border: '#2a354c',  // Border Color
+                        text: '#e2e8f0',    // Light Text
+                        muted: '#94a3b8',   // Muted Text
+                    },
                     primary: {
                         50: '#fff8f1',
                         100: '#ffedd5',
@@ -17,24 +25,20 @@
                         500: '#f97316',
                         600: '#ea580c',
                         700: '#c2410c',
+                        DEFAULT: '#f59e0b', // Amber for Light Mode
                     },
-                    amber: {
-                        50: '#fffbf0',
-                        100: '#fef3c7',
-                        400: '#fbbf24',
-                        500: '#f59e0b',
-                        600: '#d97706',
-                    },
-                    gray: {
-                        850: '#1f2937',
-                        900: '#111827',
-                        950: '#030712',
+                    // Cyan/Blue Accent for Dark Mode
+                    accent: {
+                        400: '#38bdf8',
+                        500: '#0ea5e9',
+                        600: '#0284c7',
                     }
                 },
                 boxShadow: {
                     'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.05)',
                     'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
                     'glow': '0 0 15px rgba(245, 158, 11, 0.15)',
+                    'neon': '0 0 20px rgba(14, 165, 233, 0.3)', // Neon glow for dark mode
                 },
                 animation: {
                     'fade-in': 'fadeIn 0.5s ease-out forwards',
