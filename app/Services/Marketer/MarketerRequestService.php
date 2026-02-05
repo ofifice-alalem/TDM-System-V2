@@ -1,0 +1,68 @@
+<?php
+
+namespace App\Services\Marketer;
+
+use App\Models\MarketerRequest;
+use App\Models\MarketerRequestItem;
+use Illuminate\Support\Facades\DB;
+
+class MarketerRequestService
+{
+    public function createRequest($marketerId, array $items, $notes = null)
+    {
+        return DB::transaction(function () use ($marketerId, $items, $notes) {
+            $request = MarketerRequest::create([
+                'invoice_number' => $this->generateInvoiceNumber(),
+                'marketer_id' => $marketerId,
+                'status' => 'pending',
+                'notes' => $notes,
+            ]);
+
+            foreach ($items as $item) {
+                MarketerRequestItem::create([
+                    'request_id' => $request->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                ]);
+            }
+
+            return $request->load('items.product');
+        });
+    }
+
+    public function cancelRequest($requestId, $marketerId)
+    {
+        return DB::transaction(function () use ($requestId, $marketerId) {
+            $request = MarketerRequest::where('id', $requestId)
+                ->where('marketer_id', $marketerId)
+                ->whereIn('status', ['pending', 'approved'])
+                ->firstOrFail();
+
+            if ($request->status === 'approved') {
+                $this->returnStockFromReserved($request);
+            }
+
+            $request->update(['status' => 'cancelled']);
+            return $request;
+        });
+    }
+
+    private function returnStockFromReserved($request)
+    {
+        foreach ($request->items as $item) {
+            DB::table('main_stock')
+                ->where('product_id', $item->product_id)
+                ->increment('quantity', $item->quantity);
+
+            DB::table('marketer_reserved_stock')
+                ->where('marketer_id', $request->marketer_id)
+                ->where('product_id', $item->product_id)
+                ->decrement('quantity', $item->quantity);
+        }
+    }
+
+    private function generateInvoiceNumber()
+    {
+        return 'MR-' . date('Ymd') . '-' . str_pad(MarketerRequest::count() + 1, 5, '0', STR_PAD_LEFT);
+    }
+}
