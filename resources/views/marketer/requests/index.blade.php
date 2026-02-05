@@ -5,7 +5,7 @@
 @section('content')
 
 <div class="min-h-screen py-8">
-    <div class="max-w-7xl mx-auto space-y-8 px-1 lg:px-8">
+    <div class="max-w-[1600px] mx-auto space-y-8 px-2">
         
         {{-- Header & Quick Actions --}}
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 animate-fade-in-down">
@@ -29,7 +29,10 @@
         </div>
 
         {{-- Requests List --}}
-        <div class="bg-white dark:bg-dark-card rounded-[2rem] p-1.5 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {{-- Main List --}}
+            <div class="lg:col-span-8">
+                <div class="bg-white dark:bg-dark-card rounded-[2rem] p-4 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
             @forelse($requests as $request)
                 <div class="bg-gray-50 dark:bg-dark-bg/60 rounded-2xl border border-gray-200 dark:border-dark-border mb-3 first:mt-4 md:first:mt-0 last:mb-4 md:last:mb-0 hover:shadow-md transition-all overflow-hidden">
                     @php
@@ -54,14 +57,14 @@
                             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-3 mb-2">
-                                        <h3 class="text-2xl md:text-lg font-black text-gray-900 dark:text-white">#{{ $request->invoice_number }}</h3>
+                                        <h3 class="text-xl md:text-lg font-black text-gray-900 dark:text-white">#{{ $request->invoice_number }}</h3>
                                     </div>
-                                    <div class="flex items-center gap-4 text-sm text-gray-500 dark:text-dark-muted">
-                                        <div class="flex items-center gap-1">
+                                    <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 font-medium">
+                                        <div class="flex items-center gap-1.5">
                                             <i data-lucide="calendar" class="w-4 h-4"></i>
                                             <span>{{ $request->created_at->format('Y-m-d') }}</span>
                                         </div>
-                                        <div class="flex items-center gap-1">
+                                        <div class="flex items-center gap-1.5">
                                             <i data-lucide="package" class="w-4 h-4"></i>
                                             <span>{{ $request->items->count() }} منتج</span>
                                         </div>
@@ -69,9 +72,9 @@
                                 </div>
 
                                 <div class="flex gap-2">
-                                    <a href="{{ route('marketer.requests.show', $request) }}" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-gray-600 dark:hover:bg-gray-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
-                                        <i data-lucide="file-text" class="w-4 h-4"></i>
-                                        عرض التفاصيل
+                                    <a href="{{ route('marketer.requests.show', $request) }}" class="px-5 py-2.5 bg-white dark:bg-dark-card border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-all text-sm flex items-center gap-2 shadow-sm">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                        التفاصيل
                                     </a>
                                     @if(in_array($request->status, ['pending', 'approved']))
                                         <button type="button" onclick="confirmCancel({{ $request->id }})" class="px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-xl font-bold hover:bg-red-100 dark:hover:bg-red-900/30 transition-all text-sm flex items-center gap-2">
@@ -109,6 +112,72 @@
                     {{ $requests->links() }}
                 </div>
             @endif
+                </div>
+            </div>
+
+            {{-- Timeline Guide --}}
+            <div class="lg:col-span-4">
+                <div class="bg-white dark:bg-dark-card rounded-[1.5rem] border border-gray-200 dark:border-dark-border p-8 shadow-lg shadow-gray-200/50 dark:shadow-sm lg:sticky lg:top-[150px]">
+                    <h3 class="font-bold text-xl text-gray-900 dark:text-white mb-8 flex items-center gap-3">
+                        <i data-lucide="info" class="w-6 h-6 text-primary-500"></i>
+                        دليل حالات الطلب
+                    </h3>
+                    
+                    <div class="relative space-y-8 before:absolute before:inset-0 before:mr-[21px] before:h-full before:w-0.5 before:bg-gradient-to-b before:from-gray-200 dark:before:from-dark-border before:via-gray-100 dark:before:via-dark-bg before:to-transparent">
+                        
+                        <div class="relative flex items-start gap-5">
+                            <div class="w-11 h-11 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="clock" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">قيد الانتظار</h4>
+                                <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">الطلب تم إنشاؤه وبانتظار مراجعة المخزن</p>
+                            </div>
+                        </div>
+
+                        <div class="relative flex items-start gap-5">
+                            <div class="w-11 h-11 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="check-circle" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">تمت الموافقة</h4>
+                                <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">تمت الموافقة من المخزن وجاري التجهيز</p>
+                            </div>
+                        </div>
+
+                        <div class="relative flex items-start gap-5">
+                            <div class="w-11 h-11 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="file-check" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">موثق</h4>
+                                <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">تم توثيق الاستلام وإغلاق الطلب</p>
+                            </div>
+                        </div>
+
+                        <div class="relative flex items-start gap-5">
+                            <div class="w-11 h-11 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="x-circle" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">مرفوض</h4>
+                                <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">تم رفض الطلب من قبل المخزن</p>
+                            </div>
+                        </div>
+
+                        <div class="relative flex items-start gap-5">
+                            <div class="w-11 h-11 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="slash" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">ملغي</h4>
+                                <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">تم إلغاء الطلب من قبل المسوق</p>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
