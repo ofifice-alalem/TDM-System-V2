@@ -235,12 +235,12 @@
                          <form action="{{ route('warehouse.requests.document', $request) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                             @csrf
                             <div class="relative group">
-                                <label for="file-upload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl cursor-pointer bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                <label for="file-upload" id="file-label" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl cursor-pointer bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                                     <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                        <i data-lucide="upload-cloud" class="w-8 h-8 text-gray-400 mb-2"></i>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400"><span class="font-bold">ارفق صورة</span> الفاتورة الموقعة</p>
+                                        <i data-lucide="upload-cloud" id="upload-icon" class="w-8 h-8 text-gray-400 mb-2"></i>
+                                        <p id="upload-text" class="text-xs text-gray-500 dark:text-gray-400"><span class="font-bold">ارفق صورة</span> الفاتورة الموقعة</p>
                                     </div>
-                                    <input id="file-upload" name="stamped_image" type="file" class="hidden" accept="image/*" required />
+                                    <input id="file-upload" name="stamped_image" type="file" class="hidden" accept="image/*" required onchange="handleFileUpload(this)" />
                                 </label>
                             </div>
                             <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200/50 dark:shadow-none flex items-center justify-center gap-2">
@@ -338,6 +338,29 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function handleFileUpload(input) {
+    if (input.files && input.files[0]) {
+        const label = document.getElementById('file-label');
+        const text = document.getElementById('upload-text');
+        const icon = document.getElementById('upload-icon');
+        
+        label.classList.remove('border-gray-300', 'dark:border-gray-600');
+        label.classList.add('border-emerald-500', 'dark:border-emerald-500', 'bg-emerald-50', 'dark:bg-emerald-900/20');
+        
+        icon.classList.remove('text-gray-400');
+        icon.classList.add('text-emerald-600', 'dark:text-emerald-400');
+        icon.setAttribute('data-lucide', 'check-circle');
+        
+        text.innerHTML = '<span class="font-bold text-emerald-600 dark:text-emerald-400">تم تحميل الصورة بنجاح</span>';
+        
+        lucide.createIcons();
+    }
+}
+</script>
+@endpush
 
 @if($request->status === 'documented' && $request->stamped_image)
     @include('shared.modals.documentation-image', [
