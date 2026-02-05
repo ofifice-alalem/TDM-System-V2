@@ -30,9 +30,9 @@ class MarketerRequestService
         });
     }
 
-    public function cancelRequest($requestId, $marketerId)
+    public function cancelRequest($requestId, $marketerId, $notes = null)
     {
-        return DB::transaction(function () use ($requestId, $marketerId) {
+        return DB::transaction(function () use ($requestId, $marketerId, $notes) {
             $request = MarketerRequest::where('id', $requestId)
                 ->where('marketer_id', $marketerId)
                 ->whereIn('status', ['pending', 'approved'])
@@ -42,7 +42,10 @@ class MarketerRequestService
                 $this->returnStockFromReserved($request);
             }
 
-            $request->update(['status' => 'cancelled']);
+            $request->update([
+                'status' => 'cancelled',
+                'notes' => $notes
+            ]);
             return $request;
         });
     }

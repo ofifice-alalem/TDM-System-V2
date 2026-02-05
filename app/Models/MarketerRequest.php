@@ -33,6 +33,11 @@ class MarketerRequest extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
+    public function rejecter()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
     public function documenter()
     {
         return $this->belongsTo(User::class, 'documented_by');

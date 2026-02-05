@@ -29,7 +29,7 @@ class WarehouseRequestController extends Controller
 
     public function show($id)
     {
-        $request = MarketerRequest::with('items.product', 'marketer', 'approver', 'documenter')->findOrFail($id);
+        $request = MarketerRequest::with('items.product', 'marketer', 'approver', 'rejecter', 'documenter')->findOrFail($id);
         return view('warehouse.requests.show', ['request' => $request]);
     }
 

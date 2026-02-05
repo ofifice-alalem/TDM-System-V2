@@ -24,7 +24,22 @@
         }
         @page { margin: 10px; }
         * { font-family: 'Cairo', 'DejaVu Sans', sans-serif; }
-        body { font-family: 'Cairo', 'DejaVu Sans', sans-serif; color: #333; font-size: 13px; margin: 0; }
+        body { font-family: 'Cairo', 'DejaVu Sans', sans-serif; color: #333; font-size: 13px; margin: 0; position: relative; }
+        @if($isInvalid)
+        body::before {
+            content: "{{ $labels['invalidInvoice'] }}";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            font-weight: 900;
+            color: rgba(220, 53, 69, 0.15);
+            z-index: 1000;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        @endif
         .header { margin-bottom: 8px; background-color: #333; color: white; padding: 8px; border-radius: 4px; display: table; width: 100%; }
         .header-right { display: table-cell; text-align: right; width: 50%; vertical-align: middle; }
         .header-left { display: table-cell; text-align: left; width: 50%; vertical-align: middle; }
@@ -61,11 +76,16 @@
             {{ $date }} :<span class="label">{{ $labels['date'] }}</span>
         </div>
         <div class="info-row">
-            {{ $labels['approved'] }} :<span class="label">{{ $labels['status'] }}</span>
+            {{ $status }} :<span class="label">{{ $labels['status'] }}</span>
         </div>
         @if(isset($approvedBy))
         <div class="info-row">
             {{ $approvedBy }} :<span class="label">{{ $labels['approvedBy'] }}</span>
+        </div>
+        @endif
+        @if(isset($rejectedBy))
+        <div class="info-row">
+            {{ $rejectedBy }} :<span class="label">{{ $labels['rejectedBy'] }}</span>
         </div>
         @endif
     </div>

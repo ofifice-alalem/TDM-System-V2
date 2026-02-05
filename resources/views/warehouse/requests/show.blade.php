@@ -3,6 +3,26 @@
 @section('title', 'تفاصيل الطلب')
 
 @section('content')
+@if(in_array($request->status, ['rejected', 'cancelled']))
+<style>
+    .watermark-container {
+        position: relative;
+    }
+    .watermark-container::before {
+        content: "الفاتورة لا يعتد بها";
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        font-size: 5rem;
+        font-weight: bold;
+        color: rgba(220, 53, 69, 0.15);
+        z-index: 1000;
+        pointer-events: none;
+        white-space: nowrap;
+    }
+</style>
+@endif
 <h2 class="mb-4">تفاصيل الطلب: {{ $request->invoice_number }}</h2>
 
 <div class="card mb-3">
@@ -17,6 +37,10 @@
                         <span class="badge bg-info">تمت الموافقة</span>
                     @elseif($request->status === 'documented')
                         <span class="badge bg-success">موثق</span>
+                    @elseif($request->status === 'rejected')
+                        <span class="badge bg-danger">مرفوض</span>
+                    @else
+                        <span class="badge bg-secondary">ملغي</span>
                     @endif
                 </p>
                 <p><strong>التاريخ:</strong> {{ $request->created_at->format('Y-m-d H:i') }}</p>
@@ -26,9 +50,16 @@
                     <p><strong>تمت الموافقة بواسطة:</strong> {{ $request->approver->full_name }}</p>
                     <p><strong>تاريخ الموافقة:</strong> {{ $request->approved_at->format('Y-m-d H:i') }}</p>
                 @endif
+                @if($request->rejected_by)
+                    <p><strong>تم الرفض بواسطة:</strong> {{ $request->rejecter->full_name }}</p>
+                    <p><strong>تاريخ الرفض:</strong> {{ $request->rejected_at->format('Y-m-d H:i') }}</p>
+                @endif
                 @if($request->documented_by)
                     <p><strong>تم التوثيق بواسطة:</strong> {{ $request->documenter->full_name }}</p>
                     <p><strong>تاريخ التوثيق:</strong> {{ $request->documented_at->format('Y-m-d H:i') }}</p>
+                @endif
+                @if($request->notes)
+                    <p><strong>ملاحظات:</strong> {{ $request->notes }}</p>
                 @endif
             </div>
         </div>
@@ -84,6 +115,8 @@
             </div>
             <button type="submit" class="btn btn-primary">توثيق</button>
         </form>
+        
+        <button type="button" class="btn btn-danger mt-2" data-bs-toggle="modal" data-bs-target="#rejectModal">رفض الطلب</button>
     </div>
 </div>
 @endif
@@ -140,5 +173,8 @@
 
 <div class="mt-3">
     <a href="{{ route('warehouse.requests.index') }}" class="btn btn-secondary">رجوع</a>
+    @if($request->status !== 'pending')
+        <a href="{{ route('marketer.requests.pdf', $request) }}" class="btn btn-primary" target="_blank">تحميل PDF</a>
+    @endif
 </div>
 @endsection
