@@ -32,11 +32,11 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {{-- Main List --}}
             <div class="lg:col-span-8">
-                @include('shared.requests._status-tabs', ['route' => fn($params) => route('marketer.returns.index', $params)])
+                @include('shared.returns._status-tabs', ['route' => fn($params) => route('marketer.returns.index', $params)])
 
                 <div class="bg-white dark:bg-dark-card rounded-[2rem] p-4 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
             @forelse($requests as $request)
-                @include('shared.requests._request-card', [
+                @include('shared.returns._return-card', [
                     'request' => $request,
                     'slot' => '',
                     'actions' => '<a href="' . route('marketer.returns.show', $request) . '" class="px-5 py-2.5 bg-white dark:bg-dark-card border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-all text-sm flex items-center gap-2 shadow-sm"><i data-lucide="eye" class="w-4 h-4"></i>التفاصيل</a>'
@@ -66,7 +66,7 @@
 
             {{-- Timeline Guide --}}
             <div class="lg:col-span-4">
-                @include('shared.requests._timeline-guide')
+                @include('shared.returns._timeline-guide')
             </div>
         </div>
     </div>

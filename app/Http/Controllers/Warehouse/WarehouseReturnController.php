@@ -21,6 +21,18 @@ class WarehouseReturnController extends Controller
     {
         $query = MarketerReturnRequest::with('marketer', 'items.product');
 
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        if ($request->filled('marketer_id')) {
+            $query->where('marketer_id', $request->marketer_id);
+        }
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         } elseif (!$request->has('all')) {
@@ -28,8 +40,9 @@ class WarehouseReturnController extends Controller
         }
 
         $requests = $query->latest()->paginate(20)->withQueryString();
+        $marketers = \App\Models\User::where('role_id', 3)->get();
 
-        return view('warehouse.returns.index', compact('requests'));
+        return view('warehouse.returns.index', compact('requests', 'marketers'));
     }
 
     public function show($id)
