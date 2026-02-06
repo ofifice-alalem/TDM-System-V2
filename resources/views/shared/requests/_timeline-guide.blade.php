@@ -13,27 +13,27 @@
             </div>
             <div>
                 <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">قيد الانتظار</h4>
-                <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">الطلب تم إنشاؤه وبانتظار مراجعة المخزن</p>
-            </div>
-        </div>
-
-        <div class="relative flex items-start gap-5">
-            <div class="w-11 h-11 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
-                <i data-lucide="check-circle" class="w-5 h-5"></i>
-            </div>
-            <div>
-                <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">تمت الموافقة</h4>
-                <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">تمت الموافقة من المخزن وجاري التجهيز</p>
+                <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">تم الإنشاء وبانتظار المراجعة</p>
             </div>
         </div>
 
         <div class="relative flex items-start gap-5">
             <div class="w-11 h-11 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                <i data-lucide="check-circle" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">تمت الموافقة</h4>
+                <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">تمت الموافقة وجاري التجهيز</p>
+            </div>
+        </div>
+
+        <div class="relative flex items-start gap-5">
+            <div class="w-11 h-11 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
                 <i data-lucide="file-check" class="w-5 h-5"></i>
             </div>
             <div>
                 <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">موثق</h4>
-                <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">تم توثيق الاستلام وإغلاق الطلب</p>
+                <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">تم التوثيق والإغلاق النهائي</p>
             </div>
         </div>
 
@@ -43,7 +43,7 @@
             </div>
             <div>
                 <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">مرفوض</h4>
-                <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">تم رفض الطلب من قبل المخزن</p>
+                <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">تم الرفض من قبل المخزن</p>
             </div>
         </div>
 
@@ -53,7 +53,7 @@
             </div>
             <div>
                 <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">ملغي</h4>
-                <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">تم إلغاء الطلب من قبل المسوق</p>
+                <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">تم الإلغاء من قبل المسوق</p>
             </div>
         </div>
         

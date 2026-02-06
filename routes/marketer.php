@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Marketer\MarketerRequestController;
+use App\Http\Controllers\Marketer\MarketerReturnController;
 use App\Http\Controllers\Marketer\MarketerStockController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,15 @@ Route::middleware(['web'])->group(function () {
             Route::get('/{request}', [MarketerRequestController::class, 'show'])->name('show');
             Route::get('/{request}/pdf', [MarketerRequestController::class, 'pdf'])->name('pdf');
             Route::patch('/{marketerRequest}/cancel', [MarketerRequestController::class, 'cancel'])->name('cancel');
+        });
+
+        Route::prefix('returns')->name('returns.')->group(function () {
+            Route::get('/', [MarketerReturnController::class, 'index'])->name('index');
+            Route::get('/create', [MarketerReturnController::class, 'create'])->name('create');
+            Route::post('/', [MarketerReturnController::class, 'store'])->name('store');
+            Route::get('/{return}', [MarketerReturnController::class, 'show'])->name('show');
+            Route::get('/{return}/pdf', [MarketerReturnController::class, 'pdf'])->name('pdf');
+            Route::patch('/{return}/cancel', [MarketerReturnController::class, 'cancel'])->name('cancel');
         });
     });
 });

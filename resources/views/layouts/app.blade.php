@@ -63,24 +63,57 @@
                 @endif
             </a>
 
-            {{-- Order Management --}}
-            <a href="{{ route('marketer.requests.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('marketer.requests.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
-                <i data-lucide="package" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.requests.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
-                <span>إدارة الطلبات</span>
-                @if(request()->routeIs('marketer.requests.*'))
-                    <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
-                @endif
-            </a>
+            @if(request()->routeIs('marketer.*'))
+                {{-- Marketer Links --}}
+                <a href="{{ route('marketer.requests.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('marketer.requests.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="package" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.requests.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>طلبات البضاعة</span>
+                    @if(request()->routeIs('marketer.requests.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
 
-            {{-- Real Inventory --}}
-            @if(Route::has('marketer.stock.index'))
-            <a href="{{ route('marketer.stock.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('marketer.stock.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
-                <i data-lucide="shopping-cart" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.stock.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
-                <span>مخزوني الفعلي</span>
-                @if(request()->routeIs('marketer.stock.*'))
-                    <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                <a href="{{ route('marketer.returns.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('marketer.returns.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="package-x" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.returns.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>إرجاع البضاعة</span>
+                    @if(request()->routeIs('marketer.returns.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
+
+                @if(Route::has('marketer.stock.index'))
+                <a href="{{ route('marketer.stock.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('marketer.stock.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="shopping-cart" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.stock.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>مخزوني الفعلي</span>
+                    @if(request()->routeIs('marketer.stock.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
                 @endif
-            </a>
+            @endif
+
+            @if(request()->routeIs('warehouse.*'))
+                {{-- Warehouse Links --}}
+                <a href="{{ route('warehouse.requests.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('warehouse.requests.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="package" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('warehouse.requests.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>طلبات المسوقين</span>
+                    @if(request()->routeIs('warehouse.requests.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
+
+                <a href="{{ route('warehouse.returns.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('warehouse.returns.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="package-x" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('warehouse.returns.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>إرجاعات المسوقين</span>
+                    @if(request()->routeIs('warehouse.returns.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
+
+                <a href="#" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white">
+                    <i data-lucide="warehouse" class="w-[1.35rem] h-[1.35rem] transition-colors text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white"></i>
+                    <span>المخزن الرئيسي</span>
+                </a>
             @endif
 
             {{-- Divider --}}
@@ -102,7 +135,7 @@
             <div class="bg-gradient-to-br from-gray-50 to-white dark:from-dark-card dark:to-dark-bg rounded-3xl p-6 border border-gray-100 dark:border-dark-border text-center relative overflow-hidden group hover:shadow-lg hover:shadow-amber-100/50 dark:hover:shadow-none transition-all duration-500">
                 <div class="absolute top-0 right-0 w-24 h-24 bg-amber-400/10 dark:bg-accent-500/10 rounded-full filter blur-2xl opacity-50 -translate-y-1/2 translate-x-1/2 transition-transform group-hover:scale-125"></div>
                 
-                <h4 class="text-gray-900 dark:text-white font-black text-sm tracking-widest uppercase mb-1">Marketer Panel</h4>
+                <h4 class="text-gray-900 dark:text-white font-black text-sm tracking-widest uppercase mb-1">{{ request()->routeIs('warehouse.*') ? 'Warehouse Panel' : 'Marketer Panel' }}</h4>
                 <p class="text-[0.65rem] text-gray-400 dark:text-gray-500 font-bold">Taqnia Distribution 2026 ©</p>
                 <div class="mt-3 text-[0.6rem] bg-white dark:bg-dark-bg border border-gray-100 dark:border-dark-border text-gray-400 dark:text-gray-500 py-1 px-3 rounded-full inline-flex items-center gap-1 shadow-sm">
                     <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
