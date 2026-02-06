@@ -31,5 +31,9 @@ Route::middleware(['web'])->group(function () {
         Route::prefix('discounts')->name('discounts.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Marketer\DiscountController::class, 'index'])->name('index');
         });
+
+        Route::prefix('promotions')->name('promotions.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Marketer\PromotionController::class, 'index'])->name('index');
+        });
     });
 });

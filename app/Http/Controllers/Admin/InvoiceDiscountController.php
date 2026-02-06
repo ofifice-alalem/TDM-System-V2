@@ -29,20 +29,18 @@ class InvoiceDiscountController extends Controller
         }
 
         // Filter by active status
-        if ($request->has('active') && $request->active !== 'all') {
-            if ($request->active === 'expired') {
-                $query->where(function($q) {
-                    $q->where('end_date', '<', now()->toDateString())
-                      ->orWhere('is_active', false);
-                });
-            } else {
-                $query->where('is_active', $request->active === '1')
-                      ->where('end_date', '>=', now()->toDateString());
-            }
-        } elseif (!$request->has('active')) {
+        $activeFilter = $request->get('active', '1');
+        
+        if ($activeFilter === 'expired') {
             $query->where('is_active', true)
-                  ->where('end_date', '>=', now()->toDateString());
+                  ->where('end_date', '<', now()->startOfDay());
+        } elseif ($activeFilter === '0') {
+            $query->where('is_active', false);
+        } elseif ($activeFilter === '1') {
+            $query->where('is_active', true)
+                  ->where('end_date', '>=', now()->startOfDay());
         }
+        // 'all' = no filter
 
         // Filter by ID
         if ($request->filled('id')) {
