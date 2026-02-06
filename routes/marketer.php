@@ -27,5 +27,9 @@ Route::middleware(['web'])->group(function () {
             Route::get('/{return}/pdf', [MarketerReturnController::class, 'pdf'])->name('pdf');
             Route::patch('/{return}/cancel', [MarketerReturnController::class, 'cancel'])->name('cancel');
         });
+
+        Route::prefix('discounts')->name('discounts.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Marketer\DiscountController::class, 'index'])->name('index');
+        });
     });
 });

@@ -8,3 +8,4 @@ Route::get('/', function () {
 
 require __DIR__.'/marketer.php';
 require __DIR__.'/warehouse.php';
+require __DIR__.'/admin.php';

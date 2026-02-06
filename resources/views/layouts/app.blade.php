@@ -90,6 +90,14 @@
                     @endif
                 </a>
                 @endif
+
+                <a href="{{ route('marketer.discounts.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('marketer.discounts.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="percent" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.discounts.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>خصومات الفواتير</span>
+                    @if(request()->routeIs('marketer.discounts.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
             @endif
 
             @if(request()->routeIs('warehouse.*'))
@@ -113,6 +121,22 @@
                 <a href="#" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white">
                     <i data-lucide="warehouse" class="w-[1.35rem] h-[1.35rem] transition-colors text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white"></i>
                     <span>المخزن الرئيسي</span>
+                </a>
+            @endif
+
+            {{-- Divider --}}
+            <div class="pt-6 pb-2 px-5">
+                <div class="h-px bg-gradient-to-r from-transparent via-gray-100 to-transparent"></div>
+            </div>
+
+            @if(request()->routeIs('admin.*'))
+                {{-- Admin Links --}}
+                <a href="{{ route('admin.discounts.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('admin.discounts.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="percent" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('admin.discounts.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>خصومات الفواتير</span>
+                    @if(request()->routeIs('admin.discounts.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
                 </a>
             @endif
 
