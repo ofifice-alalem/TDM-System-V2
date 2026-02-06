@@ -201,7 +201,7 @@
                                     <form action="{{ route('admin.promotions.toggle', $promotion) }}" method="POST">
                                         @csrf
                                         @method('PATCH')
-                                        <button type="submit" class="px-4 py-2.5 {{ $promotion->is_active ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200' }} rounded-xl font-bold transition-all text-sm flex items-center gap-2 shadow-sm">
+                                        <button type="submit" class="h-[88px] px-5 {{ $promotion->is_active ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200' }} rounded-xl font-bold transition-all text-sm flex items-center gap-2 shadow-sm">
                                             <i data-lucide="{{ $promotion->is_active ? 'pause' : 'play' }}" class="w-4 h-4"></i>
                                             {{ $promotion->is_active ? 'تعطيل' : 'تفعيل' }}
                                         </button>
