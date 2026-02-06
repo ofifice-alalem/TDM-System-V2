@@ -114,7 +114,7 @@
                 @if($request->notes)
                     @php
                         $isRejected = $request->status === 'rejected';
-                        $noteTitle = $isRejected ? 'ملاحظات أمين المخزن (سبب الرفض)' : 'ملاحظات المندوب';
+                        $noteTitle = $isRejected ? 'ملاحظات أمين المخزن (سبب الرفض)' : 'ملاحظات المسوق';
                         $bgClass = $isRejected ? 'bg-red-50/50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30' : 'bg-white dark:bg-dark-card border-gray-100 dark:border-dark-border';
                         $titleColor = $isRejected ? 'text-red-800 dark:text-red-400' : 'text-gray-800 dark:text-white';
                         $textColor = $isRejected ? 'text-red-700 dark:text-red-300' : 'text-gray-600 dark:text-gray-300';
@@ -229,6 +229,97 @@
                                     </form>
                                 </div>
                             </div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Activity Timeline --}}
+                <div class="bg-white dark:bg-dark-card rounded-[1.5rem] border border-gray-200 dark:border-dark-border p-6 shadow-lg shadow-gray-200/50 dark:shadow-sm">
+                    <h3 class="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                        <i data-lucide="list" class="w-5 h-5 text-primary-500"></i>
+                        سجل العمليات
+                    </h3>
+                    
+                    <div class="relative space-y-6 before:absolute before:inset-0 before:mr-[19px] before:h-full before:w-0.5 before:bg-gradient-to-b before:from-gray-200 dark:before:from-dark-border before:via-gray-100 dark:before:via-dark-bg before:to-transparent">
+                        
+                        <div class="relative flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="plus" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white text-sm">تم إنشاء الإرجاع</h4>
+                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $request->marketer->full_name }}</p>
+                                <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $request->created_at->format('Y-m-d h:i A') }}</span>
+                            </div>
+                        </div>
+
+                        @if($request->approved_at)
+                        <div class="relative flex items-start gap-4 animate-slide-up">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-accent-900/30 text-blue-600 dark:text-accent-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white text-sm">تمت موافقة المخزن</h4>
+                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $request->approver->full_name }}</p>
+                                <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $request->approved_at->format('Y-m-d h:i A') }}</span>
+                            </div>
+                        </div>
+                        @elseif($request->status == 'rejected')
+                        <div class="relative flex items-start gap-4 animate-slide-up">
+                            <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="x" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-red-800 dark:text-red-400 text-sm">تم رفض الإرجاع</h4>
+                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $request->rejecter->full_name }}</p>
+                                <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $request->rejected_at->format('Y-m-d h:i A') }}</span>
+                            </div>
+                        </div>
+                        @else
+                        <div class="relative flex items-start gap-4 opacity-50 grayscale">
+                            <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-dark-bg text-gray-400 dark:text-gray-600 flex items-center justify-center shrink-0 z-10 border-2 border-white dark:border-dark-card relative overflow-hidden">
+                                <div class="absolute inset-0 bg-gray-200/50 dark:bg-gray-800/50 animate-pulse"></div>
+                                <i data-lucide="clock" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-400 dark:text-gray-600 text-sm">موافقة المخزن</h4>
+                                <div class="text-xs text-gray-400 dark:text-gray-600 mt-1">في الانتظار...</div>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if($request->documented_at)
+                        <div class="relative flex items-start gap-4 animate-slide-up">
+                            <div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="file-check" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white text-sm">التوثيق والأرشفة</h4>
+                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $request->documenter->full_name }}</p>
+                                <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $request->documented_at->format('Y-m-d h:i A') }}</span>
+                            </div>
+                        </div>
+                        @else
+                        <div class="relative flex items-start gap-4 opacity-50 grayscale">
+                            <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-dark-bg text-gray-400 dark:text-gray-600 flex items-center justify-center shrink-0 z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="file-text" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-400 dark:text-gray-600 text-sm">التوثيق والأرشفة</h4>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if($request->status == 'cancelled')
+                        <div class="relative flex items-start gap-4 animate-slide-up">
+                            <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="slash" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-600 dark:text-gray-300 text-sm">تم إلغاء الإرجاع</h4>
+                                <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $request->updated_at->format('Y-m-d h:i A') }}</span>
+                            </div>
+                        </div>
                         @endif
                     </div>
                 </div>

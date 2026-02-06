@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Marketer;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Shared\Request\InvoiceController;
+use App\Http\Controllers\Shared\Return\InvoiceController;
 use App\Models\MarketerReturnRequest;
 use App\Models\MarketerActualStock;
 use App\Services\Marketer\MarketerReturnService;

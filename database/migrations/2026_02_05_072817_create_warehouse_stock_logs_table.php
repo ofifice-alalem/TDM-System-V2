@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('warehouse_stock_logs', function (Blueprint $table) {
             $table->id();
-            $table->enum('invoice_type', ['factory', 'marketer_request', 'sales_return']);
+            $table->enum('invoice_type', ['factory', 'marketer_request', 'marketer_return', 'sales_return']);
             $table->integer('invoice_id');
             $table->foreignId('keeper_id')->constrained('users');
             $table->enum('action', ['add', 'withdraw', 'return']);
