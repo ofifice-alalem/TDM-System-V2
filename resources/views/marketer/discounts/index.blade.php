@@ -69,34 +69,48 @@
                         </div>
 
                         {{-- Main Content --}}
-                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
-                                <div class="bg-white dark:bg-dark-card border-2 border-gray-300 dark:border-dark-border px-4 sm:px-6 py-3 rounded-xl shadow-sm w-full sm:w-auto">
-                                    <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium">الحد الأدنى</div>
-                                    <div class="text-lg sm:text-xl font-black text-gray-900 dark:text-white">{{ number_format($discount->min_amount, 2) }}</div>
-                                    <div class="text-xs text-gray-400 dark:text-gray-500 font-bold">دينار</div>
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                            <div class="flex-1 bg-white dark:bg-dark-card border-2 border-gray-300 dark:border-dark-border px-5 py-4 rounded-xl shadow-sm">
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mb-2 font-medium flex items-center gap-1.5">
+                                    <i data-lucide="coins" class="w-3.5 h-3.5"></i>
+                                    الحد الأدنى
                                 </div>
-                                
-                                <div class="hidden sm:flex items-center">
-                                    <i data-lucide="arrow-left" class="w-6 h-6 text-gray-300 dark:text-gray-600"></i>
+                                <div class="flex items-baseline gap-2">
+                                    <div class="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white">{{ number_format($discount->min_amount, 2) }}</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400 font-bold">دينار</div>
                                 </div>
-                                
-                                @if($discount->discount_type === 'percentage')
-                                    <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-900/30 border-2 border-emerald-200 dark:border-emerald-800 px-4 sm:px-6 py-3 rounded-xl shadow-sm w-full sm:w-auto">
-                                        <div class="text-xs text-emerald-600 dark:text-emerald-400 mb-1 font-bold">نسبة الخصم</div>
-                                        <div class="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 flex items-baseline gap-1">
-                                            {{ $discount->discount_percentage }}
-                                            <span class="text-base sm:text-lg">%</span>
-                                        </div>
-                                    </div>
-                                @else
-                                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 border-2 border-blue-200 dark:border-blue-800 px-4 sm:px-6 py-3 rounded-xl shadow-sm w-full sm:w-auto">
-                                        <div class="text-xs text-blue-600 dark:text-blue-400 mb-1 font-bold">مبلغ الخصم</div>
-                                        <div class="text-xl sm:text-2xl font-black text-blue-700 dark:text-blue-400">{{ number_format($discount->discount_amount, 2) }}</div>
-                                        <div class="text-xs text-blue-500 dark:text-blue-400 font-bold">دينار</div>
-                                    </div>
-                                @endif
                             </div>
+                            
+                            <div class="flex items-center justify-center">
+                                <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-dark-bg flex items-center justify-center">
+                                    <i data-lucide="arrow-left" class="w-5 h-5 text-gray-400 dark:text-gray-600 hidden sm:block"></i>
+                                    <i data-lucide="arrow-down" class="w-5 h-5 text-gray-400 dark:text-gray-600 sm:hidden"></i>
+                                </div>
+                            </div>
+                            
+                            @if($discount->discount_type === 'percentage')
+                                <div class="flex-1 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-900/30 border-2 border-emerald-200 dark:border-emerald-800 px-5 py-4 rounded-xl shadow-sm">
+                                    <div class="text-xs text-emerald-600 dark:text-emerald-400 mb-2 font-bold flex items-center gap-1.5">
+                                        <i data-lucide="percent" class="w-3.5 h-3.5"></i>
+                                        نسبة الخصم
+                                    </div>
+                                    <div class="flex items-baseline gap-2">
+                                        <div class="text-3xl sm:text-4xl font-black text-emerald-700 dark:text-emerald-400">{{ $discount->discount_percentage }}</div>
+                                        <div class="text-sm text-emerald-600 dark:text-emerald-400 font-bold">%</div>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="flex-1 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 border-2 border-blue-200 dark:border-blue-800 px-5 py-4 rounded-xl shadow-sm">
+                                    <div class="text-xs text-blue-600 dark:text-blue-400 mb-2 font-bold flex items-center gap-1.5">
+                                        <i data-lucide="badge-dollar-sign" class="w-3.5 h-3.5"></i>
+                                        مبلغ الخصم
+                                    </div>
+                                    <div class="flex items-baseline gap-2">
+                                        <div class="text-3xl sm:text-4xl font-black text-blue-700 dark:text-blue-400">{{ number_format($discount->discount_amount, 2) }}</div>
+                                        <div class="text-sm text-blue-600 dark:text-blue-400 font-bold">دينار</div>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
                         {{-- Footer Row --}}

@@ -52,18 +52,18 @@
                         <label class="relative cursor-pointer">
                             <input type="radio" name="discount_type" value="percentage" x-model="discountType" checked
                                 class="peer sr-only">
-                            <div class="px-6 py-4 bg-gray-50 dark:bg-dark-bg border-2 border-gray-200 dark:border-dark-border rounded-xl peer-checked:border-primary-500 peer-checked:bg-primary-50 dark:peer-checked:bg-primary-900/20 transition-all text-center">
-                                <i data-lucide="percent" class="w-6 h-6 mx-auto mb-2 text-gray-400 peer-checked:text-primary-600"></i>
-                                <span class="font-bold text-gray-700 dark:text-gray-300">نسبة مئوية</span>
+                            <div class="px-6 py-4 bg-gray-50 dark:bg-dark-bg border-2 border-gray-200 dark:border-dark-border rounded-xl peer-checked:border-primary-500 peer-checked:bg-primary-50 dark:peer-checked:bg-primary-500/10 dark:peer-checked:border-primary-500 transition-all text-center">
+                                <i data-lucide="percent" class="w-6 h-6 mx-auto mb-2 text-gray-400 dark:text-gray-500 peer-checked:text-primary-600 dark:peer-checked:text-primary-400"></i>
+                                <span class="font-bold text-gray-700 dark:text-gray-300 peer-checked:text-primary-600 dark:peer-checked:text-primary-400">نسبة مئوية</span>
                             </div>
                         </label>
                         
                         <label class="relative cursor-pointer">
                             <input type="radio" name="discount_type" value="fixed" x-model="discountType"
                                 class="peer sr-only">
-                            <div class="px-6 py-4 bg-gray-50 dark:bg-dark-bg border-2 border-gray-200 dark:border-dark-border rounded-xl peer-checked:border-primary-500 peer-checked:bg-primary-50 dark:peer-checked:bg-primary-900/20 transition-all text-center">
-                                <i data-lucide="coins" class="w-6 h-6 mx-auto mb-2 text-gray-400 peer-checked:text-primary-600"></i>
-                                <span class="font-bold text-gray-700 dark:text-gray-300">مبلغ ثابت</span>
+                            <div class="px-6 py-4 bg-gray-50 dark:bg-dark-bg border-2 border-gray-200 dark:border-dark-border rounded-xl peer-checked:border-primary-500 peer-checked:bg-primary-50 dark:peer-checked:bg-primary-500/10 dark:peer-checked:border-primary-500 transition-all text-center">
+                                <i data-lucide="coins" class="w-6 h-6 mx-auto mb-2 text-gray-400 dark:text-gray-500 peer-checked:text-primary-600 dark:peer-checked:text-primary-400"></i>
+                                <span class="font-bold text-gray-700 dark:text-gray-300 peer-checked:text-primary-600 dark:peer-checked:text-primary-400">مبلغ ثابت</span>
                             </div>
                         </label>
                     </div>
@@ -101,7 +101,7 @@
                             تاريخ البداية
                         </label>
                         <input type="date" name="start_date" value="{{ old('start_date') }}" required
-                            class="w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-primary-900/50 transition-all dark:text-white">
+                            class="w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-primary-900/50 transition-all dark:text-white dark:[color-scheme:dark]">
                         @error('start_date')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -112,7 +112,7 @@
                             تاريخ النهاية
                         </label>
                         <input type="date" name="end_date" value="{{ old('end_date') }}" required
-                            class="w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-primary-900/50 transition-all dark:text-white">
+                            class="w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-primary-900/50 transition-all dark:text-white dark:[color-scheme:dark]">
                         @error('end_date')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror

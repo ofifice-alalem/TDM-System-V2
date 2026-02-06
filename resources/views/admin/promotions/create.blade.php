@@ -80,7 +80,7 @@
                             تاريخ البداية
                         </label>
                         <input type="date" name="start_date" value="{{ old('start_date') }}" required
-                            class="w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-primary-900/50 transition-all dark:text-white">
+                            class="w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-primary-900/50 transition-all dark:text-white dark:[color-scheme:dark]">
                         @error('start_date')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -91,7 +91,7 @@
                             تاريخ النهاية
                         </label>
                         <input type="date" name="end_date" value="{{ old('end_date') }}" required
-                            class="w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-primary-900/50 transition-all dark:text-white">
+                            class="w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-primary-900/50 transition-all dark:text-white dark:[color-scheme:dark]">
                         @error('end_date')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror

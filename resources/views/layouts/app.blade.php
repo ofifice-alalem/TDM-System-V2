@@ -36,10 +36,10 @@
 <body class="bg-[#f1f5f9] dark:bg-[#0b1121] font-sans antialiased text-gray-900 dark:text-gray-100 transition-colors duration-300 overflow-x-hidden">
 
     {{-- SIDEBAR --}}
-    <aside class="fixed top-0 right-0 h-screen w-72 bg-white dark:bg-[#151f32] border-l border-gray-100 dark:border-[#2a354c] z-50 flex flex-col transition-all hidden lg:flex shadow-sm dark:shadow-none">
+    <aside id="sidebar" class="fixed top-0 right-0 h-screen w-80 lg:w-72 bg-white dark:bg-[#151f32] border-l border-gray-100 dark:border-[#2a354c] z-50 flex flex-col transition-transform duration-300 translate-x-full lg:translate-x-0 shadow-sm dark:shadow-none">
         
         {{-- Logo Section --}}
-        <div class="h-28 flex items-center px-8 border-b border-gray-50 dark:border-dark-border">
+        <div class="h-28 flex items-center justify-between px-8 border-b border-gray-50 dark:border-dark-border">
             <div class="flex items-center gap-4 group cursor-pointer">
                 <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 dark:from-accent-500 dark:to-accent-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-200/50 dark:shadow-accent-500/20 transform group-hover:rotate-6 transition-all duration-300">
                     <i data-lucide="zap" class="w-6 h-6 fill-current"></i>
@@ -49,6 +49,9 @@
                     <span class="text-[0.65rem] text-gray-400 dark:text-dark-muted font-bold tracking-[0.2em] uppercase mt-1 block">Distribution Sys</span>
                 </div>
             </div>
+            <button id="sidebar-close-btn" class="lg:hidden w-10 h-10 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-border transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
         </div>
 
         {{-- Navigation Links --}}
@@ -64,6 +67,25 @@
             </a>
 
             @if(request()->routeIs('marketer.*'))
+                @if(Route::has('marketer.stock.index'))
+                <a href="{{ route('marketer.stock.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('marketer.stock.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="shopping-cart" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.stock.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>مخزوني الفعلي</span>
+                    @if(request()->routeIs('marketer.stock.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
+                @endif
+
+                {{-- Divider --}}
+                <div class="pt-6 pb-2 px-5">
+                    <div class="h-px bg-gradient-to-r from-transparent via-gray-100 dark:via-gray-700 to-transparent"></div>
+                </div>
+            @endif
+
+            @if(request()->routeIs('marketer.*'))
+                {{-- Section Title --}}
+                <div class="px-5 text-[0.65rem] font-black text-gray-300 dark:text-gray-600 uppercase tracking-widest mb-1">العمليات الأساسية</div>
                 {{-- Marketer Links --}}
                 <a href="{{ route('marketer.requests.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('marketer.requests.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                     <i data-lucide="package" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.requests.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
@@ -81,15 +103,13 @@
                     @endif
                 </a>
 
-                @if(Route::has('marketer.stock.index'))
-                <a href="{{ route('marketer.stock.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('marketer.stock.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
-                    <i data-lucide="shopping-cart" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.stock.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
-                    <span>مخزوني الفعلي</span>
-                    @if(request()->routeIs('marketer.stock.*'))
-                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
-                    @endif
-                </a>
-                @endif
+                {{-- Divider --}}
+                <div class="pt-6 pb-2 px-5">
+                    <div class="h-px bg-gradient-to-r from-transparent via-gray-100 dark:via-gray-700 to-transparent"></div>
+                </div>
+
+                {{-- Section Title --}}
+                <div class="px-5 text-[0.65rem] font-black text-gray-300 dark:text-gray-600 uppercase tracking-widest mb-1">الخصومات والعروض</div>
 
                 <a href="{{ route('marketer.discounts.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('marketer.discounts.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                     <i data-lucide="percent" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.discounts.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
@@ -174,19 +194,6 @@
            
         </nav>
 
-        {{-- Footer Card --}}
-        <div class="p-6">
-            <div class="bg-gradient-to-br from-gray-50 to-white dark:from-dark-card dark:to-dark-bg rounded-3xl p-6 border border-gray-100 dark:border-dark-border text-center relative overflow-hidden group hover:shadow-lg hover:shadow-amber-100/50 dark:hover:shadow-none transition-all duration-500">
-                <div class="absolute top-0 right-0 w-24 h-24 bg-amber-400/10 dark:bg-accent-500/10 rounded-full filter blur-2xl opacity-50 -translate-y-1/2 translate-x-1/2 transition-transform group-hover:scale-125"></div>
-                
-                <h4 class="text-gray-900 dark:text-white font-black text-sm tracking-widest uppercase mb-1">{{ request()->routeIs('warehouse.*') ? 'Warehouse Panel' : 'Marketer Panel' }}</h4>
-                <p class="text-[0.65rem] text-gray-400 dark:text-gray-500 font-bold">Taqnia Distribution 2026 ©</p>
-                <div class="mt-3 text-[0.6rem] bg-white dark:bg-dark-bg border border-gray-100 dark:border-dark-border text-gray-400 dark:text-gray-500 py-1 px-3 rounded-full inline-flex items-center gap-1 shadow-sm">
-                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                    Online v2.5.0
-                </div>
-            </div>
-        </div>
     </aside>
 
     {{-- MAIN CONTENT WRAPPER --}}
@@ -197,7 +204,7 @@
             
             {{-- Right: Mobile Menu & Search --}}
             <div class="flex items-center gap-4">
-                <button class="lg:hidden p-2.5 text-gray-600 bg-white rounded-xl shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors">
+                <button id="mobile-menu-btn" class="lg:hidden p-2.5 text-gray-600 dark:text-gray-300 bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
             </div>
@@ -268,7 +275,7 @@
     </div>
 
     {{-- Mobile Overlay --}}
-    <div class="fixed inset-0 bg-gray-900/20 backdrop-blur-sm z-40 hidden lg:hidden transition-opacity" id="mobile-overlay"></div>
+    <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40 hidden transition-opacity" id="mobile-overlay"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -293,15 +300,29 @@
             }
         });
 
-        // Add subtle swing animation to Tailwind config effectively
-        tailwind.config.theme.extend.keyframes.swing = {
-            '0%, 100%': { transform: 'rotate(0deg)' },
-            '20%': { transform: 'rotate(15deg)' },
-            '40%': { transform: 'rotate(-10deg)' },
-            '60%': { transform: 'rotate(5deg)' },
-            '80%': { transform: 'rotate(-5deg)' },
-        }
-        tailwind.config.theme.extend.animation.swing = 'swing 1s ease-in-out infinite';
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        const mobileOverlay = document.getElementById('mobile-overlay');
+        const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+
+        mobileMenuBtn?.addEventListener('click', () => {
+            sidebar.classList.toggle('translate-x-full');
+            mobileOverlay.classList.toggle('hidden');
+            document.body.classList.toggle('overflow-hidden');
+        });
+
+        mobileOverlay?.addEventListener('click', () => {
+            sidebar.classList.add('translate-x-full');
+            mobileOverlay.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        });
+
+        sidebarCloseBtn?.addEventListener('click', () => {
+            sidebar.classList.add('translate-x-full');
+            mobileOverlay.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        });
     </script>
     @stack('scripts')
 </body>
