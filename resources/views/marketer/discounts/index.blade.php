@@ -25,7 +25,7 @@
             {{-- Discounts List --}}
             <div class="lg:col-span-8">
                 {{-- Type Tabs --}}
-                <div class="bg-white dark:bg-dark-card rounded-2xl p-2 shadow-lg shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6">
+                <div class="bg-white dark:bg-dark-card rounded-2xl p-2 shadow-sm border border-gray-200 dark:border-dark-border mb-6">
                     <div class="flex gap-2">
                         <a href="{{ route('marketer.discounts.index', ['type' => 'percentage']) }}" 
                             class="{{ (!request('type') || request('type') === 'percentage') ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-200 dark:border-emerald-800' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-4 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-2 flex-1 justify-center">
@@ -40,20 +40,20 @@
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-dark-card rounded-[2rem] p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
+                <div class="bg-white dark:bg-dark-card rounded-[2rem] p-8 shadow-sm border border-gray-200 dark:border-dark-border animate-slide-up">
             
             @forelse($discounts as $discount)
                 @php
                     $borderClass = 'border-green-400 dark:border-green-700';
-                    $shadowClass = 'shadow-[inset_0_2px_30px_rgba(34,197,94,0.2),0_4px_20px_rgba(34,197,94,0.15)]';
+                    $shadowClass = 'shadow-[inset_0_1px_15px_rgba(34,197,94,0.15)]';
                     $bgClass = 'from-green-50/30 to-white dark:from-green-950/10 dark:to-dark-card';
                 @endphp
-                <div class="bg-gradient-to-br {{ $bgClass }} rounded-2xl border-2 {{ $borderClass }} {{ $shadowClass }} mb-4 p-6 transition-all duration-300 group">
+                <div class="bg-gradient-to-br {{ $bgClass }} rounded-2xl border-2 {{ $borderClass }} {{ $shadowClass }} mb-4 p-6 transition-all duration-300 group hover:shadow-[inset_0_1px_20px_rgba(34,197,94,0.2)]">
                     <div class="flex flex-col gap-4">
                         {{-- Header Row --}}
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
-                                <span class="bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 px-3 py-1.5 rounded-lg text-xs font-black">
+                                <span class="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-3 py-1.5 rounded-lg text-xs font-black border border-amber-300 dark:border-amber-500">
                                     #{{ $discount->id }}
                                 </span>
                                 
@@ -138,7 +138,7 @@
 
             {{-- Info Guide --}}
             <div class="lg:col-span-4">
-                <div class="bg-white dark:bg-dark-card rounded-[1.5rem] border border-gray-200 dark:border-dark-border p-8 shadow-lg shadow-gray-200/50 dark:shadow-sm lg:sticky lg:top-[150px]">
+                <div class="bg-white dark:bg-dark-card rounded-[1.5rem] border border-gray-200 dark:border-dark-border p-8 shadow-sm lg:sticky lg:top-[150px]">
                     <h3 class="font-bold text-xl text-gray-900 dark:text-white mb-8 flex items-center gap-3">
                         <i data-lucide="info" class="w-6 h-6 text-primary-500"></i>
                         كيف تعمل الخصومات؟

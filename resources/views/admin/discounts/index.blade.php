@@ -118,14 +118,14 @@
             @forelse($discounts as $discount)
                 @php
                     $isExpired = $discount->end_date->lt(now()->startOfDay());
-                    $borderClass = $isExpired ? 'border-red-300 dark:border-red-800 shadow-red-200/50 dark:shadow-red-900/30' : ($discount->is_active ? 'border-green-300 dark:border-green-800 shadow-green-200/50 dark:shadow-green-900/30' : 'border-orange-300 dark:border-orange-800 shadow-orange-200/50 dark:shadow-orange-900/30');
+                    $borderClass = $isExpired ? 'border-red-300 dark:border-red-800 shadow-red-200/30 dark:shadow-red-900/20' : ($discount->is_active ? 'border-green-300 dark:border-green-800 shadow-green-200/30 dark:shadow-green-900/20' : 'border-orange-300 dark:border-orange-800 shadow-orange-200/30 dark:shadow-orange-900/20');
                 @endphp
                 <div class="bg-gradient-to-br from-gray-50 to-white dark:from-dark-bg dark:to-dark-card rounded-2xl border-2 {{ $borderClass }} mb-4 p-6 hover:shadow-lg transition-all group">
                     <div class="flex flex-col gap-4">
                         {{-- Header Row --}}
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div class="flex items-center gap-3">
-                                <span class="bg-amber-500/20 dark:bg-amber-500/30 text-amber-700 dark:text-amber-300 px-3 py-1.5 rounded-lg text-xs font-black border border-amber-300 dark:border-amber-600">
+                                <span class="bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-3 py-1.5 rounded-lg text-xs font-black border border-amber-300 dark:border-amber-500">
                                     #{{ $discount->id }}
                                 </span>
                                 
