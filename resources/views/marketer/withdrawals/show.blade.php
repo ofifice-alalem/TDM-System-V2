@@ -34,7 +34,7 @@
                 
                 <div class="bg-white dark:bg-dark-card rounded-[2rem] p-6 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
                     <div class="flex items-center gap-3 mb-6">
-                        <span class="bg-purple-50 dark:bg-purple-900/20 p-2.5 rounded-xl text-purple-600 dark:text-purple-400 shadow-sm border border-purple-100 dark:border-purple-600/30">
+                        <span class="bg-amber-50 dark:bg-amber-900/20 p-2.5 rounded-xl text-amber-600 dark:text-amber-400 shadow-sm border border-amber-100 dark:border-amber-600/30">
                             <i data-lucide="dollar-sign" class="w-5 h-5"></i>
                         </span>
                         <h2 class="font-bold text-xl text-gray-900 dark:text-white">تفاصيل السحب</h2>
@@ -54,7 +54,7 @@
                 @if($withdrawal->notes)
                 <div class="bg-white dark:bg-dark-card rounded-[2rem] p-6 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
                     <div class="flex items-center gap-3 mb-4">
-                        <span class="bg-purple-50 dark:bg-purple-900/20 p-2.5 rounded-xl text-purple-600 dark:text-purple-400 shadow-sm border border-purple-100 dark:border-purple-600/30">
+                        <span class="bg-amber-50 dark:bg-amber-900/20 p-2.5 rounded-xl text-amber-600 dark:text-amber-400 shadow-sm border border-amber-100 dark:border-amber-600/30">
                             <i data-lucide="sticky-note" class="w-5 h-5"></i>
                         </span>
                         <h3 class="font-bold text-lg text-gray-900 dark:text-white">ملاحظات</h3>
@@ -98,8 +98,13 @@
                         @endif
                     </div>
 
-                    @if($withdrawal->status === 'pending')
-                        <div class="mt-8 pt-6 border-t border-gray-200 dark:border-dark-border">
+                    <div class="mt-8 pt-6 border-t border-gray-200 dark:border-dark-border z-10 relative space-y-3">
+                        <a href="{{ route('marketer.withdrawals.pdf', $withdrawal) }}" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group">
+                            <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                            طباعة PDF
+                        </a>
+
+                        @if($withdrawal->status === 'pending')
                             <div x-data="{ showCancel: false }">
                             <button 
                                 type="button" 
@@ -142,8 +147,8 @@
                                 </form>
                             </div>
                             </div>
+                        @endif
                         </div>
-                    @endif
                 </div>
 
                 <div class="bg-white dark:bg-dark-card rounded-[1.5rem] border border-gray-200 dark:border-dark-border p-6 shadow-lg shadow-gray-200/50 dark:shadow-sm">

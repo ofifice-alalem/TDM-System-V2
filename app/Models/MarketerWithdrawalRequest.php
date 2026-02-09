@@ -27,7 +27,17 @@ class MarketerWithdrawalRequest extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
+    public function approvedByUser()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
     public function rejecter()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    public function rejectedByUser()
     {
         return $this->belongsTo(User::class, 'rejected_by');
     }

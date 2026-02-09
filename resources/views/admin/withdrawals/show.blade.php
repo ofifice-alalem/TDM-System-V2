@@ -117,6 +117,11 @@
 
                     @if($withdrawal->status === 'pending')
                         <div class="mt-8 pt-6 border-t border-gray-200 dark:border-dark-border space-y-3">
+                            <a href="{{ route('admin.withdrawals.pdf', $withdrawal) }}" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group mb-3">
+                                <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                طباعة PDF
+                            </a>
+
                             <div x-data="{ showApprove: false }">
                             <button 
                                 type="button" 

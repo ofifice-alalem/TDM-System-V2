@@ -72,6 +72,7 @@ Route::middleware(['web'])->group(function () {
             Route::get('/create', [WithdrawalController::class, 'create'])->name('create');
             Route::post('/', [WithdrawalController::class, 'store'])->name('store');
             Route::get('/{withdrawal}', [WithdrawalController::class, 'show'])->name('show');
+            Route::get('/{withdrawal}/pdf', [\App\Http\Controllers\Shared\Withdrawal\InvoiceController::class, 'generateWithdrawalInvoicePdf'])->name('pdf');
             Route::patch('/{withdrawal}/cancel', [WithdrawalController::class, 'cancel'])->name('cancel');
         });
     });

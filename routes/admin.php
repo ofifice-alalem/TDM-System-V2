@@ -35,6 +35,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::prefix('withdrawals')->name('withdrawals.')->group(function () {
         Route::get('/', [AdminWithdrawalController::class, 'index'])->name('index');
         Route::get('/{withdrawal}', [AdminWithdrawalController::class, 'show'])->name('show');
+        Route::get('/{withdrawal}/pdf', [\App\Http\Controllers\Shared\Withdrawal\InvoiceController::class, 'generateWithdrawalInvoicePdf'])->name('pdf');
         Route::post('/{withdrawal}/approve', [AdminWithdrawalController::class, 'approve'])->name('approve');
         Route::post('/{withdrawal}/reject', [AdminWithdrawalController::class, 'reject'])->name('reject');
     });
