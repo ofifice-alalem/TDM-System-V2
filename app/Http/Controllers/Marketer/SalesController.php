@@ -40,7 +40,8 @@ class SalesController extends Controller
     {
         $stores = Store::where('is_active', true)->get();
         
-        $products = Product::where('is_active', true)
+        $products = Product::with('activePromotion')
+            ->where('is_active', true)
             ->leftJoin('marketer_actual_stock', function($join) {
                 $join->on('products.id', '=', 'marketer_actual_stock.product_id')
                     ->where('marketer_actual_stock.marketer_id', auth()->id());

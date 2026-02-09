@@ -27,4 +27,13 @@ class Product extends Model
     {
         return $this->hasMany(ProductPromotion::class);
     }
+
+    public function activePromotion()
+    {
+        return $this->hasOne(ProductPromotion::class)
+            ->where('is_active', true)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->latest();
+    }
 }

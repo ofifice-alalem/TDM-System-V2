@@ -58,11 +58,15 @@
                                                 data-stock="{{ $product->stock }}" 
                                                 data-price="{{ $product->current_price }}"
                                                 data-promotion-free="{{ $product->activePromotion->free_quantity ?? 0 }}"
-                                                data-promotion-buy="{{ $product->activePromotion->buy_quantity ?? 0 }}">
-                                            {{ $product->name }} - {{ $product->current_price }} دينار (متوفر: {{ $product->stock }})
+                                                data-promotion-buy="{{ $product->activePromotion->min_quantity ?? 0 }}">
+                                            {{ $product->name }} @if($product->activePromotion) ⭐ @endif - {{ $product->current_price }} دينار (متوفر: {{ $product->stock }})
                                         </option>
                                     @endforeach
                                 </select>
+                                <div class="promotion-label hidden mt-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 text-amber-700 dark:text-amber-400 text-xs font-bold flex items-center gap-2">
+                                    <i data-lucide="gift" class="w-4 h-4"></i>
+                                    <span class="promotion-text"></span>
+                                </div>
                             </div>
                             <div class="col-span-6 md:col-span-2">
                                 <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">الكمية</label>
@@ -235,14 +239,30 @@ function calculateInvoiceSummary() {
         }
     });
     
-    const invoiceDiscount = 0; // يتم حسابه من السيرفر
-    const finalTotal = subtotal - invoiceDiscount;
-    
-    document.getElementById('total-items').textContent = totalItems;
-    document.getElementById('subtotal').textContent = subtotal.toFixed(2) + ' دينار';
-    document.getElementById('products-discount').textContent = productsDiscount.toFixed(2) + ' دينار';
-    document.getElementById('invoice-discount').textContent = invoiceDiscount.toFixed(2) + ' دينار';
-    document.getElementById('final-total').textContent = finalTotal.toFixed(2) + ' دينار';
+    // Fetch invoice discount from server
+    const subtotalBeforeDiscount = subtotal - productsDiscount;
+    fetch(`/calculate-invoice-discount?amount=${subtotalBeforeDiscount}`)
+        .then(response => response.json())
+        .then(data => {
+            const invoiceDiscount = data.discount_amount || 0;
+            const finalTotal = subtotal - productsDiscount - invoiceDiscount;
+            
+            document.getElementById('total-items').textContent = totalItems;
+            document.getElementById('subtotal').textContent = subtotal.toFixed(2) + ' دينار';
+            document.getElementById('products-discount').textContent = productsDiscount.toFixed(2) + ' دينار';
+            document.getElementById('invoice-discount').textContent = invoiceDiscount.toFixed(2) + ' دينار';
+            document.getElementById('final-total').textContent = finalTotal.toFixed(2) + ' دينار';
+        })
+        .catch(() => {
+            const invoiceDiscount = 0;
+            const finalTotal = subtotal - productsDiscount - invoiceDiscount;
+            
+            document.getElementById('total-items').textContent = totalItems;
+            document.getElementById('subtotal').textContent = subtotal.toFixed(2) + ' دينار';
+            document.getElementById('products-discount').textContent = productsDiscount.toFixed(2) + ' دينار';
+            document.getElementById('invoice-discount').textContent = invoiceDiscount.toFixed(2) + ' دينار';
+            document.getElementById('final-total').textContent = finalTotal.toFixed(2) + ' دينار';
+        });
 }
 
 function updateAvailableProducts() {
@@ -264,13 +284,25 @@ function updateAvailableProducts() {
 function updateMaxQuantity(selectElement) {
     const row = selectElement.closest('.item-row');
     const quantityInput = row.querySelector('.quantity-input');
+    const promotionLabel = row.querySelector('.promotion-label');
+    const promotionText = row.querySelector('.promotion-text');
     const selectedOption = selectElement.options[selectElement.selectedIndex];
     const stock = selectedOption?.dataset.stock || 0;
+    const promotionBuy = parseInt(selectedOption?.dataset.promotionBuy || 0);
+    const promotionFree = parseInt(selectedOption?.dataset.promotionFree || 0);
     
     quantityInput.max = stock;
     quantityInput.value = '';
     quantityInput.placeholder = `الحد الأقصى: ${stock}`;
     quantityInput.disabled = !stock || stock == 0;
+    
+    if (promotionBuy > 0 && promotionFree > 0) {
+        promotionLabel.classList.remove('hidden');
+        promotionText.textContent = `عرض: اشتري ${promotionBuy} واحصل على ${promotionFree} مجاناً`;
+        lucide.createIcons();
+    } else {
+        promotionLabel.classList.add('hidden');
+    }
     
     calculateRowTotal(row);
     updateAvailableProducts();
@@ -316,6 +348,9 @@ document.getElementById('add-item').addEventListener('click', function() {
             el.value = '0';
         }
     });
+    
+    const promotionLabel = newItem.querySelector('.promotion-label');
+    if (promotionLabel) promotionLabel.classList.add('hidden');
     
     newItem.querySelector('.remove-item').classList.remove('hidden');
     container.appendChild(newItem);
