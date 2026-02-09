@@ -9,7 +9,7 @@ class SalesInvoice extends Model
     protected $fillable = [
         'invoice_number', 'marketer_id', 'store_id', 'total_amount', 'subtotal',
         'product_discount', 'invoice_discount_type', 'invoice_discount_value',
-        'invoice_discount_amount', 'status', 'keeper_id', 'stamped_invoice_image',
+        'invoice_discount_amount', 'invoice_discount_tier_id', 'status', 'keeper_id', 'stamped_invoice_image',
         'confirmed_at', 'notes'
     ];
 
@@ -35,6 +35,11 @@ class SalesInvoice extends Model
     public function keeper()
     {
         return $this->belongsTo(User::class, 'keeper_id');
+    }
+
+    public function invoiceDiscountTier()
+    {
+        return $this->belongsTo(InvoiceDiscountTier::class, 'invoice_discount_tier_id');
     }
 
     public function items()

@@ -59,6 +59,7 @@ class SalesService
                 'invoice_discount_type' => $invoiceDiscount['type'],
                 'invoice_discount_value' => $invoiceDiscount['value'],
                 'invoice_discount_amount' => $invoiceDiscount['amount'],
+                'invoice_discount_tier_id' => $invoiceDiscount['tier_id'],
                 'total_amount' => $totalAmount,
                 'status' => 'pending',
                 'notes' => $notes,
@@ -163,7 +164,7 @@ class SalesService
             ->first();
 
         if (!$tier) {
-            return ['type' => null, 'value' => null, 'amount' => 0];
+            return ['type' => null, 'value' => null, 'amount' => 0, 'tier_id' => null];
         }
 
         $amount = $tier->discount_type === 'percentage'
@@ -173,7 +174,8 @@ class SalesService
         return [
             'type' => $tier->discount_type,
             'value' => $tier->discount_type === 'percentage' ? $tier->discount_percentage : $tier->discount_amount,
-            'amount' => $amount
+            'amount' => $amount,
+            'tier_id' => $tier->id
         ];
     }
 
