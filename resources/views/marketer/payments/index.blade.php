@@ -4,8 +4,8 @@
 
 @section('content')
 
-<div class="min-h-screen py-8">
-    <div class="max-w-[1600px] mx-auto space-y-8 px-2">
+<div class="min-h-screen py-4 md:py-8">
+    <div class="max-w-[1600px] mx-auto space-y-6 md:space-y-8 px-4 md:px-2">
         
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-down">
             <div class="lg:col-span-8">
@@ -14,20 +14,20 @@
                         إدارة التسديدات
                     </span>
                 </div>
-                <h1 class="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
+                <h1 class="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
                     إيصالات القبض
                 </h1>
             </div>
 
-            <div class="lg:col-span-4 lg:translate-y-[30px]">
-                <a href="{{ route('marketer.payments.create') }}" class="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2 w-full">
+            <div class="lg:col-span-4">
+                <a href="{{ route('marketer.payments.create') }}" class="px-6 md:px-8 py-3 md:py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2 w-full">
                     <i data-lucide="plus-circle" class="w-5 h-5"></i>
                     إيصال جديد
                 </a>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
             <div class="lg:col-span-8">
                 @include('shared.payments._status-tabs', ['route' => fn($params) => route('marketer.payments.index', $params)])
 
@@ -35,7 +35,7 @@
             @forelse($payments as $payment)
                 @include('shared.payments._payment-card', [
                     'payment' => $payment,
-                    'slot' => '<div class="flex items-center gap-2 mb-2"><i data-lucide="store" class="w-4 h-4 text-gray-400"></i><span class="text-sm font-bold text-gray-700 dark:text-gray-300">' . $payment->store->name . '</span></div>',
+                    'slot' => '<div class="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-800 w-fit"><i data-lucide="store" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i><span class="text-sm font-bold text-blue-700 dark:text-blue-300">' . $payment->store->name . '</span></div>',
                     'actions' => '<a href="' . route('marketer.payments.show', $payment) . '" class="px-5 py-2.5 bg-white dark:bg-dark-card border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-all text-sm flex items-center gap-2 shadow-sm"><i data-lucide="eye" class="w-4 h-4"></i>التفاصيل</a>'
                 ])
             @empty
@@ -60,19 +60,19 @@
                 </div>
             </div>
 
-            <div class="lg:col-span-4">
-                <div class="bg-white dark:bg-dark-card rounded-[2rem] p-6 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6 animate-slide-up">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="bg-emerald-50 dark:bg-emerald-900/20 p-2.5 rounded-xl text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-100 dark:border-emerald-600/30">
-                            <i data-lucide="percent" class="w-5 h-5"></i>
+            <div class="lg:col-span-4 order-first lg:order-last">
+                <div class="bg-white dark:bg-dark-card rounded-2xl md:rounded-[2rem] p-4 md:p-6 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border mb-4 md:mb-6 animate-slide-up">
+                    <div class="flex items-center gap-3 mb-3 md:mb-4">
+                        <span class="bg-emerald-50 dark:bg-emerald-900/20 p-2 md:p-2.5 rounded-xl text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-100 dark:border-emerald-600/30">
+                            <i data-lucide="percent" class="w-4 h-4 md:w-5 md:h-5"></i>
                         </span>
-                        <h3 class="font-bold text-lg text-gray-900 dark:text-white">نسبة العمولة</h3>
+                        <h3 class="font-bold text-base md:text-lg text-gray-900 dark:text-white">نسبة العمولة</h3>
                     </div>
-                    <div class="text-center py-6">
-                        <div class="text-5xl font-black text-emerald-600 dark:text-emerald-400 mb-2">
+                    <div class="text-center py-4 md:py-6">
+                        <div class="text-4xl md:text-5xl font-black text-emerald-600 dark:text-emerald-400 mb-2">
                             {{ number_format(auth()->user()->commission_rate ?? 0, 1) }}%
                         </div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">من كل تسديد موثق</p>
+                        <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400">من كل تسديد موثق</p>
                     </div>
                 </div>
 

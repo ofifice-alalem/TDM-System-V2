@@ -61,7 +61,7 @@
                     <div class="space-y-4">
                         <div class="flex justify-between items-center py-3 border-b border-gray-200 dark:border-dark-border">
                             <span class="text-gray-600 dark:text-gray-400 font-medium">المبلغ المسدد</span>
-                            <span class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ number_format($payment->amount, 2) }} د.ل</span>
+                            <span class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ number_format($payment->amount, 2) }} دينار</span>
                         </div>
                         <div class="flex justify-between items-center py-3">
                             <span class="text-gray-600 dark:text-gray-400 font-medium">طريقة الدفع</span>

@@ -51,6 +51,32 @@
                             </div>
                         </div>
                     </div>
+
+                    @if($payment->status === 'approved')
+                        @php
+                            $commission = \App\Models\MarketerCommission::where('payment_id', $payment->id)->first();
+                        @endphp
+                        @if($commission)
+                        <div class="mt-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-5 border-2 border-emerald-200 dark:border-emerald-800">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="bg-emerald-100 dark:bg-emerald-900/40 p-2 rounded-lg text-emerald-600 dark:text-emerald-400">
+                                    <i data-lucide="percent" class="w-4 h-4"></i>
+                                </span>
+                                <h3 class="font-bold text-base text-emerald-900 dark:text-emerald-300">عمولتك من هذا الإيصال</h3>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-white/60 dark:bg-dark-bg/40 rounded-xl p-3 border border-emerald-200 dark:border-emerald-800">
+                                    <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mb-1 font-bold uppercase">نسبة العمولة</p>
+                                    <p class="text-2xl font-black text-emerald-700 dark:text-emerald-300">{{ number_format($commission->commission_rate, 1) }}%</p>
+                                </div>
+                                <div class="bg-white/60 dark:bg-dark-bg/40 rounded-xl p-3 border border-emerald-200 dark:border-emerald-800">
+                                    <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mb-1 font-bold uppercase">مبلغ العمولة</p>
+                                    <p class="text-xl font-black text-emerald-700 dark:text-emerald-300">{{ number_format($commission->commission_amount, 2) }} <span class="text-xs">دينار</span></p>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                    @endif
                 </div>
 
                 <div class="bg-white dark:bg-dark-card rounded-[2rem] p-6 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
@@ -63,7 +89,7 @@
                     <div class="space-y-4">
                         <div class="flex justify-between items-center py-3 border-b border-gray-200 dark:border-dark-border">
                             <span class="text-gray-600 dark:text-gray-400 font-medium">المبلغ المسدد</span>
-                            <span class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ number_format($payment->amount, 2) }} د.ل</span>
+                            <span class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ number_format($payment->amount, 2) }} دينار</span>
                         </div>
                         <div class="flex justify-between items-center py-3 border-b border-gray-200 dark:border-dark-border">
                             <span class="text-gray-600 dark:text-gray-400 font-medium">طريقة الدفع</span>
