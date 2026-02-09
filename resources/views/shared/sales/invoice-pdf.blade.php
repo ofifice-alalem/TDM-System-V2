@@ -54,11 +54,11 @@
         td.product-name { text-align: right; padding-right: 6px; }
         td.quantity { font-family: 'DejaVu Sans', sans-serif; direction: ltr; }
         tr:nth-child(even) td { background-color: #f5f5f5; }
-        .totals-box { background-color: #f8f9fa; padding: 8px; border-radius: 3px; margin-top: 10px; border: 1px solid #333; text-align: right; }
-        .total-row { display: block; margin-bottom: 4px; font-size: 11px; font-weight: bold; }
-        .total-row.final { font-size: 14px; color: #000; background-color: #e9ecef; padding: 4px; border-radius: 2px; }
+        .totals-box { background-color: #f8f9fa; padding: 8px; border-radius: 3px; margin-top: 10px; border: 1px solid #333; text-align: right; direction: rtl; }
+        .total-row { display: block; margin-bottom: 4px; font-size: 11px; font-weight: bold; direction: rtl; }
+        .total-row.final { font-size: 14px; color: #000; background-color: #e9ecef; padding: 4px; border-radius: 2px; direction: rtl; }
         .signatures { position: fixed; bottom: 10px; left: 10px; right: 10px; }
-        .signature-box { display: inline-block; width: 45%; text-align: center; border-top: 1px solid #000; padding-top: 10px; margin: 0 2%; font-size: 10px; }
+        .signature-box { display: inline-block; width: 30%; text-align: center; border-top: 1px solid #000; padding-top: 10px; margin: 0 1.5%; font-size: 10px; }
     </style>
 </head>
 <body>
@@ -102,7 +102,7 @@
             <tr>
                 <td class="quantity">{{ $item->total_price }}</td>
                 <td class="quantity">{{ $item->unit_price }}</td>
-                <td class="quantity" style="color: #059669; font-weight: bold;">{{ $item->free_quantity }}</td>
+                <td class="quantity">{{ $item->free_quantity > 0 ? $item->free_quantity : '---' }}</td>
                 <td class="quantity">{{ $item->quantity }}</td>
                 <td class="product-name">{{ $item->name }}</td>
                 <td class="quantity">{{ $index + 1 }}</td>
@@ -113,24 +113,25 @@
 
     <div class="totals-box">
         <div class="total-row">
-            {{ $subtotal }} {{ $labels['currency'] }} :<span class="label">{{ $labels['subtotal'] }}</span>
+            {{ $labels['currency'] }} {{ $subtotal }} :<span class="label">{{ $labels['subtotal'] }}</span>
         </div>
         @if($productDiscount > 0)
         <div class="total-row" style="color: #059669;">
-            {{ $productDiscount }} {{ $labels['currency'] }} :<span class="label">{{ $labels['productDiscount'] }}</span>
+            {{ $labels['currency'] }} {{ $productDiscount }} :<span class="label">{{ $labels['productDiscount'] }}</span>
         </div>
         @endif
         @if($invoiceDiscount > 0)
         <div class="total-row" style="color: #2563eb;">
-            {{ $invoiceDiscount }} {{ $labels['currency'] }} :<span class="label">{{ $labels['invoiceDiscount'] }}</span>
+            {{ $labels['currency'] }} {{ $invoiceDiscount }} :<span class="label">{{ $labels['invoiceDiscount'] }}</span>
         </div>
         @endif
         <div class="total-row final">
-            {{ $totalAmount }} {{ $labels['currency'] }} :<span class="label">{{ $labels['finalTotal'] }}</span>
+            {{ $labels['currency'] }} {{ $totalAmount }} :<span class="label">{{ $labels['finalTotal'] }}</span>
         </div>
     </div>
 
     <div class="signatures">
+        <div class="signature-box">{{ $labels['store'] }}</div>
         <div class="signature-box">{{ $labels['marketer'] }}</div>
         <div class="signature-box">{{ $labels['keeper'] }}</div>
     </div>

@@ -27,6 +27,8 @@ class InvoiceController extends Controller
             'cancelled' => 'ملغي'
         ];
 
+        $totalWithGifts = $sale->subtotal + $sale->product_discount;
+        
         $data = [
             'invoiceNumber' => $sale->invoice_number,
             'date' => $sale->created_at ? $sale->created_at->format('Y-m-d H:i') : '',
@@ -34,17 +36,19 @@ class InvoiceController extends Controller
             'storeName' => $arabic->utf8Glyphs($sale->store->name ?? 'غير متوفر'),
             'status' => $arabic->utf8Glyphs($statusLabels[$sale->status] ?? 'غير محدد'),
             'isInvalid' => $sale->status === 'cancelled',
-            'subtotal' => number_format($sale->subtotal, 2),
+            'subtotal' => number_format($totalWithGifts, 2),
             'productDiscount' => number_format($sale->product_discount, 2),
             'invoiceDiscount' => number_format($sale->invoice_discount_amount, 2),
             'totalAmount' => number_format($sale->total_amount, 2),
             'items' => $sale->items->map(function($item) use ($arabic, $toEnglishNumbers) {
+                $totalQty = $item->quantity + $item->free_quantity;
+                $totalPrice = $totalQty * $item->unit_price;
                 return (object)[
                     'name' => $toEnglishNumbers($arabic->utf8Glyphs($item->product->name ?? 'غير متوفر')),
-                    'quantity' => $item->quantity,
+                    'quantity' => $totalQty,
                     'free_quantity' => $item->free_quantity,
                     'unit_price' => number_format($item->unit_price, 2),
-                    'total_price' => number_format($item->total_price, 2)
+                    'total_price' => number_format($totalPrice, 2)
                 ];
             }),
             'title' => $arabic->utf8Glyphs('فاتورة بيع'),
@@ -56,7 +60,7 @@ class InvoiceController extends Controller
                 'keeper' => $arabic->utf8Glyphs('أمين المخزن'),
                 'product' => $arabic->utf8Glyphs('المنتج'),
                 'quantity' => $arabic->utf8Glyphs('الكمية'),
-                'free' => $arabic->utf8Glyphs('هدية'),
+                'free' => $arabic->utf8Glyphs('التخفيض'),
                 'price' => $arabic->utf8Glyphs('السعر'),
                 'total' => $arabic->utf8Glyphs('الإجمالي'),
                 'subtotal' => $arabic->utf8Glyphs('السعر الكلي'),
@@ -74,6 +78,6 @@ class InvoiceController extends Controller
             ->setOption('isHtml5ParserEnabled', true)
             ->setOption('isFontSubsettingEnabled', true);
 
-        return $pdf->stream('invoice-' . $sale->invoice_number . '.pdf');
+        return $pdf->download('invoice-' . $sale->invoice_number . '.pdf');
     }
 }
