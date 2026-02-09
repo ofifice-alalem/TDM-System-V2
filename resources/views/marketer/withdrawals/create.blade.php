@@ -3,11 +3,11 @@
 @section('title', 'طلب سحب جديد')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
-    <div class="mb-6">
-        <a href="{{ route('marketer.withdrawals.index') }}" class="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-accent-400 transition-colors">
+<div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-6 flex justify-end">
+        <a href="{{ route('marketer.withdrawals.index') }}" class="px-12 py-4 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors shadow-lg shadow-gray-200/50 dark:shadow-none flex items-center gap-2">
             <i data-lucide="arrow-right" class="w-5 h-5"></i>
-            <span class="font-bold">العودة للقائمة</span>
+            عودة
         </a>
     </div>
 
@@ -39,7 +39,8 @@
                     
                     <div class="mb-6">
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">المبلغ المطلوب *</label>
-                        <input type="number" step="0.01" name="requested_amount" value="{{ old('requested_amount') }}" max="{{ $availableBalance }}" required class="w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-500 focus:border-transparent transition-all text-gray-900 dark:text-white">
+                        <input type="number" step="0.01" name="requested_amount" value="{{ old('requested_amount') }}" min="0.01" max="{{ $availableBalance }}" required class="w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-500 focus:border-transparent transition-all text-gray-900 dark:text-white">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">الحد الأقصى: {{ number_format($availableBalance, 2) }} دينار</p>
                         @error('requested_amount')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -63,4 +64,19 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const amountInput = document.querySelector('input[name="requested_amount"]');
+        const maxAmount = {{ $availableBalance }};
+        
+        amountInput.addEventListener('input', function() {
+            if (parseFloat(this.value) > maxAmount) {
+                this.value = maxAmount;
+            }
+        });
+    });
+</script>
+@endpush
 @endsection

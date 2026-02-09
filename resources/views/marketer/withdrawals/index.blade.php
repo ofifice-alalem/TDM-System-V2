@@ -25,9 +25,17 @@
                     <i data-lucide="hand-coins" class="w-5 h-5"></i>
                     طلب سحب جديد
                 </a>
-                <div class="bg-white dark:bg-dark-card rounded-2xl px-6 py-3 shadow-lg border border-gray-200 dark:border-dark-border">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">الرصيد المتاح</p>
-                    <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ number_format($availableBalance, 2) }} دينار</p>
+                <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 rounded-2xl px-8 py-6 shadow-2xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
+                    <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+                    <div class="absolute top-1/2 left-1/2 w-24 h-24 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i data-lucide="wallet" class="w-5 h-5 text-white/90"></i>
+                            <p class="text-sm text-white/90 font-bold uppercase tracking-widest">الرصيد المتاح</p>
+                        </div>
+                        <p class="text-5xl font-black text-white tracking-tight">{{ number_format($availableBalance, 2) }} <span class="text-2xl">دينار</span></p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -35,7 +43,7 @@
         {{-- Withdrawals List --}}
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {{-- Main List --}}
-            <div class="lg:col-span-8">
+            <div class="lg:col-span-8 lg:-mt-[130px]">
                 @include('shared.withdrawals._status-tabs', ['route' => fn($params) => route('marketer.withdrawals.index', $params)])
 
                 <div class="bg-white dark:bg-dark-card rounded-[2rem] p-4 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
