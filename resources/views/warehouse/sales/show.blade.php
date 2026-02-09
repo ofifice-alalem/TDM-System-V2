@@ -191,6 +191,7 @@
                             $statusConfig = [
                                 'pending' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-600 dark:text-amber-400', 'icon' => 'clock', 'label' => 'قيد الانتظار'],
                                 'approved' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-600 dark:text-emerald-400', 'icon' => 'check-circle', 'label' => 'موثق'],
+                                'rejected' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-600 dark:text-red-400', 'icon' => 'x-circle', 'label' => 'مرفوض'],
                                 'cancelled' => ['bg' => 'bg-gray-100 dark:bg-gray-800', 'text' => 'text-gray-500', 'icon' => 'slash', 'label' => 'ملغي'],
                             ][$invoice->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-500', 'icon' => 'help-circle', 'label' => $invoice->status];
                         @endphp
@@ -211,17 +212,78 @@
 
                     <div class="mt-8 pt-6 border-t border-gray-200 dark:border-dark-border z-10 relative">
                         @if($invoice->status === 'pending')
-                            <form action="{{ route('warehouse.sales.approve', $invoice) }}" method="POST" enctype="multipart/form-data">
+                            <form action="{{ route('warehouse.sales.approve', $invoice) }}" method="POST" enctype="multipart/form-data" class="mb-4">
                                 @csrf
                                 <div class="mb-4">
-                                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">صورة الفاتورة المختومة</label>
-                                    <input type="file" name="stamped_invoice_image" accept="image/*" required class="w-full bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm">
+                                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">صورة الفاتورة المختومة</label>
+                                    <div class="relative">
+                                        <input type="file" name="stamped_invoice_image" id="invoice_image" accept="image/*" required class="hidden">
+                                        <label for="invoice_image" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-dark-border rounded-xl cursor-pointer bg-gray-50 dark:bg-dark-bg hover:bg-gray-100 dark:hover:bg-dark-card transition-all group">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i data-lucide="upload" class="w-8 h-8 mb-2 text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors"></i>
+                                                <p class="mb-1 text-sm text-gray-500 dark:text-gray-400 font-bold">
+                                                    <span class="text-primary-600 dark:text-primary-400">اضغط للرفع</span> أو اسحب الصورة
+                                                </p>
+                                                <p class="text-xs text-gray-400 dark:text-gray-500">PNG, JPG أو JPEG (الحد الأقصى 2MB)</p>
+                                            </div>
+                                        </label>
+                                        <div id="preview" class="hidden mt-3 relative">
+                                            <img id="preview_image" class="w-full h-40 object-cover rounded-xl border-2 border-gray-200 dark:border-dark-border">
+                                            <button type="button" onclick="document.getElementById('invoice_image').value=''; document.getElementById('preview').classList.add('hidden')" class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg transition-colors">
+                                                <i data-lucide="x" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 group">
                                     <i data-lucide="check" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
                                     توثيق الفاتورة
                                 </button>
                             </form>
+
+                            <div x-data="{ showReject: false }">
+                                <button 
+                                    type="button" 
+                                    x-show="!showReject"
+                                    @click="showReject = true"
+                                    class="w-full bg-white dark:bg-dark-card border-2 border-red-50 dark:border-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-100 dark:hover:border-red-800 py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group shadow-sm">
+                                    <i data-lucide="x-circle" class="w-5 h-5 group-hover:rotate-90 transition-transform"></i>
+                                    رفض الفاتورة
+                                </button>
+
+                                <div 
+                                    x-show="showReject" 
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 -translate-y-2"
+                                    x-transition:enter-end="opacity-100 translate-y-0"
+                                    class="bg-red-50 dark:bg-red-900/10 rounded-2xl p-4 border border-red-100 dark:border-red-900/30"
+                                    style="display: none;">
+                                    
+                                    <form action="{{ route('warehouse.sales.reject', $invoice) }}" method="POST">
+                                        @csrf
+                                        
+                                        <label class="block text-xs font-bold text-red-800 dark:text-red-300 mb-2 mr-1">سبب الرفض:</label>
+                                        <textarea 
+                                            name="notes" 
+                                            rows="2" 
+                                            class="w-full bg-white dark:bg-dark-bg border border-red-200 dark:border-red-800 rounded-xl p-3 text-sm focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-200 dark:focus:ring-red-900/50 transition-all placeholder:text-red-300 dark:placeholder:text-red-700 dark:text-white mb-3" 
+                                            placeholder="اكتب السبب هنا..." 
+                                            required></textarea>
+                                        
+                                        <div class="flex gap-2">
+                                            <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-sm">
+                                                تأكيد الرفض
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                @click="showReject = false"
+                                                class="px-4 py-2.5 bg-white dark:bg-dark-card border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 font-bold rounded-xl text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                                تراجع
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         @else
                             <a href="{{ route('marketer.sales.pdf', $invoice) }}" target="_blank" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group">
                                 <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
@@ -241,6 +303,22 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
+        
+        const input = document.getElementById('invoice_image');
+        if (input) {
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('preview_image').src = e.target.result;
+                        document.getElementById('preview').classList.remove('hidden');
+                        lucide.createIcons();
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
     });
 </script>
 @endpush

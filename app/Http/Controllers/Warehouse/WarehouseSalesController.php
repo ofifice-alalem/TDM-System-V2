@@ -70,6 +70,31 @@ class WarehouseSalesController extends Controller
         }
     }
 
+    public function reject(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'notes' => 'required|string|max:500'
+        ]);
+
+        try {
+            $invoice = SalesInvoice::where('id', $id)
+                ->where('status', 'pending')
+                ->firstOrFail();
+
+            $invoice->update([
+                'status' => 'rejected',
+                'rejected_by' => auth()->id(),
+                'rejected_at' => now(),
+                'notes' => $validated['notes']
+            ]);
+
+            return redirect()->route('warehouse.sales.index')
+                ->with('success', 'تم رفض الفاتورة');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
     public function viewDocumentation($id)
     {
         $invoice = SalesInvoice::findOrFail($id);

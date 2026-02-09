@@ -9,8 +9,8 @@ class SalesInvoice extends Model
     protected $fillable = [
         'invoice_number', 'marketer_id', 'store_id', 'total_amount', 'subtotal',
         'product_discount', 'invoice_discount_type', 'invoice_discount_value',
-        'invoice_discount_amount', 'invoice_discount_tier_id', 'status', 'keeper_id', 'stamped_invoice_image',
-        'confirmed_at', 'notes'
+        'invoice_discount_amount', 'invoice_discount_tier_id', 'status', 'keeper_id', 
+        'rejected_by', 'rejected_at', 'stamped_invoice_image', 'confirmed_at', 'notes'
     ];
 
     protected $casts = [
@@ -20,6 +20,7 @@ class SalesInvoice extends Model
         'invoice_discount_value' => 'decimal:2',
         'invoice_discount_amount' => 'decimal:2',
         'confirmed_at' => 'datetime',
+        'rejected_at' => 'datetime',
     ];
 
     public function marketer()
@@ -40,6 +41,11 @@ class SalesInvoice extends Model
     public function invoiceDiscountTier()
     {
         return $this->belongsTo(InvoiceDiscountTier::class, 'invoice_discount_tier_id');
+    }
+
+    public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 
     public function items()

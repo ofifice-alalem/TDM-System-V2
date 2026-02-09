@@ -35,7 +35,7 @@ class InvoiceController extends Controller
             'marketerName' => $arabic->utf8Glyphs($sale->marketer->full_name ?? 'غير متوفر'),
             'storeName' => $arabic->utf8Glyphs($sale->store->name ?? 'غير متوفر'),
             'status' => $arabic->utf8Glyphs($statusLabels[$sale->status] ?? 'غير محدد'),
-            'isInvalid' => $sale->status === 'cancelled',
+            'isInvalid' => in_array($sale->status, ['cancelled', 'rejected']),
             'subtotal' => number_format($totalWithGifts, 2),
             'productDiscount' => number_format($sale->product_discount, 2),
             'invoiceDiscount' => number_format($sale->invoice_discount_amount, 2),
