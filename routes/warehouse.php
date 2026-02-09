@@ -31,5 +31,10 @@ Route::middleware(['web'])->group(function () {
             Route::post('{id}/reject', [\App\Http\Controllers\Warehouse\WarehouseSalesController::class, 'reject'])->name('reject');
             Route::get('{id}/documentation', [\App\Http\Controllers\Warehouse\WarehouseSalesController::class, 'viewDocumentation'])->name('documentation');
         });
+
+        Route::prefix('stores')->name('stores.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Shared\StoreController::class, 'index'])->name('index');
+            Route::get('/{store}', [\App\Http\Controllers\Shared\StoreController::class, 'show'])->name('show');
+        });
     });
 });

@@ -23,5 +23,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('/{promotion}/toggle', [ProductPromotionController::class, 'toggleActive'])->name('toggle');
         Route::delete('/{promotion}', [ProductPromotionController::class, 'destroy'])->name('destroy');
     });
+
+    // Stores Management
+    Route::prefix('stores')->name('stores.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Shared\StoreController::class, 'index'])->name('index');
+        Route::get('/{store}', [\App\Http\Controllers\Shared\StoreController::class, 'show'])->name('show');
+    });
     
 });

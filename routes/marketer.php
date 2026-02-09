@@ -45,5 +45,10 @@ Route::middleware(['web'])->group(function () {
             Route::delete('/{sale}/cancel', [SalesController::class, 'cancel'])->name('cancel');
             Route::get('/{sale}/pdf', [\App\Http\Controllers\Shared\Sales\InvoiceController::class, 'generateSalesInvoicePdf'])->name('pdf');
         });
+
+        Route::prefix('stores')->name('stores.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Shared\StoreController::class, 'index'])->name('index');
+            Route::get('/{store}', [\App\Http\Controllers\Shared\StoreController::class, 'show'])->name('show');
+        });
     });
 });
