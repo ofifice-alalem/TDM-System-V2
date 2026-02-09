@@ -28,9 +28,9 @@
             </a>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
-            <div class="lg:col-span-2 space-y-6 animate-slide-up">
+            <div class="lg:col-span-8 space-y-6 animate-slide-up">
                 
                 <div class="bg-white dark:bg-dark-card rounded-[2rem] p-6 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
                     <div class="flex items-center gap-3 mb-6">
@@ -98,7 +98,7 @@
                 @endif
             </div>
 
-            <div class="space-y-6 animate-slide-up" style="animation-delay: 0.1s">
+            <div class="lg:col-span-4 space-y-6 animate-slide-up" style="animation-delay: 0.1s">
                 
                 <div class="bg-gray-50 dark:bg-dark-card/50 rounded-[1.5rem] border-2 border-dashed border-gray-200 dark:border-dark-border p-6">
                     <h3 class="text-gray-800 dark:text-gray-200 font-bold text-lg mb-6 flex items-center gap-2">
@@ -123,8 +123,14 @@
                         <p class="text-xs text-gray-400 dark:text-dark-muted mt-2 font-medium">آخر تحديث: {{ $payment->created_at->diffForHumans() }}</p>
                     </div>
 
-                    @if($payment->status === 'pending')
-                        <div x-data="{ showCancel: false }" class="mt-6 pt-6 border-t border-gray-200 dark:border-dark-border">
+                    <div class="mt-8 pt-6 border-t border-gray-200 dark:border-dark-border z-10 relative">
+                        <a href="{{ route('marketer.payments.pdf', $payment) }}" target="_blank" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group">
+                            <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                            طباعة PDF
+                        </a>
+
+                        @if($payment->status === 'pending')
+                            <div x-data="{ showCancel: false }" class="mt-4">
                             <button 
                                 type="button" 
                                 x-show="!showCancel"
@@ -165,8 +171,9 @@
                                     </div>
                                 </form>
                             </div>
-                        </div>
-                    @endif
+                            </div>
+                        @endif
+                    </div>
                 </div>
 
             </div>

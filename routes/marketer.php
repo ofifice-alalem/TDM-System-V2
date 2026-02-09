@@ -56,6 +56,7 @@ Route::middleware(['web'])->group(function () {
             Route::get('/create', [\App\Http\Controllers\Marketer\PaymentController::class, 'create'])->name('create');
             Route::post('/', [\App\Http\Controllers\Marketer\PaymentController::class, 'store'])->name('store');
             Route::get('/{payment}', [\App\Http\Controllers\Marketer\PaymentController::class, 'show'])->name('show');
+            Route::get('/{payment}/pdf', [\App\Http\Controllers\Shared\Payment\InvoiceController::class, 'generatePaymentInvoicePdf'])->name('pdf');
             Route::patch('/{payment}/cancel', [\App\Http\Controllers\Marketer\PaymentController::class, 'cancel'])->name('cancel');
             Route::get('/store/{storeId}/debt', [\App\Http\Controllers\Marketer\PaymentController::class, 'getStoreDebt'])->name('store.debt');
         });
