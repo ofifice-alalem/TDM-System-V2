@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class StorePayment extends Model
 {
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'payment_number', 'store_id', 'marketer_id', 'keeper_id',
         'amount', 'payment_method', 'status', 'receipt_image',
