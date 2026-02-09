@@ -83,10 +83,16 @@ class SalesController extends Controller
         return view('marketer.sales.show', ['invoice' => $sale]);
     }
 
-    public function cancel(SalesInvoice $sale)
+    public function cancel(SalesInvoice $sale, Request $request)
     {
+        $validated = $request->validate([
+            'notes' => 'required|string|max:500'
+        ]);
+        
         try {
             $this->service->cancelInvoice($sale->id, auth()->id());
+            $sale->update(['notes' => $validated['notes']]);
+            
             return redirect()->route('marketer.sales.index')
                 ->with('success', 'تم إلغاء الفاتورة بنجاح');
         } catch (\Exception $e) {

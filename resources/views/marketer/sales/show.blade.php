@@ -53,8 +53,8 @@
                                 <p class="font-black text-gray-900 dark:text-white text-lg">{{ $invoice->store->name }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-400 dark:text-dark-muted mb-2 font-bold uppercase tracking-wider">صاحب المتجر</p>
-                                <p class="font-black text-gray-900 dark:text-white text-lg">{{ $invoice->store->owner_name }}</p>
+                                <p class="text-xs text-gray-400 dark:text-dark-muted mb-2 font-bold uppercase tracking-wider">الرقم</p>
+                                <p class="font-black text-gray-900 dark:text-white text-lg">{{ $invoice->store->phone ?? '---' }}</p>
                             </div>
                         </div>
                     </div>
@@ -108,10 +108,10 @@
                                         <span class="inline-flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-black px-6 py-2 rounded-xl text-lg shadow-sm">{{ $item->free_quantity }}</span>
                                     </td>
                                     <td class="px-4 md:px-6 py-4 md:py-5 bg-gray-50/50 dark:bg-dark-bg/60 border-y border-gray-100 dark:border-dark-border group-hover:bg-white dark:group-hover:bg-dark-card group-hover:shadow-md group-hover:border-primary-100 dark:group-hover:border-accent-500/30 transition-all text-center">
-                                        <span class="font-bold text-gray-700 dark:text-gray-300">{{ number_format($item->unit_price, 2) }}</span>
+                                        <span class="font-bold text-gray-700 dark:text-gray-300">{{ number_format($item->unit_price, 2) }} دينار</span>
                                     </td>
                                     <td class="px-4 md:px-6 py-4 md:py-5 bg-gray-50/50 dark:bg-dark-bg/60 rounded-l-2xl border border-gray-100 dark:border-dark-border group-hover:bg-white dark:group-hover:bg-dark-card group-hover:shadow-md group-hover:border-primary-100 dark:group-hover:border-accent-500/30 transition-all text-center">
-                                        <span class="font-black text-gray-900 dark:text-gray-100 text-lg">{{ number_format($item->total_price, 2) }}</span>
+                                        <span class="font-black text-gray-900 dark:text-gray-100 text-lg">{{ number_format(($item->quantity + $item->free_quantity) * $item->unit_price, 2) }} دينار</span>
                                     </td>
                                 </tr>
                                 @endforeach
@@ -119,31 +119,35 @@
                         </table>
                     </div>
 
-                    <div class="mt-8 bg-gray-900 dark:bg-black/40 rounded-3xl p-8 shadow-xl shadow-gray-200 dark:shadow-none text-white flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden group">
-                        <div class="absolute top-0 left-0 w-64 h-64 bg-emerald-500 dark:bg-accent-500 rounded-full mix-blend-overlay dark:mix-blend-screen filter blur-[60px] opacity-20 dark:opacity-10 -translate-x-1/2 -translate-y-1/2 transition-transform duration-700 group-hover:scale-125"></div>
+                    <div class="mt-8 bg-gradient-to-br from-primary-50 to-primary-100/50 dark:from-gray-900 dark:to-black rounded-3xl p-8 border-2 border-primary-100 dark:border-transparent text-gray-900 dark:text-white flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden group">
+                        <div class="absolute top-0 left-0 w-64 h-64 bg-primary-200 dark:bg-accent-500 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[60px] opacity-30 dark:opacity-10 -translate-x-1/2 -translate-y-1/2 transition-transform duration-700 group-hover:scale-125"></div>
                         
-                        <div class="relative z-10 w-full space-y-3">
-                            <div class="flex justify-between text-sm">
-                                <span>المجموع الفرعي:</span>
-                                <span class="font-bold">{{ number_format($invoice->subtotal, 2) }} ر.س</span>
+                        <div class="relative z-10 w-full space-y-4">
+                            <div class="flex justify-between text-base">
+                                <span class="font-semibold text-gray-700 dark:text-white">عدد البضاعة:</span>
+                                <span class="font-black text-xl text-gray-900 dark:text-white">{{ $invoice->items->sum(fn($item) => $item->quantity + $item->free_quantity) }}</span>
+                            </div>
+                            <div class="flex justify-between text-base">
+                                <span class="font-semibold text-gray-700 dark:text-white">المجموع الفرعي:</span>
+                                <span class="font-black text-xl text-gray-900 dark:text-white">{{ number_format($invoice->subtotal + $invoice->product_discount, 2) }} دينار</span>
                             </div>
                             @if($invoice->product_discount > 0)
-                            <div class="flex justify-between text-sm text-emerald-400">
-                                <span>خصم المنتجات (هدايا):</span>
-                                <span class="font-bold">- {{ number_format($invoice->product_discount, 2) }} ر.س</span>
+                            <div class="flex justify-between text-base text-emerald-600 dark:text-emerald-300">
+                                <span class="font-semibold">خصم المنتجات (هدايا):</span>
+                                <span class="font-black text-xl">- {{ number_format($invoice->product_discount, 2) }} دينار</span>
                             </div>
                             @endif
                             @if($invoice->invoice_discount_amount > 0)
-                            <div class="flex justify-between text-sm text-blue-400">
-                                <span>خصم الفاتورة:</span>
-                                <span class="font-bold">- {{ number_format($invoice->invoice_discount_amount, 2) }} ر.س</span>
+                            <div class="flex justify-between text-base text-blue-600 dark:text-blue-300">
+                                <span class="font-semibold">خصم الفاتورة:</span>
+                                <span class="font-black text-xl">- {{ number_format($invoice->invoice_discount_amount, 2) }} دينار</span>
                             </div>
                             @endif
-                            <div class="pt-3 border-t border-white/10 flex justify-between items-baseline">
-                                <span class="text-base font-bold uppercase tracking-wider">الإجمالي النهائي:</span>
-                                <div class="text-5xl font-black tracking-tighter flex items-baseline gap-2">
+                            <div class="pt-4 border-t-2 border-primary-200 dark:border-white/20 flex justify-between items-baseline">
+                                <span class="text-lg font-bold uppercase tracking-wider text-gray-800 dark:text-white">الإجمالي النهائي:</span>
+                                <div class="text-5xl font-black tracking-tighter flex items-baseline gap-2 text-gray-900 dark:text-white">
                                     {{ number_format($invoice->total_amount, 2) }}
-                                    <span class="text-lg font-bold text-gray-500">ر.س</span>
+                                    <span class="text-xl font-bold text-gray-600 dark:text-gray-300">دينار</span>
                                 </div>
                             </div>
                         </div>
@@ -208,14 +212,50 @@
                         </a>
 
                         @if($invoice->status === 'pending')
-                            <form action="{{ route('marketer.sales.cancel', $invoice) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من إلغاء الفاتورة؟')" class="mt-4">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="w-full bg-white dark:bg-dark-card border-2 border-red-50 dark:border-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-100 dark:hover:border-red-800 py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group shadow-sm">
+                            <div x-data="{ showCancel: false }" class="mt-4">
+                                <button 
+                                    type="button" 
+                                    x-show="!showCancel"
+                                    @click="showCancel = true"
+                                    class="w-full bg-white dark:bg-dark-card border-2 border-red-50 dark:border-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-100 dark:hover:border-red-800 py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group shadow-sm">
                                     <i data-lucide="x-circle" class="w-5 h-5 group-hover:rotate-90 transition-transform"></i>
                                     إلغاء الفاتورة
                                 </button>
-                            </form>
+
+                                <div 
+                                    x-show="showCancel" 
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 -translate-y-2"
+                                    x-transition:enter-end="opacity-100 translate-y-0"
+                                    class="bg-red-50 dark:bg-red-900/10 rounded-2xl p-4 border border-red-100 dark:border-red-900/30"
+                                    style="display: none;">
+                                    
+                                    <form action="{{ route('marketer.sales.cancel', $invoice) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        
+                                        <label class="block text-xs font-bold text-red-800 dark:text-red-300 mb-2 mr-1">سبب الإلغاء:</label>
+                                        <textarea 
+                                            name="notes" 
+                                            rows="2" 
+                                            class="w-full bg-white dark:bg-dark-bg border border-red-200 dark:border-red-800 rounded-xl p-3 text-sm focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-200 dark:focus:ring-red-900/50 transition-all placeholder:text-red-300 dark:placeholder:text-red-700 dark:text-white mb-3" 
+                                            placeholder="اكتب السبب هنا..." 
+                                            required></textarea>
+                                        
+                                        <div class="flex gap-2">
+                                            <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-sm">
+                                                تأكيد الإلغاء
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                @click="showCancel = false"
+                                                class="px-4 py-2.5 bg-white dark:bg-dark-card border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 font-bold rounded-xl text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                                تراجع
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         @endif
                     </div>
                 </div>
