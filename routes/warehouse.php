@@ -23,5 +23,12 @@ Route::middleware(['web'])->group(function () {
             Route::get('{id}/documentation', [WarehouseReturnController::class, 'viewDocumentation'])->name('documentation');
             Route::get('{id}', [WarehouseReturnController::class, 'show'])->name('show');
         });
+
+        Route::prefix('sales')->name('sales.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Warehouse\WarehouseSalesController::class, 'index'])->name('index');
+            Route::get('{id}', [\App\Http\Controllers\Warehouse\WarehouseSalesController::class, 'show'])->name('show');
+            Route::post('{id}/approve', [\App\Http\Controllers\Warehouse\WarehouseSalesController::class, 'approve'])->name('approve');
+            Route::get('{id}/documentation', [\App\Http\Controllers\Warehouse\WarehouseSalesController::class, 'viewDocumentation'])->name('documentation');
+        });
     });
 });

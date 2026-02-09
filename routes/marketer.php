@@ -3,6 +3,7 @@
 use App\Http\Controllers\Marketer\MarketerRequestController;
 use App\Http\Controllers\Marketer\MarketerReturnController;
 use App\Http\Controllers\Marketer\MarketerStockController;
+use App\Http\Controllers\Marketer\SalesController;
 use Illuminate\Support\Facades\Route;
 
 // Temporary: Simulate logged-in marketer (ID=3)
@@ -34,6 +35,15 @@ Route::middleware(['web'])->group(function () {
 
         Route::prefix('promotions')->name('promotions.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Marketer\PromotionController::class, 'index'])->name('index');
+        });
+
+        Route::prefix('sales')->name('sales.')->group(function () {
+            Route::get('/', [SalesController::class, 'index'])->name('index');
+            Route::get('/create', [SalesController::class, 'create'])->name('create');
+            Route::post('/', [SalesController::class, 'store'])->name('store');
+            Route::get('/{sale}', [SalesController::class, 'show'])->name('show');
+            Route::delete('/{sale}/cancel', [SalesController::class, 'cancel'])->name('cancel');
+            Route::get('/{sale}/pdf', [\App\Http\Controllers\Shared\Sales\InvoiceController::class, 'generateSalesInvoicePdf'])->name('pdf');
         });
     });
 });

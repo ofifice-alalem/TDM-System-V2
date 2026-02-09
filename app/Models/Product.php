@@ -12,4 +12,19 @@ class Product extends Model
         'current_price' => 'decimal:2',
         'is_active' => 'boolean',
     ];
+
+    public function mainStock()
+    {
+        return $this->hasOne(MainStock::class);
+    }
+
+    public function salesInvoiceItems()
+    {
+        return $this->hasMany(SalesInvoiceItem::class);
+    }
+
+    public function promotions()
+    {
+        return $this->hasMany(ProductPromotion::class);
+    }
 }
