@@ -23,14 +23,14 @@
                 <div class="bg-white dark:bg-dark-card rounded-3xl p-6 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up" style="animation-delay: 0.2s">
                     
                     {{-- Store Header --}}
-                    <div class="flex items-center justify-between mb-6 pb-6 border-b border-gray-200 dark:border-dark-border">
+                    <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
                         <div class="flex items-center gap-4">
-                            <div class="w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/40 dark:to-primary-800/40 rounded-2xl flex items-center justify-center text-primary-600 dark:text-primary-400 shadow-md">
-                                <i data-lucide="store" class="w-8 h-8"></i>
+                            <div class="w-14 h-14 bg-amber-500 dark:bg-amber-600 rounded-xl flex items-center justify-center text-white">
+                                <i data-lucide="store" class="w-7 h-7"></i>
                             </div>
                             <div>
-                                <h1 class="text-2xl font-black text-gray-900 dark:text-white mb-1">{{ $store->name }}</h1>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">عرض التفاصيل، السجل، الحركات المالية</p>
+                                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $store->name }}</h1>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">عرض التفاصيل، السجل، الحركات المالية</p>
                             </div>
                         </div>
                     </div>
@@ -46,10 +46,10 @@
 
                     <div class="space-y-3">
                         @forelse($transactions as $transaction)
-                            <div class="bg-gray-50 dark:bg-dark-bg rounded-2xl p-5 hover:shadow-md transition-all border border-gray-100 dark:border-dark-border group">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-4 flex-1">
-                                        <div class="w-12 h-12 rounded-xl flex items-center justify-center
+                            <div class="bg-gray-50 dark:bg-dark-bg rounded-2xl p-4 hover:shadow-md transition-all border border-gray-100 dark:border-dark-border group">
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                                    <div class="flex items-start gap-3 flex-1">
+                                        <div class="w-12 h-12 shrink-0 rounded-xl flex items-center justify-center
                                             {{ $transaction['type'] === 'sale' ? 'bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400' : '' }}
                                             {{ $transaction['type'] === 'payment' ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : '' }}
                                             {{ $transaction['type'] === 'return' ? 'bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400' : '' }}
@@ -62,9 +62,9 @@
                                                 <i data-lucide="package-x" class="w-5 h-5"></i>
                                             @endif
                                         </div>
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-2 mb-1">
-                                                <h3 class="font-bold text-gray-900 dark:text-white">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                                <h3 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
                                                     @if($transaction['type'] === 'sale')
                                                         فاتورة مبيعات
                                                     @elseif($transaction['type'] === 'payment')
@@ -73,7 +73,7 @@
                                                         مرتجعات
                                                     @endif
                                                 </h3>
-                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
+                                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold
                                                     {{ $transaction['type'] === 'sale' ? 'bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400' : '' }}
                                                     {{ $transaction['type'] === 'payment' ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : '' }}
                                                     {{ $transaction['type'] === 'return' ? 'bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400' : '' }}
@@ -81,22 +81,22 @@
                                                     {{ $transaction['number'] }}
                                                 </span>
                                             </div>
-                                            <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                                                <span class="flex items-center gap-1">
-                                                    <i data-lucide="calendar" class="w-3 h-3"></i>
+                                            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                                <span class="flex items-center gap-1.5">
+                                                    <i data-lucide="calendar" class="w-4 h-4"></i>
                                                     {{ \Carbon\Carbon::parse($transaction['date'])->format('d M Y') }}
                                                 </span>
-                                                <span class="flex items-center gap-1">
-                                                    <i data-lucide="user" class="w-3 h-3"></i>
+                                                <span class="flex items-center gap-1.5">
+                                                    <i data-lucide="user" class="w-4 h-4"></i>
                                                     {{ $transaction['marketer'] }}
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-3">
+                                    <div class="flex items-center justify-between sm:justify-end gap-3 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-200 dark:border-gray-700">
                                         <div class="text-right">
                                             <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">المبلغ الإجمالي</div>
-                                            <div class="text-lg font-black
+                                            <div class="text-base sm:text-lg font-black
                                                 {{ $transaction['type'] === 'sale' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}
                                             ">
                                                 {{ $transaction['type'] === 'sale' ? '+' : '-' }}{{ number_format($transaction['amount'], 2) }} د.ل
