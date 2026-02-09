@@ -27,10 +27,11 @@ class InvoiceController extends Controller
             'certified_check' => 'شيك مصدق'
         ];
         
-        $remainingDebt = \DB::table('store_debt_ledger')
+        $currentDebt = \DB::table('store_debt_ledger')
             ->where('store_id', $payment->store_id)
-            ->where('created_at', '<=', $payment->created_at)
             ->sum('amount');
+        
+        $remainingDebt = max(0, $currentDebt - $payment->amount);
         
         $data = [
             'paymentNumber' => $payment->payment_number,

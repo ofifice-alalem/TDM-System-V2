@@ -124,10 +124,52 @@
 
                     @if($payment->status === 'pending')
                         <div class="mt-6 pt-6 border-t border-gray-200 dark:border-dark-border space-y-3">
-                            <form action="{{ route('warehouse.payments.approve', $payment->id) }}" method="POST" enctype="multipart/form-data">
+                            <form action="{{ route('warehouse.payments.approve', $payment->id) }}" method="POST" enctype="multipart/form-data" x-data="{ fileName: '', imagePreview: null }">
                                 @csrf
-                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">صورة الإيصال المختوم</label>
-                                <input type="file" name="receipt_image" accept="image/*" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-3" required>
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-3">صورة الإيصال المختوم</label>
+                                
+                                <div class="relative mb-4">
+                                    <input 
+                                        type="file" 
+                                        name="receipt_image" 
+                                        accept="image/*" 
+                                        id="receipt_image"
+                                        @change="
+                                            fileName = $event.target.files[0]?.name || '';
+                                            if ($event.target.files[0]) {
+                                                const reader = new FileReader();
+                                                reader.onload = (e) => imagePreview = e.target.result;
+                                                reader.readAsDataURL($event.target.files[0]);
+                                            }
+                                        "
+                                        class="hidden" 
+                                        required>
+                                    
+                                    <label 
+                                        for="receipt_image" 
+                                        class="flex items-center justify-center gap-3 w-full bg-gray-50 dark:bg-dark-bg border-2 border-dashed border-gray-300 dark:border-dark-border rounded-xl px-4 py-6 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-dark-card hover:border-emerald-400 dark:hover:border-emerald-600 transition-all group"
+                                        x-show="!imagePreview">
+                                        <div class="text-center">
+                                            <div class="w-12 h-12 mx-auto mb-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                                                <i data-lucide="upload" class="w-6 h-6"></i>
+                                            </div>
+                                            <p class="font-bold text-gray-700 dark:text-gray-300 mb-1">اضغط لاختيار الصورة</p>
+                                            <p class="text-xs text-gray-500 dark:text-dark-muted">JPG, PNG أو JPEG</p>
+                                        </div>
+                                    </label>
+
+                                    <div x-show="imagePreview" class="relative bg-gray-50 dark:bg-dark-bg border-2 border-emerald-300 dark:border-emerald-600 rounded-xl p-3">
+                                        <img :src="imagePreview" class="w-full h-48 object-contain rounded-lg">
+                                        <button 
+                                            type="button" 
+                                            @click="imagePreview = null; fileName = ''; document.getElementById('receipt_image').value = ''"
+                                            class="absolute top-5 left-5 bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg transition-colors">
+                                            <i data-lucide="x" class="w-4 h-4"></i>
+                                        </button>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-2 text-center font-medium" x-text="fileName"></p>
+                                    </div>
+                                </div>
+
                                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg">
                                     <i data-lucide="check-circle" class="w-5 h-5"></i>
                                     توثيق الإيصال

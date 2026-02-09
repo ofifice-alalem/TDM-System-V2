@@ -46,7 +46,8 @@ class WarehousePaymentController extends Controller
         ]);
 
         try {
-            $path = $request->file('receipt_image')->store('payments', 'public');
+            $payment = StorePayment::findOrFail($id);
+            $path = $request->file('receipt_image')->store('payments/' . $payment->payment_number, 'public');
             
             $payment = $this->service->approvePayment($id, auth()->id(), $path);
 
