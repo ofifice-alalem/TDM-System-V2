@@ -36,5 +36,12 @@ Route::middleware(['web'])->group(function () {
             Route::get('/', [\App\Http\Controllers\Shared\StoreController::class, 'index'])->name('index');
             Route::get('/{store}', [\App\Http\Controllers\Shared\StoreController::class, 'show'])->name('show');
         });
+
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Warehouse\WarehousePaymentController::class, 'index'])->name('index');
+            Route::get('/{payment}', [\App\Http\Controllers\Warehouse\WarehousePaymentController::class, 'show'])->name('show');
+            Route::post('/{id}/approve', [\App\Http\Controllers\Warehouse\WarehousePaymentController::class, 'approve'])->name('approve');
+            Route::patch('/{id}/reject', [\App\Http\Controllers\Warehouse\WarehousePaymentController::class, 'reject'])->name('reject');
+        });
     });
 });

@@ -50,5 +50,14 @@ Route::middleware(['web'])->group(function () {
             Route::get('/', [\App\Http\Controllers\Shared\StoreController::class, 'index'])->name('index');
             Route::get('/{store}', [\App\Http\Controllers\Shared\StoreController::class, 'show'])->name('show');
         });
+
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Marketer\PaymentController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\Marketer\PaymentController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\Marketer\PaymentController::class, 'store'])->name('store');
+            Route::get('/{payment}', [\App\Http\Controllers\Marketer\PaymentController::class, 'show'])->name('show');
+            Route::patch('/{payment}/cancel', [\App\Http\Controllers\Marketer\PaymentController::class, 'cancel'])->name('cancel');
+            Route::get('/store/{storeId}/debt', [\App\Http\Controllers\Marketer\PaymentController::class, 'getStoreDebt'])->name('store.debt');
+        });
     });
 });

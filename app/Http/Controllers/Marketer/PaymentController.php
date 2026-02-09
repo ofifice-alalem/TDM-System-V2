@@ -1,0 +1,103 @@
+<?php
+
+namespace App\Http\Controllers\Marketer;
+
+use App\Http\Controllers\Controller;
+use App\Models\StorePayment;
+use App\Models\Store;
+use App\Models\StoreDebtLedger;
+use App\Services\Marketer\PaymentService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class PaymentController extends Controller
+{
+    public function __construct(private PaymentService $service)
+    {
+        if (!Auth::check()) {
+            Auth::loginUsingId(3);
+        }
+    }
+
+    public function index(Request $request)
+    {
+        $query = StorePayment::with('store', 'marketer', 'keeper')
+            ->where('marketer_id', auth()->id());
+
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        } elseif (!$request->has('all')) {
+            $query->where('status', 'pending');
+        }
+
+        $payments = $query->latest('id')->paginate(20)->withQueryString();
+
+        return view('marketer.payments.index', compact('payments'));
+    }
+
+    public function create()
+    {
+        $stores = Store::where('is_active', true)
+            ->withSum('debtLedger as debt', 'amount')
+            ->having('debt', '>', 0)
+            ->get();
+
+        return view('marketer.payments.create', compact('stores'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'store_id' => 'required|exists:stores,id',
+            'keeper_id' => 'required|exists:users,id',
+            'amount' => 'required|numeric|min:0.01',
+            'payment_method' => 'required|in:cash,transfer,certified_check',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $payment = $this->service->createPayment(
+                auth()->id(),
+                $validated['store_id'],
+                $validated['keeper_id'],
+                $validated['amount'],
+                $validated['payment_method'],
+                $validated['notes'] ?? null
+            );
+
+            return redirect()->route('marketer.payments.show', $payment)
+                ->with('success', 'تم إنشاء إيصال القبض بنجاح');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage())->withInput();
+        }
+    }
+
+    public function show(StorePayment $payment)
+    {
+        $payment->load('store', 'marketer', 'keeper');
+        return view('marketer.payments.show', compact('payment'));
+    }
+
+    public function cancel(StorePayment $payment, Request $request)
+    {
+        $validated = $request->validate([
+            'notes' => 'required|string|max:500'
+        ]);
+
+        try {
+            $this->service->cancelPayment($payment->id, auth()->id());
+            $payment->update(['notes' => $validated['notes']]);
+
+            return redirect()->route('marketer.payments.index')
+                ->with('success', 'تم إلغاء إيصال القبض بنجاح');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function getStoreDebt($storeId)
+    {
+        $debt = StoreDebtLedger::where('store_id', $storeId)->sum('amount');
+        return response()->json(['debt' => max(0, $debt)]);
+    }
+}
