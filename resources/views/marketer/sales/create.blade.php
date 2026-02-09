@@ -27,25 +27,13 @@
             </div>
         </div>
 
-        <form action="{{ route('marketer.sales.store') }}" method="POST" class="space-y-4 md:space-y-6">
+        <form action="{{ route('marketer.sales.store') }}" method="POST">
             @csrf
             
-            <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
-                <div class="flex items-center gap-3 mb-6">
-                    <span class="bg-primary-50 dark:bg-primary-900/20 p-2.5 rounded-xl text-primary-600 dark:text-primary-400 shadow-sm border border-primary-100 dark:border-primary-600/30">
-                        <i data-lucide="store" class="w-5 h-5"></i>
-                    </span>
-                    <h3 class="font-bold text-xl text-gray-900 dark:text-white">اختيار المتجر</h3>
-                </div>
-                <select name="store_id" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all" required>
-                    <option value="">اختر المتجر</option>
-                    @foreach($stores as $store)
-                        <option value="{{ $store->id }}">{{ $store->name }} - {{ $store->owner_name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border relative overflow-hidden animate-slide-up">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- القسم الأيمن: المنتجات -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border relative overflow-hidden animate-slide-up">
                 <div class="flex items-center justify-between mb-8">
                     <div>
                         <h2 class="font-bold text-xl text-gray-900 dark:text-white flex items-center gap-3">
@@ -60,61 +48,129 @@
 
                 <div id="items-container" class="space-y-4">
                     <div class="item-row bg-gray-50/50 dark:bg-dark-bg/60 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-dark-border">
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-                            <div class="md:col-span-6">
+                        <div class="grid grid-cols-12 gap-3">
+                            <div class="col-span-12 md:col-span-4">
                                 <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">المنتج</label>
-                                <select name="items[0][product_id]" class="product-select w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all" required>
+                                <select name="items[0][product_id]" class="product-select w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm" required>
                                     <option value="">اختر المنتج</option>
                                     @foreach($products as $product)
-                                        <option value="{{ $product->id }}" data-stock="{{ $product->stock }}" data-price="{{ $product->current_price }}">
-                                            {{ $product->name }} - {{ $product->current_price }} ر.س (متوفر: {{ $product->stock }})
+                                        <option value="{{ $product->id }}" 
+                                                data-stock="{{ $product->stock }}" 
+                                                data-price="{{ $product->current_price }}"
+                                                data-promotion-free="{{ $product->activePromotion->free_quantity ?? 0 }}"
+                                                data-promotion-buy="{{ $product->activePromotion->buy_quantity ?? 0 }}">
+                                            {{ $product->name }} - {{ $product->current_price }} دينار (متوفر: {{ $product->stock }})
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="md:col-span-5">
+                            <div class="col-span-6 md:col-span-2">
                                 <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">الكمية</label>
-                                <div class="flex gap-2">
-                                    <input type="number" name="items[0][quantity]" class="quantity-input flex-1 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all" min="1" max="" placeholder="اختر المنتج أولاً" required>
-                                    <button type="button" class="remove-item hidden md:hidden px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                    </button>
-                                </div>
+                                <input type="number" name="items[0][quantity]" class="quantity-input w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm" min="1" max="" placeholder="0" required>
                             </div>
-                            <div class="hidden md:flex md:col-span-1 items-end">
-                                <button type="button" class="remove-item w-full px-3 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all">
-                                    <i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i>
-                                </button>
+                            <div class="col-span-6 md:col-span-2">
+                                <label class="block text-sm font-bold text-emerald-600 dark:text-emerald-400 mb-2">هدية</label>
+                                <input type="text" class="gift-display w-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl px-4 py-3 text-emerald-700 dark:text-emerald-400 text-sm font-bold text-center" value="0" readonly>
+                            </div>
+                            <div class="col-span-6 md:col-span-2">
+                                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">سعر الوحدة</label>
+                                <input type="text" class="unit-price w-full bg-gray-100 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm font-bold text-center" value="0" readonly>
+                            </div>
+                            <div class="col-span-6 md:col-span-2">
+                                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">الإجمالي</label>
+                                <input type="text" class="row-total w-full bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl px-4 py-3 text-primary-700 dark:text-primary-400 text-sm font-bold text-center" value="0" readonly>
+                            </div>
+                        </div>
+                        <button type="button" class="remove-item hidden mt-3 w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all text-sm flex items-center justify-center gap-2">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            حذف
+                        </button>
+                    </div>
+                </div>
+
+                        <button type="button" id="add-item" class="mt-4 w-full md:w-auto px-6 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-200/50 dark:shadow-none flex items-center justify-center gap-2">
+                            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                            إضافة منتج جديد
+                        </button>
+
+                        <!-- ملخص الفاتورة -->
+                        <div class="mt-6 bg-gradient-to-br from-primary-50 to-primary-100/50 dark:from-dark-bg dark:to-dark-border rounded-2xl p-6 border-2 border-primary-200 dark:border-dark-border">
+                            <h3 class="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                <i data-lucide="calculator" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i>
+                                ملخص الفاتورة
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center py-2 border-b border-primary-200 dark:border-dark-border">
+                                    <span class="text-gray-700 dark:text-gray-300 font-medium">عدد البضاعة</span>
+                                    <span id="total-items" class="text-gray-900 dark:text-white font-bold">0</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-primary-200 dark:border-dark-border">
+                                    <span class="text-gray-700 dark:text-gray-300 font-medium">السعر الكلي</span>
+                                    <span id="subtotal" class="text-gray-900 dark:text-white font-bold">0.00 دينار</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-primary-200 dark:border-dark-border">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-medium">تخفيض المنتجات</span>
+                                    <span id="products-discount" class="text-emerald-600 dark:text-emerald-400 font-bold">0.00 دينار</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-primary-200 dark:border-dark-border">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-medium">تخفيض الفاتورة</span>
+                                    <span id="invoice-discount" class="text-emerald-600 dark:text-emerald-400 font-bold">0.00 دينار</span>
+                                </div>
+                                <div class="flex justify-between items-center py-3 bg-primary-600 dark:bg-primary-700 rounded-xl px-4 mt-2">
+                                    <span class="text-white font-bold text-lg">المجموع النهائي</span>
+                                    <span id="final-total" class="text-white font-black text-xl">0.00 دينار</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <button type="button" id="add-item" class="mt-4 w-full md:w-auto px-6 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-200/50 dark:shadow-none flex items-center justify-center gap-2">
-                    <i data-lucide="plus-circle" class="w-5 h-5"></i>
-                    إضافة منتج جديد
-                </button>
-            </div>
+                <!-- القسم الأيسر: المتجر والملاحظات والإجراءات -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="bg-primary-50 dark:bg-primary-900/20 p-2.5 rounded-xl text-primary-600 dark:text-primary-400 shadow-sm border border-primary-100 dark:border-primary-600/30">
+                                <i data-lucide="store" class="w-5 h-5"></i>
+                            </span>
+                            <h3 class="font-bold text-xl text-gray-900 dark:text-white">اختيار المتجر</h3>
+                        </div>
+                        <select name="store_id" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all" required>
+                            <option value="">اختر المتجر</option>
+                            @foreach($stores as $store)
+                                <option value="{{ $store->id }}">{{ $store->name }} - {{ $store->owner_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-            <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up" style="animation-delay: 0.1s">
-                <div class="flex items-center gap-3 mb-6">
-                    <span class="bg-primary-50 dark:bg-primary-900/20 p-2.5 rounded-xl text-primary-600 dark:text-primary-400 shadow-sm border border-primary-100 dark:border-primary-600/30">
-                        <i data-lucide="sticky-note" class="w-5 h-5"></i>
-                    </span>
-                    <h3 class="font-bold text-xl text-gray-900 dark:text-white">ملاحظات (اختياري)</h3>
+                    <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="bg-primary-50 dark:bg-primary-900/20 p-2.5 rounded-xl text-primary-600 dark:text-primary-400 shadow-sm border border-primary-100 dark:border-primary-600/30">
+                                <i data-lucide="sticky-note" class="w-5 h-5"></i>
+                            </span>
+                            <h3 class="font-bold text-xl text-gray-900 dark:text-white">ملاحظات</h3>
+                        </div>
+                        <textarea name="notes" rows="4" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all" placeholder="أضف أي ملاحظات إضافية..."></textarea>
+                    </div>
+
+                    <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="bg-primary-50 dark:bg-primary-900/20 p-2.5 rounded-xl text-primary-600 dark:text-primary-400 shadow-sm border border-primary-100 dark:border-primary-600/30">
+                                <i data-lucide="zap" class="w-5 h-5"></i>
+                            </span>
+                            <h3 class="font-bold text-xl text-gray-900 dark:text-white">الإجراءات</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <button type="submit" class="w-full px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2">
+                                <i data-lucide="send" class="w-5 h-5"></i>
+                                إنشاء الفاتورة
+                            </button>
+                            <a href="{{ route('marketer.sales.index') }}" class="w-full px-8 py-4 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-gray-200/50 dark:shadow-none flex items-center justify-center gap-2">
+                                <i data-lucide="x" class="w-5 h-5"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <textarea name="notes" rows="4" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all" placeholder="أضف أي ملاحظات إضافية..."></textarea>
-            </div>
-
-            <div class="flex gap-4 animate-slide-up mt-6" style="animation-delay: 0.2s">
-                <button type="submit" class="flex-1 px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm md:text-base font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2">
-                    <i data-lucide="send" class="w-5 h-5"></i>
-                    إنشاء الفاتورة
-                </button>
-                <a href="{{ route('marketer.sales.index') }}" class="flex-1 px-8 py-4 bg-gray-500 hover:bg-gray-600 text-white rounded-xl text-sm md:text-base font-bold transition-all shadow-lg shadow-gray-200/50 dark:shadow-none flex items-center justify-center gap-2">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                    إلغاء
-                </a>
             </div>
         </form>
     </div>
@@ -124,6 +180,70 @@
 @push('scripts')
 <script>
 let itemIndex = 1;
+
+function calculateGift(buyQty, quantity) {
+    if (!buyQty || buyQty == 0) return 0;
+    return Math.floor(quantity / buyQty);
+}
+
+function calculateRowTotal(row) {
+    const select = row.querySelector('.product-select');
+    const quantityInput = row.querySelector('.quantity-input');
+    const giftDisplay = row.querySelector('.gift-display');
+    const unitPriceDisplay = row.querySelector('.unit-price');
+    const rowTotalDisplay = row.querySelector('.row-total');
+    
+    const selectedOption = select.options[select.selectedIndex];
+    const price = parseFloat(selectedOption?.dataset.price || 0);
+    const quantity = parseInt(quantityInput.value || 0);
+    const promotionBuy = parseInt(selectedOption?.dataset.promotionBuy || 0);
+    const promotionFree = parseInt(selectedOption?.dataset.promotionFree || 0);
+    
+    const gift = promotionBuy > 0 ? Math.floor(quantity / promotionBuy) * promotionFree : 0;
+    const total = (quantity + gift) * price;
+    
+    giftDisplay.value = gift;
+    unitPriceDisplay.value = price.toFixed(2);
+    rowTotalDisplay.value = total.toFixed(2);
+    
+    calculateInvoiceSummary();
+}
+
+function calculateInvoiceSummary() {
+    let totalItems = 0;
+    let subtotal = 0;
+    let productsDiscount = 0;
+    
+    document.querySelectorAll('.item-row').forEach(row => {
+        const select = row.querySelector('.product-select');
+        const quantityInput = row.querySelector('.quantity-input');
+        const selectedOption = select.options[select.selectedIndex];
+        
+        if (select.value && quantityInput.value) {
+            const price = parseFloat(selectedOption?.dataset.price || 0);
+            const quantity = parseInt(quantityInput.value || 0);
+            const promotionBuy = parseInt(selectedOption?.dataset.promotionBuy || 0);
+            const promotionFree = parseInt(selectedOption?.dataset.promotionFree || 0);
+            
+            const gift = promotionBuy > 0 ? Math.floor(quantity / promotionBuy) * promotionFree : 0;
+            const itemTotal = (quantity + gift) * price;
+            const itemDiscount = gift * price;
+            
+            totalItems += quantity + gift;
+            subtotal += itemTotal;
+            productsDiscount += itemDiscount;
+        }
+    });
+    
+    const invoiceDiscount = 0; // يتم حسابه من السيرفر
+    const finalTotal = subtotal - invoiceDiscount;
+    
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('subtotal').textContent = subtotal.toFixed(2) + ' دينار';
+    document.getElementById('products-discount').textContent = productsDiscount.toFixed(2) + ' دينار';
+    document.getElementById('invoice-discount').textContent = invoiceDiscount.toFixed(2) + ' دينار';
+    document.getElementById('final-total').textContent = finalTotal.toFixed(2) + ' دينار';
+}
 
 function updateAvailableProducts() {
     const selectedProducts = [];
@@ -152,6 +272,7 @@ function updateMaxQuantity(selectElement) {
     quantityInput.placeholder = `الحد الأقصى: ${stock}`;
     quantityInput.disabled = !stock || stock == 0;
     
+    calculateRowTotal(row);
     updateAvailableProducts();
 }
 
@@ -173,6 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.quantity-input').forEach(input => {
         input.addEventListener('input', function() {
             enforceMaxValue(this);
+            calculateRowTotal(this.closest('.item-row'));
         });
     });
 });
@@ -182,12 +304,16 @@ document.getElementById('add-item').addEventListener('click', function() {
     const newItem = container.firstElementChild.cloneNode(true);
     
     newItem.querySelectorAll('select, input').forEach(el => {
-        el.name = el.name.replace(/\[\d+\]/, `[${itemIndex}]`);
-        el.value = '';
-        if(el.classList.contains('quantity-input')) {
+        el.name = el.name?.replace(/\[\d+\]/, `[${itemIndex}]`);
+        if (el.classList.contains('quantity-input')) {
+            el.value = '';
             el.max = '';
             el.placeholder = 'اختر المنتج أولاً';
             el.disabled = false;
+        } else if (el.classList.contains('product-select')) {
+            el.value = '';
+        } else if (el.classList.contains('gift-display') || el.classList.contains('unit-price') || el.classList.contains('row-total')) {
+            el.value = '0';
         }
     });
     
@@ -200,6 +326,7 @@ document.getElementById('add-item').addEventListener('click', function() {
     
     newItem.querySelector('.quantity-input').addEventListener('input', function() {
         enforceMaxValue(this);
+        calculateRowTotal(this.closest('.item-row'));
     });
     
     lucide.createIcons();
@@ -212,6 +339,7 @@ document.addEventListener('click', function(e) {
         if(document.querySelectorAll('.item-row').length > 1) {
             e.target.closest('.item-row').remove();
             updateAvailableProducts();
+            calculateInvoiceSummary();
         }
     }
 });
