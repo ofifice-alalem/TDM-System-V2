@@ -7,6 +7,7 @@ use App\Models\SalesInvoice;
 use App\Services\Warehouse\WarehouseSalesService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class WarehouseSalesController extends Controller
 {
@@ -77,19 +78,36 @@ class WarehouseSalesController extends Controller
         ]);
 
         try {
-            $invoice = SalesInvoice::where('id', $id)
-                ->where('status', 'pending')
-                ->firstOrFail();
+            return DB::transaction(function () use ($id, $validated) {
+                $invoice = SalesInvoice::where('id', $id)
+                    ->where('status', 'pending')
+                    ->firstOrFail();
 
-            $invoice->update([
-                'status' => 'rejected',
-                'rejected_by' => auth()->id(),
-                'rejected_at' => now(),
-                'notes' => $validated['notes']
-            ]);
+                // إرجاع البضاعة من pending إلى marketer
+                foreach ($invoice->items as $item) {
+                    $totalQuantity = $item->quantity + $item->free_quantity;
 
-            return redirect()->route('warehouse.sales.index')
-                ->with('success', 'تم رفض الفاتورة');
+                    DB::table('marketer_actual_stock')
+                        ->where('marketer_id', $invoice->marketer_id)
+                        ->where('product_id', $item->product_id)
+                        ->increment('quantity', $totalQuantity);
+
+                    DB::table('store_pending_stock')
+                        ->where('sales_invoice_id', $invoice->id)
+                        ->where('product_id', $item->product_id)
+                        ->delete();
+                }
+
+                $invoice->update([
+                    'status' => 'rejected',
+                    'rejected_by' => auth()->id(),
+                    'rejected_at' => now(),
+                    'notes' => $validated['notes']
+                ]);
+
+                return redirect()->route('warehouse.sales.index')
+                    ->with('success', 'تم رفض الفاتورة وإرجاع البضاعة');
+            });
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
