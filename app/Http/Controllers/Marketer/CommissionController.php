@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Marketer;
 
 use App\Http\Controllers\Controller;
 use App\Models\MarketerCommission;
+use App\Models\MarketerWithdrawal;
 use Illuminate\Support\Facades\Auth;
 
 class CommissionController extends Controller
@@ -20,10 +21,12 @@ class CommissionController extends Controller
         $marketerId = auth()->id();
 
         $totalCommissions = MarketerCommission::where('marketer_id', $marketerId)->sum('commission_amount');
-        $totalWithdrawals = 0; // TODO: Step 5 - عمليات السحب
+        $totalWithdrawals = MarketerWithdrawal::where('marketer_id', $marketerId)
+            ->where('status', 'approved')
+            ->sum('amount');
         $availableBalance = $totalCommissions - $totalWithdrawals;
 
-        $recentTransactions = MarketerCommission::where('marketer_id', $marketerId)
+        $commissions = MarketerCommission::where('marketer_id', $marketerId)
             ->with(['store', 'payment'])
             ->latest()
             ->take(10)
@@ -40,6 +43,25 @@ class CommissionController extends Controller
                     'date' => $commission->created_at,
                 ];
             });
+
+        $withdrawals = MarketerWithdrawal::where('marketer_id', $marketerId)
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(function($withdrawal) {
+                return [
+                    'type' => 'withdrawal',
+                    'id' => $withdrawal->id,
+                    'amount' => $withdrawal->amount,
+                    'status' => $withdrawal->status,
+                    'date' => $withdrawal->created_at,
+                ];
+            });
+
+        $recentTransactions = $commissions->concat($withdrawals)
+            ->sortByDesc('date')
+            ->take(10)
+            ->values();
 
         return view('marketer.commissions.index', compact(
             'totalCommissions',
