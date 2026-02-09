@@ -1,18 +1,20 @@
-<div class="flex gap-2 mb-6 overflow-x-auto pb-2">
-    <a href="{{ $route(['all' => 1]) }}" class="px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap {{ !request()->has('status') && request()->has('all') ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-lg' : 'bg-white dark:bg-dark-card text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-bg border border-gray-200 dark:border-dark-border' }}">
-        <i data-lucide="list" class="w-4 h-4 inline-block ml-1"></i>
-        الكل
-    </a>
-    <a href="{{ $route([]) }}" class="px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap {{ !request()->has('status') && !request()->has('all') ? 'bg-amber-500 dark:bg-amber-600 text-white shadow-lg shadow-amber-200/50 dark:shadow-none' : 'bg-white dark:bg-dark-card text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-bg border border-gray-200 dark:border-dark-border' }}">
-        <i data-lucide="clock" class="w-4 h-4 inline-block ml-1"></i>
-        قيد الانتظار
-    </a>
-    <a href="{{ $route(['status' => 'approved']) }}" class="px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap {{ request('status') === 'approved' ? 'bg-emerald-500 dark:bg-emerald-600 text-white shadow-lg shadow-emerald-200/50 dark:shadow-none' : 'bg-white dark:bg-dark-card text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-bg border border-gray-200 dark:border-dark-border' }}">
-        <i data-lucide="check-circle" class="w-4 h-4 inline-block ml-1"></i>
-        موثق
-    </a>
-    <a href="{{ $route(['status' => 'cancelled']) }}" class="px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap {{ request('status') === 'cancelled' ? 'bg-gray-500 dark:bg-gray-600 text-white shadow-lg' : 'bg-white dark:bg-dark-card text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-bg border border-gray-200 dark:border-dark-border' }}">
-        <i data-lucide="slash" class="w-4 h-4 inline-block ml-1"></i>
-        ملغي
-    </a>
+<div class="bg-white dark:bg-dark-card rounded-2xl p-2 shadow-lg shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6">
+    <div class="flex flex-wrap gap-2">
+        <a href="{{ $route([]) }}" class="{{ !request('all') && !request('status') ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-2 border-amber-200 dark:border-amber-800' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(50%-0.25rem)] md:basis-auto justify-center">
+            <i data-lucide="clock" class="w-4 h-4"></i>
+            قيد الانتظار
+        </a>
+        <a href="{{ $route(['status' => 'approved']) }}" class="{{ request('status') === 'approved' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-200 dark:border-emerald-800' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(50%-0.25rem)] md:basis-auto justify-center">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            موثق
+        </a>
+        <a href="{{ $route(['status' => 'cancelled']) }}" class="{{ request('status') === 'cancelled' ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(50%-0.25rem)] md:basis-auto justify-center">
+            <i data-lucide="slash" class="w-4 h-4"></i>
+            ملغي
+        </a>
+        <a href="{{ $route(['all' => '1']) }}" class="{{ request('all') ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(50%-0.25rem)] md:basis-auto justify-center">
+            <i data-lucide="list" class="w-4 h-4"></i>
+            الكل
+        </a>
+    </div>
 </div>

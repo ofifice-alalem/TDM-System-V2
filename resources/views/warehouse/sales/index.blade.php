@@ -21,7 +21,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="lg:col-span-12">
+            <div class="lg:col-span-8">
                 @include('shared.sales._status-tabs', ['route' => fn($params) => route('warehouse.sales.index', $params)])
 
                 <div class="bg-white dark:bg-dark-card rounded-[2rem] p-4 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
@@ -47,6 +47,10 @@
                 </div>
             @endif
                 </div>
+            </div>
+
+            <div class="lg:col-span-4">
+                @include('shared.sales._timeline-guide')
             </div>
         </div>
     </div>
