@@ -6,17 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class StorePayment extends Model
 {
-    public $timestamps = false;
-    
     protected $fillable = [
         'payment_number', 'store_id', 'marketer_id', 'keeper_id',
         'amount', 'payment_method', 'status', 'receipt_image',
-        'confirmed_at', 'notes'
+        'confirmed_at', 'notes', 'created_at'
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'confirmed_at' => 'datetime',
+        'created_at' => 'datetime',
     ];
 
     public function store()

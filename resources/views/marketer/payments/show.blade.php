@@ -5,7 +5,7 @@
 @section('content')
 
 <div class="min-h-screen py-8">
-    <div class="max-w-5xl mx-auto space-y-8 px-4 lg:px-8">
+    <div class="max-w-7xl mx-auto space-y-8 px-4 lg:px-8">
         
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 animate-fade-in-down">
             <div>

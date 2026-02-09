@@ -38,9 +38,12 @@ class PaymentController extends Controller
     public function create()
     {
         $stores = Store::where('is_active', true)
-            ->withSum('debtLedger as debt', 'amount')
-            ->having('debt', '>', 0)
-            ->get();
+            ->get()
+            ->map(function($store) {
+                $store->debt = StoreDebtLedger::where('store_id', $store->id)->sum('amount');
+                return $store;
+            })
+            ->filter(fn($store) => $store->debt > 0);
 
         return view('marketer.payments.create', compact('stores'));
     }
