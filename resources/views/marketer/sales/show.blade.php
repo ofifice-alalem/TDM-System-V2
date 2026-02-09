@@ -198,7 +198,7 @@
                         <p class="text-xs text-gray-400 dark:text-dark-muted mt-2 font-medium mb-4">آخر تحديث: {{ $invoice->updated_at->diffForHumans() }}</p>
 
                         @if($invoice->status === 'approved' && $invoice->stamped_invoice_image)
-                            <button type="button" onclick="window.open('{{ route('warehouse.sales.documentation', $invoice) }}', '_blank')" class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-bg border border-blue-200 dark:border-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors shadow-sm mb-2">
+                            <button type="button" onclick="showDocumentationModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-bg border border-blue-200 dark:border-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors shadow-sm mb-2">
                                 <i data-lucide="image" class="w-4 h-4"></i>
                                 عرض صورة التوثيق
                             </button>
@@ -273,4 +273,12 @@
     });
 </script>
 @endpush
+
+@if($invoice->status === 'approved' && $invoice->stamped_invoice_image)
+    @include('shared.modals.documentation-image', [
+        'imageUrl' => route('warehouse.sales.documentation', $invoice->id),
+        'invoiceNumber' => $invoice->invoice_number,
+        'documentedAt' => $invoice->confirmed_at ?? $invoice->updated_at
+    ])
+@endif
 @endsection
