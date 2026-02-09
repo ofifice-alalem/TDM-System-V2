@@ -4,6 +4,7 @@ use App\Http\Controllers\Marketer\MarketerRequestController;
 use App\Http\Controllers\Marketer\MarketerReturnController;
 use App\Http\Controllers\Marketer\MarketerStockController;
 use App\Http\Controllers\Marketer\SalesController;
+use App\Http\Controllers\Marketer\CommissionController;
 use Illuminate\Support\Facades\Route;
 
 // Temporary: Simulate logged-in marketer (ID=3)
@@ -59,6 +60,10 @@ Route::middleware(['web'])->group(function () {
             Route::get('/{payment}/pdf', [\App\Http\Controllers\Shared\Payment\InvoiceController::class, 'generatePaymentInvoicePdf'])->name('pdf');
             Route::patch('/{payment}/cancel', [\App\Http\Controllers\Marketer\PaymentController::class, 'cancel'])->name('cancel');
             Route::get('/store/{storeId}/debt', [\App\Http\Controllers\Marketer\PaymentController::class, 'getStoreDebt'])->name('store.debt');
+        });
+
+        Route::prefix('commissions')->name('commissions.')->group(function () {
+            Route::get('/', [CommissionController::class, 'index'])->name('index');
         });
     });
 });
