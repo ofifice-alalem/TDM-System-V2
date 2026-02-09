@@ -5,6 +5,7 @@ use App\Http\Controllers\Marketer\MarketerReturnController;
 use App\Http\Controllers\Marketer\MarketerStockController;
 use App\Http\Controllers\Marketer\SalesController;
 use App\Http\Controllers\Marketer\CommissionController;
+use App\Http\Controllers\Marketer\WithdrawalController;
 use Illuminate\Support\Facades\Route;
 
 // Temporary: Simulate logged-in marketer (ID=3)
@@ -64,6 +65,14 @@ Route::middleware(['web'])->group(function () {
 
         Route::prefix('commissions')->name('commissions.')->group(function () {
             Route::get('/', [CommissionController::class, 'index'])->name('index');
+        });
+
+        Route::prefix('withdrawals')->name('withdrawals.')->group(function () {
+            Route::get('/', [WithdrawalController::class, 'index'])->name('index');
+            Route::get('/create', [WithdrawalController::class, 'create'])->name('create');
+            Route::post('/', [WithdrawalController::class, 'store'])->name('store');
+            Route::get('/{withdrawal}', [WithdrawalController::class, 'show'])->name('show');
+            Route::patch('/{withdrawal}/cancel', [WithdrawalController::class, 'cancel'])->name('cancel');
         });
     });
 });

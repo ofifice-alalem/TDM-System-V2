@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\InvoiceDiscountController;
 use App\Http\Controllers\Admin\ProductPromotionController;
+use App\Http\Controllers\Admin\AdminWithdrawalController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     
@@ -28,6 +29,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::prefix('stores')->name('stores.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Shared\StoreController::class, 'index'])->name('index');
         Route::get('/{store}', [\App\Http\Controllers\Shared\StoreController::class, 'show'])->name('show');
+    });
+
+    // Withdrawals Management
+    Route::prefix('withdrawals')->name('withdrawals.')->group(function () {
+        Route::get('/', [AdminWithdrawalController::class, 'index'])->name('index');
+        Route::get('/{withdrawal}', [AdminWithdrawalController::class, 'show'])->name('show');
+        Route::post('/{withdrawal}/approve', [AdminWithdrawalController::class, 'approve'])->name('approve');
+        Route::post('/{withdrawal}/reject', [AdminWithdrawalController::class, 'reject'])->name('reject');
     });
     
 });
