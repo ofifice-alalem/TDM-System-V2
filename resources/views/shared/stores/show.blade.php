@@ -118,6 +118,12 @@
                                                 } elseif ($routePrefix === 'warehouse' && Route::has('warehouse.payments.show')) {
                                                     $url = route('warehouse.payments.show', $transaction['id']);
                                                 }
+                                            } elseif ($transaction['type'] === 'return') {
+                                                if ($routePrefix === 'marketer' && Route::has('marketer.sales-returns.show')) {
+                                                    $url = route('marketer.sales-returns.show', $transaction['id']);
+                                                } elseif ($routePrefix === 'warehouse' && Route::has('warehouse.sales-returns.show')) {
+                                                    $url = route('warehouse.sales-returns.show', $transaction['id']);
+                                                }
                                             }
                                         @endphp
                                         <a href="{{ $url }}" class="w-10 h-10 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 hover:text-primary-600 dark:hover:text-primary-400 transition-all {{ $url === '#' ? 'opacity-50 cursor-not-allowed' : '' }}">

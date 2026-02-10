@@ -78,4 +78,21 @@ class WarehouseSalesReturnController extends Controller
             return back()->with('error', $e->getMessage());
         }
     }
+
+    public function viewDocumentation($id)
+    {
+        $salesReturn = SalesReturn::findOrFail($id);
+        
+        if ($salesReturn->status !== 'approved' || !$salesReturn->stamped_image) {
+            abort(404, 'لا توجد صورة توثيق');
+        }
+
+        $imagePath = storage_path('app/public/' . $salesReturn->stamped_image);
+        
+        if (!file_exists($imagePath)) {
+            abort(404, 'الصورة غير موجودة');
+        }
+
+        return response()->file($imagePath);
+    }
 }

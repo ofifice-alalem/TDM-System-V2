@@ -1,7 +1,7 @@
 {{-- Documentation Image Modal Component --}}
 {{-- Usage: @include('shared.modals.documentation-image', ['imageUrl' => route(...), 'invoiceNumber' => '...', 'documentedAt' => ...]) --}}
 
-<div id="documentationModal" class="fixed inset-0 bg-gray-900/80 dark:bg-black/90 backdrop-blur-sm z-[100] hidden items-center justify-center p-4" onclick="closeDocumentationModal(event)">
+<div id="documentationModal" class="fixed inset-0 bg-gray-900/80 dark:bg-black/90 backdrop-blur-md z-[100] hidden items-center justify-center p-4" onclick="closeDocumentationModal(event)">
     <div class="bg-white dark:bg-dark-card rounded-[2rem] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-gray-200 dark:border-dark-border" onclick="event.stopPropagation()">
         {{-- Header --}}
         <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-dark-border">

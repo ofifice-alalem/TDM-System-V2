@@ -172,6 +172,13 @@
                         </div>
                         <h2 class="text-2xl font-black {{ $statusConfig['text'] }}">{{ $statusConfig['label'] }}</h2>
                         <p class="text-xs text-gray-400 dark:text-dark-muted mt-2 font-medium mb-4">آخر تحديث: {{ $salesReturn->updated_at->diffForHumans() }}</p>
+
+                        @if($salesReturn->status === 'approved' && $salesReturn->stamped_image)
+                            <button type="button" onclick="showDocumentationModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-bg border border-blue-200 dark:border-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors shadow-sm mb-2">
+                                <i data-lucide="image" class="w-4 h-4"></i>
+                                عرض صورة التوثيق
+                            </button>
+                        @endif
                     </div>
 
                     <div class="mt-8 pt-6 border-t border-gray-200 dark:border-dark-border z-10 relative">
@@ -242,4 +249,12 @@
     });
 </script>
 @endpush
+
+@if($salesReturn->status === 'approved' && $salesReturn->stamped_image)
+    @include('shared.modals.documentation-image', [
+        'imageUrl' => route('warehouse.sales-returns.documentation', $salesReturn->id),
+        'invoiceNumber' => $salesReturn->return_number,
+        'documentedAt' => $salesReturn->confirmed_at ?? $salesReturn->updated_at
+    ])
+@endif
 @endsection

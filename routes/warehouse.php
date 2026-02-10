@@ -49,6 +49,7 @@ Route::middleware(['web'])->group(function () {
             Route::get('/{salesReturn}', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'show'])->name('show');
             Route::post('/{id}/approve', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'approve'])->name('approve');
             Route::patch('/{id}/reject', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'reject'])->name('reject');
+            Route::get('/{id}/documentation', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'viewDocumentation'])->name('documentation');
         });
     });
 });
