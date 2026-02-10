@@ -22,16 +22,41 @@ class WithdrawalController extends Controller
         $query = MarketerWithdrawalRequest::with('marketer', 'approver', 'rejecter')
             ->where('marketer_id', auth()->id());
 
-        if ($request->has('status')) {
+        $hasFilter = $request->filled('withdrawal_id') || $request->filled('from_date') || $request->filled('to_date');
+
+        if (!$hasFilter && $request->has('status')) {
             $query->where('status', $request->status);
-        } elseif (!$request->has('all')) {
+        } elseif (!$hasFilter && !$request->has('all')) {
             $query->where('status', 'pending');
+        }
+
+        if ($request->filled('withdrawal_id')) {
+            $query->where('id', $request->withdrawal_id);
+        }
+
+        if ($request->filled('from_date')) {
+            try {
+                $fromDate = \Carbon\Carbon::parse($request->from_date)->format('Y-m-d');
+                $query->whereDate('created_at', '>=', $fromDate);
+            } catch (\Exception $e) {}
+        }
+
+        if ($request->filled('to_date')) {
+            try {
+                $toDate = \Carbon\Carbon::parse($request->to_date)->format('Y-m-d');
+                $query->whereDate('created_at', '<=', $toDate);
+            } catch (\Exception $e) {}
         }
 
         $withdrawals = $query->latest('id')->paginate(20)->withQueryString();
         $availableBalance = $this->service->getAvailableBalance(auth()->id());
 
         return view('marketer.withdrawals.index', compact('withdrawals', 'availableBalance'));
+    }
+
+    public function clearFilters()
+    {
+        return redirect()->route('marketer.withdrawals.index');
     }
 
     public function create()

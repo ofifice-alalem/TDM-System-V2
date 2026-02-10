@@ -22,10 +22,37 @@ class AdminWithdrawalController extends Controller
     {
         $query = MarketerWithdrawalRequest::with('marketer', 'approver', 'rejecter');
 
-        if ($request->has('status')) {
+        $hasFilter = $request->filled('withdrawal_id') || $request->filled('from_date') || $request->filled('to_date') || $request->filled('marketer');
+
+        if (!$hasFilter && $request->has('status')) {
             $query->where('status', $request->status);
-        } elseif (!$request->has('all')) {
+        } elseif (!$hasFilter && !$request->has('all')) {
             $query->where('status', 'pending');
+        }
+
+        if ($request->filled('withdrawal_id')) {
+            $query->where('id', $request->withdrawal_id);
+        }
+
+        if ($request->filled('from_date')) {
+            try {
+                $fromDate = \Carbon\Carbon::parse($request->from_date)->format('Y-m-d');
+                $query->whereDate('created_at', '>=', $fromDate);
+            } catch (\Exception $e) {}
+        }
+
+        if ($request->filled('to_date')) {
+            try {
+                $toDate = \Carbon\Carbon::parse($request->to_date)->format('Y-m-d');
+                $query->whereDate('created_at', '<=', $toDate);
+            } catch (\Exception $e) {}
+        }
+
+        if ($request->filled('marketer')) {
+            $marketerName = $request->marketer;
+            $query->whereHas('marketer', function($q) use ($marketerName) {
+                $q->where('name', 'like', '%' . $marketerName . '%');
+            });
         }
 
         $withdrawals = $query->latest('id')->paginate(20)->withQueryString();

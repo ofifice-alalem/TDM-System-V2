@@ -25,6 +25,40 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {{-- Main List --}}
             <div class="lg:col-span-8">
+                {{-- Filters --}}
+                <div class="bg-white dark:bg-dark-card rounded-2xl p-4 md:p-6 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6 animate-slide-up">
+                    <form method="GET" action="{{ route('admin.withdrawals.index') }}" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">رقم السحب</label>
+                                <input type="number" name="withdrawal_id" value="{{ request('withdrawal_id') }}" placeholder="1" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">من تاريخ</label>
+                                <input type="date" name="from_date" value="{{ request('from_date') }}" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">إلى تاريخ</label>
+                                <input type="date" name="to_date" value="{{ request('to_date') }}" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">اسم المسوق</label>
+                                <input type="text" name="marketer" value="{{ request('marketer') }}" placeholder="اسم المسوق" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm">
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="submit" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all flex items-center gap-2">
+                                <i data-lucide="filter" class="w-4 h-4"></i>
+                                فلترة
+                            </button>
+                            <a href="{{ route('admin.withdrawals.index') }}" class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all flex items-center gap-2">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
                 @include('shared.withdrawals._status-tabs', ['route' => fn($params) => route('admin.withdrawals.index', $params)])
 
                 <div class="bg-white dark:bg-dark-card rounded-[2rem] p-4 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
