@@ -122,6 +122,7 @@ const allInvoices = {!! json_encode($approvedInvoices->map(function($invoice) {
         'id' => $invoice->id,
         'number' => $invoice->invoice_number,
         'store' => $invoice->store->name,
+        'store_active' => $invoice->store->is_active,
         'amount' => $invoice->total_amount,
         'items' => $invoice->items->map(function($item) {
             return [
@@ -215,6 +216,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function selectInvoice(invoice) {
+        // Check if store is inactive
+        if (!invoice.store_active) {
+            searchResults.innerHTML = `
+                <div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-500 dark:border-red-500 rounded-xl p-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 bg-red-100 dark:bg-red-500/20 rounded-xl flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
+                            <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-black text-lg text-red-900 dark:text-red-200 mb-2">تم إيقاف التعامل مع هذا المتجر</div>
+                            <div class="text-sm text-red-700 dark:text-red-300 mb-3">لا يمكن إجراء عملية الإرجاع لهذه الفاتورة</div>
+                            <div class="bg-white dark:bg-dark-card rounded-lg p-3 border border-red-200 dark:border-red-800">
+                                <div class="font-bold text-gray-900 dark:text-white">#${invoice.number}</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">${invoice.store}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+            itemsContainer.classList.add('hidden');
+            summaryContainer.classList.add('hidden');
+            selectedInvoiceId.value = '';
+            return;
+        }
+        
         selectedInvoiceId.value = invoice.id;
         invoiceSearch.value = '#' + invoice.number;
         

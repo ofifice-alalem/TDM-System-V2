@@ -181,21 +181,35 @@
                         <div class="py-3 border-b border-gray-100 dark:border-dark-border">
                             <span class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2 mb-2">
                                 <i data-lucide="map-pin" class="w-4 h-4"></i>
-                                الموقع والعنوان
+                                الموقع
                             </span>
                             <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $store->location }}</p>
-                            @if($store->address)
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $store->address }}</p>
-                            @endif
+                        </div>
+                        @endif
+
+                        @if($store->address)
+                        <div class="py-3 border-b border-gray-100 dark:border-dark-border">
+                            <span class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2 mb-2">
+                                <i data-lucide="map" class="w-4 h-4"></i>
+                                العنوان التفصيلي
+                            </span>
+                            <a href="{{ $store->address }}" target="_blank" class="text-sm font-bold text-primary-600 dark:text-primary-400 hover:underline break-all">فتح الموقع على الخريطة</a>
                         </div>
                         @endif
 
                         <div class="flex items-center justify-between py-3">
                             <span class="text-sm text-gray-500 dark:text-gray-400">الحالة</span>
+                            @if($store->is_active)
                             <span class="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-bold border border-emerald-100 dark:border-emerald-500/30 flex items-center gap-1">
                                 <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
                                 نشط
                             </span>
+                            @else
+                            <span class="px-3 py-1.5 bg-gray-50 dark:bg-gray-500/10 text-gray-600 dark:text-gray-400 rounded-full text-xs font-bold border border-gray-100 dark:border-gray-500/30 flex items-center gap-1">
+                                <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                                غير نشط
+                            </span>
+                            @endif
                         </div>
                     </div>
                 </div>

@@ -11,6 +11,50 @@ use Illuminate\Http\Request;
 
 class StoreController extends Controller
 {
+    public function create()
+    {
+        return view('shared.stores.create');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'owner_name' => 'required|string|max:100',
+            'phone' => 'nullable|string|max:20',
+            'location' => 'nullable|string|max:200',
+            'address' => 'nullable|string',
+        ]);
+
+        Store::create($validated);
+
+        return redirect()->route(request()->routeIs('admin.*') ? 'admin.stores.index' : 'warehouse.stores.index')
+            ->with('success', 'تم إضافة المتجر بنجاح');
+    }
+
+    public function edit(Store $store)
+    {
+        return view('shared.stores.edit', compact('store'));
+    }
+
+    public function update(Request $request, Store $store)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'owner_name' => 'required|string|max:100',
+            'phone' => 'nullable|string|max:20',
+            'location' => 'nullable|string|max:200',
+            'address' => 'nullable|string',
+        ]);
+
+        $validated['is_active'] = $request->has('is_active') ? 1 : 0;
+
+        $store->update($validated);
+
+        return redirect()->route(request()->routeIs('admin.*') ? 'admin.stores.index' : 'warehouse.stores.index')
+            ->with('success', 'تم تحديث بيانات المتجر بنجاح');
+    }
+
     public function index(Request $request)
     {
         $search = $request->get('search');

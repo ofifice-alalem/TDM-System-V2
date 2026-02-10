@@ -9,10 +9,18 @@
         
         {{-- Header --}}
         <div class="animate-fade-in-down">
-            <div class="flex items-center gap-3 mb-2">
-                <span class="bg-primary-100 dark:bg-primary-600/20 text-primary-600 dark:text-primary-400 px-3 py-1 rounded-lg text-xs font-bold border border-primary-100 dark:border-primary-600/30">
-                    إدارة المتاجر
-                </span>
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                    <span class="bg-primary-100 dark:bg-primary-600/20 text-primary-600 dark:text-primary-400 px-3 py-1 rounded-lg text-xs font-bold border border-primary-100 dark:border-primary-600/30">
+                        إدارة المتاجر
+                    </span>
+                </div>
+                @if(request()->routeIs('admin.*') || request()->routeIs('warehouse.*'))
+                <a href="{{ request()->routeIs('admin.*') ? route('admin.stores.create') : route('warehouse.stores.create') }}" class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                    إضافة متجر جديد
+                </a>
+                @endif
             </div>
             <h1 class="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
                 المتاجر
@@ -56,10 +64,17 @@
                                 </p>
                             </div>
                         </div>
+                        @if($store->is_active)
                         <span class="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-bold border border-emerald-100 dark:border-emerald-500/30 flex items-center gap-1">
                             <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
                             نشط
                         </span>
+                        @else
+                        <span class="px-3 py-1.5 bg-gray-50 dark:bg-gray-500/10 text-gray-600 dark:text-gray-400 rounded-full text-xs font-bold border border-gray-100 dark:border-gray-500/30 flex items-center gap-1">
+                            <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                            غير نشط
+                        </span>
+                        @endif
                     </div>
 
                     {{-- Store Info --}}
@@ -96,6 +111,11 @@
                             <i data-lucide="eye" class="w-4 h-4"></i>
                             التفاصيل
                         </a>
+                        @if(request()->routeIs('admin.*') || request()->routeIs('warehouse.*'))
+                        <a href="{{ request()->routeIs('admin.*') ? route('admin.stores.edit', $store) : route('warehouse.stores.edit', $store) }}" class="w-12 h-12 bg-amber-100 dark:bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-500/20 transition-all">
+                            <i data-lucide="edit" class="w-5 h-5"></i>
+                        </a>
+                        @endif
                         @if($store->phone)
                         <a href="tel:{{ $store->phone }}" class="w-12 h-12 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
                             <i data-lucide="phone" class="w-5 h-5"></i>
@@ -104,8 +124,8 @@
                         <button class="w-12 h-12 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
                             <i data-lucide="message-circle" class="w-5 h-5"></i>
                         </button>
-                        @if($store->location)
-                        <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($store->location) }}" target="_blank" class="w-12 h-12 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+                        @if($store->address)
+                        <a href="{{ $store->address }}" target="_blank" class="w-12 h-12 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
                             <i data-lucide="map-pin" class="w-5 h-5"></i>
                         </a>
                         @endif

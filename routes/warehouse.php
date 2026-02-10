@@ -34,7 +34,11 @@ Route::middleware(['web'])->group(function () {
 
         Route::prefix('stores')->name('stores.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Shared\StoreController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\Shared\StoreController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\Shared\StoreController::class, 'store'])->name('store');
             Route::get('/{store}', [\App\Http\Controllers\Shared\StoreController::class, 'show'])->name('show');
+            Route::get('/{store}/edit', [\App\Http\Controllers\Shared\StoreController::class, 'edit'])->name('edit');
+            Route::patch('/{store}', [\App\Http\Controllers\Shared\StoreController::class, 'update'])->name('update');
         });
 
         Route::prefix('payments')->name('payments.')->group(function () {
