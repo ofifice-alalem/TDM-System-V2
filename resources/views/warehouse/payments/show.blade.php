@@ -124,6 +124,11 @@
 
                     @if($payment->status === 'pending')
                         <div class="mt-6 pt-6 border-t border-gray-200 dark:border-dark-border space-y-3">
+                            <a href="{{ route('marketer.payments.pdf', $payment) }}" target="_blank" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group mb-3">
+                                <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                طباعة PDF
+                            </a>
+
                             <form action="{{ route('warehouse.payments.approve', $payment->id) }}" method="POST" enctype="multipart/form-data" x-data="{ fileName: '', imagePreview: null }">
                                 @csrf
                                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-3">صورة الإيصال المختوم</label>
@@ -218,6 +223,13 @@
                                     </form>
                                 </div>
                             </div>
+                        </div>
+                    @else
+                        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-dark-border">
+                            <a href="{{ route('marketer.payments.pdf', $payment) }}" target="_blank" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group">
+                                <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                طباعة PDF
+                            </a>
                         </div>
                     @endif
                 </div>

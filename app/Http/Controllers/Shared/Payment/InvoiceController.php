@@ -27,12 +27,6 @@ class InvoiceController extends Controller
             'certified_check' => 'شيك مصدق'
         ];
         
-        $currentDebt = \DB::table('store_debt_ledger')
-            ->where('store_id', $payment->store_id)
-            ->sum('amount');
-        
-        $remainingDebt = max(0, $currentDebt - $payment->amount);
-        
         $data = [
             'paymentNumber' => $payment->payment_number,
             'date' => $payment->created_at ? $payment->created_at->format('Y-m-d H:i') : '',
@@ -42,7 +36,6 @@ class InvoiceController extends Controller
             'status' => $arabic->utf8Glyphs($statusLabels[$payment->status] ?? 'غير محدد'),
             'paymentMethod' => $arabic->utf8Glyphs($methodLabels[$payment->payment_method] ?? 'غير محدد'),
             'amount' => number_format($payment->amount, 2),
-            'remainingDebt' => $remainingDebt,
             'isInvalid' => in_array($payment->status, ['cancelled', 'rejected']),
             'title' => $arabic->utf8Glyphs('إيصال قبض'),
             'labels' => [
@@ -53,8 +46,6 @@ class InvoiceController extends Controller
                 'status' => $arabic->utf8Glyphs('الحالة'),
                 'paymentMethod' => $arabic->utf8Glyphs('طريقة الدفع'),
                 'amount' => $arabic->utf8Glyphs('المبلغ المسدد'),
-                'remainingDebt' => $arabic->utf8Glyphs('باقي الدين'),
-                'noDebt' => $arabic->utf8Glyphs('لا يوجد دين عند هذا التاريخ'),
                 'invalidPayment' => $arabic->utf8Glyphs('ملغي'),
                 'currency' => $arabic->utf8Glyphs('دينار'),
             ]
