@@ -211,6 +211,11 @@
                     </div>
 
                     <div class="mt-8 pt-6 border-t border-gray-200 dark:border-dark-border z-10 relative">
+                        <a href="{{ route('marketer.sales.pdf', $invoice) }}" target="_blank" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group mb-4">
+                            <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                            طباعة PDF
+                        </a>
+
                         @if($invoice->status === 'pending')
                             <form action="{{ route('warehouse.sales.approve', $invoice) }}" method="POST" enctype="multipart/form-data" class="mb-4">
                                 @csrf
@@ -284,11 +289,6 @@
                                     </form>
                                 </div>
                             </div>
-                        @else
-                            <a href="{{ route('marketer.sales.pdf', $invoice) }}" target="_blank" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group">
-                                <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
-                                طباعة PDF
-                            </a>
                         @endif
                     </div>
                 </div>
