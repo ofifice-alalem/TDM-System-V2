@@ -21,30 +21,30 @@ class WarehouseRequestController extends Controller
     {
         $query = MarketerRequest::with('marketer', 'items.product');
 
-        $hasDateFilter = $request->filled('from_date') || $request->filled('to_date');
+        $hasFilter = $request->filled('invoice_number') || $request->filled('from_date') || $request->filled('to_date');
 
-        if ($request->filled('status')) {
+        if (!$hasFilter && $request->filled('status')) {
             $query->where('status', $request->status);
-        } elseif (!$request->has('all') && !$hasDateFilter) {
+        } elseif (!$hasFilter && !$request->has('all')) {
             $query->where('status', 'pending');
+        }
+
+        if ($request->filled('invoice_number')) {
+            $query->where('invoice_number', 'like', '%' . $request->invoice_number . '%');
         }
 
         if ($request->filled('from_date')) {
             try {
                 $fromDate = \Carbon\Carbon::parse($request->from_date)->format('Y-m-d');
                 $query->whereDate('created_at', '>=', $fromDate);
-            } catch (\Exception $e) {
-                // Invalid date format, skip filter
-            }
+            } catch (\Exception $e) {}
         }
 
         if ($request->filled('to_date')) {
             try {
                 $toDate = \Carbon\Carbon::parse($request->to_date)->format('Y-m-d');
                 $query->whereDate('created_at', '<=', $toDate);
-            } catch (\Exception $e) {
-                // Invalid date format, skip filter
-            }
+            } catch (\Exception $e) {}
         }
 
         if ($request->filled('marketer_id')) {

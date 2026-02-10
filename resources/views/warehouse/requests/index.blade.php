@@ -32,6 +32,10 @@
                         <input type="hidden" name="all" value="{{ request('all') }}">
                         
                         <div class="flex-1">
+                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">رقم الفاتورة</label>
+                            <input type="text" name="invoice_number" value="{{ request('invoice_number') }}" placeholder="ابحث برقم الفاتورة..." class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        </div>
+                        <div class="flex-1">
                             <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">من تاريخ</label>
                             <input type="date" name="from_date" value="{{ request('from_date') }}" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:[color-scheme:dark]">
                         </div>
@@ -53,7 +57,7 @@
                                 <i data-lucide="filter" class="w-4 h-4"></i>
                                 فلترة
                             </button>
-                            @if(request('from_date') || request('to_date') || request('marketer_id'))
+                            @if(request('invoice_number') || request('from_date') || request('to_date') || request('marketer_id'))
                                 <a href="{{ route('warehouse.requests.index', ['status' => request('status'), 'all' => request('all')]) }}" class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2 justify-center">
                                     <i data-lucide="x" class="w-4 h-4"></i>
                                     إلغاء

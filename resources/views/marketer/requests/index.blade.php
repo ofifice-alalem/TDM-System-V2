@@ -32,6 +32,39 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {{-- Main List --}}
             <div class="lg:col-span-8">
+                {{-- Filters --}}
+                <div class="bg-white dark:bg-dark-card rounded-2xl p-4 shadow-lg shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6">
+                    <form method="GET" action="{{ route('marketer.requests.index') }}" class="flex flex-col md:flex-row gap-3">
+                        <input type="hidden" name="status" value="{{ request('status') }}">
+                        <input type="hidden" name="all" value="{{ request('all') }}">
+                        
+                        <div class="flex-1">
+                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">رقم الفاتورة</label>
+                            <input type="text" name="invoice_number" value="{{ request('invoice_number') }}" placeholder="ابحث برقم الفاتورة..." class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">من تاريخ</label>
+                            <input type="date" name="from_date" value="{{ request('from_date') }}" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:[color-scheme:dark]">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">إلى تاريخ</label>
+                            <input type="date" name="to_date" value="{{ request('to_date') }}" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:[color-scheme:dark]">
+                        </div>
+                        <div class="flex gap-2 items-end">
+                            <button type="submit" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2 justify-center">
+                                <i data-lucide="filter" class="w-4 h-4"></i>
+                                فلترة
+                            </button>
+                            @if(request('invoice_number') || request('from_date') || request('to_date'))
+                                <a href="{{ route('marketer.requests.index', ['status' => request('status'), 'all' => request('all')]) }}" class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2 justify-center">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                    إلغاء
+                                </a>
+                            @endif
+                        </div>
+                    </form>
+                </div>
+
                 @include('shared.requests._status-tabs', ['route' => fn($params) => route('marketer.requests.index', $params)])
 
                 <div class="bg-white dark:bg-dark-card rounded-[2rem] p-4 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">

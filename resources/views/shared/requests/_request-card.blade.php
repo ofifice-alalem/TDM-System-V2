@@ -18,8 +18,12 @@
         </div>
 
         <div class="flex-1 p-4 md:p-6 flex items-center">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex-1">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
+                <div class="flex gap-2 md:order-2">
+                    {!! $actions ?? '' !!}
+                </div>
+                
+                <div class="flex-1 md:order-1">
                     <div class="flex items-center gap-3 mb-2">
                         <h3 class="text-xl md:text-lg font-black text-gray-900 dark:text-white">#{{ $request->invoice_number }}</h3>
                     </div>
@@ -36,10 +40,6 @@
                             <span>{{ $request->items->count() }} منتج</span>
                         </div>
                     </div>
-                </div>
-
-                <div class="flex gap-2">
-                    {!! $actions ?? '' !!}
                 </div>
             </div>
         </div>
