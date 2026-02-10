@@ -22,18 +22,41 @@ class WarehouseSalesController extends Controller
     {
         $query = SalesInvoice::with('marketer', 'store', 'items.product');
 
-        if ($request->filled('status')) {
+        $hasFilter = $request->filled('invoice_number') || $request->filled('from_date') || $request->filled('to_date');
+
+        if (!$hasFilter && $request->filled('status')) {
             $query->where('status', $request->status);
-        } elseif (!$request->has('all')) {
+        } elseif (!$hasFilter && !$request->has('all')) {
             $query->where('status', 'pending');
         }
 
+        if ($request->filled('invoice_number')) {
+            $query->where('invoice_number', 'like', '%' . $request->invoice_number . '%');
+        }
+
         if ($request->filled('from_date')) {
-            $query->whereDate('created_at', '>=', $request->from_date);
+            try {
+                $fromDate = \Carbon\Carbon::parse($request->from_date)->format('Y-m-d');
+                $query->whereDate('created_at', '>=', $fromDate);
+            } catch (\Exception $e) {}
         }
 
         if ($request->filled('to_date')) {
-            $query->whereDate('created_at', '<=', $request->to_date);
+            try {
+                $toDate = \Carbon\Carbon::parse($request->to_date)->format('Y-m-d');
+                $query->whereDate('created_at', '<=', $toDate);
+            } catch (\Exception $e) {}
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('marketer', function($mq) use ($search) {
+                    $mq->where('full_name', 'like', '%' . $search . '%');
+                })->orWhereHas('store', function($sq) use ($search) {
+                    $sq->where('name', 'like', '%' . $search . '%');
+                });
+            });
         }
 
         $invoices = $query->latest()->paginate(20)->withQueryString();
