@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Marketer;
 
 use App\Http\Controllers\Controller;
 use App\Models\MarketerCommission;
-use App\Models\MarketerWithdrawal;
+use App\Models\MarketerWithdrawalRequest;
 use Illuminate\Support\Facades\Auth;
 
 class CommissionController extends Controller
@@ -21,9 +21,9 @@ class CommissionController extends Controller
         $marketerId = auth()->id();
 
         $totalCommissions = MarketerCommission::where('marketer_id', $marketerId)->sum('commission_amount');
-        $totalWithdrawals = MarketerWithdrawal::where('marketer_id', $marketerId)
+        $totalWithdrawals = MarketerWithdrawalRequest::where('marketer_id', $marketerId)
             ->where('status', 'approved')
-            ->sum('amount');
+            ->sum('requested_amount');
         $availableBalance = $totalCommissions - $totalWithdrawals;
 
         $commissions = MarketerCommission::where('marketer_id', $marketerId)
@@ -44,7 +44,8 @@ class CommissionController extends Controller
                 ];
             });
 
-        $withdrawals = MarketerWithdrawal::where('marketer_id', $marketerId)
+        $withdrawals = MarketerWithdrawalRequest::where('marketer_id', $marketerId)
+            ->where('status', 'approved')
             ->latest()
             ->take(10)
             ->get()
@@ -52,7 +53,7 @@ class CommissionController extends Controller
                 return [
                     'type' => 'withdrawal',
                     'id' => $withdrawal->id,
-                    'amount' => $withdrawal->amount,
+                    'amount' => $withdrawal->requested_amount,
                     'status' => $withdrawal->status,
                     'date' => $withdrawal->created_at,
                 ];
