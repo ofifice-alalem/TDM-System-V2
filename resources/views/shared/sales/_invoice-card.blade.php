@@ -17,31 +17,24 @@
         </div>
 
         <div class="flex-1 p-4 md:p-6 flex items-center">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
-                <div class="flex-1">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 w-full">
+                <div class="flex-1 md:order-1">
                     <div class="flex items-center gap-3 mb-2">
                         <h3 class="text-xl md:text-lg font-black text-gray-900 dark:text-white">#{{ $invoice->invoice_number }}</h3>
                     </div>
                     
                     {!! $slot ?? '' !!}
                     
-                    <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 font-medium">
-                        <div class="flex items-center gap-1.5">
-                            <i data-lucide="calendar" class="w-4 h-4"></i>
-                            <span>{{ $invoice->created_at->format('Y-m-d') }}</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <i data-lucide="package" class="w-4 h-4"></i>
-                            <span>{{ $invoice->items->count() }} منتج</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
+                    <div class="flex items-center justify-between md:gap-4 bg-white dark:bg-dark-card rounded-xl p-3 border border-gray-200 dark:border-dark-border">
+                        {!! $storeSlot ?? '' !!}
+                        <div class="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400 font-medium">
                             <i data-lucide="dollar-sign" class="w-4 h-4"></i>
                             <span class="font-bold">{{ number_format($invoice->total_amount, 2) }} دينار</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex gap-2">
+                <div class="flex gap-2 md:order-2">
                     {!! $actions ?? '' !!}
                 </div>
             </div>

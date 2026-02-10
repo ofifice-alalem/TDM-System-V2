@@ -25,7 +25,7 @@ class SalesController extends Controller
         $query = SalesInvoice::with('store', 'items.product')
             ->where('marketer_id', auth()->id());
 
-        $hasFilter = $request->filled('invoice_number') || $request->filled('from_date') || $request->filled('to_date');
+        $hasFilter = $request->filled('invoice_number') || $request->filled('from_date') || $request->filled('to_date') || $request->filled('store');
 
         if (!$hasFilter && $request->has('status')) {
             $query->where('status', $request->status);
