@@ -22,10 +22,41 @@ class WarehousePaymentController extends Controller
     {
         $query = StorePayment::with('store', 'marketer', 'keeper');
 
-        if ($request->has('status')) {
+        $hasFilter = $request->filled('payment_number') || $request->filled('from_date') || $request->filled('to_date') || $request->filled('search');
+
+        if (!$hasFilter && $request->has('status')) {
             $query->where('status', $request->status);
-        } elseif (!$request->has('all')) {
+        } elseif (!$hasFilter && !$request->has('all')) {
             $query->where('status', 'pending');
+        }
+
+        if ($request->filled('payment_number')) {
+            $query->where('payment_number', 'like', '%' . $request->payment_number . '%');
+        }
+
+        if ($request->filled('from_date')) {
+            try {
+                $fromDate = \Carbon\Carbon::parse($request->from_date)->format('Y-m-d');
+                $query->whereDate('created_at', '>=', $fromDate);
+            } catch (\Exception $e) {}
+        }
+
+        if ($request->filled('to_date')) {
+            try {
+                $toDate = \Carbon\Carbon::parse($request->to_date)->format('Y-m-d');
+                $query->whereDate('created_at', '<=', $toDate);
+            } catch (\Exception $e) {}
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('marketer', function($q) use ($search) {
+                    $q->where('full_name', 'like', '%' . $search . '%');
+                })->orWhereHas('store', function($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%');
+                });
+            });
         }
 
         $payments = $query->latest('id')->paginate(20)->withQueryString();

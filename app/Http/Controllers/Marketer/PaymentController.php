@@ -24,10 +24,37 @@ class PaymentController extends Controller
         $query = StorePayment::with('store', 'marketer', 'keeper')
             ->where('marketer_id', auth()->id());
 
-        if ($request->has('status')) {
+        $hasFilter = $request->filled('payment_number') || $request->filled('from_date') || $request->filled('to_date') || $request->filled('store');
+
+        if (!$hasFilter && $request->has('status')) {
             $query->where('status', $request->status);
-        } elseif (!$request->has('all')) {
+        } elseif (!$hasFilter && !$request->has('all')) {
             $query->where('status', 'pending');
+        }
+
+        if ($request->filled('payment_number')) {
+            $query->where('payment_number', 'like', '%' . $request->payment_number . '%');
+        }
+
+        if ($request->filled('from_date')) {
+            try {
+                $fromDate = \Carbon\Carbon::parse($request->from_date)->format('Y-m-d');
+                $query->whereDate('created_at', '>=', $fromDate);
+            } catch (\Exception $e) {}
+        }
+
+        if ($request->filled('to_date')) {
+            try {
+                $toDate = \Carbon\Carbon::parse($request->to_date)->format('Y-m-d');
+                $query->whereDate('created_at', '<=', $toDate);
+            } catch (\Exception $e) {}
+        }
+
+        if ($request->filled('store')) {
+            $storeName = $request->store;
+            $query->whereHas('store', function($q) use ($storeName) {
+                $q->where('name', 'like', '%' . $storeName . '%');
+            });
         }
 
         $payments = $query->latest('id')->paginate(20)->withQueryString();
