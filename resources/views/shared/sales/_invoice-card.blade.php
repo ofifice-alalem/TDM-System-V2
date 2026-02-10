@@ -25,10 +25,10 @@
                     
                     {!! $slot ?? '' !!}
                     
-                    <div class="flex items-center justify-between md:gap-4 bg-white dark:bg-dark-card rounded-xl p-3 border border-gray-200 dark:border-dark-border">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-4 bg-white dark:bg-dark-card rounded-xl p-3 border border-gray-200 dark:border-dark-border">
                         {!! $storeSlot ?? '' !!}
-                        <div class="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400 font-medium">
-                            <i data-lucide="dollar-sign" class="w-4 h-4"></i>
+                        <div class="flex items-center gap-1.5 text-base text-gray-600 dark:text-gray-400 font-medium">
+                            <i data-lucide="dollar-sign" class="w-5 h-5"></i>
                             <span class="font-bold">{{ number_format($invoice->total_amount, 2) }} دينار</span>
                         </div>
                     </div>

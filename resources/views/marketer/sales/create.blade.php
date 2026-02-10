@@ -33,6 +33,16 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- القسم الأيمن: المنتجات -->
                 <div class="lg:col-span-2 space-y-6">
+                    <!-- اختيار المتجر - يظهر فقط في النقال -->
+                    <div id="store-select-mobile" class="lg:hidden bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="bg-primary-50 dark:bg-primary-900/20 p-2.5 rounded-xl text-primary-600 dark:text-primary-400 shadow-sm border border-primary-100 dark:border-primary-600/30">
+                                <i data-lucide="store" class="w-5 h-5"></i>
+                            </span>
+                            <h3 class="font-bold text-xl text-gray-900 dark:text-white">اختيار المتجر</h3>
+                        </div>
+                    </div>
+                    
                     <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border relative overflow-hidden animate-slide-up">
                 <div class="flex items-center justify-between mb-8">
                     <div>
@@ -128,22 +138,17 @@
                         </div>
                     </div>
                 </div>
-
+                
                 <!-- القسم الأيسر: المتجر والملاحظات والإجراءات -->
                 <div class="lg:col-span-1 space-y-6">
-                    <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
+                    <!-- اختيار المتجر - يظهر فقط في الشاشات الكبيرة -->
+                    <div id="store-select-desktop" class="hidden lg:block bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
                         <div class="flex items-center gap-3 mb-6">
                             <span class="bg-primary-50 dark:bg-primary-900/20 p-2.5 rounded-xl text-primary-600 dark:text-primary-400 shadow-sm border border-primary-100 dark:border-primary-600/30">
                                 <i data-lucide="store" class="w-5 h-5"></i>
                             </span>
                             <h3 class="font-bold text-xl text-gray-900 dark:text-white">اختيار المتجر</h3>
                         </div>
-                        <select name="store_id" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all" required>
-                            <option value="">اختر المتجر</option>
-                            @foreach($stores as $store)
-                                <option value="{{ $store->id }}">{{ $store->name }} - {{ $store->owner_name }}</option>
-                            @endforeach
-                        </select>
                     </div>
 
                     <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
@@ -183,6 +188,29 @@
 
 @push('scripts')
 <script>
+// Create single store select and move it based on screen size
+const storeSelect = document.createElement('select');
+storeSelect.name = 'store_id';
+storeSelect.required = true;
+storeSelect.className = 'w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all';
+storeSelect.innerHTML = `
+    <option value="">اختر المتجر</option>
+    @foreach($stores as $store)
+        <option value="{{ $store->id }}">{{ $store->name }} - {{ $store->owner_name }}</option>
+    @endforeach
+`;
+
+function moveStoreSelect() {
+    const isMobile = window.innerWidth < 1024;
+    const container = isMobile ? document.getElementById('store-select-mobile') : document.getElementById('store-select-desktop');
+    if (container && !container.contains(storeSelect)) {
+        container.appendChild(storeSelect);
+    }
+}
+
+window.addEventListener('resize', moveStoreSelect);
+document.addEventListener('DOMContentLoaded', moveStoreSelect);
+
 let itemIndex = 1;
 
 function calculateGift(buyQty, quantity) {
