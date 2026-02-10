@@ -111,6 +111,14 @@
                     @endif
                 </a>
 
+                <a href="{{ route('marketer.sales-returns.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('marketer.sales-returns.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="undo-2" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.sales-returns.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>إرجاع من المتاجر</span>
+                    @if(request()->routeIs('marketer.sales-returns.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
+
                 <a href="{{ route('marketer.payments.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('marketer.payments.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                     <i data-lucide="banknote" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.payments.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
                     <span>إيصالات القبض</span>
@@ -192,6 +200,14 @@
                     <i data-lucide="banknote" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('warehouse.payments.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
                     <span>إيصالات القبض</span>
                     @if(request()->routeIs('warehouse.payments.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
+
+                <a href="{{ route('warehouse.sales-returns.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('warehouse.sales-returns.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="undo-2" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('warehouse.sales-returns.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>إرجاع من المتاجر</span>
+                    @if(request()->routeIs('warehouse.sales-returns.*'))
                         <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
                     @endif
                 </a>

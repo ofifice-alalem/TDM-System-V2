@@ -43,5 +43,12 @@ Route::middleware(['web'])->group(function () {
             Route::post('/{id}/approve', [\App\Http\Controllers\Warehouse\WarehousePaymentController::class, 'approve'])->name('approve');
             Route::patch('/{id}/reject', [\App\Http\Controllers\Warehouse\WarehousePaymentController::class, 'reject'])->name('reject');
         });
+
+        Route::prefix('sales-returns')->name('sales-returns.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'index'])->name('index');
+            Route::get('/{salesReturn}', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'show'])->name('show');
+            Route::post('/{id}/approve', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'approve'])->name('approve');
+            Route::patch('/{id}/reject', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'reject'])->name('reject');
+        });
     });
 });

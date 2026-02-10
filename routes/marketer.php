@@ -75,5 +75,14 @@ Route::middleware(['web'])->group(function () {
             Route::get('/{withdrawal}/pdf', [\App\Http\Controllers\Shared\Withdrawal\InvoiceController::class, 'generateWithdrawalInvoicePdf'])->name('pdf');
             Route::patch('/{withdrawal}/cancel', [WithdrawalController::class, 'cancel'])->name('cancel');
         });
+
+        Route::prefix('sales-returns')->name('sales-returns.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Marketer\SalesReturnController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\Marketer\SalesReturnController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\Marketer\SalesReturnController::class, 'store'])->name('store');
+            Route::get('/{salesReturn}', [\App\Http\Controllers\Marketer\SalesReturnController::class, 'show'])->name('show');
+            Route::patch('/{salesReturn}/cancel', [\App\Http\Controllers\Marketer\SalesReturnController::class, 'cancel'])->name('cancel');
+            Route::get('/{salesReturn}/pdf', [\App\Http\Controllers\Shared\SalesReturn\InvoiceController::class, 'generateSalesReturnInvoicePdf'])->name('pdf');
+        });
     });
 });

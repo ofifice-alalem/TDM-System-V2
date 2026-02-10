@@ -31,4 +31,14 @@ class SalesReturn extends Model
     {
         return $this->belongsTo(SalesInvoice::class);
     }
+
+    public function keeper()
+    {
+        return $this->belongsTo(User::class, 'keeper_id');
+    }
+
+    public function items()
+    {
+        return $this->hasMany(SalesReturnItem::class, 'return_id');
+    }
 }
