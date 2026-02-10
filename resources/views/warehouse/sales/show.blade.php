@@ -123,35 +123,35 @@
                         </table>
                     </div>
 
-                    <div class="mt-8 bg-gradient-to-br from-primary-50 to-primary-100/50 dark:from-gray-900 dark:to-black rounded-3xl p-8 border-2 border-primary-100 dark:border-transparent text-gray-900 dark:text-white flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden group">
+                    <div class="mt-8 bg-gradient-to-br from-primary-50 to-primary-100/50 dark:from-gray-900 dark:to-black rounded-3xl p-4 md:p-8 border-2 border-primary-100 dark:border-transparent text-gray-900 dark:text-white flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden group">
                         <div class="absolute top-0 left-0 w-64 h-64 bg-primary-200 dark:bg-accent-500 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[60px] opacity-30 dark:opacity-10 -translate-x-1/2 -translate-y-1/2 transition-transform duration-700 group-hover:scale-125"></div>
                         
-                        <div class="relative z-10 w-full space-y-4">
-                            <div class="flex justify-between text-base">
+                        <div class="relative z-10 w-full space-y-2 md:space-y-4">
+                            <div class="flex justify-between text-sm md:text-base">
                                 <span class="font-semibold text-gray-700 dark:text-white">عدد البضاعة:</span>
-                                <span class="font-black text-xl text-gray-900 dark:text-white">{{ $invoice->items->sum(fn($item) => $item->quantity + $item->free_quantity) }}</span>
+                                <span class="font-black text-base md:text-xl text-gray-900 dark:text-white">{{ $invoice->items->sum(fn($item) => $item->quantity + $item->free_quantity) }}</span>
                             </div>
-                            <div class="flex justify-between text-base">
+                            <div class="flex justify-between text-sm md:text-base">
                                 <span class="font-semibold text-gray-700 dark:text-white">المجموع الفرعي:</span>
-                                <span class="font-black text-xl text-gray-900 dark:text-white">{{ number_format($invoice->subtotal + $invoice->product_discount, 2) }} دينار</span>
+                                <span class="font-black text-base md:text-xl text-gray-900 dark:text-white">{{ number_format($invoice->subtotal + $invoice->product_discount, 2) }} دينار</span>
                             </div>
                             @if($invoice->product_discount > 0)
-                            <div class="flex justify-between text-base text-emerald-600 dark:text-emerald-300">
+                            <div class="flex justify-between text-sm md:text-base text-emerald-600 dark:text-emerald-300">
                                 <span class="font-semibold">خصم المنتجات (هدايا):</span>
-                                <span class="font-black text-xl">- {{ number_format($invoice->product_discount, 2) }} دينار</span>
+                                <span class="font-black text-base md:text-xl">- {{ number_format($invoice->product_discount, 2) }} دينار</span>
                             </div>
                             @endif
                             @if($invoice->invoice_discount_amount > 0)
-                            <div class="flex justify-between text-base text-blue-600 dark:text-blue-300">
+                            <div class="flex justify-between text-sm md:text-base text-blue-600 dark:text-blue-300">
                                 <span class="font-semibold">خصم الفاتورة:</span>
-                                <span class="font-black text-xl">- {{ number_format($invoice->invoice_discount_amount, 2) }} دينار</span>
+                                <span class="font-black text-base md:text-xl">- {{ number_format($invoice->invoice_discount_amount, 2) }} دينار</span>
                             </div>
                             @endif
-                            <div class="pt-4 border-t-2 border-primary-200 dark:border-white/20 flex justify-between items-baseline">
-                                <span class="text-lg font-bold uppercase tracking-wider text-gray-800 dark:text-white">الإجمالي النهائي:</span>
-                                <div class="text-5xl font-black tracking-tighter flex items-baseline gap-2 text-gray-900 dark:text-white">
+                            <div class="pt-3 md:pt-4 border-t-2 border-primary-200 dark:border-white/20 flex flex-col md:flex-row justify-between md:items-baseline gap-2">
+                                <span class="text-base md:text-lg font-bold uppercase tracking-wider text-gray-800 dark:text-white">الإجمالي النهائي:</span>
+                                <div class="text-3xl md:text-5xl font-black tracking-tighter flex items-baseline gap-2 text-gray-900 dark:text-white">
                                     {{ number_format($invoice->total_amount, 2) }}
-                                    <span class="text-xl font-bold text-gray-600 dark:text-gray-300">دينار</span>
+                                    <span class="text-base md:text-xl font-bold text-gray-600 dark:text-gray-300">دينار</span>
                                 </div>
                             </div>
                         </div>
