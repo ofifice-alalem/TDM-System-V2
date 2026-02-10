@@ -25,12 +25,39 @@ class SalesReturnController extends Controller
             ->with(['store', 'salesInvoice', 'items.product'])
             ->latest();
 
-        if ($request->has('status') && $request->status !== 'all') {
+        $hasFilter = $request->filled('return_number') || $request->filled('from_date') || $request->filled('to_date') || $request->filled('store');
+
+        if (!$hasFilter && $request->has('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
 
-        if (!$request->has('status') && !$request->has('all')) {
+        if (!$hasFilter && !$request->has('status') && !$request->has('all')) {
             $query->where('status', 'pending');
+        }
+
+        if ($request->filled('return_number')) {
+            $query->where('return_number', 'like', '%' . $request->return_number . '%');
+        }
+
+        if ($request->filled('from_date')) {
+            try {
+                $fromDate = \Carbon\Carbon::parse($request->from_date)->format('Y-m-d');
+                $query->whereDate('created_at', '>=', $fromDate);
+            } catch (\Exception $e) {}
+        }
+
+        if ($request->filled('to_date')) {
+            try {
+                $toDate = \Carbon\Carbon::parse($request->to_date)->format('Y-m-d');
+                $query->whereDate('created_at', '<=', $toDate);
+            } catch (\Exception $e) {}
+        }
+
+        if ($request->filled('store')) {
+            $storeName = $request->store;
+            $query->whereHas('store', function($q) use ($storeName) {
+                $q->where('name', 'like', '%' . $storeName . '%');
+            });
         }
 
         $returns = $query->paginate(10);
