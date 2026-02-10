@@ -34,21 +34,29 @@
                 
                 <div class="bg-white dark:bg-dark-card rounded-[2rem] p-6 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
                     <div class="flex items-center gap-3 mb-6">
-                        <span class="bg-purple-50 dark:bg-purple-900/20 p-2.5 rounded-xl text-purple-600 dark:text-purple-400 shadow-sm border border-purple-100 dark:border-purple-600/30">
+                        <span class="bg-amber-50 dark:bg-amber-900/20 p-2.5 rounded-xl text-amber-600 dark:text-amber-400 shadow-sm border border-amber-100 dark:border-amber-600/30">
                             <i data-lucide="user" class="w-5 h-5"></i>
                         </span>
                         <h2 class="font-bold text-xl text-gray-900 dark:text-white">معلومات المسوق</h2>
                     </div>
-                    <div class="bg-gray-50/50 dark:bg-dark-bg/60 rounded-2xl p-6 border border-gray-100 dark:border-dark-border">
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <p class="text-xs text-gray-400 dark:text-dark-muted mb-2 font-bold uppercase">اسم المسوق</p>
-                                <p class="font-black text-gray-900 dark:text-white text-lg">{{ $withdrawal->marketer->full_name }}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/10 rounded-2xl p-5 border border-amber-200 dark:border-amber-800/30">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/40 rounded-xl flex items-center justify-center">
+                                    <i data-lucide="user-circle" class="w-5 h-5 text-amber-600 dark:text-amber-400"></i>
+                                </div>
+                                <p class="text-xs text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">اسم المسوق</p>
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-400 dark:text-dark-muted mb-2 font-bold uppercase">الرقم</p>
-                                <p class="font-black text-gray-900 dark:text-white text-lg">{{ $withdrawal->marketer->phone ?? '---' }}</p>
+                            <p class="font-black text-gray-900 dark:text-white text-xl">{{ $withdrawal->marketer->full_name }}</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 rounded-2xl p-5 border border-blue-200 dark:border-blue-800/30">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-xl flex items-center justify-center">
+                                    <i data-lucide="phone" class="w-5 h-5 text-blue-600 dark:text-blue-400"></i>
+                                </div>
+                                <p class="text-xs text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">رقم الهاتف</p>
                             </div>
+                            <p class="font-black text-gray-900 dark:text-white text-xl direction-ltr text-right">{{ $withdrawal->marketer->phone ?? '---' }}</p>
                         </div>
                     </div>
                 </div>
