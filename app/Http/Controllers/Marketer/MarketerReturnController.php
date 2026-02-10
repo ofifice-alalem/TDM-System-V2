@@ -27,10 +27,30 @@ class MarketerReturnController extends Controller
         $query = MarketerReturnRequest::with('items.product')
             ->where('marketer_id', auth()->id());
 
-        if ($request->has('status')) {
+        $hasFilter = $request->filled('invoice_number') || $request->filled('from_date') || $request->filled('to_date');
+
+        if (!$hasFilter && $request->has('status')) {
             $query->where('status', $request->status);
-        } elseif (!$request->has('all')) {
+        } elseif (!$hasFilter && !$request->has('all')) {
             $query->where('status', 'pending');
+        }
+
+        if ($request->filled('invoice_number')) {
+            $query->where('invoice_number', 'like', '%' . $request->invoice_number . '%');
+        }
+
+        if ($request->filled('from_date')) {
+            try {
+                $fromDate = \Carbon\Carbon::parse($request->from_date)->format('Y-m-d');
+                $query->whereDate('created_at', '>=', $fromDate);
+            } catch (\Exception $e) {}
+        }
+
+        if ($request->filled('to_date')) {
+            try {
+                $toDate = \Carbon\Carbon::parse($request->to_date)->format('Y-m-d');
+                $query->whereDate('created_at', '<=', $toDate);
+            } catch (\Exception $e) {}
         }
 
         $requests = $query->latest()->paginate(20)->withQueryString();

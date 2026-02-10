@@ -21,26 +21,46 @@ class WarehouseReturnController extends Controller
     {
         $query = MarketerReturnRequest::with('marketer', 'items.product');
 
-        if ($request->filled('from_date')) {
-            $query->whereDate('created_at', '>=', $request->from_date);
-        }
+        $hasFilter = $request->filled('invoice_number') || $request->filled('from_date') || $request->filled('to_date');
 
-        if ($request->filled('to_date')) {
-            $query->whereDate('created_at', '<=', $request->to_date);
-        }
-
-        if ($request->filled('marketer_id')) {
-            $query->where('marketer_id', $request->marketer_id);
-        }
-
-        if ($request->filled('status')) {
+        if (!$hasFilter && $request->filled('status')) {
             $query->where('status', $request->status);
-        } elseif (!$request->has('all')) {
+        } elseif (!$hasFilter && !$request->has('all')) {
             $query->where('status', 'pending');
         }
 
+        if ($request->filled('invoice_number')) {
+            $query->where('invoice_number', 'like', '%' . $request->invoice_number . '%');
+        }
+
+        if ($request->filled('from_date')) {
+            try {
+                $fromDate = \Carbon\Carbon::parse($request->from_date)->format('Y-m-d');
+                $query->whereDate('created_at', '>=', $fromDate);
+            } catch (\Exception $e) {}
+        }
+
+        if ($request->filled('to_date')) {
+            try {
+                $toDate = \Carbon\Carbon::parse($request->to_date)->format('Y-m-d');
+                $query->whereDate('created_at', '<=', $toDate);
+            } catch (\Exception $e) {}
+        }
+
+        if ($request->filled('marketer_id')) {
+            $marketerName = $request->marketer_id;
+            $query->whereHas('marketer', function($q) use ($marketerName) {
+                $q->where('full_name', 'like', '%' . $marketerName . '%');
+            });
+        }
+
         $requests = $query->latest()->paginate(20)->withQueryString();
-        $marketers = \App\Models\User::where('role_id', 3)->get();
+        $marketers = \App\Models\MarketerReturnRequest::with('marketer')
+            ->select('marketer_id')
+            ->distinct()
+            ->get()
+            ->pluck('marketer')
+            ->unique('id');
 
         return view('warehouse.returns.index', compact('requests', 'marketers'));
     }
