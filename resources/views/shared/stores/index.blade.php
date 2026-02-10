@@ -85,7 +85,7 @@
                                 الرصيد
                             </div>
                             <div class="text-sm font-black {{ $store->total_debt > 0 ? 'text-red-600 dark:text-red-400' : ($store->total_debt < 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white') }}">
-                                {{ number_format(abs($store->total_debt), 2) }} د.ل
+                                {{ number_format(abs($store->total_debt), 2) }} دينار
                             </div>
                         </div>
                     </div>
@@ -104,9 +104,11 @@
                         <button class="w-12 h-12 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
                             <i data-lucide="message-circle" class="w-5 h-5"></i>
                         </button>
-                        <a href="{{ request()->routeIs('marketer.*') ? route('marketer.stores.show', $store) : (request()->routeIs('warehouse.*') ? route('warehouse.stores.show', $store) : route('admin.stores.show', $store)) }}" class="w-12 h-12 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
-                            <i data-lucide="eye" class="w-5 h-5"></i>
+                        @if($store->location)
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($store->location) }}" target="_blank" class="w-12 h-12 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+                            <i data-lucide="map-pin" class="w-5 h-5"></i>
                         </a>
+                        @endif
                     </div>
 
                 </div>

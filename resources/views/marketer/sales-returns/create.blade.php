@@ -45,24 +45,16 @@
                             </div>
                         </div>
 
-                        <select name="sales_invoice_id" id="invoice-select" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm" required>
-                            <option value="">اختر الفاتورة</option>
-                            @foreach($approvedInvoices as $invoice)
-                                <option value="{{ $invoice->id }}" 
-                                        data-store="{{ $invoice->store->name }}"
-                                        data-items="{{ json_encode($invoice->items->map(fn($item) => [
-                                            'id' => $item->id,
-                                            'product_id' => $item->product_id,
-                                            'product_name' => $item->product->name,
-                                            'quantity' => $item->quantity,
-                                            'free_quantity' => $item->free_quantity,
-                                            'unit_price' => $item->unit_price,
-                                            'total' => $item->quantity + $item->free_quantity
-                                        ])) }}">
-                                    #{{ $invoice->invoice_number }} - {{ $invoice->store->name }} - {{ number_format($invoice->total_amount, 2) }} دينار
-                                </option>
-                            @endforeach
-                        </select>
+                        <div class="flex gap-2">
+                            <input type="text" id="invoice-search" placeholder="ادخل رقم الفاتورة..." class="flex-1 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm" autocomplete="off">
+                            <button type="button" id="search-btn" class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all flex items-center gap-2">
+                                <i data-lucide="search" class="w-5 h-5"></i>
+                                بحث
+                            </button>
+                        </div>
+                        <input type="hidden" name="sales_invoice_id" id="selected-invoice-id" required>
+                        
+                        <div id="search-results" class="hidden mt-4 space-y-3"></div>
 
                         <div id="items-container" class="mt-6 space-y-4 hidden">
                             <h3 class="font-bold text-lg text-gray-900 dark:text-white mb-4">المنتجات المتاحة للإرجاع</h3>
@@ -125,23 +117,131 @@
 
 @push('scripts')
 <script>
+const allInvoices = {!! json_encode($approvedInvoices->map(function($invoice) {
+    return [
+        'id' => $invoice->id,
+        'number' => $invoice->invoice_number,
+        'store' => $invoice->store->name,
+        'amount' => $invoice->total_amount,
+        'items' => $invoice->items->map(function($item) {
+            return [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'product_name' => $item->product->name,
+                'quantity' => $item->quantity,
+                'free_quantity' => $item->free_quantity,
+                'unit_price' => $item->unit_price,
+                'total' => $item->quantity + $item->free_quantity
+            ];
+        })->toArray()
+    ];
+})->toArray()) !!};
+
 document.addEventListener('DOMContentLoaded', function() {
     lucide.createIcons();
     
-    const invoiceSelect = document.getElementById('invoice-select');
+    const invoiceSearch = document.getElementById('invoice-search');
+    const searchBtn = document.getElementById('search-btn');
+    const searchResults = document.getElementById('search-results');
+    const selectedInvoiceId = document.getElementById('selected-invoice-id');
     const itemsContainer = document.getElementById('items-container');
     const summaryContainer = document.getElementById('summary-container');
     
-    invoiceSelect.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
+    // Search functionality
+    searchBtn.addEventListener('click', performSearch);
+    invoiceSearch.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            performSearch();
+        }
+    });
+    
+    function performSearch() {
+        const searchTerm = invoiceSearch.value.toLowerCase().trim();
         
-        if (!this.value) {
-            itemsContainer.classList.add('hidden');
-            summaryContainer.classList.add('hidden');
+        if (searchTerm === '') {
+            alert('الرجاء إدخال رقم الفاتورة');
             return;
         }
         
-        const items = JSON.parse(selectedOption.dataset.items || '[]');
+        const results = allInvoices.filter(invoice => 
+            invoice.number.toLowerCase().includes(searchTerm)
+        );
+        
+        displayResults(results);
+    }
+    
+    function displayResults(results) {
+        searchResults.innerHTML = '';
+        
+        if (results.length === 0) {
+            searchResults.innerHTML = '<div class="text-center py-8 text-gray-500 dark:text-gray-400">لم يتم العثور على فواتير</div>';
+            searchResults.classList.remove('hidden');
+            return;
+        }
+        
+        results.forEach(invoice => {
+            const resultHtml = `
+                <div class="invoice-result bg-white dark:bg-dark-card border-2 border-gray-200 dark:border-dark-border rounded-xl p-4 hover:border-primary-500 dark:hover:border-primary-500 cursor-pointer transition-all"
+                     data-invoice='${JSON.stringify(invoice)}'>
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="font-black text-lg text-gray-900 dark:text-white">#${invoice.number}</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-2">
+                                <i data-lucide="store" class="w-4 h-4"></i>
+                                <span>${invoice.store}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-bold text-primary-600 dark:text-primary-400">${parseFloat(invoice.amount).toFixed(2)}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">دينار</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            searchResults.insertAdjacentHTML('beforeend', resultHtml);
+        });
+        
+        searchResults.classList.remove('hidden');
+        lucide.createIcons();
+        
+        // Add click handlers
+        searchResults.querySelectorAll('.invoice-result').forEach(result => {
+            result.addEventListener('click', function() {
+                const invoice = JSON.parse(this.dataset.invoice);
+                selectInvoice(invoice);
+            });
+        });
+    }
+    
+    function selectInvoice(invoice) {
+        selectedInvoiceId.value = invoice.id;
+        invoiceSearch.value = '#' + invoice.number;
+        
+        // Keep only selected result
+        searchResults.innerHTML = `
+            <div class="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-500 dark:border-emerald-500 rounded-xl p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="font-black text-lg text-gray-900 dark:text-white">#${invoice.number}</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-2">
+                            <i data-lucide="store" class="w-4 h-4"></i>
+                            <span>${invoice.store}</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xl font-bold text-emerald-600 dark:text-emerald-400">${parseFloat(invoice.amount).toFixed(2)}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">دينار</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        lucide.createIcons();
+        
+        loadInvoiceItems(invoice.items);
+    }
+    
+    function loadInvoiceItems(items) {
         
         itemsContainer.innerHTML = '<h3 class="font-bold text-lg text-gray-900 dark:text-white mb-4">المنتجات المتاحة للإرجاع</h3>';
         
@@ -156,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         <div class="col-span-6 md:col-span-3">
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">الكمية المرجعة</label>
-                            <input type="number" name="items[${index}][quantity]" class="return-quantity w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm" min="1" max="${item.total}" data-price="${item.unit_price}" data-max="${item.total}" placeholder="0" required>
+                            <input type="number" name="items[${index}][quantity]" class="return-quantity w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm" min="0" max="${item.total}" data-price="${item.unit_price}" data-max="${item.total}" value="0">
                         </div>
                         <div class="col-span-6 md:col-span-2">
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">السعر</label>
@@ -187,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         lucide.createIcons();
-    });
+    }
     
     function calculateSummary() {
         let totalItems = 0;
@@ -210,6 +310,31 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('total-items').textContent = totalItems;
         document.getElementById('total-amount').textContent = totalAmount.toFixed(2) + ' دينار';
     }
+    
+    // Handle form submission - remove items with quantity 0
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const quantityInputs = document.querySelectorAll('.return-quantity');
+        let hasItems = false;
+        
+        quantityInputs.forEach(input => {
+            const quantity = parseInt(input.value || 0);
+            if (quantity === 0) {
+                // Remove the entire item container
+                const container = input.closest('.bg-gray-50\\/50');
+                if (container) {
+                    container.remove();
+                }
+            } else {
+                hasItems = true;
+            }
+        });
+        
+        if (!hasItems) {
+            e.preventDefault();
+            alert('يجب تحديد كمية واحدة على الأقل للإرجاع');
+            return false;
+        }
+    });
 });
 </script>
 @endpush

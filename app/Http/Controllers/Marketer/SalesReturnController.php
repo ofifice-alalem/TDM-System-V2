@@ -84,9 +84,22 @@ class SalesReturnController extends Controller
             'sales_invoice_id' => 'required|exists:sales_invoices,id',
             'items' => 'required|array|min:1',
             'items.*.sales_invoice_item_id' => 'required|exists:sales_invoice_items,id',
-            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.quantity' => 'required|integer|min:0',
             'notes' => 'nullable|string',
         ]);
+
+        // Filter out items with quantity 0
+        $validated['items'] = array_filter($validated['items'], function($item) {
+            return $item['quantity'] > 0;
+        });
+
+        // Re-index array
+        $validated['items'] = array_values($validated['items']);
+
+        // Check if there are any items left
+        if (empty($validated['items'])) {
+            return back()->with('error', 'يجب تحديد كمية واحدة على الأقل للإرجاع')->withInput();
+        }
 
         $marketerId = 3; // Temporary
         $keeperId = 1; // Temporary

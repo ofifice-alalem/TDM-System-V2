@@ -99,7 +99,7 @@
                                             <div class="text-base sm:text-lg font-black
                                                 {{ $transaction['type'] === 'sale' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}
                                             ">
-                                                {{ $transaction['type'] === 'sale' ? '+' : '-' }}{{ number_format($transaction['amount'], 2) }} د.ل
+                                                {{ $transaction['type'] === 'sale' ? '+' : '-' }}{{ number_format($transaction['amount'], 2) }} دينار
                                             </div>
                                         </div>
                                         @php
@@ -212,23 +212,23 @@
                     <div class="space-y-3">
                         <div class="bg-blue-50 dark:bg-blue-500/10 rounded-2xl p-4">
                             <div class="text-xs text-blue-600 dark:text-blue-400 mb-1">إجمالي المبيعات</div>
-                            <div class="text-xl font-black text-blue-700 dark:text-blue-300">{{ number_format($stats['total_sales'], 2) }} د.ل</div>
+                            <div class="text-xl font-black text-blue-700 dark:text-blue-300">{{ number_format($stats['total_sales'], 2) }} دينار</div>
                         </div>
 
                         <div class="bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl p-4">
                             <div class="text-xs text-emerald-600 dark:text-emerald-400 mb-1">إجمالي المدفوعات</div>
-                            <div class="text-xl font-black text-emerald-700 dark:text-emerald-300">{{ number_format($stats['total_payments'], 2) }} د.ل</div>
+                            <div class="text-xl font-black text-emerald-700 dark:text-emerald-300">{{ number_format($stats['total_payments'], 2) }} دينار</div>
                         </div>
 
                         <div class="bg-orange-50 dark:bg-orange-500/10 rounded-2xl p-4">
                             <div class="text-xs text-orange-600 dark:text-orange-400 mb-1">إجمالي المرتجعات</div>
-                            <div class="text-xl font-black text-orange-700 dark:text-orange-300">{{ number_format($stats['total_returns'], 2) }} د.ل</div>
+                            <div class="text-xl font-black text-orange-700 dark:text-orange-300">{{ number_format($stats['total_returns'], 2) }} دينار</div>
                         </div>
 
                         <div class="bg-gradient-to-br from-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-100 to-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-200 dark:from-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-900/40 dark:to-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-800/40 rounded-2xl p-5 border-2 border-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-200 dark:border-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-700">
                             <div class="text-xs text-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-700 dark:text-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-300 mb-1 font-bold">الرصيد الحالي</div>
                             <div class="text-2xl font-black text-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-800 dark:text-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-200">
-                                {{ $debt > 0 ? '-' : ($debt < 0 ? '+' : '') }}{{ number_format(abs($debt), 2) }} د.ل
+                                {{ $debt > 0 ? '-' : ($debt < 0 ? '+' : '') }}{{ number_format(abs($debt), 2) }} دينار
                             </div>
                         </div>
                     </div>
