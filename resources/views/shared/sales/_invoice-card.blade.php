@@ -36,7 +36,7 @@
                         </div>
                         <div class="flex items-center gap-1.5">
                             <i data-lucide="dollar-sign" class="w-4 h-4"></i>
-                            <span class="font-bold">{{ number_format($invoice->total_amount, 2) }} ر.س</span>
+                            <span class="font-bold">{{ number_format($invoice->total_amount, 2) }} دينار</span>
                         </div>
                     </div>
                 </div>
