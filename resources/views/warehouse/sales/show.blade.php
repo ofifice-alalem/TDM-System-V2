@@ -293,6 +293,77 @@
                     </div>
                 </div>
 
+                {{-- Activity Timeline --}}
+                <div class="bg-white dark:bg-dark-card rounded-[1.5rem] border border-gray-200 dark:border-dark-border p-6 shadow-lg shadow-gray-200/50 dark:shadow-sm">
+                    <h3 class="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                        <i data-lucide="list" class="w-5 h-5 text-primary-500"></i>
+                        سجل العمليات
+                    </h3>
+                    
+                    <div class="relative space-y-6 before:absolute before:inset-0 before:mr-[19px] before:h-full before:w-0.5 before:bg-gradient-to-b before:from-gray-200 dark:before:from-dark-border before:via-gray-100 dark:before:via-dark-bg before:to-transparent">
+                        
+                        {{-- Step 1: Created --}}
+                        <div class="relative flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="plus" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white text-sm">تم إنشاء الفاتورة</h4>
+                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $invoice->marketer->full_name }}</p>
+                                <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $invoice->created_at->format('Y-m-d h:i A') }}</span>
+                            </div>
+                        </div>
+
+                        {{-- Step 2: Approved --}}
+                        @if($invoice->confirmed_at)
+                        <div class="relative flex items-start gap-4 animate-slide-up">
+                            <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white text-sm">تم التوثيق</h4>
+                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $invoice->keeper->full_name }}</p>
+                                <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $invoice->confirmed_at->format('Y-m-d h:i A') }}</span>
+                            </div>
+                        </div>
+                        @elseif($invoice->status == 'rejected')
+                        <div class="relative flex items-start gap-4 animate-slide-up">
+                            <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="x" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-red-800 dark:text-red-400 text-sm">تم الرفض</h4>
+                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: أمين المخزن</p>
+                            </div>
+                        </div>
+                        @else
+                        <div class="relative flex items-start gap-4 opacity-50 grayscale">
+                            <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-dark-bg text-gray-400 dark:text-gray-600 flex items-center justify-center shrink-0 z-10 border-2 border-white dark:border-dark-card relative overflow-hidden">
+                                <div class="absolute inset-0 bg-gray-200/50 dark:bg-gray-800/50 animate-pulse"></div>
+                                <i data-lucide="clock" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-400 dark:text-gray-600 text-sm">التوثيق</h4>
+                                <div class="text-xs text-gray-400 dark:text-gray-600 mt-1">في الانتظار...</div>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- Step 3: Cancelled --}}
+                        @if($invoice->status == 'cancelled')
+                        <div class="relative flex items-start gap-4 animate-slide-up">
+                            <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="slash" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-600 dark:text-gray-300 text-sm">تم الإلغاء</h4>
+                            </div>
+                        </div>
+                        @endif
+                        
+                    </div>
+                </div>
+
             </div>
 
         </div>
