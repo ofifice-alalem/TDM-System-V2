@@ -1,130 +1,124 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html>
 <head>
-    <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>فاتورة إرجاع #{{ $salesReturn->return_number }}</title>
+    <title>إرجاع بضاعة</title>
     <style>
         @font-face {
             font-family: 'Cairo';
-            src: url('{{ storage_path('fonts/Cairo-Bold.ttf') }}') format('truetype');
-            font-weight: bold;
+            src: url('{{ public_path("fonts/Cairo-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
         }
         @font-face {
             font-family: 'Cairo';
-            src: url('{{ storage_path('fonts/Cairo-Regular.ttf') }}') format('truetype');
-            font-weight: normal;
+            src: url('{{ public_path("fonts/Cairo-Bold.ttf") }}') format('truetype');
+            font-weight: bold;
+            font-style: normal;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Cairo', sans-serif; font-size: 14px; line-height: 1.6; color: #1f2937; direction: rtl; }
-        .container { max-width: 800px; margin: 0 auto; padding: 40px; }
-        .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #f59e0b; padding-bottom: 20px; }
-        .header h1 { font-size: 32px; color: #f59e0b; margin-bottom: 10px; font-weight: bold; }
-        .header p { font-size: 16px; color: #6b7280; }
-        .info-grid { display: table; width: 100%; margin-bottom: 30px; }
-        .info-row { display: table-row; }
-        .info-cell { display: table-cell; padding: 10px; border: 1px solid #e5e7eb; background: #f9fafb; }
-        .info-label { font-weight: bold; color: #374151; width: 30%; }
-        .info-value { color: #1f2937; }
-        .status-badge { display: inline-block; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 14px; }
-        .status-pending { background: #fef3c7; color: #92400e; }
-        .status-approved { background: #d1fae5; color: #065f46; }
-        .status-rejected { background: #fee2e2; color: #991b1b; }
-        .status-cancelled { background: #f3f4f6; color: #374151; }
-        table { width: 100%; border-collapse: collapse; margin: 30px 0; }
-        thead { background: #f59e0b; color: white; }
-        th, td { padding: 12px; text-align: center; border: 1px solid #e5e7eb; }
-        th { font-weight: bold; }
-        tbody tr:nth-child(even) { background: #f9fafb; }
-        .total-row { background: #fef3c7 !important; font-weight: bold; font-size: 16px; }
-        .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 12px; }
-        .notes { background: #fef3c7; border-right: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 8px; }
-        .notes-title { font-weight: bold; color: #92400e; margin-bottom: 8px; }
-        .notes-content { color: #78350f; }
+        @font-face {
+            font-family: 'Cairo';
+            src: url('{{ public_path("fonts/Cairo-ExtraBold.ttf") }}') format('truetype');
+            font-weight: 900;
+            font-style: normal;
+        }
+        @page { margin: 10px; }
+        * { font-family: 'Cairo', 'DejaVu Sans', sans-serif; }
+        body { font-family: 'Cairo', 'DejaVu Sans', sans-serif; color: #333; font-size: 11px; margin: 0; position: relative; }
+        @if($isInvalid)
+        body::before {
+            content: "{{ $labels['invalidInvoice'] }}";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            font-weight: 900;
+            color: rgba(220, 53, 69, 0.15);
+            z-index: 1000;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        @endif
+        .header { margin-bottom: 5px; background-color: #333; color: white; padding: 5px; border-radius: 3px; display: table; width: 100%; }
+        .header-right { display: table-cell; text-align: right; width: 50%; vertical-align: middle; }
+        .header-left { display: table-cell; text-align: left; width: 50%; vertical-align: middle; }
+        .header h1 { margin: 0; font-size: 16px; font-weight: bold; }
+        .header h2 { margin: 0; font-size: 18px; font-weight: 900; color: white; letter-spacing: 0.5px; }
+        .info-box { background-color: #f8f9fa; padding: 4px 8px; border-radius: 3px; margin-bottom: 5px; border: 1px solid #333; text-align: right; }
+        .info-row { display: inline-block; width: 48%; margin-bottom: 2px; font-size: 11px; text-align: right; font-weight: bold; }
+        .label { font-weight: bold; color: #333; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 3px; }
+        th { background-color: #333; color: white; padding: 4px; text-align: center; font-weight: bold; font-size: 12px; }
+        td { border: 1px solid #333; padding: 3px; background-color: #ffffff; font-size: 11px; text-align: center; }
+        td.product-name { text-align: right; padding-right: 6px; }
+        td.quantity { font-family: 'DejaVu Sans', sans-serif; direction: ltr; }
+        tr:nth-child(even) td { background-color: #f5f5f5; }
+        .totals-box { background-color: #f8f9fa; padding: 8px; border-radius: 3px; margin-top: 10px; border: 1px solid #333; text-align: right; direction: rtl; }
+        .total-row { display: block; margin-bottom: 4px; font-size: 11px; font-weight: bold; direction: rtl; }
+        .total-row.final { font-size: 14px; color: #000; background-color: #e9ecef; padding: 4px; border-radius: 2px; direction: rtl; }
+        .signatures { position: fixed; bottom: 10px; left: 10px; right: 10px; }
+        .signature-box { display: inline-block; width: 30%; text-align: center; border-top: 1px solid #000; padding-top: 10px; margin: 0 1.5%; font-size: 10px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>فاتورة إرجاع بضاعة</h1>
-            <p>نظام إدارة التوزيع والمبيعات - تقنية</p>
+    <div class="header">
+        <div class="header-left">
+            <h2>#{{ $returnNumber }}</h2>
         </div>
-
-        <div class="info-grid">
-            <div class="info-row">
-                <div class="info-cell info-label">رقم الإرجاع</div>
-                <div class="info-cell info-value">#{{ $salesReturn->return_number }}</div>
-                <div class="info-cell info-label">التاريخ</div>
-                <div class="info-cell info-value">{{ $salesReturn->created_at->format('Y-m-d') }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-cell info-label">الفاتورة الأصلية</div>
-                <div class="info-cell info-value">#{{ $salesReturn->salesInvoice->invoice_number }}</div>
-                <div class="info-cell info-label">الحالة</div>
-                <div class="info-cell info-value">
-                    <span class="status-badge status-{{ $salesReturn->status }}">
-                        @if($salesReturn->status === 'pending') قيد الانتظار
-                        @elseif($salesReturn->status === 'approved') موثق
-                        @elseif($salesReturn->status === 'rejected') مرفوض
-                        @elseif($salesReturn->status === 'cancelled') ملغي
-                        @endif
-                    </span>
-                </div>
-            </div>
-            <div class="info-row">
-                <div class="info-cell info-label">المسوق</div>
-                <div class="info-cell info-value">{{ $salesReturn->marketer->full_name }}</div>
-                <div class="info-cell info-label">المتجر</div>
-                <div class="info-cell info-value">{{ $salesReturn->store->name }}</div>
-            </div>
-            @if($salesReturn->keeper)
-            <div class="info-row">
-                <div class="info-cell info-label">أمين المخزن</div>
-                <div class="info-cell info-value">{{ $salesReturn->keeper->full_name }}</div>
-                <div class="info-cell info-label">تاريخ التوثيق</div>
-                <div class="info-cell info-value">{{ $salesReturn->confirmed_at ? $salesReturn->confirmed_at->format('Y-m-d H:i') : '-' }}</div>
-            </div>
-            @endif
+        <div class="header-right">
+            <h1>{{ $title }}</h1>
         </div>
+    </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 10%;">#</th>
-                    <th style="width: 40%;">المنتج</th>
-                    <th style="width: 15%;">الكمية</th>
-                    <th style="width: 15%;">سعر الوحدة</th>
-                    <th style="width: 20%;">الإجمالي</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($salesReturn->items as $index => $item)
-                <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td style="text-align: right;">{{ $item->product->name }}</td>
-                    <td>{{ $item->quantity }}</td>
-                    <td>{{ number_format($item->unit_price, 2) }}</td>
-                    <td>{{ number_format($item->quantity * $item->unit_price, 2) }}</td>
-                </tr>
-                @endforeach
-                <tr class="total-row">
-                    <td colspan="4" style="text-align: left;">المجموع الإجمالي</td>
-                    <td>{{ number_format($salesReturn->total_amount, 2) }} دينار</td>
-                </tr>
-            </tbody>
-        </table>
-
-        @if($salesReturn->notes)
-        <div class="notes">
-            <div class="notes-title">ملاحظات:</div>
-            <div class="notes-content">{{ $salesReturn->notes }}</div>
+    <div class="info-box">
+        <div class="info-row">
+            {{ $marketerName }} :<span class="label">{{ $labels['marketer'] }}</span>
         </div>
-        @endif
-
-        <div class="footer">
-            <p>تم إنشاء هذه الفاتورة إلكترونياً بواسطة نظام تقنية لإدارة التوزيع والمبيعات</p>
-            <p>{{ now()->format('Y-m-d H:i:s') }}</p>
+        <div class="info-row">
+            {{ $storeName }} :<span class="label">{{ $labels['store'] }}</span>
         </div>
+        <div class="info-row">
+            {{ $date }} :<span class="label">{{ $labels['date'] }}</span>
+        </div>
+        <div class="info-row">
+            {{ $status }} :<span class="label">{{ $labels['status'] }}</span>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>{{ $labels['total'] }}</th>
+                <th>{{ $labels['price'] }}</th>
+                <th>{{ $labels['quantity'] }}</th>
+                <th>{{ $labels['product'] }}</th>
+                <th>#</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($items as $index => $item)
+            <tr>
+                <td class="quantity">{{ $item->total_price }}</td>
+                <td class="quantity">{{ $item->unit_price }}</td>
+                <td class="quantity">{{ $item->quantity }}</td>
+                <td class="product-name">{{ $item->name }}</td>
+                <td class="quantity">{{ $index + 1 }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <div class="totals-box">
+        <div class="total-row final">
+            {{ $labels['currency'] }} {{ $totalAmount }} :<span class="label">{{ $labels['finalTotal'] }}</span>
+        </div>
+    </div>
+
+    <div class="signatures">
+        <div class="signature-box">{{ $labels['store'] }}</div>
+        <div class="signature-box">{{ $labels['marketer'] }}</div>
+        <div class="signature-box">{{ $labels['keeper'] }}</div>
     </div>
 </body>
 </html>

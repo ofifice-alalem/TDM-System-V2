@@ -46,7 +46,15 @@ class WarehouseSalesReturnController extends Controller
         $keeperId = 1; // Temporary
 
         try {
-            $this->salesReturnService->approveReturn($salesReturn, $keeperId, $request->file('stamped_image'));
+            $stampedImage = null;
+            if ($request->hasFile('stamped_image')) {
+                $stampedImage = $request->file('stamped_image')->store(
+                    'sales-returns/' . $salesReturn->return_number,
+                    'public'
+                );
+            }
+            
+            $this->salesReturnService->approveReturn($salesReturn, $keeperId, $stampedImage);
             return redirect()->route('warehouse.sales-returns.show', $salesReturn)
                 ->with('success', 'تم الموافقة على طلب الإرجاع وتوثيقه بنجاح');
         } catch (\Exception $e) {

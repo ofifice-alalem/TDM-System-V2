@@ -12,18 +12,13 @@ use Illuminate\Support\Facades\Storage;
 
 class WarehouseSalesReturnService
 {
-    public function approveReturn(SalesReturn $return, $keeperId, $stampedImage = null)
+    public function approveReturn(SalesReturn $return, $keeperId, $stampedImagePath = null)
     {
         if ($return->status !== 'pending') {
             throw new \Exception('لا يمكن الموافقة على هذا الطلب');
         }
 
-        return DB::transaction(function () use ($return, $keeperId, $stampedImage) {
-            $stampedImagePath = null;
-            if ($stampedImage) {
-                $stampedImagePath = $stampedImage->store('sales-returns', 'public');
-            }
-
+        return DB::transaction(function () use ($return, $keeperId, $stampedImagePath) {
             // Move from pending to marketer actual stock
             foreach ($return->items as $item) {
                 $marketerStock = MarketerActualStock::firstOrCreate(
