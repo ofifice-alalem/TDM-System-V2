@@ -22,9 +22,11 @@ class FactoryInvoiceController extends Controller
     {
         $query = FactoryInvoice::with('items.product', 'keeper', 'documenter');
 
-        if ($request->filled('status')) {
+        $hasFilter = $request->filled('invoice_number');
+
+        if (!$hasFilter && $request->filled('status')) {
             $query->where('status', $request->status);
-        } elseif (!$request->has('all')) {
+        } elseif (!$hasFilter && !$request->has('all')) {
             $query->where('status', 'pending');
         }
 

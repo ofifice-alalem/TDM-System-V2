@@ -78,7 +78,7 @@
                         <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-xl flex items-center justify-center text-primary-600 dark:text-primary-400">
+                                    <div class="hidden md:flex w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-xl items-center justify-center text-primary-600 dark:text-primary-400">
                                         <i data-lucide="package" class="w-5 h-5"></i>
                                     </div>
                                     <div>
@@ -93,7 +93,7 @@
                                 <span class="text-sm font-mono text-gray-600 dark:text-gray-400">{{ $product->barcode ?? '-' }}</span>
                             </td>
                             <td class="px-6 py-4">
-                                <span class="text-sm font-bold text-gray-900 dark:text-white">{{ number_format($product->current_price, 2) }} ر.س</span>
+                                <span class="text-sm font-bold text-gray-900 dark:text-white">{{ number_format($product->current_price, 2) }} دينار</span>
                             </td>
                             <td class="px-6 py-4 text-center">
                                 @php
