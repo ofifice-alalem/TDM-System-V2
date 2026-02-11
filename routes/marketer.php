@@ -19,7 +19,7 @@ Route::middleware(['web', 'auth', 'role:marketer'])->group(function () {
             Route::post('/', [MarketerRequestController::class, 'store'])->name('store');
             Route::get('/{request}', [MarketerRequestController::class, 'show'])->name('show');
             Route::get('/{request}/pdf', [MarketerRequestController::class, 'pdf'])->name('pdf');
-            Route::get('/{request}/documentation', [MarketerRequestController::class, 'viewDocumentation'])->name('documentation');
+            Route::get('/{request}/documentation', [MarketerRequestController::class, 'viewDocumentation'])->name('documentation')->withoutMiddleware(['role:marketer']);
             Route::patch('/{marketerRequest}/cancel', [MarketerRequestController::class, 'cancel'])->name('cancel');
         });
 

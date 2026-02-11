@@ -110,11 +110,11 @@ class MarketerRequestController extends Controller
 
     public function viewDocumentation(MarketerRequest $request)
     {
-        if (!$request->stamped_image) {
+        if (!$request->stamped_image || $request->status !== 'documented') {
             abort(404);
         }
 
-        $path = storage_path('app/' . $request->stamped_image);
+        $path = storage_path('app/public/' . $request->stamped_image);
         
         if (!file_exists($path)) {
             abort(404);
