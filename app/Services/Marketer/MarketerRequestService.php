@@ -4,10 +4,14 @@ namespace App\Services\Marketer;
 
 use App\Models\MarketerRequest;
 use App\Models\MarketerRequestItem;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 
 class MarketerRequestService
 {
+    public function __construct(private NotificationService $notificationService)
+    {
+    }
     public function createRequest($marketerId, array $items, $notes = null)
     {
         return DB::transaction(function () use ($marketerId, $items, $notes) {
@@ -24,6 +28,18 @@ class MarketerRequestService
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
                 ]);
+            }
+
+            // إرسال إشعار لجميع أمناء المخزن
+            $warehouseKeepers = \App\Models\User::where('role_id', 2)->where('is_active', true)->get();
+            foreach ($warehouseKeepers as $keeper) {
+                $this->notificationService->create(
+                    $keeper->id,
+                    'marketer_request_created',
+                    'طلب بضاعة جديد',
+                    'تم إنشاء طلب بضاعة جديد رقم ' . $request->invoice_number,
+                    route('warehouse.requests.show', $request->id)
+                );
             }
 
             return $request->load('items.product');

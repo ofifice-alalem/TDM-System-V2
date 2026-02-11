@@ -15,7 +15,7 @@ Route::get('/dashboard', function () {
     
     return match($roleId) {
         3 => redirect()->route('marketer.stock.index'),
-        2 => redirect()->route('warehouse.requests.index'),
+        2 => redirect()->route('warehouse.dashboard'),
         1 => redirect()->route('admin.main-stock.index'),
         default => abort(403, 'دور غير معروف'),
     };

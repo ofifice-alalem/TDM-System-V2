@@ -3,11 +3,16 @@
 use App\Http\Controllers\Warehouse\WarehouseRequestController;
 use App\Http\Controllers\Warehouse\WarehouseReturnController;
 use App\Http\Controllers\Warehouse\FactoryInvoiceController;
+use App\Http\Controllers\Warehouse\WarehouseDashboardController;
 use App\Http\Controllers\Shared\MainStockController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'role:warehouse'])->group(function () {
     Route::prefix('warehouse')->name('warehouse.')->group(function () {
+        
+        // Dashboard
+        Route::get('/dashboard', [WarehouseDashboardController::class, 'index'])->name('dashboard');
+        
         Route::prefix('requests')->name('requests.')->group(function () {
             Route::get('/', [WarehouseRequestController::class, 'index'])->name('index');
             Route::patch('{id}/approve', [WarehouseRequestController::class, 'approve'])->name('approve');

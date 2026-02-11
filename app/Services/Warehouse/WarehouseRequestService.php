@@ -4,10 +4,14 @@ namespace App\Services\Warehouse;
 
 use App\Models\MarketerRequest;
 use App\Models\WarehouseStockLog;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 
 class WarehouseRequestService
 {
+    public function __construct(private NotificationService $notificationService)
+    {
+    }
     public function approveRequest($requestId, $keeperId)
     {
         return DB::transaction(function () use ($requestId, $keeperId) {
@@ -23,6 +27,15 @@ class WarehouseRequestService
                 'approved_by' => $keeperId,
                 'approved_at' => now(),
             ]);
+
+            // إرسال إشعار للمسوق
+            $this->notificationService->create(
+                $request->marketer_id,
+                'marketer_request_approved',
+                'تمت الموافقة على طلبك',
+                'تمت الموافقة على طلب البضاعة رقم ' . $request->invoice_number,
+                route('marketer.requests.show', $request->id)
+            );
 
             return $request;
         });
@@ -45,6 +58,15 @@ class WarehouseRequestService
                 'rejected_at' => now(),
                 'notes' => $notes,
             ]);
+
+            // إرسال إشعار للمسوق
+            $this->notificationService->create(
+                $request->marketer_id,
+                'marketer_request_rejected',
+                'تم رفض طلبك',
+                'تم رفض طلب البضاعة رقم ' . $request->invoice_number . ': ' . $notes,
+                route('marketer.requests.show', $request->id)
+            );
 
             return $request;
         });
@@ -72,6 +94,15 @@ class WarehouseRequestService
                 'keeper_id' => $keeperId,
                 'action' => 'withdraw',
             ]);
+
+            // إرسال إشعار للمسوق
+            $this->notificationService->create(
+                $request->marketer_id,
+                'marketer_request_documented',
+                'تم توثيق طلبك',
+                'تم توثيق طلب البضاعة رقم ' . $request->invoice_number . ' وإضافته لمخزونك',
+                route('marketer.requests.show', $request->id)
+            );
 
             return $request;
         });

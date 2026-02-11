@@ -340,7 +340,10 @@
                     </button>
                     <button class="w-11 h-11 bg-white dark:bg-dark-card rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-amber-600 dark:hover:text-accent-400 hover:bg-amber-50 dark:hover:bg-accent-500/10 hover:scale-105 shadow-sm hover:shadow-md border border-gray-200 dark:border-dark-border transition-all duration-300 relative group">
                         <i data-lucide="bell" class="w-5 h-5 group-hover:animate-swing"></i>
-                        <span class="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-dark-card"></span>
+                        @if(isset($unreadNotifications) && $unreadNotifications > 0)
+                            <span class="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-dark-card"></span>
+                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">{{ $unreadNotifications }}</span>
+                        @endif
                     </button>
                 </div>
 
