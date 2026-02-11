@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\InvoiceDiscountController;
 use App\Http\Controllers\Admin\ProductPromotionController;
 use App\Http\Controllers\Admin\AdminWithdrawalController;
+use App\Http\Controllers\Shared\MainStockController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     
@@ -42,6 +43,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/{withdrawal}/pdf', [\App\Http\Controllers\Shared\Withdrawal\InvoiceController::class, 'generateWithdrawalInvoicePdf'])->name('pdf');
         Route::post('/{withdrawal}/approve', [AdminWithdrawalController::class, 'approve'])->name('approve');
         Route::post('/{withdrawal}/reject', [AdminWithdrawalController::class, 'reject'])->name('reject');
+    });
+
+    // Main Stock
+    Route::prefix('main-stock')->name('main-stock.')->group(function () {
+        Route::get('/', [MainStockController::class, 'index'])->name('index');
     });
     
 });

@@ -6,6 +6,7 @@ use App\Http\Controllers\Marketer\MarketerStockController;
 use App\Http\Controllers\Marketer\SalesController;
 use App\Http\Controllers\Marketer\CommissionController;
 use App\Http\Controllers\Marketer\WithdrawalController;
+use App\Http\Controllers\Shared\MainStockController;
 use Illuminate\Support\Facades\Route;
 
 // Temporary: Simulate logged-in marketer (ID=3)
@@ -83,6 +84,10 @@ Route::middleware(['web'])->group(function () {
             Route::get('/{salesReturn}', [\App\Http\Controllers\Marketer\SalesReturnController::class, 'show'])->name('show');
             Route::patch('/{salesReturn}/cancel', [\App\Http\Controllers\Marketer\SalesReturnController::class, 'cancel'])->name('cancel');
             Route::get('/{salesReturn}/pdf', [\App\Http\Controllers\Shared\SalesReturn\InvoiceController::class, 'generateSalesReturnInvoicePdf'])->name('pdf');
+        });
+
+        Route::prefix('main-stock')->name('main-stock.')->group(function () {
+            Route::get('/', [MainStockController::class, 'index'])->name('index');
         });
     });
 });

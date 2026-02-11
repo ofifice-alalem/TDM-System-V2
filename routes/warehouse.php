@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Warehouse\WarehouseRequestController;
 use App\Http\Controllers\Warehouse\WarehouseReturnController;
+use App\Http\Controllers\Warehouse\FactoryInvoiceController;
+use App\Http\Controllers\Shared\MainStockController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web'])->group(function () {
@@ -54,6 +56,19 @@ Route::middleware(['web'])->group(function () {
             Route::post('/{id}/approve', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'approve'])->name('approve');
             Route::patch('/{id}/reject', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'reject'])->name('reject');
             Route::get('/{id}/documentation', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'viewDocumentation'])->name('documentation');
+        });
+
+        Route::prefix('main-stock')->name('main-stock.')->group(function () {
+            Route::get('/', [MainStockController::class, 'index'])->name('index');
+        });
+
+        Route::prefix('factory-invoices')->name('factory-invoices.')->group(function () {
+            Route::get('/', [FactoryInvoiceController::class, 'index'])->name('index');
+            Route::get('/create', [FactoryInvoiceController::class, 'create'])->name('create');
+            Route::post('/', [FactoryInvoiceController::class, 'store'])->name('store');
+            Route::get('/{factoryInvoice}', [FactoryInvoiceController::class, 'show'])->name('show');
+            Route::post('/{factoryInvoice}/document', [FactoryInvoiceController::class, 'document'])->name('document');
+            Route::get('/{factoryInvoice}/pdf', [FactoryInvoiceController::class, 'pdf'])->name('pdf');
         });
     });
 });

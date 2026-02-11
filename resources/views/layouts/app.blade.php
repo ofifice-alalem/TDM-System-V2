@@ -172,6 +172,22 @@
 
             @if(request()->routeIs('warehouse.*'))
                 {{-- Warehouse Links --}}
+                <a href="{{ route('warehouse.main-stock.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('warehouse.main-stock.*') && !request()->routeIs('warehouse.factory-invoices.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="warehouse" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('warehouse.main-stock.*') && !request()->routeIs('warehouse.factory-invoices.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>المخزن الرئيسي</span>
+                    @if(request()->routeIs('warehouse.main-stock.*') && !request()->routeIs('warehouse.factory-invoices.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
+
+                <a href="{{ route('warehouse.factory-invoices.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('warehouse.factory-invoices.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="package-plus" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('warehouse.factory-invoices.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>فواتير المصنع</span>
+                    @if(request()->routeIs('warehouse.factory-invoices.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
+
                 <a href="{{ route('warehouse.requests.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('warehouse.requests.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                     <i data-lucide="package" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('warehouse.requests.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
                     <span>طلبات المسوقين</span>
@@ -210,11 +226,6 @@
                     @if(request()->routeIs('warehouse.sales-returns.*'))
                         <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
                     @endif
-                </a>
-
-                <a href="#" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white">
-                    <i data-lucide="warehouse" class="w-[1.35rem] h-[1.35rem] transition-colors text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white"></i>
-                    <span>المخزن الرئيسي</span>
                 </a>
             @endif
 
