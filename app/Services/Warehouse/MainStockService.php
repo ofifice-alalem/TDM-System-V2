@@ -58,6 +58,24 @@ class MainStockService
         });
     }
 
+    public function cancelInvoice($invoiceId, $keeperId, $reason)
+    {
+        return DB::transaction(function () use ($invoiceId, $keeperId, $reason) {
+            $invoice = FactoryInvoice::where('id', $invoiceId)
+                ->where('status', 'pending')
+                ->firstOrFail();
+
+            $invoice->update([
+                'status' => 'cancelled',
+                'cancelled_by' => $keeperId,
+                'cancelled_at' => now(),
+                'cancellation_reason' => $reason,
+            ]);
+
+            return $invoice;
+        });
+    }
+
     private function addStockToMain($invoice)
     {
         foreach ($invoice->items as $item) {

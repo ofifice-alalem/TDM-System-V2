@@ -1,111 +1,119 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html>
 <head>
-    <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>فاتورة مصنع - {{ $invoice->invoice_number }}</title>
+    <title>فاتورة مصنع</title>
     <style>
         @font-face {
             font-family: 'Cairo';
-            src: url('{{ storage_path('fonts/cairo_normal_2d9c4d6e617fe3285e59b1da45dbe1bb.ttf') }}') format('truetype');
+            src: url('{{ public_path("fonts/Cairo-Regular.ttf") }}') format('truetype');
             font-weight: normal;
+            font-style: normal;
         }
         @font-face {
             font-family: 'Cairo';
-            src: url('{{ storage_path('fonts/cairo_bold_e98ffece7049214f295baa3838c174b1.ttf') }}') format('truetype');
+            src: url('{{ public_path("fonts/Cairo-Bold.ttf") }}') format('truetype');
             font-weight: bold;
+            font-style: normal;
         }
-        body { font-family: 'Cairo', sans-serif; direction: rtl; text-align: right; }
-        .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #f59e0b; padding-bottom: 20px; }
-        .header h1 { color: #f59e0b; font-size: 28px; margin: 0; }
-        .header p { color: #666; margin: 5px 0; }
-        .info-box { background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .info-label { font-weight: bold; color: #374151; }
-        .info-value { color: #6b7280; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { background: #f59e0b; color: white; padding: 12px; text-align: right; font-weight: bold; }
-        td { padding: 10px; border-bottom: 1px solid #e5e7eb; }
-        tr:nth-child(even) { background: #f9fafb; }
-        .footer { margin-top: 40px; text-align: center; color: #9ca3af; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 20px; }
-        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; }
-        .status-pending { background: #fef3c7; color: #92400e; }
-        .status-documented { background: #d1fae5; color: #065f46; }
+        @font-face {
+            font-family: 'Cairo';
+            src: url('{{ public_path("fonts/Cairo-ExtraBold.ttf") }}') format('truetype');
+            font-weight: 900;
+            font-style: normal;
+        }
+        @page { margin: 10px; }
+        * { font-family: 'Cairo', 'DejaVu Sans', sans-serif; }
+        body { font-family: 'Cairo', 'DejaVu Sans', sans-serif; color: #333; font-size: 11px; margin: 0; position: relative; }
+        @if($isInvalid)
+        body::before {
+            content: "{{ $labels['invalidInvoice'] }}";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            font-weight: 900;
+            color: rgba(220, 53, 69, 0.15);
+            z-index: 1000;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        @endif
+        .header { margin-bottom: 5px; background-color: #333; color: white; padding: 5px; border-radius: 3px; display: table; width: 100%; }
+        .header-right { display: table-cell; text-align: right; width: 50%; vertical-align: middle; }
+        .header-left { display: table-cell; text-align: left; width: 50%; vertical-align: middle; }
+        .header h1 { margin: 0; font-size: 16px; font-weight: bold; }
+        .header h2 { margin: 0; font-size: 18px; font-weight: 900; color: white; letter-spacing: 0.5px; }
+        .info-box { background-color: #f8f9fa; padding: 4px 8px; border-radius: 3px; margin-bottom: 5px; border: 1px solid #333; text-align: right; }
+        .info-row { display: inline-block; width: 48%; margin-bottom: 2px; font-size: 11px; text-align: right; font-weight: bold; }
+        .label { font-weight: bold; color: #333; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 3px; }
+        th { background-color: #333; color: white; padding: 4px; text-align: center; font-weight: bold; font-size: 12px; }
+        td { border: 1px solid #333; padding: 3px; background-color: #ffffff; font-size: 11px; text-align: center; }
+        td.product-name { text-align: right; padding-right: 6px; }
+        td.quantity { font-family: 'DejaVu Sans', sans-serif; direction: ltr; }
+        tr:nth-child(even) td { background-color: #f5f5f5; }
+        .totals-box { background-color: #f8f9fa; padding: 8px; border-radius: 3px; margin-top: 10px; border: 1px solid #333; text-align: right; direction: rtl; }
+        .total-row { display: block; margin-bottom: 4px; font-size: 11px; font-weight: bold; direction: rtl; }
+        .total-row.final { font-size: 14px; color: #000; background-color: #e9ecef; padding: 4px; border-radius: 2px; direction: rtl; }
+        .signatures { position: fixed; bottom: 10px; left: 10px; right: 10px; text-align: center; }
+        .signature-box { display: inline-block; width: 30%; text-align: center; border-top: 1px solid #000; padding-top: 10px; margin: 0 1.5%; font-size: 10px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>⚡ تقنية للتوزيع</h1>
-        <p>فاتورة تعبئة مخزن من المصنع</p>
-        <p style="font-size: 12px; color: #9ca3af;">{{ now()->format('Y-m-d H:i') }}</p>
+        <div class="header-left">
+            <h2>#{{ $invoiceNumber }}</h2>
+        </div>
+        <div class="header-right">
+            <h1>{{ $title }}</h1>
+        </div>
     </div>
 
     <div class="info-box">
         <div class="info-row">
-            <div>
-                <span class="info-label">رقم الفاتورة:</span>
-                <span class="info-value">{{ $invoice->invoice_number }}</span>
-            </div>
-            <div>
-                <span class="info-label">الحالة:</span>
-                <span class="status-badge status-{{ $invoice->status }}">
-                    {{ $invoice->status === 'pending' ? 'قيد الانتظار' : 'موثق' }}
-                </span>
-            </div>
+            {{ $keeperName }} :<span class="label">{{ $labels['keeper'] }}</span>
         </div>
         <div class="info-row">
-            <div>
-                <span class="info-label">أمين المخزن:</span>
-                <span class="info-value">{{ $invoice->keeper->full_name }}</span>
-            </div>
-            <div>
-                <span class="info-label">تاريخ الإنشاء:</span>
-                <span class="info-value">{{ $invoice->created_at->format('Y-m-d H:i') }}</span>
-            </div>
+            {{ $date }} :<span class="label">{{ $labels['date'] }}</span>
         </div>
-        @if($invoice->status === 'documented')
         <div class="info-row">
-            <div>
-                <span class="info-label">وثق بواسطة:</span>
-                <span class="info-value">{{ $invoice->documenter->full_name }}</span>
-            </div>
-            <div>
-                <span class="info-label">تاريخ التوثيق:</span>
-                <span class="info-value">{{ $invoice->documented_at->format('Y-m-d H:i') }}</span>
-            </div>
+            {{ $status }} :<span class="label">{{ $labels['status'] }}</span>
         </div>
-        @endif
+        <div class="info-row">
+            {{ $itemsCount }} :<span class="label">{{ $labels['itemsCount'] }}</span>
+        </div>
     </div>
-
-    @if($invoice->notes)
-    <div class="info-box">
-        <div class="info-label">ملاحظات:</div>
-        <div style="margin-top: 5px; color: #6b7280;">{{ $invoice->notes }}</div>
-    </div>
-    @endif
 
     <table>
         <thead>
             <tr>
-                <th style="width: 10%;">#</th>
-                <th style="width: 60%;">المنتج</th>
-                <th style="width: 30%; text-align: center;">الكمية</th>
+                <th>{{ $labels['quantity'] }}</th>
+                <th>{{ $labels['product'] }}</th>
+                <th>#</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($invoice->items as $index => $item)
+            @foreach($items as $index => $item)
             <tr>
-                <td>{{ $index + 1 }}</td>
-                <td><strong>{{ $item->product->name }}</strong></td>
-                <td style="text-align: center;"><strong>{{ number_format($item->quantity) }}</strong></td>
+                <td class="quantity">{{ $item->quantity }}</td>
+                <td class="product-name">{{ $item->name }}</td>
+                <td class="quantity">{{ $index + 1 }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
 
-    <div class="footer">
-        <p>هذه الفاتورة صادرة إلكترونياً من نظام تقنية للتوزيع</p>
-        <p>تم الطباعة بتاريخ: {{ now()->format('Y-m-d H:i:s') }}</p>
+    <div class="totals-box">
+        <div class="total-row final">
+            {{ $labels['piece'] }} {{ $totalQuantity }} :<span class="label">{{ $labels['totalQuantity'] }}</span>
+        </div>
+    </div>
+
+    <div class="signatures">
+        <div class="signature-box">{{ $labels['management'] }}</div>
+        <div class="signature-box">{{ $labels['keeper'] }}</div>
     </div>
 </body>
 </html>

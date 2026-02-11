@@ -68,6 +68,7 @@ Route::middleware(['web'])->group(function () {
             Route::post('/', [FactoryInvoiceController::class, 'store'])->name('store');
             Route::get('/{factoryInvoice}', [FactoryInvoiceController::class, 'show'])->name('show');
             Route::post('/{factoryInvoice}/document', [FactoryInvoiceController::class, 'document'])->name('document');
+            Route::post('/{factoryInvoice}/cancel', [FactoryInvoiceController::class, 'cancel'])->name('cancel');
             Route::get('/{factoryInvoice}/pdf', [FactoryInvoiceController::class, 'pdf'])->name('pdf');
         });
     });

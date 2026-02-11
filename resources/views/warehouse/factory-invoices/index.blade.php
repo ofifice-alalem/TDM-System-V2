@@ -64,6 +64,10 @@
                     <i data-lucide="file-check" class="w-4 h-4"></i>
                     موثق
                 </a>
+                <a href="{{ route('warehouse.factory-invoices.index', ['status' => 'cancelled']) }}" class="{{ request('status') === 'cancelled' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-2 border-red-200 dark:border-red-800' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(50%-0.5rem)] md:basis-auto justify-center">
+                    <i data-lucide="x-circle" class="w-4 h-4"></i>
+                    ملغى
+                </a>
                 <a href="{{ route('warehouse.factory-invoices.index', ['all' => '1']) }}" class="{{ request('all') ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(50%-0.5rem)] md:basis-auto justify-center">
                     <i data-lucide="list" class="w-4 h-4"></i>
                     الكل
@@ -78,6 +82,7 @@
                     $statusConfig = [
                         'pending' => ['bg' => 'bg-amber-50 dark:bg-amber-900/20', 'text' => 'text-amber-700 dark:text-amber-400', 'iconBg' => 'bg-amber-100 dark:bg-amber-900/40', 'icon' => 'clock', 'label' => 'قيد الانتظار'],
                         'documented' => ['bg' => 'bg-emerald-50 dark:bg-emerald-900/20', 'text' => 'text-emerald-700 dark:text-emerald-400', 'iconBg' => 'bg-emerald-100 dark:bg-emerald-900/40', 'icon' => 'file-check', 'label' => 'موثق'],
+                        'cancelled' => ['bg' => 'bg-red-50 dark:bg-red-900/20', 'text' => 'text-red-700 dark:text-red-400', 'iconBg' => 'bg-red-100 dark:bg-red-900/40', 'icon' => 'x-circle', 'label' => 'ملغى'],
                     ][$invoice->status];
                 @endphp
 

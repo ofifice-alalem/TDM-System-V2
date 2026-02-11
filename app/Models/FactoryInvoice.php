@@ -8,11 +8,13 @@ class FactoryInvoice extends Model
 {
     protected $fillable = [
         'invoice_number', 'keeper_id', 'status', 'notes',
-        'documented_by', 'documented_at', 'stamped_image'
+        'documented_by', 'documented_at', 'stamped_image',
+        'cancelled_by', 'cancelled_at', 'cancellation_reason'
     ];
 
     protected $casts = [
         'documented_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     public function keeper()
@@ -23,6 +25,11 @@ class FactoryInvoice extends Model
     public function documenter()
     {
         return $this->belongsTo(User::class, 'documented_by');
+    }
+
+    public function canceller()
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 
     public function items()

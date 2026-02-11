@@ -152,6 +152,7 @@
                             $statusConfig = [
                                 'pending' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-600 dark:text-amber-400', 'icon' => 'clock', 'label' => 'قيد الانتظار'],
                                 'documented' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-600 dark:text-emerald-400', 'icon' => 'file-check', 'label' => 'موثق'],
+                                'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-600 dark:text-red-400', 'icon' => 'x-circle', 'label' => 'ملغى'],
                             ][$invoice->status];
                         @endphp
                         
@@ -213,6 +214,40 @@
                         </button>
                     </form>
                 </div>
+
+                {{-- Cancel Form --}}
+                <div class="bg-white dark:bg-dark-card rounded-[1.5rem] border border-gray-200 dark:border-dark-border p-6 shadow-lg shadow-gray-200/50 dark:shadow-sm">
+                    <h3 class="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                        <i data-lucide="x-circle" class="w-5 h-5 text-red-500"></i>
+                        إلغاء الفاتورة
+                    </h3>
+                    
+                    <div id="cancel-form-container">
+                        <button type="button" onclick="showCancelForm()" class="w-full bg-red-600 hover:bg-red-700 text-white py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                            إلغاء الفاتورة
+                        </button>
+                    </div>
+
+                    <form id="cancel-form" method="POST" action="{{ route('warehouse.factory-invoices.cancel', $invoice) }}" class="hidden">
+                        @csrf
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">سبب الإلغاء</label>
+                            <textarea name="cancellation_reason" rows="3" required class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-300 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" placeholder="اكتب سبب إلغاء الفاتورة..."></textarea>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="check" class="w-5 h-5"></i>
+                                تأكيد الإلغاء
+                            </button>
+                            <button type="button" onclick="hideCancelForm()" class="flex-1 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-dark-card text-gray-700 dark:text-gray-300 py-3.5 rounded-xl font-bold transition-all">
+                                إلغاء
+                            </button>
+                        </div>
+                    </form>
+                </div>
                 @endif
 
                 {{-- Activity Timeline --}}
@@ -246,6 +281,18 @@
                                 <h4 class="font-bold text-gray-900 dark:text-white text-sm">التوثيق والإضافة للمخزن</h4>
                                 <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $invoice->documenter->full_name }}</p>
                                 <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $invoice->documented_at->format('Y-m-d h:i A') }}</span>
+                            </div>
+                        </div>
+                        @elseif($invoice->cancelled_at)
+                        <div class="relative flex items-start gap-4 animate-slide-up">
+                            <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
+                                <i data-lucide="x-circle" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white text-sm">تم إلغاء الفاتورة</h4>
+                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $invoice->canceller->full_name }}</p>
+                                <p class="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">السبب: {{ $invoice->cancellation_reason }}</p>
+                                <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $invoice->cancelled_at->format('Y-m-d h:i A') }}</span>
                             </div>
                         </div>
                         @else
@@ -287,6 +334,17 @@
         document.getElementById('preview-img').src = '';
         document.getElementById('image-preview').classList.add('hidden');
         document.getElementById('upload-label').classList.remove('hidden');
+    }
+
+    function showCancelForm() {
+        document.getElementById('cancel-form-container').classList.add('hidden');
+        document.getElementById('cancel-form').classList.remove('hidden');
+        setTimeout(() => lucide.createIcons(), 100);
+    }
+
+    function hideCancelForm() {
+        document.getElementById('cancel-form').classList.add('hidden');
+        document.getElementById('cancel-form-container').classList.remove('hidden');
     }
 
     document.addEventListener('DOMContentLoaded', function() {
