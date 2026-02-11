@@ -8,6 +8,15 @@ use App\Http\Controllers\Shared\MainStockController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     
+    // Users Management
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\UserController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('store');
+        Route::get('/{user}/edit', [\App\Http\Controllers\Admin\UserController::class, 'edit'])->name('edit');
+        Route::patch('/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('update');
+    });
+    
     // Invoice Discounts
     Route::prefix('discounts')->name('discounts.')->group(function () {
         Route::get('/', [InvoiceDiscountController::class, 'index'])->name('index');
