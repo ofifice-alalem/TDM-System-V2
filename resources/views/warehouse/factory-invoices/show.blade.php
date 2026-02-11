@@ -179,7 +179,7 @@
                     </div>
                 </div>
 
-                @if($invoice->status === 'pending')
+                @if($invoice->status === 'pending' && request()->routeIs('warehouse.*'))
                 {{-- Document Form --}}
                 <div class="bg-white dark:bg-dark-card rounded-[1.5rem] border border-gray-200 dark:border-dark-border p-6 shadow-lg shadow-gray-200/50 dark:shadow-sm">
                     <h3 class="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">

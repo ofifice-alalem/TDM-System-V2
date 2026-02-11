@@ -47,7 +47,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Main Stock
     Route::prefix('main-stock')->name('main-stock.')->group(function () {
-        Route::get('/', [MainStockController::class, 'index'])->name('index');
+        Route::get('/', [\App\Http\Controllers\Admin\AdminMainStockController::class, 'index'])->name('index');
+    });
+
+    // Products Management
+    Route::prefix('products')->name('products.')->group(function () {
+        Route::get('/{product}/edit', [\App\Http\Controllers\Admin\AdminProductController::class, 'edit'])->name('edit');
+        Route::patch('/{product}', [\App\Http\Controllers\Admin\AdminProductController::class, 'update'])->name('update');
+    });
+
+    // Factory Invoices (Read-only)
+    Route::prefix('factory-invoices')->name('factory-invoices.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AdminFactoryInvoiceController::class, 'index'])->name('index');
+        Route::get('/{factoryInvoice}', [\App\Http\Controllers\Admin\AdminFactoryInvoiceController::class, 'show'])->name('show');
+        Route::get('/{factoryInvoice}/pdf', [\App\Http\Controllers\Admin\AdminFactoryInvoiceController::class, 'pdf'])->name('pdf');
     });
     
 });

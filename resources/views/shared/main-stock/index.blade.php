@@ -62,7 +62,8 @@
 
         {{-- Products Table --}}
         <div class="bg-white dark:bg-dark-card rounded-[2rem] shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border overflow-hidden">
-            <div class="overflow-x-auto">
+            {{-- Desktop Table --}}
+            <div class="hidden md:block overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50 dark:bg-dark-bg border-b border-gray-200 dark:border-dark-border">
                         <tr>
@@ -71,6 +72,9 @@
                             <th class="px-6 py-4 text-right text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">السعر</th>
                             <th class="px-6 py-4 text-center text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">الكمية المتوفرة</th>
                             <th class="px-6 py-4 text-center text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">آخر تحديث</th>
+                            @if(request()->routeIs('admin.*'))
+                            <th class="px-6 py-4 text-center text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">إجراءات</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
@@ -109,10 +113,18 @@
                                     {{ $product->stock_updated_at ? \Carbon\Carbon::parse($product->stock_updated_at)->format('Y-m-d H:i') : '-' }}
                                 </span>
                             </td>
+                            @if(request()->routeIs('admin.*'))
+                            <td class="px-6 py-4 text-center">
+                                <a href="{{ route('admin.products.edit', $product) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-bold transition-all">
+                                    <i data-lucide="edit" class="w-4 h-4"></i>
+                                    تعديل
+                                </a>
+                            </td>
+                            @endif
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center">
+                            <td colspan="{{ request()->routeIs('admin.*') ? '6' : '5' }}" class="px-6 py-12 text-center">
                                 <div class="w-20 h-20 bg-gray-100 dark:bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
                                     <i data-lucide="inbox" class="w-10 h-10 text-gray-400 dark:text-gray-600"></i>
                                 </div>
@@ -123,6 +135,57 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            {{-- Mobile Cards --}}
+            <div class="md:hidden p-4 space-y-4">
+                @forelse($products as $product)
+                <div class="bg-gray-50 dark:bg-dark-bg rounded-2xl p-4 border border-gray-200 dark:border-dark-border">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-gray-900 dark:text-white mb-1 text-base">{{ $product->name }}</h3>
+                            @if($product->description)
+                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ Str::limit($product->description, 40) }}</p>
+                            @endif
+                        </div>
+                        @php
+                            $quantity = $product->stock_quantity ?? 0;
+                        @endphp
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-sm font-bold {{ $quantity > 0 ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' }}">
+                            <i data-lucide="{{ $quantity > 0 ? 'check-circle' : 'x-circle' }}" class="w-3 h-3"></i>
+                            {{ number_format($quantity) }}
+                        </span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <span class="text-gray-500 dark:text-gray-400 text-sm">الباركود</span>
+                            <p class="font-mono text-gray-900 dark:text-white text-base">{{ $product->barcode ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <span class="text-gray-500 dark:text-gray-400 text-sm">السعر</span>
+                            <p class="font-black text-gray-900 dark:text-white text-xl">{{ number_format($product->current_price, 2) }} د</p>
+                        </div>
+                    </div>
+
+                    @if(request()->routeIs('admin.*'))
+                    <div class="mt-3 pt-3 border-t border-gray-200 dark:border-dark-border">
+                        <a href="{{ route('admin.products.edit', $product) }}" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-sm font-bold transition-all">
+                            <i data-lucide="edit" class="w-4 h-4"></i>
+                            تعديل
+                        </a>
+                    </div>
+                    @endif
+                </div>
+                @empty
+                <div class="text-center py-12">
+                    <div class="w-20 h-20 bg-gray-100 dark:bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="inbox" class="w-10 h-10 text-gray-400 dark:text-gray-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">لا توجد منتجات</h3>
+                    <p class="text-gray-500 dark:text-dark-muted">لم يتم العثور على أي منتجات</p>
+                </div>
+                @endforelse
             </div>
 
             @if($products->hasPages())

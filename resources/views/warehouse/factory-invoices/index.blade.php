@@ -20,12 +20,14 @@
                 </h1>
             </div>
 
+            @if(request()->routeIs('warehouse.*'))
             <div class="lg:col-span-4 lg:translate-y-[30px]">
                 <a href="{{ route('warehouse.factory-invoices.create') }}" class="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2 w-full">
                     <i data-lucide="plus-circle" class="w-5 h-5"></i>
                     فاتورة جديدة
                 </a>
             </div>
+            @endif
         </div>
 
         {{-- Filters --}}
