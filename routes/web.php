@@ -4,7 +4,20 @@ use Illuminate\Support\Facades\Route;
 use App\Models\InvoiceDiscountTier;
 
 Route::get('/', function () {
-    return view('welcome');
+    if (!Auth::check()) {
+        return redirect()->route('login');
+    }
+    return redirect()->route('dashboard');
+});
+
+Route::get('/dashboard', function () {
+    return redirect()->route('marketer.stock.index');
+})->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', function() { return view('profile.edit'); })->name('profile.edit');
+    Route::patch('/profile', function() { return back(); })->name('profile.update');
+    Route::delete('/profile', function() { return back(); })->name('profile.destroy');
 });
 
 Route::get('/calculate-invoice-discount', function () {
@@ -39,6 +52,7 @@ Route::get('/calculate-invoice-discount', function () {
     ]);
 });
 
+require __DIR__.'/auth.php';
 require __DIR__.'/marketer.php';
 require __DIR__.'/warehouse.php';
 require __DIR__.'/admin.php';

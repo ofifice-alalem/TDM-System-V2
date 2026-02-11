@@ -9,8 +9,7 @@ use App\Http\Controllers\Marketer\WithdrawalController;
 use App\Http\Controllers\Shared\MainStockController;
 use Illuminate\Support\Facades\Route;
 
-// Temporary: Simulate logged-in marketer (ID=3)
-Route::middleware(['web'])->group(function () {
+Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('marketer')->name('marketer.')->group(function () {
         Route::get('/stock', [MarketerStockController::class, 'index'])->name('stock.index');
         

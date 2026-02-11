@@ -347,17 +347,29 @@
                 <div class="w-px h-8 bg-gray-200/60"></div>
 
                 {{-- User Info --}}
-                <div class="flex items-center gap-3 pl-2 p-1.5 pr-4 rounded-full hover:bg-gray-50/80 hover:shadow-md border border-transparent hover:border-gray-200 transition-all cursor-pointer group">
-                    <div class="hidden md:block text-left">
-                        <div class="text-sm font-black text-gray-800 dark:text-gray-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                            {{ Auth::user()->full_name ?? 'المسوق' }}
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" class="flex items-center gap-3 pl-2 p-1.5 pr-4 rounded-full hover:bg-gray-50 dark:hover:bg-dark-bg hover:shadow-md border border-transparent hover:border-gray-200 dark:hover:border-dark-border transition-all group">
+                        <div class="hidden md:block text-left">
+                            <div class="text-sm font-black text-gray-800 dark:text-gray-200 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                                {{ Auth::user()->full_name ?? 'المسوق' }}
+                            </div>
+                            <div class="text-[0.65rem] text-gray-400 font-bold text-right uppercase tracking-wider">Top Seller</div>
                         </div>
-                        <div class="text-[0.65rem] text-gray-400 font-bold text-right uppercase tracking-wider">Top Seller</div>
+                        <div class="w-10 h-10 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40 rounded-full flex items-center justify-center text-amber-600 dark:text-amber-400 border-2 border-white dark:border-dark-card shadow-md ring-1 ring-gray-100 dark:ring-gray-700 group-hover:ring-amber-200 transition-all">
+                            <i data-lucide="user" class="w-5 h-5"></i>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors"></i>
+                    </button>
+
+                    <div x-show="open" @click.away="open = false" x-transition class="absolute left-0 mt-2 w-48 bg-white dark:bg-dark-card rounded-xl shadow-lg border border-gray-200 dark:border-dark-border py-2 z-50">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full text-right px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2">
+                                <i data-lucide="log-out" class="w-4 h-4"></i>
+                                تسجيل الخروج
+                            </button>
+                        </form>
                     </div>
-                    <div class="w-10 h-10 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40 rounded-full flex items-center justify-center text-amber-600 dark:text-amber-400 border-2 border-white dark:border-dark-card shadow-md ring-1 ring-gray-100 dark:ring-gray-700 group-hover:ring-amber-200 transition-all">
-                        <i data-lucide="user" class="w-5 h-5"></i>
-                    </div>
-                    <i data-lucide="chevron-down" class="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors"></i>
                 </div>
 
             </div>

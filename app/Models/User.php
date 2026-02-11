@@ -22,7 +22,13 @@ class User extends Authenticatable
 
     protected $hidden = [
         'password_hash',
+        'remember_token',
     ];
+
+    public function getAuthPassword()
+    {
+        return $this->password_hash;
+    }
 
     protected $casts = [
         'commission_rate' => 'decimal:2',

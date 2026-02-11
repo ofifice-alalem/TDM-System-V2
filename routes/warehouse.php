@@ -6,7 +6,7 @@ use App\Http\Controllers\Warehouse\FactoryInvoiceController;
 use App\Http\Controllers\Shared\MainStockController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['web'])->group(function () {
+Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('warehouse')->name('warehouse.')->group(function () {
         Route::prefix('requests')->name('requests.')->group(function () {
             Route::get('/', [WarehouseRequestController::class, 'index'])->name('index');

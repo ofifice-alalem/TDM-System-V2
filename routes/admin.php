@@ -6,7 +6,7 @@ use App\Http\Controllers\Admin\ProductPromotionController;
 use App\Http\Controllers\Admin\AdminWithdrawalController;
 use App\Http\Controllers\Shared\MainStockController;
 
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['web', 'auth'])->prefix('admin')->name('admin.')->group(function () {
     
     // Users Management
     Route::prefix('users')->name('users.')->group(function () {
