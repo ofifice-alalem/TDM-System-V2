@@ -263,7 +263,7 @@
                             </div>
                             <div>
                                 <h4 class="font-bold text-gray-900 dark:text-white text-sm">تم إنشاء الطلب</h4>
-                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $request->user?->full_name ?? 'غير معروف' }}</p>
+                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $request->marketer?->full_name ?? 'غير معروف' }}</p>
                                 <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $request->created_at->format('Y-m-d h:i A') }}</span>
                             </div>
                         </div>
@@ -276,7 +276,7 @@
                             </div>
                             <div>
                                 <h4 class="font-bold text-gray-900 dark:text-white text-sm">تمت موافقة المخزن</h4>
-                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $request->approvedBy?->full_name ?? 'النظام' }}</p>
+                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $request->approver?->full_name ?? 'النظام' }}</p>
                                 <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $request->approved_at->format('Y-m-d h:i A') }}</span>
                             </div>
                         </div>
@@ -312,7 +312,7 @@
                             </div>
                             <div>
                                 <h4 class="font-bold text-gray-900 dark:text-white text-sm">التوثيق والأرشفة</h4>
-                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $request->documentedBy?->full_name ?? 'النظام' }}</p>
+                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $request->documenter?->full_name ?? 'النظام' }}</p>
                                 <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $request->documented_at->format('Y-m-d h:i A') }}</span>
                             </div>
                         </div>
@@ -354,7 +354,7 @@
 
 @if($request->status === 'documented' && $request->stamped_image)
     @include('shared.modals.documentation-image', [
-        'imageUrl' => route('warehouse.requests.documentation', $request->id),
+        'imageUrl' => route('marketer.requests.documentation', $request->id),
         'invoiceNumber' => $request->invoice_number,
         'documentedAt' => $request->documented_at
     ])

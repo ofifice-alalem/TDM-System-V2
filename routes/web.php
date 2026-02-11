@@ -11,8 +11,15 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return redirect()->route('marketer.stock.index');
-})->name('dashboard');
+    $roleId = auth()->user()->role_id;
+    
+    return match($roleId) {
+        3 => redirect()->route('marketer.stock.index'),
+        2 => redirect()->route('warehouse.requests.index'),
+        1 => redirect()->route('admin.main-stock.index'),
+        default => abort(403, 'دور غير معروف'),
+    };
+})->middleware('auth')->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', function() { return view('profile.edit'); })->name('profile.edit');

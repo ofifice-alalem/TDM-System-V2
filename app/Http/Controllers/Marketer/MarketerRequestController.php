@@ -88,7 +88,7 @@ class MarketerRequestController extends Controller
 
     public function show(MarketerRequest $request)
     {
-        return view('marketer.requests.show', ['request' => $request->load('items.product', 'approver', 'rejecter', 'documenter')]);
+        return view('marketer.requests.show', ['request' => $request->load('items.product', 'marketer', 'approver', 'rejecter', 'documenter')]);
     }
 
     public function cancel(Request $request, MarketerRequest $marketerRequest)
@@ -106,5 +106,20 @@ class MarketerRequestController extends Controller
     public function pdf(MarketerRequest $request)
     {
         return $this->invoiceController->generateRequestPdf($request);
+    }
+
+    public function viewDocumentation(MarketerRequest $request)
+    {
+        if (!$request->stamped_image) {
+            abort(404);
+        }
+
+        $path = storage_path('app/' . $request->stamped_image);
+        
+        if (!file_exists($path)) {
+            abort(404);
+        }
+
+        return response()->file($path);
     }
 }

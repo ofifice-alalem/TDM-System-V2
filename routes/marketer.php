@@ -9,7 +9,7 @@ use App\Http\Controllers\Marketer\WithdrawalController;
 use App\Http\Controllers\Shared\MainStockController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['web', 'auth'])->group(function () {
+Route::middleware(['web', 'auth', 'role:marketer'])->group(function () {
     Route::prefix('marketer')->name('marketer.')->group(function () {
         Route::get('/stock', [MarketerStockController::class, 'index'])->name('stock.index');
         
@@ -19,6 +19,7 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::post('/', [MarketerRequestController::class, 'store'])->name('store');
             Route::get('/{request}', [MarketerRequestController::class, 'show'])->name('show');
             Route::get('/{request}/pdf', [MarketerRequestController::class, 'pdf'])->name('pdf');
+            Route::get('/{request}/documentation', [MarketerRequestController::class, 'viewDocumentation'])->name('documentation');
             Route::patch('/{marketerRequest}/cancel', [MarketerRequestController::class, 'cancel'])->name('cancel');
         });
 

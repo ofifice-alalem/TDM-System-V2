@@ -44,4 +44,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(MarketerRequest::class, 'marketer_id');
     }
+
+    public function isMarketer(): bool
+    {
+        return $this->role_id === 3;
+    }
+
+    public function isWarehouse(): bool
+    {
+        return $this->role_id === 2;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role_id === 1;
+    }
 }
