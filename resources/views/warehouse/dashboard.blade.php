@@ -11,7 +11,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-down">
             <div class="lg:col-span-12">
                 <div class="flex items-center gap-3 mb-2">
-                    <span class="bg-primary-100 dark:bg-primary-600/20 text-primary-600 dark:text-primary-400 px-3 py-1 rounded-lg text-xs font-bold border border-primary-100 dark:border-primary-600/30">
+                    <span class="bg-amber-100 dark:bg-amber-600/20 text-amber-600 dark:text-amber-400 px-3 py-1 rounded-lg text-xs font-bold border border-amber-100 dark:border-amber-600/30">
                         أمين المخزن
                     </span>
                 </div>
@@ -149,7 +149,7 @@
                                     </span>
                                 </div>
                             </div>
-                            <a href="{{ route('warehouse.requests.show', $request) }}" class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
+                            <a href="{{ route('warehouse.requests.show', $request) }}" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                                 معالجة
                             </a>
@@ -159,7 +159,7 @@
             </div>
 
             <div class="mt-6 pt-6 border-t border-gray-200 dark:border-dark-border">
-                <a href="{{ route('warehouse.requests.index') }}" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-bold text-sm flex items-center gap-2 justify-center">
+                <a href="{{ route('warehouse.requests.index') }}" class="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-bold text-sm flex items-center gap-2 justify-center">
                     عرض جميع الطلبات
                     <i data-lucide="arrow-left" class="w-4 h-4"></i>
                 </a>

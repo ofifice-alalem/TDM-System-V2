@@ -43,6 +43,11 @@ class WarehouseDashboardController extends Controller
         // إرجاعات المتاجر
         $pendingSalesReturns = SalesReturn::where('status', 'pending')->count();
 
+        // عدد الإشعارات غير المقروءة
+        $unreadNotifications = \App\Models\Notification::where('user_id', auth()->id())
+            ->where('is_read', false)
+            ->count();
+
         return view('warehouse.dashboard', compact(
             'pendingRequests',
             'approvedRequests',
@@ -51,7 +56,8 @@ class WarehouseDashboardController extends Controller
             'approvedReturns',
             'pendingSales',
             'pendingPayments',
-            'pendingSalesReturns'
+            'pendingSalesReturns',
+            'unreadNotifications'
         ));
     }
 }
