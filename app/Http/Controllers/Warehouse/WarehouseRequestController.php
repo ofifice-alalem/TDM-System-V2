@@ -58,7 +58,7 @@ class WarehouseRequestController extends Controller
             });
         }
 
-        $requests = $query->oldest()->paginate(20)->withQueryString();
+        $requests = $query->latest()->paginate(20)->withQueryString();
         $marketers = \App\Models\MarketerRequest::with('marketer')
             ->select('marketer_id')
             ->distinct()

@@ -54,6 +54,7 @@ Route::middleware(['web', 'auth', 'role:warehouse'])->group(function () {
         Route::prefix('payments')->name('payments.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Warehouse\WarehousePaymentController::class, 'index'])->name('index');
             Route::get('/{payment}', [\App\Http\Controllers\Warehouse\WarehousePaymentController::class, 'show'])->name('show');
+            Route::get('/{payment}/pdf', [\App\Http\Controllers\Shared\Payment\InvoiceController::class, 'generatePaymentInvoicePdf'])->name('pdf');
             Route::post('/{id}/approve', [\App\Http\Controllers\Warehouse\WarehousePaymentController::class, 'approve'])->name('approve');
             Route::patch('/{id}/reject', [\App\Http\Controllers\Warehouse\WarehousePaymentController::class, 'reject'])->name('reject');
         });
