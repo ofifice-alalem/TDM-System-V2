@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="ar" dir="rtl" class="dark">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,10 +7,10 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
-        <!-- Fonts -->
+        <!-- Cairo Font -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -23,7 +23,7 @@
                 --primary-glow: radial-gradient(circle at center, rgba(60, 60, 60, 0.15) 0%, transparent 70%);
             }
             body {
-                font-family: 'Inter', sans-serif;
+                font-family: 'Cairo', sans-serif;
                 background-color: var(--bg-color);
                 color: #ffffff;
                 margin: 0;
@@ -94,10 +94,10 @@
         <div class="organic-line line-left"></div>
         <div class="organic-line line-right"></div>
 
-        <div class="min-h-screen flex flex-col sm:justify-center items-center p-4 relative z-10">
-            <div class="w-full px-8 py-12 glass-card" style="max-width: min(700px, 90%);">
-                <div class="sparkle-icon mb-8" style="width: 400px; height: 140px; border-radius: 40px;">
-                    <img src="/logo.png" alt="Logo" class="object-contain" style="width: 300px; scale: 1.15;">
+        <div class="min-h-screen flex flex-col sm:justify-center items-center p-4 sm:p-6 relative z-10">
+            <div class="w-full px-6 sm:px-8 py-6 sm:py-8 glass-card" style="max-width: min(450px, 90%);">
+                <div class="sparkle-icon mb-4 sm:mb-6" style="width: 240px; height: 80px; border-radius: 30px;">
+                    <img src="/logo.png" alt="Logo" class="object-contain" style="width: 180px; scale: 1.05;">
                 </div>
                 
                 {{ $slot }}
