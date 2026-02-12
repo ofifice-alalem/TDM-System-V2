@@ -61,6 +61,7 @@ Route::middleware(['web', 'auth', 'role:warehouse'])->group(function () {
         Route::prefix('sales-returns')->name('sales-returns.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'index'])->name('index');
             Route::get('/{salesReturn}', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'show'])->name('show');
+            Route::get('/{salesReturn}/pdf', [\App\Http\Controllers\Shared\SalesReturn\InvoiceController::class, 'generateSalesReturnInvoicePdf'])->name('pdf');
             Route::post('/{id}/approve', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'approve'])->name('approve');
             Route::patch('/{id}/reject', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'reject'])->name('reject');
             Route::get('/{id}/documentation', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'viewDocumentation'])->name('documentation');
