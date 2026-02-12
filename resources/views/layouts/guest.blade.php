@@ -95,11 +95,9 @@
         <div class="organic-line line-right"></div>
 
         <div class="min-h-screen flex flex-col sm:justify-center items-center p-4 relative z-10">
-            <div class="w-full sm:max-w-[420px] px-8 py-10 glass-card">
-                <div class="sparkle-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white opacity-80">
-                        <path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z"></path>
-                    </svg>
+            <div class="w-full px-8 py-12 glass-card" style="max-width: min(700px, 90%);">
+                <div class="sparkle-icon mb-8" style="width: 400px; height: 140px; border-radius: 40px;">
+                    <img src="/logo.png" alt="Logo" class="object-contain" style="width: 300px; scale: 1.15;">
                 </div>
                 
                 {{ $slot }}
