@@ -67,7 +67,7 @@ class InvoiceController extends Controller
                 'productDiscount' => $arabic->utf8Glyphs('تخفيض المنتجات'),
                 'invoiceDiscount' => $arabic->utf8Glyphs('تخفيض الفاتورة'),
                 'finalTotal' => $arabic->utf8Glyphs('المجموع النهائي'),
-                'invalidInvoice' => $arabic->utf8Glyphs('ملغية'),
+                'invalidInvoice' => $arabic->utf8Glyphs('الفاتورة لا يعتد بها'),
                 'currency' => $arabic->utf8Glyphs('دينار'),
             ]
         ];

@@ -34,7 +34,9 @@ class InvoiceController extends Controller
             'marketerName' => $arabic->utf8Glyphs($return->marketer->full_name),
             'status' => $arabic->utf8Glyphs($statusLabels[$return->status]),
             'approvedBy' => $return->approver ? $arabic->utf8Glyphs($return->approver->full_name) : null,
+            'approvedDate' => $return->approved_at ? $return->approved_at->format('Y-m-d H:i') : null,
             'rejectedBy' => $return->rejecter ? $arabic->utf8Glyphs($return->rejecter->full_name) : null,
+            'rejectedDate' => $return->rejected_at ? $return->rejected_at->format('Y-m-d H:i') : null,
             'isInvalid' => in_array($return->status, ['rejected', 'cancelled']),
             'items' => $return->items->map(function($item) use ($arabic, $toEnglishNumbers) {
                 return (object)[

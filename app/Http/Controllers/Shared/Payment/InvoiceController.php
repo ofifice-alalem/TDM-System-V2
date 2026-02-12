@@ -46,7 +46,7 @@ class InvoiceController extends Controller
                 'status' => $arabic->utf8Glyphs('الحالة'),
                 'paymentMethod' => $arabic->utf8Glyphs('طريقة الدفع'),
                 'amount' => $arabic->utf8Glyphs('المبلغ المسدد'),
-                'invalidPayment' => $arabic->utf8Glyphs('ملغي'),
+                'invalidPayment' => $arabic->utf8Glyphs('الفاتورة لا يعتد بها'),
                 'currency' => $arabic->utf8Glyphs('دينار'),
             ]
         ];

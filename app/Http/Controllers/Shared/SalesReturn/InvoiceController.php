@@ -57,7 +57,7 @@ class InvoiceController extends Controller
                 'price' => $arabic->utf8Glyphs('السعر'),
                 'total' => $arabic->utf8Glyphs('الإجمالي'),
                 'finalTotal' => $arabic->utf8Glyphs('الإجمالي'),
-                'invalidInvoice' => $arabic->utf8Glyphs('ملغية'),
+                'invalidInvoice' => $arabic->utf8Glyphs('الفاتورة لا يعتد بها'),
                 'currency' => $arabic->utf8Glyphs('دينار'),
                 'originalInvoice' => $arabic->utf8Glyphs('الفاتورة الأصلية'),
             ]

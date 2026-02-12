@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Warehouse;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Shared\Request\InvoiceController;
 use App\Models\MarketerRequest;
 use App\Services\Warehouse\WarehouseRequestService;
 use Illuminate\Http\Request;
@@ -10,7 +11,10 @@ use Illuminate\Support\Facades\Auth;
 
 class WarehouseRequestController extends Controller
 {
-    public function __construct(private WarehouseRequestService $service) 
+    public function __construct(
+        private WarehouseRequestService $service,
+        private InvoiceController $invoiceController
+    ) 
     {
         if (!Auth::check()) {
             Auth::loginUsingId(2);
@@ -125,5 +129,11 @@ class WarehouseRequestController extends Controller
         }
 
         return response()->file($imagePath);
+    }
+
+    public function pdf($id)
+    {
+        $request = MarketerRequest::findOrFail($id);
+        return $this->invoiceController->generateRequestPdf($request);
     }
 }

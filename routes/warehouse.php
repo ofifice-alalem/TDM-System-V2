@@ -19,6 +19,7 @@ Route::middleware(['web', 'auth', 'role:warehouse'])->group(function () {
             Route::patch('{id}/reject', [WarehouseRequestController::class, 'reject'])->name('reject');
             Route::post('{id}/document', [WarehouseRequestController::class, 'document'])->name('document');
             Route::get('{id}/documentation', [WarehouseRequestController::class, 'viewDocumentation'])->name('documentation');
+            Route::get('{id}/pdf', [WarehouseRequestController::class, 'pdf'])->name('pdf');
             Route::get('{id}', [WarehouseRequestController::class, 'show'])->name('show');
         });
 
@@ -28,12 +29,14 @@ Route::middleware(['web', 'auth', 'role:warehouse'])->group(function () {
             Route::patch('{id}/reject', [WarehouseReturnController::class, 'reject'])->name('reject');
             Route::post('{id}/document', [WarehouseReturnController::class, 'document'])->name('document');
             Route::get('{id}/documentation', [WarehouseReturnController::class, 'viewDocumentation'])->name('documentation');
+            Route::get('{id}/pdf', [WarehouseReturnController::class, 'pdf'])->name('pdf');
             Route::get('{id}', [WarehouseReturnController::class, 'show'])->name('show');
         });
 
         Route::prefix('sales')->name('sales.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Warehouse\WarehouseSalesController::class, 'index'])->name('index');
             Route::get('{id}', [\App\Http\Controllers\Warehouse\WarehouseSalesController::class, 'show'])->name('show');
+            Route::get('{sale}/pdf', [\App\Http\Controllers\Shared\Sales\InvoiceController::class, 'generateSalesInvoicePdf'])->name('pdf');
             Route::post('{id}/approve', [\App\Http\Controllers\Warehouse\WarehouseSalesController::class, 'approve'])->name('approve');
             Route::post('{id}/reject', [\App\Http\Controllers\Warehouse\WarehouseSalesController::class, 'reject'])->name('reject');
             Route::get('{id}/documentation', [\App\Http\Controllers\Warehouse\WarehouseSalesController::class, 'viewDocumentation'])->name('documentation');

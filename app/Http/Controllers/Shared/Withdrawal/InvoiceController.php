@@ -40,7 +40,7 @@ class InvoiceController extends Controller
                 'approvedBy' => $arabic->utf8Glyphs('تمت الموافقة بواسطة'),
                 'rejectedBy' => $arabic->utf8Glyphs('تم الرفض بواسطة'),
                 'notes' => $arabic->utf8Glyphs('ملاحظات'),
-                'invalidWithdrawal' => $arabic->utf8Glyphs('ملغي'),
+                'invalidWithdrawal' => $arabic->utf8Glyphs('الفاتورة لا يعتد بها'),
                 'currency' => $arabic->utf8Glyphs('دينار'),
                 'marketerSignature' => $arabic->utf8Glyphs('توقيع المسوق'),
                 'adminSignature' => $arabic->utf8Glyphs('توقيع الإدارة'),
