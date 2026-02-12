@@ -4,168 +4,183 @@
 
 @section('content')
 
-<div class="min-h-screen py-8">
-    <div class="max-w-[1600px] mx-auto space-y-8 px-2">
+<div class="py-8">
+    <div class="max-w-7xl mx-auto px-4">
         
         {{-- Header --}}
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-down">
-            <div class="lg:col-span-12">
-                <div class="flex items-center gap-3 mb-2">
-                    <span class="bg-amber-100 dark:bg-amber-600/20 text-amber-600 dark:text-amber-400 px-3 py-1 rounded-lg text-xs font-bold border border-amber-100 dark:border-amber-600/30">
-                        أمين المخزن
-                    </span>
-                </div>
-                <h1 class="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
-                    لوحة التحكم
-                </h1>
-                <p class="text-gray-500 dark:text-dark-muted mt-2">نظرة شاملة على جميع العمليات المعلقة</p>
-            </div>
+        <div class="mb-8">
+            <h1 class="text-3xl font-black text-gray-900 dark:text-white">لوحة التحكم</h1>
+            <p class="text-gray-500 dark:text-dark-muted mt-1">نظرة سريعة على العمليات المعلقة</p>
         </div>
 
-        {{-- Stats Cards --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            {{-- طلبات البضاعة المعلقة --}}
-            <a href="{{ route('warehouse.requests.index', ['status' => 'pending']) }}" class="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 rounded-2xl p-6 border border-amber-200 dark:border-amber-700/30 hover:shadow-xl transition-all transform hover:-translate-y-1">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-amber-500 dark:bg-amber-600 rounded-xl flex items-center justify-center">
-                        <i data-lucide="package" class="w-6 h-6 text-white"></i>
-                    </div>
-                    @if($pendingRequests > 0)
-                        <span class="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">{{ $pendingRequests }}</span>
-                    @endif
-                </div>
-                <h3 class="text-2xl font-black text-amber-900 dark:text-amber-400">{{ $pendingRequests }}</h3>
-                <p class="text-sm text-amber-700 dark:text-amber-500 font-bold mt-1">طلبات معلقة</p>
-            </a>
-
-            {{-- طلبات معتمدة بانتظار التوثيق --}}
-            <a href="{{ route('warehouse.requests.index', ['status' => 'approved']) }}" class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-700/30 hover:shadow-xl transition-all transform hover:-translate-y-1">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-blue-500 dark:bg-blue-600 rounded-xl flex items-center justify-center">
-                        <i data-lucide="clock" class="w-6 h-6 text-white"></i>
-                    </div>
-                    @if($approvedRequests > 0)
-                        <span class="bg-blue-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">{{ $approvedRequests }}</span>
-                    @endif
-                </div>
-                <h3 class="text-2xl font-black text-blue-900 dark:text-blue-400">{{ $approvedRequests }}</h3>
-                <p class="text-sm text-blue-700 dark:text-blue-500 font-bold mt-1">بانتظار التوثيق</p>
-            </a>
-
-            {{-- إرجاعات المسوقين --}}
-            <a href="{{ route('warehouse.returns.index', ['status' => 'pending']) }}" class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl p-6 border border-purple-200 dark:border-purple-700/30 hover:shadow-xl transition-all transform hover:-translate-y-1">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-purple-500 dark:bg-purple-600 rounded-xl flex items-center justify-center">
-                        <i data-lucide="package-x" class="w-6 h-6 text-white"></i>
-                    </div>
-                    @if($pendingReturns > 0)
-                        <span class="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">{{ $pendingReturns }}</span>
-                    @endif
-                </div>
-                <h3 class="text-2xl font-black text-purple-900 dark:text-purple-400">{{ $pendingReturns }}</h3>
-                <p class="text-sm text-purple-700 dark:text-purple-500 font-bold mt-1">إرجاعات معلقة</p>
-            </a>
-
-            {{-- فواتير البيع --}}
-            <a href="{{ route('warehouse.sales.index', ['status' => 'pending']) }}" class="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-2xl p-6 border border-emerald-200 dark:border-emerald-700/30 hover:shadow-xl transition-all transform hover:-translate-y-1">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-emerald-500 dark:bg-emerald-600 rounded-xl flex items-center justify-center">
-                        <i data-lucide="shopping-cart" class="w-6 h-6 text-white"></i>
-                    </div>
-                    @if($pendingSales > 0)
-                        <span class="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">{{ $pendingSales }}</span>
-                    @endif
-                </div>
-                <h3 class="text-2xl font-black text-emerald-900 dark:text-emerald-400">{{ $pendingSales }}</h3>
-                <p class="text-sm text-emerald-700 dark:text-emerald-500 font-bold mt-1">فواتير بيع معلقة</p>
-            </a>
-
-            {{-- إيصالات القبض --}}
-            <a href="{{ route('warehouse.payments.index', ['status' => 'pending']) }}" class="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/20 rounded-2xl p-6 border border-cyan-200 dark:border-cyan-700/30 hover:shadow-xl transition-all transform hover:-translate-y-1">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 bg-cyan-500 dark:bg-cyan-600 rounded-xl flex items-center justify-center">
-                        <i data-lucide="banknote" class="w-6 h-6 text-white"></i>
-                    </div>
-                    @if($pendingPayments > 0)
-                        <span class="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">{{ $pendingPayments }}</span>
-                    @endif
-                </div>
-                <h3 class="text-2xl font-black text-cyan-900 dark:text-cyan-400">{{ $pendingPayments }}</h3>
-                <p class="text-sm text-cyan-700 dark:text-cyan-500 font-bold mt-1">إيصالات معلقة</p>
-            </a>
-        </div>
-
-        {{-- أقدم الطلبات (أولوية) --}}
-        @if($oldestRequests->count() > 0)
-        <div class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-2xl font-black text-gray-900 dark:text-white">الطلبات الأقدم (أولوية)</h2>
-                    <p class="text-sm text-gray-500 dark:text-dark-muted mt-1">يجب معالجة هذه الطلبات أولاً</p>
-                </div>
-                <div class="bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2">
-                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
-                    عاجل
-                </div>
-            </div>
-
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {{-- قسم: طلبات المسوقين --}}
             <div class="space-y-4">
-                @foreach($oldestRequests as $request)
-                    @php
-                        $statusConfig = [
-                            'pending' => ['bg' => 'bg-amber-50 dark:bg-amber-900/20', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'معلق'],
-                            'approved' => ['bg' => 'bg-blue-50 dark:bg-blue-900/20', 'text' => 'text-blue-700 dark:text-blue-400', 'label' => 'معتمد'],
-                        ][$request->status] ?? ['bg' => 'bg-gray-50', 'text' => 'text-gray-600', 'label' => 'غير معروف'];
-                        
-                        $daysOld = now()->diffInDays($request->created_at);
-                    @endphp
-                    
-                    <div class="bg-gray-50 dark:bg-dark-bg rounded-xl p-4 border border-gray-200 dark:border-dark-border hover:shadow-md transition-all">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-3 mb-2">
-                                    <span class="font-black text-gray-900 dark:text-white">{{ $request->invoice_number }}</span>
-                                    <span class="{{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} px-3 py-1 rounded-lg text-xs font-bold">
-                                        {{ $statusConfig['label'] }}
-                                    </span>
-                                    @if($daysOld > 2)
-                                        <span class="bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-3 py-1 rounded-lg text-xs font-bold">
-                                            {{ $daysOld }} يوم
-                                        </span>
-                                    @endif
-                                </div>
-                                <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                    <span class="flex items-center gap-1">
-                                        <i data-lucide="user" class="w-4 h-4"></i>
-                                        {{ $request->marketer->full_name }}
-                                    </span>
-                                    <span class="flex items-center gap-1">
-                                        <i data-lucide="calendar" class="w-4 h-4"></i>
-                                        {{ $request->created_at->format('Y-m-d') }}
-                                    </span>
-                                    <span class="flex items-center gap-1">
-                                        <i data-lucide="package" class="w-4 h-4"></i>
-                                        {{ $request->items->count() }} منتج
-                                    </span>
-                                </div>
-                            </div>
-                            <a href="{{ route('warehouse.requests.show', $request) }}" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
-                                <i data-lucide="eye" class="w-4 h-4"></i>
-                                معالجة
-                            </a>
-                        </div>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                        <i data-lucide="package" class="w-5 h-5 text-amber-600 dark:text-amber-400"></i>
                     </div>
-                @endforeach
-            </div>
+                    <h2 class="text-lg font-black text-gray-900 dark:text-white">طلبات المسوقين</h2>
+                </div>
+                
+                <a href="{{ route('warehouse.requests.index', ['status' => 'pending']) }}" class="block bg-white dark:bg-dark-card rounded-xl p-5 border border-gray-200 dark:border-dark-border hover:shadow-lg transition-all hover:-translate-y-1">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center justify-center">
+                                <i data-lucide="clock" class="w-5 h-5 text-amber-600"></i>
+                            </div>
+                            <span class="font-bold text-gray-900 dark:text-white">طلبات معلقة</span>
+                        </div>
+                        @if($pendingRequests > 0)
+                            <span class="bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full">{{ $pendingRequests }}</span>
+                        @else
+                            <span class="text-2xl font-black text-gray-400">{{ $pendingRequests }}</span>
+                        @endif
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">تحتاج موافقة</p>
+                </a>
 
-            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-dark-border">
-                <a href="{{ route('warehouse.requests.index') }}" class="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-bold text-sm flex items-center gap-2 justify-center">
-                    عرض جميع الطلبات
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <a href="{{ route('warehouse.requests.index', ['status' => 'approved']) }}" class="block bg-white dark:bg-dark-card rounded-xl p-5 border border-gray-200 dark:border-dark-border hover:shadow-lg transition-all hover:-translate-y-1">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                                <i data-lucide="check-circle" class="w-5 h-5 text-blue-600"></i>
+                            </div>
+                            <span class="font-bold text-gray-900 dark:text-white">بانتظار التوثيق</span>
+                        </div>
+                        @if($approvedRequests > 0)
+                            <span class="bg-blue-500 text-white text-sm font-bold px-3 py-1.5 rounded-full">{{ $approvedRequests }}</span>
+                        @else
+                            <span class="text-2xl font-black text-gray-400">{{ $approvedRequests }}</span>
+                        @endif
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">معتمدة ومحجوزة</p>
+                </a>
+
+                <a href="{{ route('warehouse.returns.index', ['status' => 'pending']) }}" class="block bg-white dark:bg-dark-card rounded-xl p-5 border border-gray-200 dark:border-dark-border hover:shadow-lg transition-all hover:-translate-y-1">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
+                                <i data-lucide="package-x" class="w-5 h-5 text-purple-600"></i>
+                            </div>
+                            <span class="font-bold text-gray-900 dark:text-white">إرجاعات المسوقين</span>
+                        </div>
+                        @if($pendingReturns > 0)
+                            <span class="bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full">{{ $pendingReturns }}</span>
+                        @else
+                            <span class="text-2xl font-black text-gray-400">{{ $pendingReturns }}</span>
+                        @endif
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">تحتاج معالجة</p>
                 </a>
             </div>
+
+            {{-- قسم: فواتير البيع --}}
+            <div class="space-y-4">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
+                        <i data-lucide="shopping-cart" class="w-5 h-5 text-emerald-600 dark:text-emerald-400"></i>
+                    </div>
+                    <h2 class="text-lg font-black text-gray-900 dark:text-white">فواتير البيع</h2>
+                </div>
+                
+                <a href="{{ route('warehouse.sales.index', ['status' => 'pending']) }}" class="block bg-white dark:bg-dark-card rounded-xl p-5 border border-gray-200 dark:border-dark-border hover:shadow-lg transition-all hover:-translate-y-1">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg flex items-center justify-center">
+                                <i data-lucide="file-text" class="w-5 h-5 text-emerald-600"></i>
+                            </div>
+                            <span class="font-bold text-gray-900 dark:text-white">فواتير معلقة</span>
+                        </div>
+                        @if($pendingSales > 0)
+                            <span class="bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full">{{ $pendingSales }}</span>
+                        @else
+                            <span class="text-2xl font-black text-gray-400">{{ $pendingSales }}</span>
+                        @endif
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">تحتاج توثيق</p>
+                </a>
+
+                <a href="{{ route('warehouse.sales-returns.index', ['status' => 'pending']) }}" class="block bg-white dark:bg-dark-card rounded-xl p-5 border border-gray-200 dark:border-dark-border hover:shadow-lg transition-all hover:-translate-y-1">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-orange-50 dark:bg-orange-900/20 rounded-lg flex items-center justify-center">
+                                <i data-lucide="undo-2" class="w-5 h-5 text-orange-600"></i>
+                            </div>
+                            <span class="font-bold text-gray-900 dark:text-white">إرجاعات من المتاجر</span>
+                        </div>
+                        @if($pendingSalesReturns > 0)
+                            <span class="bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full">{{ $pendingSalesReturns }}</span>
+                        @else
+                            <span class="text-2xl font-black text-gray-400">{{ $pendingSalesReturns }}</span>
+                        @endif
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">من المتاجر للمسوقين</p>
+                </a>
+            </div>
+
+            {{-- قسم: إيصالات القبض (الجانب الأيسر) --}}
+            <div class="space-y-4">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg flex items-center justify-center">
+                        <i data-lucide="banknote" class="w-5 h-5 text-cyan-600 dark:text-cyan-400"></i>
+                    </div>
+                    <h2 class="text-lg font-black text-gray-900 dark:text-white">إيصالات القبض</h2>
+                </div>
+                
+                <a href="{{ route('warehouse.payments.index', ['status' => 'pending']) }}" class="block bg-white dark:bg-dark-card rounded-xl p-5 border border-gray-200 dark:border-dark-border hover:shadow-lg transition-all hover:-translate-y-1">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg flex items-center justify-center">
+                                <i data-lucide="wallet" class="w-5 h-5 text-cyan-600"></i>
+                            </div>
+                            <span class="font-bold text-gray-900 dark:text-white">إيصالات معلقة</span>
+                        </div>
+                        @if($pendingPayments > 0)
+                            <span class="bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-full">{{ $pendingPayments }}</span>
+                        @else
+                            <span class="text-2xl font-black text-gray-400">{{ $pendingPayments }}</span>
+                        @endif
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">تحتاج موافقة</p>
+                </a>
+
+                {{-- قسم: الطلبات العاجلة --}}
+                @if($oldestRequests->count() > 0)
+                <div class="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl p-5 border-2 border-red-200 dark:border-red-700/30 mt-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center animate-pulse">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <h2 class="text-lg font-black text-red-900 dark:text-red-400">طلبات عاجلة</h2>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        @foreach($oldestRequests as $request)
+                            @php
+                                $daysOld = now()->diffInDays($request->created_at);
+                            @endphp
+                            
+                            <div class="bg-white dark:bg-dark-card rounded-lg p-3">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="font-bold text-gray-900 dark:text-white text-sm">{{ $request->invoice_number }}</span>
+                                    <span class="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded text-xs font-bold">
+                                        {{ $daysOld }} يوم
+                                    </span>
+                                </div>
+                                <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">{{ $request->marketer->full_name }}</p>
+                                <a href="{{ route('warehouse.requests.show', $request) }}" class="block w-full text-center px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-xs transition-all">
+                                    معالجة فوراً
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+            </div>
+
         </div>
-        @endif
 
     </div>
 </div>
