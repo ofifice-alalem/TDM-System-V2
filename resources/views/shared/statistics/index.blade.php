@@ -16,33 +16,51 @@
         <div class="bg-white dark:bg-dark-card rounded-2xl p-6 border border-gray-200 dark:border-dark-border shadow-lg mb-6">
             <form method="GET" action="{{ route('admin.statistics.index') }}" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
+                    <div class="md:col-span-2 lg:col-span-3">
                         <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">نوع الإحصاء</label>
-                        <select name="stat_type" required class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <select name="stat_type" id="stat_type" required class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                             <option value="">اختر النوع...</option>
                             <option value="stores" {{ request('stat_type') == 'stores' ? 'selected' : '' }}>المتاجر</option>
+                            <option value="marketers" {{ request('stat_type') == 'marketers' ? 'selected' : '' }}>المسوقين</option>
                         </select>
                     </div>
+                </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">اسم المتجر</label>
-                        <select name="store_id" required class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">اختر المتجر...</option>
-                            @foreach($stores as $store)
-                                <option value="{{ $store->id }}" {{ request('store_id') == $store->id ? 'selected' : '' }}>{{ $store->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                <div id="filters_container" style="display: {{ request('stat_type') ? 'block' : 'none' }}">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div id="store_field" style="display: {{ request('stat_type') == 'stores' ? 'block' : 'none' }}">
+                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">اسم المتجر</label>
+                            <select name="store_id" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                <option value="">اختر المتجر...</option>
+                                @foreach($stores as $store)
+                                    <option value="{{ $store->id }}" {{ request('store_id') == $store->id ? 'selected' : '' }}>{{ $store->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">العملية</label>
-                        <select name="operation" required class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">اختر العملية...</option>
-                            <option value="sales" {{ request('operation') == 'sales' ? 'selected' : '' }}>فواتير البيع</option>
-                            <option value="payments" {{ request('operation') == 'payments' ? 'selected' : '' }}>إيصالات القبض</option>
-                            <option value="returns" {{ request('operation') == 'returns' ? 'selected' : '' }}>إرجاعات البضاعة</option>
-                        </select>
-                    </div>
+                        <div id="marketer_field" style="display: {{ request('stat_type') == 'marketers' ? 'block' : 'none' }}">
+                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">اسم المسوق</label>
+                            <select name="marketer_id" id="marketer_id" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                <option value="">اختر المسوق...</option>
+                                @foreach($marketers as $marketer)
+                                    <option value="{{ $marketer->id }}" {{ request('marketer_id') == $marketer->id ? 'selected' : '' }}>{{ $marketer->full_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div id="marketer_store_field" style="display: none">
+                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">المتجر (اختياري)</label>
+                            <select name="marketer_store_id" id="marketer_store_id" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                <option value="">الكل</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">العملية</label>
+                            <select name="operation" id="operation" required class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                <option value="">اختر العملية...</option>
+                            </select>
+                        </div>
 
                     <div>
                         <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">من تاريخ</label>
@@ -59,10 +77,12 @@
                         <select name="status" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                             <option value="">الكل</option>
                             <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>معلق</option>
-                            <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>موثق</option>
+                            <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>موافق عليه</option>
+                            <option value="documented" {{ request('status') == 'documented' ? 'selected' : '' }}>موثق</option>
                             <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغي</option>
                             <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>مرفوض</option>
                         </select>
+                    </div>
                     </div>
                 </div>
 
@@ -100,10 +120,28 @@
 
                 <div class="overflow-x-auto">
                     <table class="w-full">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
                         <thead class="bg-gray-50 dark:bg-dark-bg border-b border-gray-200 dark:border-dark-border">
                             <tr>
-                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">رقم الفاتورة</th>
-                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المسوق</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">
+                                    @if($results['operation'] == 'sales')
+                                        رقم الفاتورة
+                                    @elseif($results['operation'] == 'payments')
+                                        رقم الإيصال
+                                    @elseif($results['operation'] == 'returns')
+                                        رقم الإرجاع
+                                    @elseif($results['operation'] == 'requests')
+                                        رقم الطلب
+                                    @elseif($results['operation'] == 'withdrawals')
+                                        رقم السحب
+                                    @endif
+                                </th>
+                                @if(request('stat_type') == 'stores')
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المسوق</th>
+                                @elseif(request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments']))
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المتجر</th>
+                                @endif
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">التاريخ</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">الحالة</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المبلغ</th>
@@ -114,7 +152,8 @@
                                 @php
                                     $statusConfig = [
                                         'pending' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'معلق'],
-                                        'approved' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'موثق'],
+                                        'approved' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-700 dark:text-blue-400', 'label' => 'موافق عليه'],
+                                        'documented' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'موثق'],
                                         'cancelled' => ['bg' => 'bg-gray-100 dark:bg-gray-800/50', 'text' => 'text-gray-700 dark:text-gray-400', 'label' => 'ملغي'],
                                         'rejected' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'مرفوض'],
                                     ][$item->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => $item->status];
@@ -127,9 +166,17 @@
                                             {{ $item->payment_number }}
                                         @elseif($results['operation'] == 'returns')
                                             {{ $item->return_number }}
+                                        @elseif($results['operation'] == 'requests')
+                                            {{ $item->invoice_number }}
+                                        @elseif($results['operation'] == 'withdrawals')
+                                            WD-{{ $item->id }}
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->marketer->full_name }}</td>
+                                    @if(request('stat_type') == 'stores')
+                                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->marketer->full_name ?? '-' }}</td>
+                                    @elseif(request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments']))
+                                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->store->name ?? '-' }}</td>
+                                    @endif
                                     <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->created_at->format('Y-m-d') }}</td>
                                     <td class="px-6 py-4">
                                         <span class="{{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} px-2 py-1 rounded text-xs font-bold">
@@ -143,13 +190,19 @@
                                             {{ number_format($item->amount, 2) }}
                                         @elseif($results['operation'] == 'returns')
                                             {{ number_format($item->total_amount, 2) }}
+                                        @elseif($results['operation'] == 'requests')
+                                            -
+                                        @elseif($results['operation'] == 'withdrawals')
+                                            {{ number_format($item->requested_amount, 2) }}
                                         @endif
-                                        دينار
+                                        @if($results['operation'] != 'requests')
+                                            دينار
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-12 text-center">
+                                    <td colspan="{{ (request('stat_type') == 'stores') || (request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments'])) ? '5' : '4' }}" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center">
                                             <i data-lucide="inbox" class="w-12 h-12 text-gray-400 dark:text-gray-600 mb-3"></i>
                                             <p class="text-gray-500 dark:text-gray-400">لا توجد نتائج</p>
@@ -170,6 +223,114 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
+        
+        const statType = document.getElementById('stat_type');
+        const filtersContainer = document.getElementById('filters_container');
+        const storeField = document.getElementById('store_field');
+        const marketerField = document.getElementById('marketer_field');
+        const marketerStoreField = document.getElementById('marketer_store_field');
+        const marketerSelect = document.getElementById('marketer_id');
+        const marketerStoreSelect = document.getElementById('marketer_store_id');
+        const operation = document.getElementById('operation');
+        
+        const storeOperations = [
+            {value: 'sales', text: 'فواتير البيع'},
+            {value: 'payments', text: 'إيصالات القبض'},
+            {value: 'returns', text: 'إرجاعات البضاعة'}
+        ];
+        
+        const marketerOperations = [
+            {value: 'requests', text: 'طلبات البضاعة'},
+            {value: 'returns', text: 'إرجاعات البضاعة'},
+            {value: 'sales', text: 'فواتير البيع'},
+            {value: 'payments', text: 'إيصالات القبض'},
+            {value: 'withdrawals', text: 'طلبات سحب الأرباح'}
+        ];
+        
+        const selectedOperation = '{{ request('operation') }}';
+        
+        // Load marketer stores when marketer is selected
+        marketerSelect.addEventListener('change', function() {
+            const marketerId = this.value;
+            if (marketerId) {
+                fetch(`/admin/statistics/marketer-stores/${marketerId}`)
+                    .then(response => response.json())
+                    .then(stores => {
+                        marketerStoreSelect.innerHTML = '<option value="">الكل</option>';
+                        stores.forEach(store => {
+                            const option = document.createElement('option');
+                            option.value = store.id;
+                            option.text = store.name;
+                            if ('{{ request('marketer_store_id') }}' == store.id) {
+                                option.selected = true;
+                            }
+                            marketerStoreSelect.appendChild(option);
+                        });
+                    });
+            } else {
+                marketerStoreSelect.innerHTML = '<option value="">الكل</option>';
+            }
+        });
+        
+        statType.addEventListener('change', function() {
+            if (this.value === 'stores') {
+                filtersContainer.style.display = 'block';
+                storeField.style.display = 'block';
+                marketerField.style.display = 'none';
+                marketerStoreField.style.display = 'none';
+                updateOperations(storeOperations, selectedOperation);
+            } else if (this.value === 'marketers') {
+                filtersContainer.style.display = 'block';
+                storeField.style.display = 'none';
+                marketerField.style.display = 'block';
+                updateOperations(marketerOperations, selectedOperation);
+            } else {
+                filtersContainer.style.display = 'none';
+                storeField.style.display = 'none';
+                marketerField.style.display = 'none';
+                marketerStoreField.style.display = 'none';
+                operation.innerHTML = '<option value="">اختر العملية...</option>';
+            }
+        });
+        
+        function updateOperations(ops, selected) {
+            operation.innerHTML = '<option value="">اختر العملية...</option>';
+            ops.forEach(op => {
+                const option = document.createElement('option');
+                option.value = op.value;
+                option.text = op.text;
+                if (selected && op.value === selected) {
+                    option.selected = true;
+                }
+                operation.appendChild(option);
+            });
+            
+            // Show/hide marketer store field based on operation
+            if (statType.value === 'marketers' && ['sales', 'payments'].includes(operation.value)) {
+                marketerStoreField.style.display = 'block';
+            } else {
+                marketerStoreField.style.display = 'none';
+            }
+        }
+        
+        // Listen to operation changes
+        operation.addEventListener('change', function() {
+            if (statType.value === 'marketers' && ['sales', 'payments'].includes(this.value)) {
+                marketerStoreField.style.display = 'block';
+            } else {
+                marketerStoreField.style.display = 'none';
+            }
+        });
+        
+        // Initialize on load
+        if (statType.value) {
+            statType.dispatchEvent(new Event('change'));
+        }
+        
+        // Load marketer stores on page load if marketer is selected
+        if (marketerSelect.value && statType.value === 'marketers') {
+            marketerSelect.dispatchEvent(new Event('change'));
+        }
     });
 </script>
 @endpush

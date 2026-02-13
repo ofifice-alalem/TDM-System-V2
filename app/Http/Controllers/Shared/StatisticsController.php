@@ -37,6 +37,21 @@ class StatisticsController extends Controller
         return view('shared.statistics.index', compact('stores', 'marketers', 'results'));
     }
 
+    public function getMarketerStores($marketerId)
+    {
+        $stores = SalesInvoice::where('marketer_id', $marketerId)
+            ->with('store:id,name')
+            ->select('store_id')
+            ->distinct()
+            ->get()
+            ->pluck('store')
+            ->filter()
+            ->unique('id')
+            ->values();
+        
+        return response()->json($stores);
+    }
+
     private function getStatistics($request)
     {
         $query = match($request->operation) {
@@ -72,22 +87,76 @@ class StatisticsController extends Controller
         ];
     }
 
+    private function getMarketerStatistics($request)
+    {
+        $query = match($request->operation) {
+            'requests' => \App\Models\MarketerRequest::with('marketer', 'items.product')
+                ->where('marketer_id', $request->marketer_id),
+            'returns' => \App\Models\MarketerReturnRequest::with('marketer', 'items.product')
+                ->where('marketer_id', $request->marketer_id),
+            'sales' => SalesInvoice::with('marketer', 'store')
+                ->where('marketer_id', $request->marketer_id),
+            'payments' => StorePayment::with('marketer', 'store', 'keeper')
+                ->where('marketer_id', $request->marketer_id),
+            'withdrawals' => \App\Models\MarketerWithdrawalRequest::with('marketer')
+                ->where('marketer_id', $request->marketer_id),
+            default => null
+        };
+
+        if (!$query) return null;
+
+        if ($request->filled('marketer_store_id') && in_array($request->operation, ['sales', 'payments'])) {
+            $query->where('store_id', $request->marketer_store_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $query->whereDate('created_at', '>=', $request->from_date)
+              ->whereDate('created_at', '<=', $request->to_date);
+
+        $data = $query->latest()->get();
+
+        return [
+            'operation' => $request->operation,
+            'data' => $data,
+            'total' => $data->where('status', 'approved')->sum(fn($item) => match($request->operation) {
+                'sales' => $item->total_amount,
+                'payments' => $item->amount,
+                'withdrawals' => $item->requested_amount,
+                default => 0
+            })
+        ];
+    }
+
     private function exportToExcel($results, $request)
     {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setRightToLeft(true);
         
-        $store = Store::find($request->store_id);
+        $entity = null;
+        if ($request->stat_type == 'stores') {
+            $entity = Store::find($request->store_id);
+            $entityLabel = 'اسم المتجر';
+        } else {
+            $entity = \App\Models\User::find($request->marketer_id);
+            $entityLabel = 'اسم المسوق';
+        }
+        
         $operationName = match($request->operation) {
             'sales' => 'فواتير البيع',
             'payments' => 'إيصالات القبض',
             'returns' => 'إرجاعات البضاعة',
+            'requests' => 'طلبات البضاعة',
+            'withdrawals' => 'طلبات سحب الأرباح',
             default => ''
         };
         $statusName = match($request->status) {
             'pending' => 'معلق',
-            'approved' => 'موثق',
+            'approved' => 'موافق عليه',
+            'documented' => 'موثق',
             'cancelled' => 'ملغي',
             'rejected' => 'مرفوض',
             default => 'الكل'
@@ -97,8 +166,8 @@ class StatisticsController extends Controller
         
         // معلومات الفلتر - كارد
         $infoData = [
-            ['نوع الإحصاء', 'المتاجر'],
-            ['اسم المتجر', $store->name ?? ''],
+            ['نوع الإحصاء', $request->stat_type == 'stores' ? 'المتاجر' : 'المسوقين'],
+            [$entityLabel, $entity->name ?? $entity->full_name ?? ''],
             ['العملية', $operationName],
             ['من تاريخ', $request->from_date],
             ['إلى تاريخ', $request->to_date],
@@ -120,9 +189,17 @@ class StatisticsController extends Controller
         $row++;
         
         // عناوين الجدول
-        $headers = ['رقم الفاتورة', 'المسوق', 'التاريخ', 'الحالة', 'المبلغ'];
+        if ($request->stat_type == 'stores') {
+            $headers = ['رقم الفاتورة', 'المسوق', 'التاريخ', 'الحالة', 'المبلغ'];
+        } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments'])) {
+            $headers = ['رقم الفاتورة', 'المتجر', 'التاريخ', 'الحالة', 'المبلغ'];
+        } else {
+            $headers = ['رقم الفاتورة', 'التاريخ', 'الحالة', 'المبلغ'];
+        }
+        
         $sheet->fromArray($headers, null, 'A' . $row);
-        $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+        $lastCol = ($request->stat_type == 'stores' || ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments']))) ? 'E' : 'D';
+        $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
@@ -135,20 +212,24 @@ class StatisticsController extends Controller
             $invoiceNumber = match($results['operation']) {
                 'sales' => $item->invoice_number,
                 'payments' => $item->payment_number,
-                'returns' => $item->return_number,
+                'returns' => $item->return_number ?? null,
+                'requests' => $item->invoice_number,
+                'withdrawals' => 'WD-' . $item->id,
                 default => ''
             };
             
             $amount = match($results['operation']) {
                 'sales' => $item->total_amount,
                 'payments' => $item->amount,
-                'returns' => $item->total_amount,
+                'returns' => $item->total_amount ?? 0,
+                'withdrawals' => $item->requested_amount,
                 default => 0
             };
             
             $status = match($item->status) {
                 'pending' => 'معلق',
-                'approved' => 'موثق',
+                'approved' => 'موافق عليه',
+                'documented' => 'موثق',
                 'cancelled' => 'ملغي',
                 'rejected' => 'مرفوض',
                 default => $item->status
@@ -156,25 +237,48 @@ class StatisticsController extends Controller
             
             $statusColor = match($item->status) {
                 'pending' => 'FFA726',
-                'approved' => '66BB6A',
+                'approved' => '42A5F5',
+                'documented' => '66BB6A',
                 'cancelled' => '9E9E9E',
                 'rejected' => 'EF5350',
                 default => 'FFFFFF'
             };
             
-            $sheet->fromArray([
-                $invoiceNumber,
-                $item->marketer->full_name,
-                $item->created_at->format('Y-m-d'),
-                $status,
-                number_format($amount, 2)
-            ], null, 'A' . $row);
+            if ($request->stat_type == 'stores') {
+                $rowData = [
+                    $invoiceNumber,
+                    $item->marketer->full_name ?? '',
+                    $item->created_at->format('Y-m-d'),
+                    $status,
+                    number_format($amount, 2)
+                ];
+                $statusCol = 'D';
+            } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments'])) {
+                $rowData = [
+                    $invoiceNumber,
+                    $item->store->name ?? '',
+                    $item->created_at->format('Y-m-d'),
+                    $status,
+                    number_format($amount, 2)
+                ];
+                $statusCol = 'D';
+            } else {
+                $rowData = [
+                    $invoiceNumber,
+                    $item->created_at->format('Y-m-d'),
+                    $status,
+                    number_format($amount, 2)
+                ];
+                $statusCol = 'C';
+            }
             
-            $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+            $sheet->fromArray($rowData, null, 'A' . $row);
+            
+            $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             ]);
             
-            $sheet->getStyle('D' . $row)->applyFromArray([
+            $sheet->getStyle($statusCol . $row)->applyFromArray([
                 'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $statusColor]],
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
@@ -183,7 +287,8 @@ class StatisticsController extends Controller
         }
         
         // ضبط عرض الأعمدة
-        foreach (range('A', 'E') as $col) {
+        $maxCol = ($request->stat_type == 'stores' || ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments']))) ? 'E' : 'D';
+        foreach (range('A', $maxCol) as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
