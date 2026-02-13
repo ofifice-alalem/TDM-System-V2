@@ -18,6 +18,10 @@ class StatisticsController extends Controller
 
         if ($request->filled(['stat_type', 'store_id', 'operation', 'from_date', 'to_date'])) {
             $results = $this->getStatistics($request);
+            
+            if ($request->has('export')) {
+                return $this->exportToExcel($results, $request);
+            }
         }
 
         return view('shared.statistics.index', compact('stores', 'results'));
@@ -56,5 +60,87 @@ class StatisticsController extends Controller
                 default => 0
             })
         ];
+    }
+
+    private function exportToExcel($results, $request)
+    {
+        $filename = 'statistics_' . date('Y-m-d_H-i-s') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($results, $request) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // معلومات الفلتر
+            $store = \App\Models\Store::find($request->store_id);
+            $operationName = match($request->operation) {
+                'sales' => 'فواتير البيع',
+                'payments' => 'إيصالات القبض',
+                'returns' => 'إرجاعات البضاعة',
+                default => ''
+            };
+            $statusName = match($request->status) {
+                'pending' => 'معلق',
+                'approved' => 'موثق',
+                'cancelled' => 'ملغي',
+                'rejected' => 'مرفوض',
+                default => 'الكل'
+            };
+            
+            fputcsv($file, ['نوع الإحصاء', 'المتاجر']);
+            fputcsv($file, ['اسم المتجر', $store->name ?? '']);
+            fputcsv($file, ['العملية', $operationName]);
+            fputcsv($file, ['من تاريخ', $request->from_date]);
+            fputcsv($file, ['إلى تاريخ', $request->to_date]);
+            fputcsv($file, ['الحالة', $statusName]);
+            fputcsv($file, ['الإجمالي (الموثق فقط)', number_format($results['total'], 2) . ' دينار']);
+            fputcsv($file, []);
+            
+            // عناوين الجدول
+            fputcsv($file, ['رقم الفاتورة', 'المسوق', 'التاريخ', 'الحالة', 'المبلغ']);
+            
+            foreach ($results['data'] as $item) {
+                $invoiceNumber = match($results['operation']) {
+                    'sales' => $item->invoice_number,
+                    'payments' => $item->payment_number,
+                    'returns' => $item->return_number,
+                    default => ''
+                };
+                
+                $amount = match($results['operation']) {
+                    'sales' => $item->total_amount,
+                    'payments' => $item->amount,
+                    'returns' => $item->total_amount,
+                    default => 0
+                };
+                
+                $status = match($item->status) {
+                    'pending' => 'معلق',
+                    'approved' => 'موثق',
+                    'cancelled' => 'ملغي',
+                    'rejected' => 'مرفوض',
+                    default => $item->status
+                };
+                
+                fputcsv($file, [
+                    $invoiceNumber,
+                    $item->marketer->full_name,
+                    $item->created_at->format('Y-m-d'),
+                    $status,
+                    number_format($amount, 2)
+                ]);
+            }
+            
+            fputcsv($file, []);
+            fputcsv($file, ['الإجمالي (الموثق فقط)', '', '', '', number_format($results['total'], 2)]);
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }
