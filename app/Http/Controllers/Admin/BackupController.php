@@ -38,14 +38,20 @@ class BackupController extends Controller
                 $sql .= "DROP TABLE IF EXISTS `{$tableName}`;\n";
                 $sql .= $create->{'Create Table'} . ";\n\n";
                 
-                DB::table($tableName)->orderBy(DB::raw('1'))->chunk(500, function($rows) use (&$sql, $tableName) {
+                $insertValues = [];
+                DB::table($tableName)->orderBy(DB::raw('1'))->chunk(500, function($rows) use (&$insertValues, $tableName, &$sql) {
                     foreach ($rows as $row) {
                         $values = collect((array)$row)->map(function($v) {
                             if (is_null($v)) return 'NULL';
                             return "'" . str_replace("'", "''", $v) . "'";
                         })->implode(',');
                         
-                        $sql .= "INSERT INTO `{$tableName}` VALUES ({$values});\n";
+                        $insertValues[] = "({$values})";
+                    }
+                    
+                    if (!empty($insertValues)) {
+                        $sql .= "INSERT INTO `{$tableName}` VALUES " . implode(',', $insertValues) . ";\n";
+                        $insertValues = [];
                     }
                 });
                 
@@ -232,14 +238,17 @@ class BackupController extends Controller
     
     private function restoreLargeSQL($sqlFile)
     {
+        // Disable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        
         $handle = fopen($sqlFile, 'r');
         if (!$handle) {
             throw new \Exception('Cannot open SQL file');
         }
         
-        $query = '';
-        $batchQueries = [];
-        $batchSize = 100;
+        $currentTable = '';
+        $insertValues = [];
+        $batchSize = 500;
         
         while (($line = fgets($handle)) !== false) {
             $line = trim($line);
@@ -248,32 +257,67 @@ class BackupController extends Controller
                 continue;
             }
             
-            $query .= $line . ' ';
-            
-            if (substr(rtrim($query), -1) === ';') {
-                $batchQueries[] = $query;
-                $query = '';
+            // Execute CREATE/DROP statements immediately
+            if (stripos($line, 'CREATE TABLE') !== false || stripos($line, 'DROP TABLE') !== false || stripos($line, 'SET ') !== false) {
+                $this->flushInserts($currentTable, $insertValues);
+                $insertValues = [];
+                $currentTable = '';
                 
-                if (count($batchQueries) >= $batchSize) {
-                    try {
-                        DB::unprepared(implode("\n", $batchQueries));
-                    } catch (\Exception $e) {
-                        // Continue on error
-                    }
-                    $batchQueries = [];
+                $statement = $line;
+                while (substr(rtrim($statement), -1) !== ';') {
+                    $statement .= ' ' . trim(fgets($handle));
+                }
+                DB::unprepared($statement);
+                continue;
+            }
+            
+            // Handle INSERT statements
+            if (stripos($line, 'INSERT INTO') !== false) {
+                preg_match('/INSERT INTO `([^`]+)`/i', $line, $matches);
+                $tableName = $matches[1] ?? '';
+                
+                if ($tableName !== $currentTable && !empty($insertValues)) {
+                    $this->flushInserts($currentTable, $insertValues);
+                    $insertValues = [];
+                }
+                
+                $currentTable = $tableName;
+                
+                // Extract VALUES (...)
+                preg_match('/VALUES \((.+)\);/i', $line, $valueMatches);
+                if (isset($valueMatches[1])) {
+                    $insertValues[] = '(' . $valueMatches[1] . ')';
+                }
+                
+                if (count($insertValues) >= $batchSize) {
+                    $this->flushInserts($currentTable, $insertValues);
+                    $insertValues = [];
                 }
             }
         }
         
-        // Execute remaining queries
-        if (!empty($batchQueries)) {
-            try {
-                DB::unprepared(implode("\n", $batchQueries));
-            } catch (\Exception $e) {
-                // Continue on error
-            }
+        // Flush remaining inserts
+        if (!empty($insertValues)) {
+            $this->flushInserts($currentTable, $insertValues);
         }
         
         fclose($handle);
+        
+        // Re-enable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+    }
+    
+    private function flushInserts($table, $values)
+    {
+        if (empty($table) || empty($values)) {
+            return;
+        }
+        
+        try {
+            $sql = "INSERT INTO `{$table}` VALUES " . implode(',', $values) . ';';
+            DB::unprepared($sql);
+        } catch (\Exception $e) {
+            // Continue on error
+        }
     }
 }
