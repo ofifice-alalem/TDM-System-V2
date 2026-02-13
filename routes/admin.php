@@ -81,5 +81,10 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
         Route::get('/download/{filename}', [BackupController::class, 'download'])->name('download');
         Route::delete('/{filename}', [BackupController::class, 'delete'])->name('delete');
     });
+
+    // Statistics
+    Route::prefix('statistics')->name('statistics.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Shared\StatisticsController::class, 'index'])->name('index');
+    });
     
 });
