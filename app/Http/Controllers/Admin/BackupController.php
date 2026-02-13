@@ -3,82 +3,92 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use ZipArchive;
 
 class BackupController extends Controller
 {
-    public function create()
+    public function create(Request $request)
     {
         set_time_limit(300);
         ini_set('memory_limit', '512M');
         
-        $backupName = 'backup_' . date('Y-m-d_H-i-s');
+        $type = $request->input('type', 'full');
+        $backupName = 'backup_' . date('Y-m-d_H-i-s') . '_' . $type;
         $sqlFile = storage_path("app/{$backupName}.sql");
-        $zipFile = storage_path("app/backups/{$backupName}.zip");
+        $backupDir = storage_path("app/backups/{$type}");
+        $zipFile = "{$backupDir}/{$backupName}.zip";
         
-        if (!file_exists(storage_path('app/backups'))) {
-            mkdir(storage_path('app/backups'), 0755, true);
+        if (!file_exists($backupDir)) {
+            mkdir($backupDir, 0755, true);
         }
         
-        // تصدير قاعدة البيانات
-        $sql = "SET FOREIGN_KEY_CHECKS=0;\n\n";
-        
-        foreach (DB::select('SHOW TABLES') as $table) {
-            $tableName = array_values((array)$table)[0];
-            
-            // Structure
-            $create = DB::select("SHOW CREATE TABLE `{$tableName}`")[0];
-            $sql .= "DROP TABLE IF EXISTS `{$tableName}`;\n";
-            $sql .= $create->{'Create Table'} . ";\n\n";
-            
-            // Data
-            DB::table($tableName)->orderBy(DB::raw('1'))->chunk(500, function($rows) use (&$sql, $tableName) {
-                foreach ($rows as $row) {
-                    $values = collect((array)$row)->map(function($v) {
-                        if (is_null($v)) return 'NULL';
-                        return "'" . str_replace("'", "''", $v) . "'";
-                    })->implode(',');
-                    
-                    $sql .= "INSERT INTO `{$tableName}` VALUES ({$values});\n";
-                }
-            });
-            
-            $sql .= "\n";
-        }
-        
-        $sql .= "SET FOREIGN_KEY_CHECKS=1;\n";
-        file_put_contents($sqlFile, $sql);
-        
-        // ضغط كل شيء
         $zip = new ZipArchive;
         $zip->open($zipFile, ZipArchive::CREATE);
         
-        // إضافة SQL
-        $zip->addFile($sqlFile, 'database.sql');
+        // Database backup
+        if ($type === 'full' || $type === 'database') {
+            $sql = "SET FOREIGN_KEY_CHECKS=0;\n\n";
+            
+            foreach (DB::select('SHOW TABLES') as $table) {
+                $tableName = array_values((array)$table)[0];
+                
+                $create = DB::select("SHOW CREATE TABLE `{$tableName}`")[0];
+                $sql .= "DROP TABLE IF EXISTS `{$tableName}`;\n";
+                $sql .= $create->{'Create Table'} . ";\n\n";
+                
+                DB::table($tableName)->orderBy(DB::raw('1'))->chunk(500, function($rows) use (&$sql, $tableName) {
+                    foreach ($rows as $row) {
+                        $values = collect((array)$row)->map(function($v) {
+                            if (is_null($v)) return 'NULL';
+                            return "'" . str_replace("'", "''", $v) . "'";
+                        })->implode(',');
+                        
+                        $sql .= "INSERT INTO `{$tableName}` VALUES ({$values});\n";
+                    }
+                });
+                
+                $sql .= "\n";
+            }
+            
+            $sql .= "SET FOREIGN_KEY_CHECKS=1;\n";
+            file_put_contents($sqlFile, $sql);
+            $zip->addFile($sqlFile, 'database.sql');
+        }
         
-        // إضافة الملفات
-        $this->addDirectory(storage_path('app/public'), $zip, 'storage');
+        // Files backup
+        if ($type === 'full' || $type === 'files') {
+            $this->addDirectory(storage_path('app/public'), $zip, 'storage');
+        }
         
         $zip->close();
-        unlink($sqlFile);
+        if (file_exists($sqlFile)) unlink($sqlFile);
         
         return response()->download($zipFile);
     }
     
     public function index()
     {
-        $backups = collect(glob(storage_path('app/backups/*.zip')))
-            ->map(function($file) {
-                return [
-                    'name' => basename($file),
-                    'size' => $this->formatBytes(filesize($file)),
-                    'date' => date('Y-m-d H:i:s', filemtime($file)),
-                    'path' => $file
-                ];
-            })
-            ->sortByDesc('date')
-            ->values();
+        $backups = collect();
+        
+        foreach (['full', 'database', 'files'] as $type) {
+            $dir = storage_path("app/backups/{$type}");
+            if (is_dir($dir)) {
+                $files = glob("{$dir}/*.zip");
+                foreach ($files as $file) {
+                    $backups->push([
+                        'name' => basename($file),
+                        'size' => $this->formatBytes(filesize($file)),
+                        'date' => date('Y-m-d H:i:s', filemtime($file)),
+                        'path' => $file,
+                        'type' => $type
+                    ]);
+                }
+            }
+        }
+        
+        $backups = $backups->sortByDesc('date')->values();
         
         return view('admin.backups.index', compact('backups'));
     }
@@ -88,7 +98,15 @@ class BackupController extends Controller
         set_time_limit(300);
         ini_set('memory_limit', '512M');
         
-        $zipFile = storage_path("app/backups/{$filename}");
+        // البحث عن الملف في المجلدات الثلاثة
+        $zipFile = null;
+        foreach (['full', 'database', 'files'] as $type) {
+            $path = storage_path("app/backups/{$type}/{$filename}");
+            if (file_exists($path)) {
+                $zipFile = $path;
+                break;
+            }
+        }
         
         if (!file_exists($zipFile)) {
             return back()->with('error', 'الملف غير موجود');
@@ -122,24 +140,29 @@ class BackupController extends Controller
     
     public function download($filename)
     {
-        $file = storage_path("app/backups/{$filename}");
-        
-        if (!file_exists($file)) {
-            return back()->with('error', 'الملف غير موجود');
+        // البحث عن الملف في المجلدات الثلاثة
+        foreach (['full', 'database', 'files'] as $type) {
+            $file = storage_path("app/backups/{$type}/{$filename}");
+            if (file_exists($file)) {
+                return response()->download($file);
+            }
         }
         
-        return response()->download($file);
+        return back()->with('error', 'الملف غير موجود');
     }
     
     public function delete($filename)
     {
-        $file = storage_path("app/backups/{$filename}");
-        
-        if (file_exists($file)) {
-            unlink($file);
+        // البحث عن الملف في المجلدات الثلاثة
+        foreach (['full', 'database', 'files'] as $type) {
+            $file = storage_path("app/backups/{$type}/{$filename}");
+            if (file_exists($file)) {
+                unlink($file);
+                return back()->with('success', 'تم حذف النسخة الاحتياطية');
+            }
         }
         
-        return back()->with('success', 'تم حذف النسخة الاحتياطية');
+        return back()->with('error', 'الملف غير موجود');
     }
     
     private function addDirectory($path, $zip, $base)
