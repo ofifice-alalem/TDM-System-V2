@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\InvoiceDiscountController;
 use App\Http\Controllers\Admin\ProductPromotionController;
 use App\Http\Controllers\Admin\AdminWithdrawalController;
+use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Shared\MainStockController;
 
 Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -70,6 +71,15 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
         Route::get('/', [\App\Http\Controllers\Admin\AdminFactoryInvoiceController::class, 'index'])->name('index');
         Route::get('/{factoryInvoice}', [\App\Http\Controllers\Admin\AdminFactoryInvoiceController::class, 'show'])->name('show');
         Route::get('/{factoryInvoice}/pdf', [\App\Http\Controllers\Admin\AdminFactoryInvoiceController::class, 'pdf'])->name('pdf');
+    });
+
+    // Backups Management
+    Route::prefix('backups')->name('backups.')->group(function () {
+        Route::get('/', [BackupController::class, 'index'])->name('index');
+        Route::post('/create', [BackupController::class, 'create'])->name('create');
+        Route::post('/restore/{filename}', [BackupController::class, 'restore'])->name('restore');
+        Route::get('/download/{filename}', [BackupController::class, 'download'])->name('download');
+        Route::delete('/{filename}', [BackupController::class, 'delete'])->name('delete');
     });
     
 });

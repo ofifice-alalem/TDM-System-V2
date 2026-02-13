@@ -296,6 +296,14 @@
                     <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
                 @endif
             </a>
+
+            <a href="{{ route('admin.backups.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('admin.backups.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                <i data-lucide="database" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('admin.backups.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                <span>النسخ الاحتياطية</span>
+                @if(request()->routeIs('admin.backups.*'))
+                    <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                @endif
+            </a>
             @endif
             
             {{-- Stores Link - Available for all users --}}
