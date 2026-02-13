@@ -75,17 +75,33 @@ class StatisticsController extends Controller
 
         $data = $forExport ? $query->latest()->get() : $query->latest()->paginate(50);
         
-        $total = $query->getQuery()->where('status', 'approved')->orWhere('status', 'documented')->sum(match($request->operation) {
-            'sales' => 'total_amount',
-            'payments' => 'amount',
-            'returns' => 'total_amount',
-            default => DB::raw('0')
-        });
+        // Calculate total from separate query
+        $totalQuery = StorePayment::where('store_id', $request->store_id)
+            ->whereDate('created_at', '>=', $request->from_date)
+            ->whereDate('created_at', '<=', $request->to_date)
+            ->where(function($q) {
+                $q->where('status', 'approved')->orWhere('status', 'documented');
+            });
+        
+        if ($request->filled('status')) {
+            $totalQuery->where('status', $request->status);
+        }
+        
+        $total = $totalQuery->sum('amount');
         
         $totalCommission = 0;
         if ($request->operation == 'payments') {
+            $commissionQuery = StorePayment::where('store_id', $request->store_id)
+                ->where('status', 'approved')
+                ->whereDate('created_at', '>=', $request->from_date)
+                ->whereDate('created_at', '<=', $request->to_date);
+            
+            if ($request->filled('status')) {
+                $commissionQuery->where('status', $request->status);
+            }
+            
             $totalCommission = \App\Models\MarketerCommission::whereIn('payment_id', 
-                $query->getQuery()->where('status', 'approved')->pluck('id')
+                $commissionQuery->pluck('id')
             )->sum('commission_amount');
         }
 
@@ -128,19 +144,41 @@ class StatisticsController extends Controller
 
         $data = $forExport ? $query->latest()->get() : $query->latest()->paginate(50);
         
-        $total = $query->getQuery()->where(function($q) {
-            $q->where('status', 'approved')->orWhere('status', 'documented');
-        })->sum(match($request->operation) {
-            'sales' => 'total_amount',
-            'payments' => 'amount',
-            'withdrawals' => 'requested_amount',
-            default => DB::raw('0')
-        });
+        // Calculate total from separate query
+        $totalQuery = StorePayment::where('marketer_id', $request->marketer_id)
+            ->whereDate('created_at', '>=', $request->from_date)
+            ->whereDate('created_at', '<=', $request->to_date)
+            ->where(function($q) {
+                $q->where('status', 'approved')->orWhere('status', 'documented');
+            });
+        
+        if ($request->filled('marketer_store_id')) {
+            $totalQuery->where('store_id', $request->marketer_store_id);
+        }
+        
+        if ($request->filled('status')) {
+            $totalQuery->where('status', $request->status);
+        }
+        
+        $total = $totalQuery->sum('amount');
         
         $totalCommission = 0;
         if ($request->operation == 'payments') {
+            $commissionQuery = StorePayment::where('marketer_id', $request->marketer_id)
+                ->where('status', 'approved')
+                ->whereDate('created_at', '>=', $request->from_date)
+                ->whereDate('created_at', '<=', $request->to_date);
+            
+            if ($request->filled('marketer_store_id')) {
+                $commissionQuery->where('store_id', $request->marketer_store_id);
+            }
+            
+            if ($request->filled('status')) {
+                $commissionQuery->where('status', $request->status);
+            }
+            
             $totalCommission = \App\Models\MarketerCommission::whereIn('payment_id', 
-                $query->getQuery()->where('status', 'approved')->pluck('id')
+                $commissionQuery->pluck('id')
             )->sum('commission_amount');
         }
 
