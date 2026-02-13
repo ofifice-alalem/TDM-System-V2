@@ -109,6 +109,10 @@
                         <div class="text-left">
                             <p class="text-xs text-gray-500 dark:text-gray-400">الإجمالي</p>
                             <p class="text-2xl font-black text-primary-600 dark:text-primary-400">{{ number_format($results['total'], 2) }} دينار</p>
+                            @if($results['operation'] == 'payments' && $results['total_commission'] > 0)
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">إجمالي المستحق</p>
+                                <p class="text-lg font-black text-emerald-600 dark:text-emerald-400">{{ number_format($results['total_commission'], 2) }} دينار</p>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -136,6 +140,10 @@
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المسوق</th>
                                 @elseif(request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments']))
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المتجر</th>
+                                @endif
+                                @if($results['operation'] == 'payments')
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">نسبة العمولة</th>
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">القيمة المستحقة</th>
                                 @endif
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">التاريخ</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">الحالة</th>
@@ -172,6 +180,10 @@
                                     @elseif(request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments']))
                                         <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->store->name ?? '-' }}</td>
                                     @endif
+                                    @if($results['operation'] == 'payments')
+                                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->commission->commission_rate ?? '-' }}%</td>
+                                        <td class="px-6 py-4 text-sm font-bold text-emerald-600 dark:text-emerald-400">{{ number_format($item->commission->commission_amount ?? 0, 2) }}</td>
+                                    @endif
                                     <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->created_at->format('Y-m-d') }}</td>
                                     <td class="px-6 py-4">
                                         <span class="{{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} px-2 py-1 rounded text-xs font-bold">
@@ -197,7 +209,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ (request('stat_type') == 'stores') || (request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments'])) ? '5' : '4' }}" class="px-6 py-12 text-center">
+                                    <td colspan="{{ $results['operation'] == 'payments' ? ((request('stat_type') == 'stores') || (request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments'])) ? '7' : '6') : ((request('stat_type') == 'stores') || (request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments'])) ? '5' : '4') }}" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center">
                                             <i data-lucide="inbox" class="w-12 h-12 text-gray-400 dark:text-gray-600 mb-3"></i>
                                             <p class="text-gray-500 dark:text-gray-400">لا توجد نتائج</p>

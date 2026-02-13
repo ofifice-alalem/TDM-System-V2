@@ -120,19 +120,40 @@ class LargeDataSeeder extends Seeder
         $paymentStatuses = ['pending', 'approved', 'rejected', 'cancelled'];
         for ($i = 1; $i <= 5000; $i++) {
             $status = $paymentStatuses[array_rand($paymentStatuses)];
+            $marketerId = $marketerIds[array_rand($marketerIds)];
+            $storeId = $storeIds[array_rand($storeIds)];
+            $amount = rand(10000, 500000) / 100;
             $createdAt = $startDate->copy()->addMinutes(rand(0, 259200));
             
-            DB::table('store_payments')->insert([
+            $paymentId = DB::table('store_payments')->insertGetId([
                 'payment_number' => 'PAY-' . str_pad($i, 6, '0', STR_PAD_LEFT),
-                'store_id' => $storeIds[array_rand($storeIds)],
-                'marketer_id' => $marketerIds[array_rand($marketerIds)],
+                'store_id' => $storeId,
+                'marketer_id' => $marketerId,
                 'keeper_id' => 2,
-                'amount' => rand(10000, 500000) / 100,
+                'amount' => $amount,
                 'payment_method' => ['cash', 'transfer', 'certified_check'][array_rand(['cash', 'transfer', 'certified_check'])],
                 'status' => $status,
                 'confirmed_at' => $status === 'approved' ? $createdAt : null,
                 'created_at' => $createdAt,
             ]);
+            
+            // Create commission record for approved payments
+            if ($status === 'approved') {
+                $marketer = DB::table('users')->where('id', $marketerId)->first();
+                $commissionRate = $marketer->commission_rate ?? rand(5, 15);
+                $commissionAmount = $amount * ($commissionRate / 100);
+                
+                DB::table('marketer_commissions')->insert([
+                    'marketer_id' => $marketerId,
+                    'store_id' => $storeId,
+                    'keeper_id' => 2,
+                    'payment_amount' => $amount,
+                    'payment_id' => $paymentId,
+                    'commission_rate' => $commissionRate,
+                    'commission_amount' => $commissionAmount,
+                    'created_at' => $createdAt,
+                ]);
+            }
             
             if ($i % 500 == 0) {
                 echo "Created {$i} payments\n";
@@ -176,6 +197,29 @@ class LargeDataSeeder extends Seeder
             
             if ($i % 300 == 0) {
                 echo "Created {$i} returns\n";
+            }
+        }
+
+        echo "Creating marketer withdrawal requests...\n";
+        $withdrawalStatuses = ['pending', 'approved', 'rejected', 'cancelled'];
+        for ($i = 1; $i <= 2000; $i++) {
+            $status = $withdrawalStatuses[array_rand($withdrawalStatuses)];
+            $createdAt = $startDate->copy()->addMinutes(rand(0, 259200));
+            
+            DB::table('marketer_withdrawal_requests')->insert([
+                'marketer_id' => $marketerIds[array_rand($marketerIds)],
+                'requested_amount' => rand(10000, 200000) / 100,
+                'status' => $status,
+                'approved_by' => $status === 'approved' ? 1 : null,
+                'approved_at' => $status === 'approved' ? $createdAt : null,
+                'rejected_by' => $status === 'rejected' ? 1 : null,
+                'rejected_at' => $status === 'rejected' ? $createdAt : null,
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
+            ]);
+            
+            if ($i % 200 == 0) {
+                echo "Created {$i} withdrawal requests\n";
             }
         }
 

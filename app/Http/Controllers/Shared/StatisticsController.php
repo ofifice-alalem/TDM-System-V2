@@ -57,7 +57,7 @@ class StatisticsController extends Controller
         $query = match($request->operation) {
             'sales' => SalesInvoice::with('marketer', 'store')
                 ->where('store_id', $request->store_id),
-            'payments' => StorePayment::with('marketer', 'store', 'keeper')
+            'payments' => StorePayment::with('marketer', 'store', 'keeper', 'commission')
                 ->where('store_id', $request->store_id),
             'returns' => SalesReturn::with('marketer', 'store')
                 ->where('store_id', $request->store_id),
@@ -74,16 +74,26 @@ class StatisticsController extends Controller
               ->whereDate('created_at', '<=', $request->to_date);
 
         $data = $forExport ? $query->latest()->get() : $query->latest()->paginate(50);
+        
+        $total = $query->getQuery()->where('status', 'approved')->orWhere('status', 'documented')->sum(match($request->operation) {
+            'sales' => 'total_amount',
+            'payments' => 'amount',
+            'returns' => 'total_amount',
+            default => DB::raw('0')
+        });
+        
+        $totalCommission = 0;
+        if ($request->operation == 'payments') {
+            $totalCommission = \App\Models\MarketerCommission::whereIn('payment_id', 
+                $query->getQuery()->where('status', 'approved')->pluck('id')
+            )->sum('commission_amount');
+        }
 
         return [
             'operation' => $request->operation,
             'data' => $data,
-            'total' => $query->getQuery()->where('status', 'approved')->orWhere('status', 'documented')->sum(match($request->operation) {
-                'sales' => 'total_amount',
-                'payments' => 'amount',
-                'returns' => 'total_amount',
-                default => DB::raw('0')
-            })
+            'total' => $total,
+            'total_commission' => $totalCommission
         ];
     }
 
@@ -96,7 +106,7 @@ class StatisticsController extends Controller
                 ->where('marketer_id', $request->marketer_id),
             'sales' => SalesInvoice::with('marketer', 'store')
                 ->where('marketer_id', $request->marketer_id),
-            'payments' => StorePayment::with('marketer', 'store', 'keeper')
+            'payments' => StorePayment::with('marketer', 'store', 'keeper', 'commission')
                 ->where('marketer_id', $request->marketer_id),
             'withdrawals' => \App\Models\MarketerWithdrawalRequest::with('marketer')
                 ->where('marketer_id', $request->marketer_id),
@@ -117,18 +127,28 @@ class StatisticsController extends Controller
               ->whereDate('created_at', '<=', $request->to_date);
 
         $data = $forExport ? $query->latest()->get() : $query->latest()->paginate(50);
+        
+        $total = $query->getQuery()->where(function($q) {
+            $q->where('status', 'approved')->orWhere('status', 'documented');
+        })->sum(match($request->operation) {
+            'sales' => 'total_amount',
+            'payments' => 'amount',
+            'withdrawals' => 'requested_amount',
+            default => DB::raw('0')
+        });
+        
+        $totalCommission = 0;
+        if ($request->operation == 'payments') {
+            $totalCommission = \App\Models\MarketerCommission::whereIn('payment_id', 
+                $query->getQuery()->where('status', 'approved')->pluck('id')
+            )->sum('commission_amount');
+        }
 
         return [
             'operation' => $request->operation,
             'data' => $data,
-            'total' => $query->getQuery()->where(function($q) {
-                $q->where('status', 'approved')->orWhere('status', 'documented');
-            })->sum(match($request->operation) {
-                'sales' => 'total_amount',
-                'payments' => 'amount',
-                'withdrawals' => 'requested_amount',
-                default => DB::raw('0')
-            })
+            'total' => $total,
+            'total_commission' => $totalCommission
         ];
     }
 
@@ -186,6 +206,10 @@ class StatisticsController extends Controller
             ['الإجمالي (الموثق فقط)', number_format($results['total'], 2) . ' دينار'],
         ]);
         
+        if ($request->operation == 'payments' && $results['total_commission'] > 0) {
+            $infoData[] = ['إجمالي المستحق', number_format($results['total_commission'], 2) . ' دينار'];
+        }
+        
         foreach ($infoData as $info) {
             $sheet->setCellValue('A' . $row, $info[0]);
             $sheet->setCellValue('B' . $row, $info[1]);
@@ -201,15 +225,29 @@ class StatisticsController extends Controller
         
         // عناوين الجدول
         if ($request->stat_type == 'stores') {
-            $headers = ['رقم الفاتورة', 'المسوق', 'التاريخ', 'الحالة', 'المبلغ'];
+            if ($request->operation == 'payments') {
+                $headers = ['رقم الفاتورة', 'المسوق', 'نسبة العمولة', 'القيمة المستحقة', 'التاريخ', 'الحالة', 'المبلغ'];
+            } else {
+                $headers = ['رقم الفاتورة', 'المسوق', 'التاريخ', 'الحالة', 'المبلغ'];
+            }
         } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments'])) {
-            $headers = ['رقم الفاتورة', 'المتجر', 'التاريخ', 'الحالة', 'المبلغ'];
+            if ($request->operation == 'payments') {
+                $headers = ['رقم الفاتورة', 'المتجر', 'نسبة العمولة', 'القيمة المستحقة', 'التاريخ', 'الحالة', 'المبلغ'];
+            } else {
+                $headers = ['رقم الفاتورة', 'المتجر', 'التاريخ', 'الحالة', 'المبلغ'];
+            }
         } else {
             $headers = ['رقم الفاتورة', 'التاريخ', 'الحالة', 'المبلغ'];
         }
         
         $sheet->fromArray($headers, null, 'A' . $row);
-        $lastCol = ($request->stat_type == 'stores' || ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments']))) ? 'E' : 'D';
+        
+        if ($request->operation == 'payments') {
+            $lastCol = ($request->stat_type == 'stores' || ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments']))) ? 'G' : 'F';
+        } else {
+            $lastCol = ($request->stat_type == 'stores' || ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments']))) ? 'E' : 'D';
+        }
+        
         $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
@@ -256,23 +294,49 @@ class StatisticsController extends Controller
             };
             
             if ($request->stat_type == 'stores') {
-                $rowData = [
-                    $invoiceNumber,
-                    $item->marketer->full_name ?? '',
-                    $item->created_at->format('Y-m-d'),
-                    $status,
-                    number_format($amount, 2)
-                ];
-                $statusCol = 'D';
+                if ($request->operation == 'payments') {
+                    $rowData = [
+                        $invoiceNumber,
+                        $item->marketer->full_name ?? '',
+                        ($item->commission->commission_rate ?? '-') . '%',
+                        number_format($item->commission->commission_amount ?? 0, 2),
+                        $item->created_at->format('Y-m-d'),
+                        $status,
+                        number_format($amount, 2)
+                    ];
+                    $statusCol = 'F';
+                } else {
+                    $rowData = [
+                        $invoiceNumber,
+                        $item->marketer->full_name ?? '',
+                        $item->created_at->format('Y-m-d'),
+                        $status,
+                        number_format($amount, 2)
+                    ];
+                    $statusCol = 'D';
+                }
             } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments'])) {
-                $rowData = [
-                    $invoiceNumber,
-                    $item->store->name ?? '',
-                    $item->created_at->format('Y-m-d'),
-                    $status,
-                    number_format($amount, 2)
-                ];
-                $statusCol = 'D';
+                if ($request->operation == 'payments') {
+                    $rowData = [
+                        $invoiceNumber,
+                        $item->store->name ?? '',
+                        ($item->commission->commission_rate ?? '-') . '%',
+                        number_format($item->commission->commission_amount ?? 0, 2),
+                        $item->created_at->format('Y-m-d'),
+                        $status,
+                        number_format($amount, 2)
+                    ];
+                    $statusCol = 'F';
+                } else {
+                    $rowData = [
+                        $invoiceNumber,
+                        $item->store->name ?? '',
+                        $item->created_at->format('Y-m-d'),
+                        $status,
+                        number_format($amount, 2)
+                    ];
+                    $statusCol = 'D';
+                }
             } else {
                 $rowData = [
                     $invoiceNumber,
@@ -298,7 +362,11 @@ class StatisticsController extends Controller
         }
         
         // ضبط عرض الأعمدة
-        $maxCol = ($request->stat_type == 'stores' || ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments']))) ? 'E' : 'D';
+        if ($request->operation == 'payments') {
+            $maxCol = ($request->stat_type == 'stores' || ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments']))) ? 'G' : 'F';
+        } else {
+            $maxCol = ($request->stat_type == 'stores' || ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments']))) ? 'E' : 'D';
+        }
         foreach (range('A', $maxCol) as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }

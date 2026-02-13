@@ -34,4 +34,9 @@ class StorePayment extends Model
     {
         return $this->belongsTo(User::class, 'keeper_id');
     }
+
+    public function commission()
+    {
+        return $this->hasOne(MarketerCommission::class, 'payment_id');
+    }
 }
