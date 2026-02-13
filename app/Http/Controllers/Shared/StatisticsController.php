@@ -8,23 +8,33 @@ use App\Models\SalesInvoice;
 use App\Models\StorePayment;
 use App\Models\SalesReturn;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class StatisticsController extends Controller
 {
     public function index(Request $request)
     {
         $stores = Store::where('is_active', true)->get();
+        $marketers = \App\Models\User::where('role_id', 3)->where('is_active', true)->get();
         $results = null;
 
-        if ($request->filled(['stat_type', 'store_id', 'operation', 'from_date', 'to_date'])) {
-            $results = $this->getStatistics($request);
+        if ($request->filled(['stat_type', 'from_date', 'to_date'])) {
+            if ($request->stat_type == 'stores' && $request->filled(['store_id', 'operation'])) {
+                $results = $this->getStatistics($request);
+            } elseif ($request->stat_type == 'marketers' && $request->filled(['marketer_id', 'operation'])) {
+                $results = $this->getMarketerStatistics($request);
+            }
             
-            if ($request->has('export')) {
+            if ($results && $request->has('export')) {
                 return $this->exportToExcel($results, $request);
             }
         }
 
-        return view('shared.statistics.index', compact('stores', 'results'));
+        return view('shared.statistics.index', compact('stores', 'marketers', 'results'));
     }
 
     private function getStatistics($request)
@@ -64,83 +74,127 @@ class StatisticsController extends Controller
 
     private function exportToExcel($results, $request)
     {
-        $filename = 'statistics_' . date('Y-m-d_H-i-s') . '.csv';
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setRightToLeft(true);
         
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        $store = Store::find($request->store_id);
+        $operationName = match($request->operation) {
+            'sales' => 'فواتير البيع',
+            'payments' => 'إيصالات القبض',
+            'returns' => 'إرجاعات البضاعة',
+            default => ''
+        };
+        $statusName = match($request->status) {
+            'pending' => 'معلق',
+            'approved' => 'موثق',
+            'cancelled' => 'ملغي',
+            'rejected' => 'مرفوض',
+            default => 'الكل'
+        };
+        
+        $row = 1;
+        
+        // معلومات الفلتر - كارد
+        $infoData = [
+            ['نوع الإحصاء', 'المتاجر'],
+            ['اسم المتجر', $store->name ?? ''],
+            ['العملية', $operationName],
+            ['من تاريخ', $request->from_date],
+            ['إلى تاريخ', $request->to_date],
+            ['الحالة', $statusName],
+            ['الإجمالي (الموثق فقط)', number_format($results['total'], 2) . ' دينار'],
         ];
-
-        $callback = function() use ($results, $request) {
-            $file = fopen('php://output', 'w');
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
-            // معلومات الفلتر
-            $store = \App\Models\Store::find($request->store_id);
-            $operationName = match($request->operation) {
-                'sales' => 'فواتير البيع',
-                'payments' => 'إيصالات القبض',
-                'returns' => 'إرجاعات البضاعة',
+        
+        foreach ($infoData as $info) {
+            $sheet->setCellValue('A' . $row, $info[0]);
+            $sheet->setCellValue('B' . $row, $info[1]);
+            $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E3F2FD']],
+                'font' => ['bold' => true, 'size' => 12],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
+            $row++;
+        }
+        
+        $row++;
+        
+        // عناوين الجدول
+        $headers = ['رقم الفاتورة', 'المسوق', 'التاريخ', 'الحالة', 'المبلغ'];
+        $sheet->fromArray($headers, null, 'A' . $row);
+        $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ]);
+        $row++;
+        
+        // البيانات
+        foreach ($results['data'] as $item) {
+            $invoiceNumber = match($results['operation']) {
+                'sales' => $item->invoice_number,
+                'payments' => $item->payment_number,
+                'returns' => $item->return_number,
                 default => ''
             };
-            $statusName = match($request->status) {
+            
+            $amount = match($results['operation']) {
+                'sales' => $item->total_amount,
+                'payments' => $item->amount,
+                'returns' => $item->total_amount,
+                default => 0
+            };
+            
+            $status = match($item->status) {
                 'pending' => 'معلق',
                 'approved' => 'موثق',
                 'cancelled' => 'ملغي',
                 'rejected' => 'مرفوض',
-                default => 'الكل'
+                default => $item->status
             };
             
-            fputcsv($file, ['نوع الإحصاء', 'المتاجر']);
-            fputcsv($file, ['اسم المتجر', $store->name ?? '']);
-            fputcsv($file, ['العملية', $operationName]);
-            fputcsv($file, ['من تاريخ', $request->from_date]);
-            fputcsv($file, ['إلى تاريخ', $request->to_date]);
-            fputcsv($file, ['الحالة', $statusName]);
-            fputcsv($file, ['الإجمالي (الموثق فقط)', number_format($results['total'], 2) . ' دينار']);
-            fputcsv($file, []);
+            $statusColor = match($item->status) {
+                'pending' => 'FFA726',
+                'approved' => '66BB6A',
+                'cancelled' => '9E9E9E',
+                'rejected' => 'EF5350',
+                default => 'FFFFFF'
+            };
             
-            // عناوين الجدول
-            fputcsv($file, ['رقم الفاتورة', 'المسوق', 'التاريخ', 'الحالة', 'المبلغ']);
+            $sheet->fromArray([
+                $invoiceNumber,
+                $item->marketer->full_name,
+                $item->created_at->format('Y-m-d'),
+                $status,
+                number_format($amount, 2)
+            ], null, 'A' . $row);
             
-            foreach ($results['data'] as $item) {
-                $invoiceNumber = match($results['operation']) {
-                    'sales' => $item->invoice_number,
-                    'payments' => $item->payment_number,
-                    'returns' => $item->return_number,
-                    default => ''
-                };
-                
-                $amount = match($results['operation']) {
-                    'sales' => $item->total_amount,
-                    'payments' => $item->amount,
-                    'returns' => $item->total_amount,
-                    default => 0
-                };
-                
-                $status = match($item->status) {
-                    'pending' => 'معلق',
-                    'approved' => 'موثق',
-                    'cancelled' => 'ملغي',
-                    'rejected' => 'مرفوض',
-                    default => $item->status
-                };
-                
-                fputcsv($file, [
-                    $invoiceNumber,
-                    $item->marketer->full_name,
-                    $item->created_at->format('Y-m-d'),
-                    $status,
-                    number_format($amount, 2)
-                ]);
-            }
+            $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
             
-            fputcsv($file, []);
-            fputcsv($file, ['الإجمالي (الموثق فقط)', '', '', '', number_format($results['total'], 2)]);
-            
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+            $sheet->getStyle('D' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $statusColor]],
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            ]);
+            $row++;
+        }
+        
+        // ضبط عرض الأعمدة
+        foreach (range('A', 'E') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        
+        $filename = 'statistics_' . date('Y-m-d_H-i-s') . '.xlsx';
+        
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 }
