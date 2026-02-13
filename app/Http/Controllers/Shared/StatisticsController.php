@@ -24,9 +24,9 @@ class StatisticsController extends Controller
 
         if ($request->filled(['stat_type', 'from_date', 'to_date'])) {
             if ($request->stat_type == 'stores' && $request->filled(['store_id', 'operation'])) {
-                $results = $this->getStatistics($request);
+                $results = $this->getStatistics($request, $request->has('export'));
             } elseif ($request->stat_type == 'marketers' && $request->filled(['marketer_id', 'operation'])) {
-                $results = $this->getMarketerStatistics($request);
+                $results = $this->getMarketerStatistics($request, $request->has('export'));
             }
             
             if ($results && $request->has('export')) {
@@ -52,7 +52,7 @@ class StatisticsController extends Controller
         return response()->json($stores);
     }
 
-    private function getStatistics($request)
+    private function getStatistics($request, $forExport = false)
     {
         $query = match($request->operation) {
             'sales' => SalesInvoice::with('marketer', 'store')
@@ -73,21 +73,21 @@ class StatisticsController extends Controller
         $query->whereDate('created_at', '>=', $request->from_date)
               ->whereDate('created_at', '<=', $request->to_date);
 
-        $data = $query->latest()->get();
+        $data = $forExport ? $query->latest()->get() : $query->latest()->paginate(50);
 
         return [
             'operation' => $request->operation,
             'data' => $data,
-            'total' => $data->where('status', 'approved')->sum(fn($item) => match($request->operation) {
-                'sales' => $item->total_amount,
-                'payments' => $item->amount,
-                'returns' => $item->total_amount,
-                default => 0
+            'total' => $query->getQuery()->where('status', 'approved')->orWhere('status', 'documented')->sum(match($request->operation) {
+                'sales' => 'total_amount',
+                'payments' => 'amount',
+                'returns' => 'total_amount',
+                default => DB::raw('0')
             })
         ];
     }
 
-    private function getMarketerStatistics($request)
+    private function getMarketerStatistics($request, $forExport = false)
     {
         $query = match($request->operation) {
             'requests' => \App\Models\MarketerRequest::with('marketer', 'items.product')
@@ -116,16 +116,18 @@ class StatisticsController extends Controller
         $query->whereDate('created_at', '>=', $request->from_date)
               ->whereDate('created_at', '<=', $request->to_date);
 
-        $data = $query->latest()->get();
+        $data = $forExport ? $query->latest()->get() : $query->latest()->paginate(50);
 
         return [
             'operation' => $request->operation,
             'data' => $data,
-            'total' => $data->where('status', 'approved')->sum(fn($item) => match($request->operation) {
-                'sales' => $item->total_amount,
-                'payments' => $item->amount,
-                'withdrawals' => $item->requested_amount,
-                default => 0
+            'total' => $query->getQuery()->where(function($q) {
+                $q->where('status', 'approved')->orWhere('status', 'documented');
+            })->sum(match($request->operation) {
+                'sales' => 'total_amount',
+                'payments' => 'amount',
+                'withdrawals' => 'requested_amount',
+                default => DB::raw('0')
             })
         ];
     }
