@@ -70,6 +70,8 @@ class BackupController extends Controller
     
     public function index()
     {
+        set_time_limit(120);
+        
         $backups = collect();
         
         foreach (['full', 'database', 'files'] as $type) {
@@ -95,8 +97,9 @@ class BackupController extends Controller
     
     public function restore($filename)
     {
-        set_time_limit(300);
-        ini_set('memory_limit', '512M');
+        set_time_limit(0);
+        ini_set('memory_limit', '1G');
+        ini_set('max_execution_time', '0');
         
         // البحث عن الملف في المجلدات الثلاثة
         $zipFile = null;
@@ -123,7 +126,7 @@ class BackupController extends Controller
         // استعادة قاعدة البيانات
         $sqlFile = $extractPath . '/database.sql';
         if (file_exists($sqlFile)) {
-            DB::unprepared(file_get_contents($sqlFile));
+            $this->restoreLargeSQL($sqlFile);
         }
         
         // استعادة الملفات
@@ -225,5 +228,52 @@ class BackupController extends Controller
             return number_format($bytes / 1024, 2) . ' KB';
         }
         return $bytes . ' bytes';
+    }
+    
+    private function restoreLargeSQL($sqlFile)
+    {
+        $handle = fopen($sqlFile, 'r');
+        if (!$handle) {
+            throw new \Exception('Cannot open SQL file');
+        }
+        
+        $query = '';
+        $batchQueries = [];
+        $batchSize = 100;
+        
+        while (($line = fgets($handle)) !== false) {
+            $line = trim($line);
+            
+            if (empty($line) || strpos($line, '--') === 0 || strpos($line, '/*') === 0) {
+                continue;
+            }
+            
+            $query .= $line . ' ';
+            
+            if (substr(rtrim($query), -1) === ';') {
+                $batchQueries[] = $query;
+                $query = '';
+                
+                if (count($batchQueries) >= $batchSize) {
+                    try {
+                        DB::unprepared(implode("\n", $batchQueries));
+                    } catch (\Exception $e) {
+                        // Continue on error
+                    }
+                    $batchQueries = [];
+                }
+            }
+        }
+        
+        // Execute remaining queries
+        if (!empty($batchQueries)) {
+            try {
+                DB::unprepared(implode("\n", $batchQueries));
+            } catch (\Exception $e) {
+                // Continue on error
+            }
+        }
+        
+        fclose($handle);
     }
 }
