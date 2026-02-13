@@ -16,6 +16,7 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
         Route::post('/', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('store');
         Route::get('/{user}/edit', [\App\Http\Controllers\Admin\UserController::class, 'edit'])->name('edit');
         Route::patch('/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('update');
+        Route::get('/{user}/details', [\App\Http\Controllers\Admin\MarketerDetailsController::class, 'show'])->name('details');
     });
     
     // Invoice Discounts

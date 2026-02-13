@@ -113,9 +113,17 @@
 
                     {{-- Actions --}}
                     <div class="flex items-center gap-2">
-                        <a href="{{ route('admin.users.edit', $user) }}" class="flex-1 px-5 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                        @if($user->role->name === 'marketer')
+                        <a href="{{ route('admin.users.details', $user) }}" class="flex-1 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                            تفاصيل
+                        </a>
+                        @endif
+                        <a href="{{ route('admin.users.edit', $user) }}" class="{{ $user->role->name === 'marketer' ? 'w-12 h-12' : 'flex-1 px-5 py-3' }} bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
                             <i data-lucide="edit" class="w-4 h-4"></i>
+                            @if($user->role->name !== 'marketer')
                             تعديل
+                            @endif
                         </a>
                         @if($user->phone)
                         <a href="tel:{{ $user->phone }}" class="w-12 h-12 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
