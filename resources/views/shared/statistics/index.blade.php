@@ -74,13 +74,8 @@
 
                     <div>
                         <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">الحالة</label>
-                        <select name="status" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <select name="status" id="status" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                             <option value="">الكل</option>
-                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>معلق</option>
-                            <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>موافق عليه</option>
-                            <option value="documented" {{ request('status') == 'documented' ? 'selected' : '' }}>موثق</option>
-                            <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغي</option>
-                            <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>مرفوض</option>
                         </select>
                     </div>
                     </div>
@@ -232,6 +227,7 @@
         const marketerSelect = document.getElementById('marketer_id');
         const marketerStoreSelect = document.getElementById('marketer_store_id');
         const operation = document.getElementById('operation');
+        const statusSelect = document.getElementById('status');
         
         const storeOperations = [
             {value: 'sales', text: 'فواتير البيع'},
@@ -246,6 +242,44 @@
             {value: 'payments', text: 'إيصالات القبض'},
             {value: 'withdrawals', text: 'طلبات سحب الأرباح'}
         ];
+        
+        // Status options based on operation type
+        const statusOptions = {
+            // For requests and returns from marketer
+            'requests': [
+                {value: 'pending', text: 'معلق'},
+                {value: 'approved', text: 'موافق عليه'},
+                {value: 'documented', text: 'موثق'},
+                {value: 'cancelled', text: 'ملغي'},
+                {value: 'rejected', text: 'مرفوض'}
+            ],
+            'returns': [
+                {value: 'pending', text: 'معلق'},
+                {value: 'approved', text: 'موافق عليه'},
+                {value: 'documented', text: 'موثق'},
+                {value: 'cancelled', text: 'ملغي'},
+                {value: 'rejected', text: 'مرفوض'}
+            ],
+            // For sales and payments
+            'sales': [
+                {value: 'pending', text: 'معلق'},
+                {value: 'approved', text: 'موثق'},
+                {value: 'cancelled', text: 'ملغي'},
+                {value: 'rejected', text: 'مرفوض'}
+            ],
+            'payments': [
+                {value: 'pending', text: 'معلق'},
+                {value: 'approved', text: 'موثق'},
+                {value: 'cancelled', text: 'ملغي'},
+                {value: 'rejected', text: 'مرفوض'}
+            ],
+            'withdrawals': [
+                {value: 'pending', text: 'معلق'},
+                {value: 'approved', text: 'موثق'},
+                {value: 'cancelled', text: 'ملغي'},
+                {value: 'rejected', text: 'مرفوض'}
+            ]
+        };
         
         const selectedOperation = '{{ request('operation') }}';
         
@@ -305,6 +339,11 @@
                 operation.appendChild(option);
             });
             
+            // Update status options when operation changes
+            if (selected) {
+                updateStatusOptions(selected);
+            }
+            
             // Show/hide marketer store field based on operation
             if (statType.value === 'marketers' && ['sales', 'payments'].includes(operation.value)) {
                 marketerStoreField.style.display = 'block';
@@ -313,8 +352,26 @@
             }
         }
         
+        function updateStatusOptions(operationType) {
+            const selectedStatus = '{{ request('status') }}';
+            const options = statusOptions[operationType] || [];
+            
+            statusSelect.innerHTML = '<option value="">الكل</option>';
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt.value;
+                option.text = opt.text;
+                if (selectedStatus && opt.value === selectedStatus) {
+                    option.selected = true;
+                }
+                statusSelect.appendChild(option);
+            });
+        }
+        
         // Listen to operation changes
         operation.addEventListener('change', function() {
+            updateStatusOptions(this.value);
+            
             if (statType.value === 'marketers' && ['sales', 'payments'].includes(this.value)) {
                 marketerStoreField.style.display = 'block';
             } else {

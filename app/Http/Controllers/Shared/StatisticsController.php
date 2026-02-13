@@ -169,11 +169,20 @@ class StatisticsController extends Controller
             ['نوع الإحصاء', $request->stat_type == 'stores' ? 'المتاجر' : 'المسوقين'],
             [$entityLabel, $entity->name ?? $entity->full_name ?? ''],
             ['العملية', $operationName],
+        ];
+        
+        // Add store filter for marketers if applicable
+        if ($request->stat_type == 'marketers' && $request->filled('marketer_store_id') && in_array($request->operation, ['sales', 'payments'])) {
+            $selectedStore = Store::find($request->marketer_store_id);
+            $infoData[] = ['المتجر', $selectedStore->name ?? ''];
+        }
+        
+        $infoData = array_merge($infoData, [
             ['من تاريخ', $request->from_date],
             ['إلى تاريخ', $request->to_date],
             ['الحالة', $statusName],
             ['الإجمالي (الموثق فقط)', number_format($results['total'], 2) . ' دينار'],
-        ];
+        ]);
         
         foreach ($infoData as $info) {
             $sheet->setCellValue('A' . $row, $info[0]);
