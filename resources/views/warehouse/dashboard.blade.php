@@ -69,41 +69,44 @@
                                         'cancelled' => ['bg' => 'bg-gray-100 dark:bg-gray-800/50', 'text' => 'text-gray-700 dark:text-gray-400', 'label' => 'ملغي'],
                                     ][$item['data']->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => $item['data']->status];
                                 @endphp
-                                <div class="bg-white dark:bg-dark-card rounded-lg p-3 flex items-center justify-between">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <p class="font-bold text-gray-900 dark:text-white text-sm">
-                                                @if($searchResult['type'] == 'MR')
-                                                    طلب بضاعة: {{ $item['data']->invoice_number }}
-                                                @elseif($searchResult['type'] == 'MRR')
-                                                    إرجاع بضاعة: {{ $item['data']->invoice_number }}
-                                                @elseif($searchResult['type'] == 'SI')
-                                                    فاتورة بيع: {{ $item['data']->invoice_number }}
-                                                @elseif($searchResult['type'] == 'RET')
-                                                    إرجاع من متجر: {{ $item['data']->return_number }}
-                                                @elseif($searchResult['type'] == 'RCP')
-                                                    إيصال قبض: {{ $item['data']->payment_number }}
-                                                @elseif($searchResult['type'] == 'FI')
-                                                    فاتورة مصنع: {{ $item['data']->invoice_number }}
+                                <div class="bg-white dark:bg-dark-card rounded-lg p-3">
+                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                        <div class="flex-1">
+                                            <div class="flex flex-wrap items-center gap-2 mb-1">
+                                                <p class="font-bold text-gray-900 dark:text-white text-sm">
+                                                    @if($searchResult['type'] == 'MR')
+                                                        طلب بضاعة: {{ $item['data']->invoice_number }}
+                                                    @elseif($searchResult['type'] == 'MRR')
+                                                        إرجاع بضاعة: {{ $item['data']->invoice_number }}
+                                                    @elseif($searchResult['type'] == 'SI')
+                                                        فاتورة بيع: {{ $item['data']->invoice_number }}
+                                                    @elseif($searchResult['type'] == 'RET')
+                                                        إرجاع من متجر: {{ $item['data']->return_number }}
+                                                    @elseif($searchResult['type'] == 'RCP')
+                                                        إيصال قبض: {{ $item['data']->payment_number }}
+                                                    @elseif($searchResult['type'] == 'FI')
+                                                        فاتورة مصنع: {{ $item['data']->invoice_number }}
+                                                    @endif
+                                                </p>
+                                                <span class="{{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap">
+                                                    {{ $statusConfig['label'] }}
+                                                </span>
+                                            </div>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400">
+                                                @if(isset($item['data']->marketer))
+                                                    المسوق: {{ $item['data']->marketer->full_name }}
+                                                @endif
+                                                @if(isset($item['data']->store))
+                                                    <span class="hidden sm:inline">|</span>
+                                                    <span class="block sm:inline">المتجر: {{ $item['data']->store->name }}</span>
                                                 @endif
                                             </p>
-                                            <span class="{{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} px-2 py-0.5 rounded text-xs font-bold">
-                                                {{ $statusConfig['label'] }}
-                                            </span>
                                         </div>
-                                        <p class="text-xs text-gray-600 dark:text-gray-400">
-                                            @if(isset($item['data']->marketer))
-                                                المسوق: {{ $item['data']->marketer->full_name }}
-                                            @endif
-                                            @if(isset($item['data']->store))
-                                                | المتجر: {{ $item['data']->store->name }}
-                                            @endif
-                                        </p>
+                                        <a href="{{ $item['route'] }}" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2">
+                                            <i data-lucide="eye" class="w-4 h-4"></i>
+                                            عرض
+                                        </a>
                                     </div>
-                                    <a href="{{ $item['route'] }}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-sm transition-all flex items-center gap-2">
-                                        <i data-lucide="eye" class="w-4 h-4"></i>
-                                        عرض
-                                    </a>
                                 </div>
                             @endforeach
                         </div>
