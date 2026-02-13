@@ -109,6 +109,15 @@
                             <div class="text-sm font-black text-emerald-600 dark:text-emerald-400">{{ $user->commission_rate }}%</div>
                         </div>
                         @endif
+                        @if($user->role->name === 'marketer' && isset($user->available_balance))
+                        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/30 rounded-2xl p-4 text-center col-span-2 border border-emerald-200 dark:border-emerald-700">
+                            <div class="text-xs text-emerald-600 dark:text-emerald-400 mb-1 flex items-center justify-center gap-1 font-bold">
+                                <i data-lucide="wallet" class="w-3.5 h-3.5"></i>
+                                الرصيد المستحق
+                            </div>
+                            <div class="text-lg font-black text-emerald-700 dark:text-emerald-300">{{ number_format($user->available_balance, 2) }} دينار</div>
+                        </div>
+                        @endif
                     </div>
 
                     {{-- Actions --}}

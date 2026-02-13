@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\MarketerCommission;
+use App\Models\MarketerWithdrawalRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -26,6 +28,17 @@ class UserController extends Controller
             })
             ->latest()
             ->get();
+
+        // Calculate available balance for marketers
+        foreach ($users as $user) {
+            if ($user->role_id == 3) {
+                $totalCommissions = MarketerCommission::where('marketer_id', $user->id)->sum('commission_amount');
+                $totalWithdrawals = MarketerWithdrawalRequest::where('marketer_id', $user->id)
+                    ->where('status', 'approved')
+                    ->sum('requested_amount');
+                $user->available_balance = $totalCommissions - $totalWithdrawals;
+            }
+        }
 
         $roles = Role::where('is_active', true)->get();
 
