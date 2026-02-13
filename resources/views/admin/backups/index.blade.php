@@ -19,29 +19,29 @@
             </h1>
         </div>
 
-        {{-- Tabs --}}
-        <div class="bg-white dark:bg-dark-card rounded-3xl p-2 shadow-lg border border-gray-200 dark:border-dark-border mb-6">
-            <div class="flex gap-2">
-                <button onclick="switchTab('full')" id="tab-full" class="tab-btn flex-1 px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 bg-primary-600 text-white">
-                    <i data-lucide="package" class="w-5 h-5"></i>
-                    نسخة كاملة
-                </button>
-                <button onclick="switchTab('database')" id="tab-database" class="tab-btn flex-1 px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-bg">
-                    <i data-lucide="database" class="w-5 h-5"></i>
-                    قواعد البيانات
-                </button>
-                <button onclick="switchTab('files')" id="tab-files" class="tab-btn flex-1 px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-bg">
-                    <i data-lucide="folder" class="w-5 h-5"></i>
-                    الملفات
-                </button>
-            </div>
-        </div>
+        {{-- Main Layout Grid --}}
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {{-- Backups List --}}
+            <div class="lg:col-span-8">
+                {{-- Tabs --}}
+                <div class="bg-white dark:bg-dark-card rounded-2xl p-2 shadow-lg shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6">
+                    <div class="flex gap-2">
+                        <button onclick="switchTab('full')" id="tab-full" class="tab-btn flex-1 px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 bg-primary-600 text-white">
+                            <i data-lucide="package" class="w-5 h-5"></i>
+                            نسخة كاملة
+                        </button>
+                        <button onclick="switchTab('database')" id="tab-database" class="tab-btn flex-1 px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-bg">
+                            <i data-lucide="database" class="w-5 h-5"></i>
+                            قواعد البيانات
+                        </button>
+                        <button onclick="switchTab('files')" id="tab-files" class="tab-btn flex-1 px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-bg">
+                            <i data-lucide="folder" class="w-5 h-5"></i>
+                            الملفات
+                        </button>
+                    </div>
+                </div>
 
-        {{-- Two Column Layout --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            {{-- Right Side: Backups List --}}
-            <div class="lg:col-span-2">
+                <div class="bg-white dark:bg-dark-card rounded-[2rem] p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
                 <div id="content-full" class="tab-content grid grid-cols-1 md:grid-cols-2 gap-6 animate-slide-up">
                     @php
                         $fullBackups = $backups->filter(fn($b) => str_contains($b['name'], '_full'));
@@ -259,44 +259,13 @@
                         </div>
                     @endforelse
                 </div>
+                </div>
             </div>
 
-            {{-- Left Side: Info & Buttons --}}
-            <div class="lg:col-span-1 space-y-6">
-                
-                {{-- Info Card --}}
-                <div class="animate-fade-in bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-3xl p-6 border border-blue-100 dark:border-blue-800/30">
-                    <div class="flex items-start gap-4 mb-6">
-                        <div class="w-12 h-12 bg-blue-500 dark:bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0">
-                            <i data-lucide="info" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-blue-900 dark:text-blue-300 mb-2 text-lg">ملاحظات مهمة</h3>
-                            <ul class="space-y-1.5 text-sm text-blue-800 dark:text-blue-400">
-                                <li class="flex items-start gap-2">
-                                    <i data-lucide="check" class="w-4 h-4 mt-0.5 shrink-0"></i>
-                                    <span>النسخة الاحتياطية تشمل: قاعدة البيانات + جميع الملفات المرفوعة</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <i data-lucide="alert-triangle" class="w-4 h-4 mt-0.5 shrink-0"></i>
-                                    <span>عملية الاستعادة ستستبدل جميع البيانات الحالية</span>
-                                </li>
-                                <li class="flex items-start gap-2">
-                                    <i data-lucide="shield" class="w-4 h-4 mt-0.5 shrink-0"></i>
-                                    <span>يُنصح بإنشاء نسخة احتياطية قبل أي تحديث كبير</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Backup Buttons --}}
-                <div class="bg-white dark:bg-dark-card rounded-3xl p-6 shadow-lg border border-gray-200 dark:border-dark-border">
-                    <h3 class="font-bold text-gray-900 dark:text-white mb-4 text-lg flex items-center gap-2">
-                        <i data-lucide="download" class="w-5 h-5"></i>
-                        إنشاء نسخة احتياطية
-                    </h3>
-                    <div class="space-y-3">
+            {{-- Info Guide --}}
+            <div class="lg:col-span-4">
+                <div class="bg-white dark:bg-dark-card rounded-[1.5rem] border border-gray-200 dark:border-dark-border p-8 shadow-lg shadow-gray-200/50 dark:shadow-sm lg:sticky lg:top-[150px]">
+                    <div class="space-y-3 mb-6">
                         <button onclick="showCreateModal('full')" class="w-full px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
                             <i data-lucide="package" class="w-5 h-5"></i>
                             <span>نسخة كاملة</span>
@@ -310,10 +279,66 @@
                             <span>الملفات فقط</span>
                         </button>
                     </div>
+                    
+                    <h3 class="font-bold text-xl text-gray-900 dark:text-white mb-8 flex items-center gap-3 pt-6 border-t border-gray-200 dark:border-dark-border">
+                        <i data-lucide="info" class="w-6 h-6 text-primary-500"></i>
+                        ملاحظات مهمة
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <div class="relative">
+                            <div class="flex items-start gap-4">
+                                <div class="w-11 h-11 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-sm">
+                                    <i data-lucide="database" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">نسخة كاملة</h4>
+                                    <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">تشمل قاعدة البيانات + جميع الملفات المرفوعة</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="relative">
+                            <div class="flex items-start gap-4">
+                                <div class="w-11 h-11 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-sm">
+                                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">الاستعادة</h4>
+                                    <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">عملية الاستعادة ستستبدل جميع البيانات الحالية</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="relative">
+                            <div class="flex items-start gap-4">
+                                <div class="w-11 h-11 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center shrink-0 shadow-sm">
+                                    <i data-lucide="shield" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">النسخ الدوري</h4>
+                                    <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">يُنصح بإنشاء نسخة احتياطية قبل أي تحديث كبير</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 rounded-xl p-4 mt-6">
+                            <div class="flex gap-3">
+                                <i data-lucide="alert-circle" class="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"></i>
+                                <div class="text-sm text-amber-800 dark:text-amber-300">
+                                    <p class="font-bold mb-1">تحذير:</p>
+                                    <p>عملية الاستعادة لا يمكن التراجع عنها. تأكد من اختيار النسخة الصحيحة.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 pt-6 border-t border-gray-200 dark:border-dark-border">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
             </div>
-
         </div>
 
     </div>
@@ -401,6 +426,11 @@
     function hideCreateModal() {
         document.getElementById('createModal').classList.add('hidden');
     }
+    
+    // Close modal on form submit
+    document.getElementById('createForm')?.addEventListener('submit', function() {
+        hideCreateModal();
+    });
     
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
