@@ -47,26 +47,30 @@
                         $fullBackups = $backups->filter(fn($b) => str_contains($b['name'], '_full'));
                     @endphp
                     @forelse($fullBackups as $backup)
-                        <div class="bg-white dark:bg-dark-card rounded-3xl p-6 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                        <div class="bg-white dark:bg-dark-card rounded-3xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden">
                     
                     {{-- Backup Header --}}
-                    <div class="flex items-start gap-4 mb-6">
-                        <div class="w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/40 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-md group-hover:scale-110 transition-transform">
-                            <i data-lucide="database" class="w-8 h-8"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="text-sm font-black text-gray-900 dark:text-white mb-1 truncate">{{ $backup['name'] }}</h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                <i data-lucide="calendar" class="w-3 h-3"></i>
-                                {{ $backup['date'] }}
-                            </p>
+                    <div class="bg-gradient-to-br from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700 p-6 mb-6">
+                        <div class="flex items-start gap-4">
+                            <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform">
+                                <i data-lucide="package" class="w-8 h-8"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-sm font-black text-white mb-3 truncate">{{ $backup['name'] }}</h3>
+                                <span class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-sm font-bold text-white">
+                                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                                    {{ $backup['date'] }}
+                                </span>
+                            </div>
                         </div>
                     </div>
+                    
+                    <div class="px-6 pb-6">
 
                     {{-- Stats --}}
-                    <div class="bg-gray-50 dark:bg-dark-bg rounded-2xl p-4 mb-6">
+                    <div class="bg-gray-100 dark:bg-dark-bg rounded-2xl p-4 mb-4 border border-gray-200 dark:border-dark-border">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                            <span class="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1 font-semibold dark:font-normal">
                                 <i data-lucide="hard-drive" class="w-3.5 h-3.5"></i>
                                 حجم الملف
                             </span>
@@ -99,6 +103,7 @@
                                 </button>
                             </form>
                         </div>
+                    </div>
                     </div>
 
                         </div>
@@ -125,26 +130,30 @@
                         $dbBackups = $backups->filter(fn($b) => str_contains($b['name'], '_database'));
                     @endphp
                     @forelse($dbBackups as $backup)
-                        <div class="bg-white dark:bg-dark-card rounded-3xl p-6 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                        <div class="bg-white dark:bg-dark-card rounded-3xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden">
                     
                     {{-- Backup Header --}}
-                    <div class="flex items-start gap-4 mb-6">
-                        <div class="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-md group-hover:scale-110 transition-transform">
-                            <i data-lucide="database" class="w-8 h-8"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="text-sm font-black text-gray-900 dark:text-white mb-1 truncate">{{ $backup['name'] }}</h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                <i data-lucide="calendar" class="w-3 h-3"></i>
-                                {{ $backup['date'] }}
-                            </p>
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 p-6 mb-6">
+                        <div class="flex items-start gap-4">
+                            <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform">
+                                <i data-lucide="database" class="w-8 h-8"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-sm font-black text-white mb-3 truncate">{{ $backup['name'] }}</h3>
+                                <span class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-sm font-bold text-white">
+                                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                                    {{ $backup['date'] }}
+                                </span>
+                            </div>
                         </div>
                     </div>
+                    
+                    <div class="px-6 pb-6">
 
                     {{-- Stats --}}
-                    <div class="bg-gray-50 dark:bg-dark-bg rounded-2xl p-4 mb-6">
+                    <div class="bg-gray-100 dark:bg-dark-bg rounded-2xl p-4 mb-4 border border-gray-200 dark:border-dark-border">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                            <span class="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1 font-semibold dark:font-normal">
                                 <i data-lucide="hard-drive" class="w-3.5 h-3.5"></i>
                                 حجم الملف
                             </span>
@@ -177,6 +186,7 @@
                                 </button>
                             </form>
                         </div>
+                    </div>
                     </div>
 
                         </div>
@@ -195,26 +205,30 @@
                         $filesBackups = $backups->filter(fn($b) => str_contains($b['name'], '_files'));
                     @endphp
                     @forelse($filesBackups as $backup)
-                        <div class="bg-white dark:bg-dark-card rounded-3xl p-6 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                        <div class="bg-white dark:bg-dark-card rounded-3xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden">
                     
                     {{-- Backup Header --}}
-                    <div class="flex items-start gap-4 mb-6">
-                        <div class="w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/40 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-md group-hover:scale-110 transition-transform">
-                            <i data-lucide="folder" class="w-8 h-8"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="text-sm font-black text-gray-900 dark:text-white mb-1 truncate">{{ $backup['name'] }}</h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                <i data-lucide="calendar" class="w-3 h-3"></i>
-                                {{ $backup['date'] }}
-                            </p>
+                    <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 p-6 mb-6">
+                        <div class="flex items-start gap-4">
+                            <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform">
+                                <i data-lucide="folder" class="w-8 h-8"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-sm font-black text-white mb-3 truncate">{{ $backup['name'] }}</h3>
+                                <span class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-sm font-bold text-white">
+                                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                                    {{ $backup['date'] }}
+                                </span>
+                            </div>
                         </div>
                     </div>
+                    
+                    <div class="px-6 pb-6">
 
                     {{-- Stats --}}
-                    <div class="bg-gray-50 dark:bg-dark-bg rounded-2xl p-4 mb-6">
+                    <div class="bg-gray-100 dark:bg-dark-bg rounded-2xl p-4 mb-4 border border-gray-200 dark:border-dark-border">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                            <span class="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1 font-semibold dark:font-normal">
                                 <i data-lucide="hard-drive" class="w-3.5 h-3.5"></i>
                                 حجم الملف
                             </span>
@@ -247,6 +261,7 @@
                                 </button>
                             </form>
                         </div>
+                    </div>
                     </div>
 
                         </div>
