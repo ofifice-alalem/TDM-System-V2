@@ -69,42 +69,48 @@
                                         'cancelled' => ['bg' => 'bg-gray-100 dark:bg-gray-800/50', 'text' => 'text-gray-700 dark:text-gray-400', 'label' => 'ملغي'],
                                     ][$item['data']->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => $item['data']->status];
                                 @endphp
-                                <div class="bg-white dark:bg-dark-card rounded-lg p-3">
-                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                                        <div class="flex-1">
-                                            <div class="flex flex-wrap items-center gap-2 mb-1">
-                                                <p class="font-bold text-gray-900 dark:text-white text-sm">
+                                <div class="bg-white dark:bg-dark-card rounded-xl p-4 border border-gray-200 dark:border-dark-border hover:shadow-lg transition-all">
+                                    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-2 sm:mb-1">
+                                                <p class="font-bold text-gray-900 dark:text-white text-base truncate">
                                                     @if($searchResult['type'] == 'MR')
-                                                        طلب بضاعة: {{ $item['data']->invoice_number }}
+                                                        {{ $item['data']->invoice_number }}
                                                     @elseif($searchResult['type'] == 'MRR')
-                                                        إرجاع بضاعة: {{ $item['data']->invoice_number }}
+                                                        {{ $item['data']->invoice_number }}
                                                     @elseif($searchResult['type'] == 'SI')
-                                                        فاتورة بيع: {{ $item['data']->invoice_number }}
+                                                        {{ $item['data']->invoice_number }}
                                                     @elseif($searchResult['type'] == 'RET')
-                                                        إرجاع من متجر: {{ $item['data']->return_number }}
+                                                        {{ $item['data']->return_number }}
                                                     @elseif($searchResult['type'] == 'RCP')
-                                                        إيصال قبض: {{ $item['data']->payment_number }}
+                                                        {{ $item['data']->payment_number }}
                                                     @elseif($searchResult['type'] == 'FI')
-                                                        فاتورة مصنع: {{ $item['data']->invoice_number }}
+                                                        {{ $item['data']->invoice_number }}
                                                     @endif
                                                 </p>
-                                                <span class="{{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap">
+                                                <span class="{{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} px-2 py-1 rounded text-xs font-bold whitespace-nowrap w-fit">
                                                     {{ $statusConfig['label'] }}
                                                 </span>
                                             </div>
-                                            <p class="text-xs text-gray-600 dark:text-gray-400">
+                                            <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-x-3 text-xs text-gray-600 dark:text-gray-400">
                                                 @if(isset($item['data']->marketer))
-                                                    المسوق: {{ $item['data']->marketer->full_name }}
+                                                    <span class="flex items-center gap-1.5">
+                                                        <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                                                        {{ $item['data']->marketer->full_name }}
+                                                    </span>
                                                 @endif
                                                 @if(isset($item['data']->store))
-                                                    <span class="hidden sm:inline">|</span>
-                                                    <span class="block sm:inline">المتجر: {{ $item['data']->store->name }}</span>
+                                                    <span class="flex items-center gap-1.5">
+                                                        <i data-lucide="store" class="w-3.5 h-3.5"></i>
+                                                        {{ $item['data']->store->name }}
+                                                    </span>
                                                 @endif
-                                            </p>
+                                            </div>
                                         </div>
-                                        <a href="{{ $item['route'] }}" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2">
+                                        <a href="{{ $item['route'] }}" class="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap">
                                             <i data-lucide="eye" class="w-4 h-4"></i>
-                                            عرض
+                                            <span class="sm:hidden">عرض التفاصيل</span>
+                                            <span class="hidden sm:inline">عرض</span>
                                         </a>
                                     </div>
                                 </div>
