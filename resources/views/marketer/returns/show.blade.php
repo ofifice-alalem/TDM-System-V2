@@ -331,7 +331,7 @@
 
 @if($request->status === 'documented' && $request->stamped_image)
     @include('shared.modals.documentation-image', [
-        'imageUrl' => route('warehouse.returns.documentation', $request->id),
+        'imageUrl' => route('marketer.returns.documentation', $request->id),
         'invoiceNumber' => $request->invoice_number,
         'documentedAt' => $request->documented_at
     ])

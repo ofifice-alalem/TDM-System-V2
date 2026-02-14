@@ -104,12 +104,18 @@ class PaymentController extends Controller
 
     public function show(StorePayment $payment)
     {
+        if ($payment->marketer_id !== auth()->id()) {
+            abort(403, 'غير مصرح لك بالوصول لهذا الإيصال');
+        }
         $payment->load('store', 'marketer', 'keeper');
         return view('marketer.payments.show', compact('payment'));
     }
 
     public function cancel(StorePayment $payment, Request $request)
     {
+        if ($payment->marketer_id !== auth()->id()) {
+            abort(403, 'غير مصرح لك بالوصول لهذا الإيصال');
+        }
         $validated = $request->validate([
             'notes' => 'required|string|max:500'
         ]);

@@ -106,6 +106,10 @@ class SalesController extends Controller
 
     public function show(SalesInvoice $sale)
     {
+        if ($sale->marketer_id !== auth()->id()) {
+            abort(403, 'غير مصرح لك بالوصول لهذه الفاتورة');
+        }
+        
         $sale->load('items.product', 'store', 'keeper');
         return view('marketer.sales.show', ['invoice' => $sale]);
     }
@@ -125,5 +129,24 @@ class SalesController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    public function viewDocumentation(SalesInvoice $sale)
+    {
+        if ($sale->marketer_id !== auth()->id()) {
+            abort(403, 'غير مصرح لك بالوصول لهذه الفاتورة');
+        }
+
+        if (!$sale->stamped_invoice_image || $sale->status !== 'approved') {
+            abort(404);
+        }
+
+        $path = storage_path('app/public/' . $sale->stamped_invoice_image);
+        
+        if (!file_exists($path)) {
+            abort(404);
+        }
+
+        return response()->file($path);
     }
 }

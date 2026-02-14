@@ -19,9 +19,7 @@ class SalesReturnController extends Controller
 
     public function index(Request $request)
     {
-        $marketerId = 3; // Temporary
-        
-        $query = SalesReturn::where('marketer_id', $marketerId)
+        $query = SalesReturn::where('marketer_id', auth()->id())
             ->with(['store', 'salesInvoice', 'items.product'])
             ->latest();
 
@@ -67,9 +65,7 @@ class SalesReturnController extends Controller
 
     public function create()
     {
-        $marketerId = 3; // Temporary
-        
-        $approvedInvoices = SalesInvoice::where('marketer_id', $marketerId)
+        $approvedInvoices = SalesInvoice::where('marketer_id', auth()->id())
             ->where('status', 'approved')
             ->with(['store', 'items.product'])
             ->latest()
@@ -101,7 +97,7 @@ class SalesReturnController extends Controller
             return back()->with('error', 'يجب تحديد كمية واحدة على الأقل للإرجاع')->withInput();
         }
 
-        $marketerId = 3; // Temporary
+        $marketerId = auth()->id();
         $keeperId = 1; // Temporary
 
         try {
@@ -115,12 +111,18 @@ class SalesReturnController extends Controller
 
     public function show(SalesReturn $salesReturn)
     {
+        if ($salesReturn->marketer_id !== auth()->id()) {
+            abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
+        }
         $salesReturn->load(['store', 'salesInvoice', 'items.product', 'items.salesInvoiceItem', 'marketer', 'keeper']);
         return view('marketer.sales-returns.show', compact('salesReturn'));
     }
 
     public function cancel(Request $request, SalesReturn $salesReturn)
     {
+        if ($salesReturn->marketer_id !== auth()->id()) {
+            abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
+        }
         $request->validate([
             'notes' => 'required|string|max:500',
         ]);

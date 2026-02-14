@@ -88,12 +88,18 @@ class WithdrawalController extends Controller
 
     public function show(MarketerWithdrawalRequest $withdrawal)
     {
+        if ($withdrawal->marketer_id !== auth()->id()) {
+            abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
+        }
         $withdrawal->load('marketer', 'approver', 'rejecter');
         return view('marketer.withdrawals.show', compact('withdrawal'));
     }
 
     public function cancel(MarketerWithdrawalRequest $withdrawal, Request $request)
     {
+        if ($withdrawal->marketer_id !== auth()->id()) {
+            abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
+        }
         $validated = $request->validate([
             'notes' => 'required|string|max:500'
         ]);

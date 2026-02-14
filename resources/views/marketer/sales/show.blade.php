@@ -348,7 +348,7 @@
 
 @if($invoice->status === 'approved' && $invoice->stamped_invoice_image)
     @include('shared.modals.documentation-image', [
-        'imageUrl' => route('warehouse.sales.documentation', $invoice->id),
+        'imageUrl' => route('marketer.sales.documentation', $invoice->id),
         'invoiceNumber' => $invoice->invoice_number,
         'documentedAt' => $invoice->confirmed_at ?? $invoice->updated_at
     ])

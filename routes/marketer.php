@@ -30,6 +30,7 @@ Route::middleware(['web', 'auth', 'role:marketer'])->group(function () {
             Route::get('/{return}', [MarketerReturnController::class, 'show'])->name('show');
             Route::get('/{return}/pdf', [MarketerReturnController::class, 'pdf'])->name('pdf');
             Route::patch('/{return}/cancel', [MarketerReturnController::class, 'cancel'])->name('cancel');
+            Route::get('/{return}/documentation', [MarketerReturnController::class, 'viewDocumentation'])->name('documentation');
         });
 
         Route::prefix('discounts')->name('discounts.')->group(function () {
@@ -47,6 +48,7 @@ Route::middleware(['web', 'auth', 'role:marketer'])->group(function () {
             Route::get('/{sale}', [SalesController::class, 'show'])->name('show');
             Route::delete('/{sale}/cancel', [SalesController::class, 'cancel'])->name('cancel');
             Route::get('/{sale}/pdf', [\App\Http\Controllers\Shared\Sales\InvoiceController::class, 'generateSalesInvoicePdf'])->name('pdf');
+            Route::get('/{sale}/documentation', [SalesController::class, 'viewDocumentation'])->name('documentation');
         });
 
         Route::prefix('stores')->name('stores.')->group(function () {
