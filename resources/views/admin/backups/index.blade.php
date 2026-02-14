@@ -41,238 +41,219 @@
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-dark-card rounded-[2rem] p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
-                <div id="content-full" class="tab-content grid grid-cols-1 md:grid-cols-2 gap-6 animate-slide-up">
+                <div class="bg-white dark:bg-dark-card rounded-[2rem] shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up overflow-hidden">
+                <div id="content-full" class="tab-content animate-slide-up">
                     @php
                         $fullBackups = $backups->filter(fn($b) => str_contains($b['name'], '_full'));
                     @endphp
-                    @forelse($fullBackups as $backup)
-                        <div class="bg-white dark:bg-dark-card rounded-3xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden">
-                    
-                    {{-- Backup Header --}}
-                    <div class="bg-gradient-to-br from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700 p-6 mb-6">
-                        <div class="flex items-start gap-4">
-                            <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform">
-                                <i data-lucide="package" class="w-8 h-8"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="text-sm font-black text-white mb-3 truncate">{{ $backup['name'] }}</h3>
-                                <span class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-sm font-bold text-white">
-                                    <i data-lucide="calendar" class="w-4 h-4"></i>
-                                    {{ $backup['date'] }}
-                                </span>
-                            </div>
-                        </div>
+                    @if($fullBackups->count() > 0)
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 dark:bg-dark-bg border-b border-gray-200 dark:border-dark-border">
+                                <tr>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">اسم الملف</th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">التاريخ</th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الحجم</th>
+                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
+                                @foreach($fullBackups as $backup)
+                                <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $backup['name'] }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-dark-bg rounded-lg text-sm text-gray-600 dark:text-gray-400">
+                                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                                            {{ $backup['date'] }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
+                                            <i data-lucide="hard-drive" class="w-4 h-4 text-gray-400"></i>
+                                            {{ $backup['size'] }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <a href="{{ route('admin.backups.download', $backup['name']) }}" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
+                                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                                تحميل
+                                            </a>
+                                            <form method="POST" action="{{ route('admin.backups.restore', $backup['name']) }}" class="restore-form inline">
+                                                @csrf
+                                                <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
+                                                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                                    استعادة
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ route('admin.backups.delete', $backup['name']) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه النسخة؟')" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                    حذف
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
-                    
-                    <div class="px-6 pb-6">
-
-                    {{-- Stats --}}
-                    <div class="bg-gray-100 dark:bg-dark-bg rounded-2xl p-4 mb-4 border border-gray-200 dark:border-dark-border">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1 font-semibold dark:font-normal">
-                                <i data-lucide="hard-drive" class="w-3.5 h-3.5"></i>
-                                حجم الملف
-                            </span>
-                            <span class="text-sm font-black text-gray-900 dark:text-white">{{ $backup['size'] }}</span>
-                        </div>
-                    </div>
-
-                    {{-- Actions --}}
-                    <div class="space-y-2">
-                        <a href="{{ route('admin.backups.download', $backup['name']) }}" class="w-full px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            تحميل
-                        </a>
-                        
-                        <div class="grid grid-cols-2 gap-2">
-                            <form method="POST" action="{{ route('admin.backups.restore', $backup['name']) }}" class="restore-form">
-                                @csrf
-                                <button type="submit" class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm">
-                                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                                    استعادة
-                                </button>
-                            </form>
-                            
-                            <form method="POST" action="{{ route('admin.backups.delete', $backup['name']) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه النسخة؟')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                    حذف
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    </div>
-
-                        </div>
-                    @empty
-                        <div class="col-span-full text-center py-16">
+                    @else
+                        <div class="text-center py-16">
                             <div class="w-24 h-24 bg-gray-100 dark:bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
                                 <i data-lucide="database" class="w-12 h-12 text-gray-400 dark:text-gray-600"></i>
                             </div>
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">لا توجد نسخ احتياطية</h3>
                             <p class="text-gray-500 dark:text-dark-muted mb-6">قم بإنشاء نسخة احتياطية جديدة للبدء</p>
-                            <form method="POST" action="{{ route('admin.backups.create') }}" class="inline-block">
-                                @csrf
-                                <button type="submit" class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2">
-                                    <i data-lucide="plus" class="w-5 h-5"></i>
-                                    إنشاء أول نسخة احتياطية
-                                </button>
-                            </form>
                         </div>
-                    @endforelse
+                    @endif
                 </div>
                 
-                <div id="content-database" class="tab-content hidden grid grid-cols-1 md:grid-cols-2 gap-6 animate-slide-up">
+                <div id="content-database" class="tab-content hidden animate-slide-up">
                     @php
                         $dbBackups = $backups->filter(fn($b) => str_contains($b['name'], '_database'));
                     @endphp
-                    @forelse($dbBackups as $backup)
-                        <div class="bg-white dark:bg-dark-card rounded-3xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden">
-                    
-                    {{-- Backup Header --}}
-                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 p-6 mb-6">
-                        <div class="flex items-start gap-4">
-                            <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform">
-                                <i data-lucide="database" class="w-8 h-8"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="text-sm font-black text-white mb-3 truncate">{{ $backup['name'] }}</h3>
-                                <span class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-sm font-bold text-white">
-                                    <i data-lucide="calendar" class="w-4 h-4"></i>
-                                    {{ $backup['date'] }}
-                                </span>
-                            </div>
-                        </div>
+                    @if($dbBackups->count() > 0)
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 dark:bg-dark-bg border-b border-gray-200 dark:border-dark-border">
+                                <tr>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">اسم الملف</th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">التاريخ</th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الحجم</th>
+                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
+                                @foreach($dbBackups as $backup)
+                                <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $backup['name'] }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-dark-bg rounded-lg text-sm text-gray-600 dark:text-gray-400">
+                                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                                            {{ $backup['date'] }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
+                                            <i data-lucide="hard-drive" class="w-4 h-4 text-gray-400"></i>
+                                            {{ $backup['size'] }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <a href="{{ route('admin.backups.download', $backup['name']) }}" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
+                                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                                تحميل
+                                            </a>
+                                            <form method="POST" action="{{ route('admin.backups.restore', $backup['name']) }}" class="restore-form inline">
+                                                @csrf
+                                                <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
+                                                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                                    استعادة
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ route('admin.backups.delete', $backup['name']) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه النسخة؟')" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                    حذف
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
-                    
-                    <div class="px-6 pb-6">
-
-                    {{-- Stats --}}
-                    <div class="bg-gray-100 dark:bg-dark-bg rounded-2xl p-4 mb-4 border border-gray-200 dark:border-dark-border">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1 font-semibold dark:font-normal">
-                                <i data-lucide="hard-drive" class="w-3.5 h-3.5"></i>
-                                حجم الملف
-                            </span>
-                            <span class="text-sm font-black text-gray-900 dark:text-white">{{ $backup['size'] }}</span>
-                        </div>
-                    </div>
-
-                    {{-- Actions --}}
-                    <div class="space-y-2">
-                        <a href="{{ route('admin.backups.download', $backup['name']) }}" class="w-full px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            تحميل
-                        </a>
-                        
-                        <div class="grid grid-cols-2 gap-2">
-                            <form method="POST" action="{{ route('admin.backups.restore', $backup['name']) }}" class="restore-form">
-                                @csrf
-                                <button type="submit" class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm">
-                                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                                    استعادة
-                                </button>
-                            </form>
-                            
-                            <form method="POST" action="{{ route('admin.backups.delete', $backup['name']) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه النسخة؟')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                    حذف
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    </div>
-
-                        </div>
-                    @empty
-                        <div class="col-span-full text-center py-16">
+                    @else
+                        <div class="text-center py-16">
                             <div class="w-24 h-24 bg-gray-100 dark:bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
                                 <i data-lucide="database" class="w-12 h-12 text-gray-400 dark:text-gray-600"></i>
                             </div>
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">لا توجد نسخ قواعد بيانات</h3>
                         </div>
-                    @endforelse
+                    @endif
                 </div>
                 
-                <div id="content-files" class="tab-content hidden grid grid-cols-1 md:grid-cols-2 gap-6 animate-slide-up">
+                <div id="content-files" class="tab-content hidden animate-slide-up">
                     @php
                         $filesBackups = $backups->filter(fn($b) => str_contains($b['name'], '_files'));
                     @endphp
-                    @forelse($filesBackups as $backup)
-                        <div class="bg-white dark:bg-dark-card rounded-3xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden">
-                    
-                    {{-- Backup Header --}}
-                    <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 p-6 mb-6">
-                        <div class="flex items-start gap-4">
-                            <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform">
-                                <i data-lucide="folder" class="w-8 h-8"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="text-sm font-black text-white mb-3 truncate">{{ $backup['name'] }}</h3>
-                                <span class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-sm font-bold text-white">
-                                    <i data-lucide="calendar" class="w-4 h-4"></i>
-                                    {{ $backup['date'] }}
-                                </span>
-                            </div>
-                        </div>
+                    @if($filesBackups->count() > 0)
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 dark:bg-dark-bg border-b border-gray-200 dark:border-dark-border">
+                                <tr>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">اسم الملف</th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">التاريخ</th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الحجم</th>
+                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
+                                @foreach($filesBackups as $backup)
+                                <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $backup['name'] }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-dark-bg rounded-lg text-sm text-gray-600 dark:text-gray-400">
+                                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                                            {{ $backup['date'] }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
+                                            <i data-lucide="hard-drive" class="w-4 h-4 text-gray-400"></i>
+                                            {{ $backup['size'] }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <a href="{{ route('admin.backups.download', $backup['name']) }}" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
+                                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                                تحميل
+                                            </a>
+                                            <form method="POST" action="{{ route('admin.backups.restore', $backup['name']) }}" class="restore-form inline">
+                                                @csrf
+                                                <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
+                                                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                                    استعادة
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ route('admin.backups.delete', $backup['name']) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه النسخة؟')" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                    حذف
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
-                    
-                    <div class="px-6 pb-6">
-
-                    {{-- Stats --}}
-                    <div class="bg-gray-100 dark:bg-dark-bg rounded-2xl p-4 mb-4 border border-gray-200 dark:border-dark-border">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1 font-semibold dark:font-normal">
-                                <i data-lucide="hard-drive" class="w-3.5 h-3.5"></i>
-                                حجم الملف
-                            </span>
-                            <span class="text-sm font-black text-gray-900 dark:text-white">{{ $backup['size'] }}</span>
-                        </div>
-                    </div>
-
-                    {{-- Actions --}}
-                    <div class="space-y-2">
-                        <a href="{{ route('admin.backups.download', $backup['name']) }}" class="w-full px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            تحميل
-                        </a>
-                        
-                        <div class="grid grid-cols-2 gap-2">
-                            <form method="POST" action="{{ route('admin.backups.restore', $backup['name']) }}" class="restore-form">
-                                @csrf
-                                <button type="submit" class="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm">
-                                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                                    استعادة
-                                </button>
-                            </form>
-                            
-                            <form method="POST" action="{{ route('admin.backups.delete', $backup['name']) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه النسخة؟')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="w-full px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                    حذف
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    </div>
-
-                        </div>
-                    @empty
-                        <div class="col-span-full text-center py-16">
+                    @else
+                        <div class="text-center py-16">
                             <div class="w-24 h-24 bg-gray-100 dark:bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
                                 <i data-lucide="folder" class="w-12 h-12 text-gray-400 dark:text-gray-600"></i>
                             </div>
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">لا توجد نسخ ملفات</h3>
                         </div>
-                    @endforelse
+                    @endif
                 </div>
                 </div>
             </div>
