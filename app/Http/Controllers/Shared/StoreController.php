@@ -72,7 +72,12 @@ class StoreController extends Controller
                 return $store;
             });
 
-        return view('shared.stores.index', compact('stores', 'search'));
+        $totalDebt = SalesInvoice::where('status', 'approved')->sum('total_amount');
+        $totalReturns = SalesReturn::where('status', 'approved')->sum('total_amount');
+        $totalPayments = StorePayment::where('status', 'approved')->sum('amount');
+        $totalRemaining = $totalDebt - $totalReturns - $totalPayments;
+
+        return view('shared.stores.index', compact('stores', 'search', 'totalDebt', 'totalPayments', 'totalRemaining'));
     }
 
     public function show(Store $store)

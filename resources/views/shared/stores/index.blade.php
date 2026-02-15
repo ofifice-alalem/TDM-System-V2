@@ -45,6 +45,43 @@
             </form>
         </div>
 
+        {{-- Stats Summary --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
+            <div class="bg-white dark:bg-dark-card rounded-3xl p-6 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center text-red-600 dark:text-red-400">
+                        <i data-lucide="trending-up" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-bold uppercase tracking-wider">إجمالي الديون</p>
+                        <p class="text-2xl font-black text-gray-900 dark:text-white">{{ number_format($totalDebt, 2) }} <span class="text-sm text-gray-500">دينار</span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-dark-card rounded-3xl p-6 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                        <i data-lucide="check-circle" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-bold uppercase tracking-wider">إجمالي المدفوع</p>
+                        <p class="text-2xl font-black text-gray-900 dark:text-white">{{ number_format($totalPayments, 2) }} <span class="text-sm text-gray-500">دينار</span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-dark-card rounded-3xl p-6 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center text-amber-600 dark:text-amber-400">
+                        <i data-lucide="alert-circle" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-bold uppercase tracking-wider">إجمالي المتبقي</p>
+                        <p class="text-2xl font-black text-gray-900 dark:text-white">{{ number_format($totalRemaining, 2) }} <span class="text-sm text-gray-500">دينار</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- Stores Grid --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-up">
             @forelse($stores as $store)
