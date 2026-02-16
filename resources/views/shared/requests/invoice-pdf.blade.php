@@ -45,7 +45,11 @@
         .header-left { display: table-cell; text-align: left; width: 50%; vertical-align: middle; }
         .header h1 { margin: 0; font-size: 16px; font-weight: bold; }
         .header h2 { margin: 0; font-size: 18px; font-weight: 900; color: white; letter-spacing: 0.5px; }
-        .info-box { background-color: #f8f9fa; padding: 4px 8px; border-radius: 3px; margin-bottom: 5px; border: 1px solid #333; text-align: right; }
+        .company-header { display: table; width: 100%; margin-bottom: 10px; }
+        .company-name { display: table-cell; text-align: right; width: 70%; vertical-align: top; font-size: 16px; font-weight: bold; color: #333; }
+        .company-logo { display: table-cell; text-align: left; width: 30%; vertical-align: top; }
+        .company-logo img { max-height: 145px; max-width: 100%; }
+        .info-box { background-color: #f8f9fa; padding: 4px 8px; border-radius: 3px; margin-bottom: 5px; border: 1px solid #333; text-align: right; margin-top: 10px; }
         .info-row { display: inline-block; width: 48%; margin-bottom: 2px; font-size: 11px; text-align: right; font-weight: bold; }
         .label { font-weight: bold; color: #333; font-size: 11px; }
         table { width: 100%; border-collapse: collapse; margin-top: 3px; }
@@ -68,26 +72,36 @@
         </div>
     </div>
 
-    <div class="info-box">
-        <div class="info-row">
-            {{ $marketerName }} :<span class="label">{{ $labels['marketer'] }}</span>
+    <div class="company-header">
+        <div class="company-logo">
+            @if($logoBase64)
+            <img src="data:image/png;base64,{{ $logoBase64 }}" alt="شعار الشركة">
+            @endif
         </div>
-        <div class="info-row">
-            {{ $date }} :<span class="label">{{ $labels['date'] }}</span>
+        <div class="company-name">
+            {{ $companyName }}
+            <div class="info-box">
+                <div class="info-row">
+                    {{ $marketerName }} :<span class="label">{{ $labels['marketer'] }}</span>
+                </div>
+                <div class="info-row">
+                    {{ $date }} :<span class="label">{{ $labels['date'] }}</span>
+                </div>
+                <div class="info-row">
+                    {{ $status }} :<span class="label">{{ $labels['status'] }}</span>
+                </div>
+                @if(isset($approvedBy))
+                <div class="info-row">
+                    {{ $approvedBy }} :<span class="label">{{ $labels['approvedBy'] }}</span>
+                </div>
+                @endif
+                @if(isset($rejectedBy))
+                <div class="info-row">
+                    {{ $rejectedBy }} :<span class="label">{{ $labels['rejectedBy'] }}</span>
+                </div>
+                @endif
+            </div>
         </div>
-        <div class="info-row">
-            {{ $status }} :<span class="label">{{ $labels['status'] }}</span>
-        </div>
-        @if(isset($approvedBy))
-        <div class="info-row">
-            {{ $approvedBy }} :<span class="label">{{ $labels['approvedBy'] }}</span>
-        </div>
-        @endif
-        @if(isset($rejectedBy))
-        <div class="info-row">
-            {{ $rejectedBy }} :<span class="label">{{ $labels['rejectedBy'] }}</span>
-        </div>
-        @endif
     </div>
 
     <table>

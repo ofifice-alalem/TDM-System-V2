@@ -28,6 +28,11 @@ class InvoiceController extends Controller
             'cancelled' => 'ملغي'
         ];
 
+        $logoPath = public_path('images/company.png');
+        $logoBase64 = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : null;
+        
+        $companyName = $arabic->utf8Glyphs('شركة المتفوقون الأوائل للصناعات البلاستيكية');
+
         $data = [
             'invoiceNumber' => $request->invoice_number,
             'date' => $request->created_at->format('Y-m-d H:i'),
@@ -36,6 +41,8 @@ class InvoiceController extends Controller
             'approvedBy' => $request->approver ? $arabic->utf8Glyphs($request->approver->full_name) : null,
             'rejectedBy' => $request->rejecter ? $arabic->utf8Glyphs($request->rejecter->full_name) : null,
             'isInvalid' => in_array($request->status, ['rejected', 'cancelled']),
+            'logoBase64' => $logoBase64,
+            'companyName' => $companyName,
             'items' => $request->items->map(function($item) use ($arabic, $toEnglishNumbers) {
                 return (object)[
                     'name' => $toEnglishNumbers($arabic->utf8Glyphs($item->product->name)),
