@@ -118,59 +118,80 @@
         </div>
 
         {{-- Customers List --}}
-        <div id="listView" class="space-y-4 animate-slide-up hidden">
-            @forelse($customers as $customer)
-                <div class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border hover:shadow-xl transition-all">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-4 flex-1">
-                            <div class="w-14 h-14 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400">
-                                <i data-lucide="user" class="w-7 h-7"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-lg font-black text-gray-900 dark:text-white mb-1">{{ $customer->name }}</h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                                    <i data-lucide="phone" class="w-4 h-4"></i>
-                                    {{ $customer->phone }}
-                                </p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-6">
-                            <div class="text-center">
-                                <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">الفواتير</div>
-                                <div class="text-lg font-black text-gray-900 dark:text-white">{{ $customer->invoices_count ?? 0 }}</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">الدين</div>
-                                <div class="text-lg font-black {{ ($customer->debt_ledger_sum_amount ?? 0) > 0 ? 'text-red-600 dark:text-red-400' : (($customer->debt_ledger_sum_amount ?? 0) < 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white') }}">
-                                    {{ number_format(abs($customer->debt_ledger_sum_amount ?? 0), 0) }} دينار
+        <div id="listView" class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up hidden overflow-hidden">
+            @if($customers->count() > 0)
+            <table class="w-full">
+                <thead class="bg-gray-50 dark:bg-dark-bg border-b border-gray-200 dark:border-dark-border">
+                    <tr>
+                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">العميل</th>
+                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">رقم الهاتف</th>
+                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">عدد الفواتير</th>
+                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">الدين</th>
+                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">الحالة</th>
+                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
+                    @foreach($customers as $customer)
+                    <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400">
+                                    <i data-lucide="user" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-gray-900 dark:text-white">{{ $customer->name }}</div>
                                 </div>
                             </div>
+                        </td>
+                        <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ $customer->phone }}</td>
+                        <td class="px-6 py-4 text-center font-bold text-gray-900 dark:text-white">{{ $customer->invoices_count ?? 0 }}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="font-bold {{ ($customer->debt_ledger_sum_amount ?? 0) > 0 ? 'text-red-600 dark:text-red-400' : (($customer->debt_ledger_sum_amount ?? 0) < 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white') }}">
+                                {{ number_format(abs($customer->debt_ledger_sum_amount ?? 0), 0) }} دينار
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
                             @if($customer->is_active)
-                            <span class="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-bold">نشط</span>
+                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-bold">
+                                <i data-lucide="check-circle" class="w-3 h-3"></i>
+                                نشط
+                            </span>
                             @else
-                            <span class="px-3 py-1.5 bg-gray-50 dark:bg-gray-500/10 text-gray-600 dark:text-gray-400 rounded-full text-xs font-bold">غير نشط</span>
+                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-gray-50 dark:bg-gray-500/10 text-gray-600 dark:text-gray-400 rounded-full text-xs font-bold">
+                                <i data-lucide="x-circle" class="w-3 h-3"></i>
+                                غير نشط
+                            </span>
                             @endif
-                            <div class="flex items-center gap-2">
-                                <a href="{{ route('sales.customers.show', $customer) }}" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-bold transition-all flex items-center gap-2">
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center justify-center gap-2">
+                                <a href="{{ route('sales.customers.show', $customer) }}" class="w-9 h-9 bg-primary-600 hover:bg-primary-700 text-white rounded-lg flex items-center justify-center transition-all">
                                     <i data-lucide="eye" class="w-4 h-4"></i>
-                                    التفاصيل
                                 </a>
-                                <a href="{{ route('sales.customers.edit', $customer) }}" class="w-10 h-10 bg-amber-100 dark:bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-600 dark:text-amber-400 hover:bg-amber-200 transition-all">
+                                <a href="{{ route('sales.customers.edit', $customer) }}" class="w-9 h-9 bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-200 rounded-lg flex items-center justify-center transition-all">
                                     <i data-lucide="edit" class="w-4 h-4"></i>
                                 </a>
+                                @if($customer->phone)
+                                <a href="tel:{{ $customer->phone }}" class="w-9 h-9 bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-gray-400 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-all">
+                                    <i data-lucide="phone" class="w-4 h-4"></i>
+                                </a>
+                                @endif
                             </div>
-                        </div>
-                    </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            @else
+            <div class="text-center py-16">
+                <div class="w-24 h-24 bg-gray-100 dark:bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="users" class="w-12 h-12 text-gray-400 dark:text-gray-600"></i>
                 </div>
-            @empty
-                <div class="text-center py-16">
-                    <div class="w-24 h-24 bg-gray-100 dark:bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i data-lucide="users" class="w-12 h-12 text-gray-400 dark:text-gray-600"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">لا توجد عملاء</h3>
-                    <p class="text-gray-500 dark:text-dark-muted">لم يتم إضافة أي عملاء بعد</p>
-                </div>
-            @endforelse
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">لا توجد عملاء</h3>
+                <p class="text-gray-500 dark:text-dark-muted">لم يتم إضافة أي عملاء بعد</p>
+            </div>
+            @endif
         </div>
 
     </div>
