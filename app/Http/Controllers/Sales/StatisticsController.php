@@ -192,7 +192,7 @@ class StatisticsController extends Controller
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        $filename = 'sales_statistics_' . date('Y-m-d_H-i-s') . '.xlsx';
+        $filename = date('y_m_d') . '_' . $customer->name . '_' . $operationName . '.xlsx';
         
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
