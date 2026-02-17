@@ -37,6 +37,33 @@
             </h1>
         </div>
 
+        {{-- Filters --}}
+        <div class="animate-fade-in">
+            <form method="GET" class="bg-white dark:bg-dark-card rounded-2xl p-4 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="البحث بالاسم أو رقم الهاتف..." class="w-full px-4 py-2 bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 transition-all">
+                    </div>
+                    <div>
+                        <select name="sort" class="w-full px-4 py-2 bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 transition-all">
+                            <option value="">الترتيب حسب...</option>
+                            <option value="debt_desc" {{ request('sort') == 'debt_desc' ? 'selected' : '' }}>الدين (من الأعلى)</option>
+                            <option value="debt_asc" {{ request('sort') == 'debt_asc' ? 'selected' : '' }}>الدين (من الأقل)</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all">
+                            <i data-lucide="search" class="w-4 h-4 inline"></i>
+                            بحث
+                        </button>
+                        <a href="{{ route('sales.customers.index') }}" class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
         {{-- Customers Grid --}}
         <div id="gridView" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-up">
             @forelse($customers as $customer)
@@ -193,6 +220,13 @@
             </div>
             @endif
         </div>
+
+        {{-- Pagination --}}
+        @if($customers->hasPages())
+        <div class="animate-fade-in">
+            {{ $customers->links() }}
+        </div>
+        @endif
 
     </div>
 </div>

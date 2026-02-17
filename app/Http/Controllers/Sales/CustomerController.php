@@ -8,12 +8,37 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $customers = Customer::withCount('invoices')
-            ->withSum('debtLedger', 'amount')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $query = Customer::withCount('invoices')
+            ->withSum('debtLedger', 'amount');
+
+        // Search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('phone', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Sort filter
+        if ($request->filled('sort')) {
+            switch ($request->sort) {
+                case 'debt_asc':
+                    $query->orderBy('debt_ledger_sum_amount', 'asc');
+                    break;
+                case 'debt_desc':
+                    $query->orderBy('debt_ledger_sum_amount', 'desc');
+                    break;
+                default:
+                    $query->orderBy('created_at', 'desc');
+            }
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $customers = $query->paginate(20)->withQueryString();
 
         return view('sales.customers.index', compact('customers'));
     }

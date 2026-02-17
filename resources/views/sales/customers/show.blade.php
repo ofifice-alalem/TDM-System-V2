@@ -99,6 +99,10 @@
                                             <a href="{{ route('sales.payments.show', $entry->payment_id) }}" class="text-orange-500 hover:text-orange-600 transition-colors border-2 border-orange-500 hover:border-orange-600 rounded-lg p-1 mr-3">
                                                 <i data-lucide="chevron-left" class="w-6 h-6" stroke-width="3"></i>
                                             </a>
+                                        @elseif($entry->entry_type === 'return' && $entry->return_id)
+                                            <a href="{{ route('sales.returns.show', $entry->return_id) }}" class="text-orange-500 hover:text-orange-600 transition-colors border-2 border-orange-500 hover:border-orange-600 rounded-lg p-1 mr-3">
+                                                <i data-lucide="chevron-left" class="w-6 h-6" stroke-width="3"></i>
+                                            </a>
                                         @endif
                                     </div>
                                 </div>
