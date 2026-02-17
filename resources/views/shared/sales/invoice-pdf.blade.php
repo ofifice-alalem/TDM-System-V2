@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>فاتورة بيع</title>
+    <title>فاتورة مبيعات</title>
     <style>
         @font-face {
             font-family: 'Cairo';
@@ -45,7 +45,11 @@
         .header-left { display: table-cell; text-align: left; width: 50%; vertical-align: middle; }
         .header h1 { margin: 0; font-size: 16px; font-weight: bold; }
         .header h2 { margin: 0; font-size: 18px; font-weight: 900; color: white; letter-spacing: 0.5px; }
-        .info-box { background-color: #f8f9fa; padding: 4px 8px; border-radius: 3px; margin-bottom: 5px; border: 1px solid #333; text-align: right; }
+        .company-header { display: table; width: 100%; margin-bottom: 10px; }
+        .company-name { display: table-cell; text-align: right; width: 70%; vertical-align: top; font-size: 16px; font-weight: bold; color: #333; }
+        .company-logo { display: table-cell; text-align: left; width: 30%; vertical-align: top; }
+        .company-logo img { max-height: 145px; max-width: 100%; }
+        .info-box { background-color: #f8f9fa; padding: 4px 8px; border-radius: 3px; margin-bottom: 5px; border: 1px solid #333; text-align: right; margin-top: 10px; }
         .info-row { display: inline-block; width: 48%; margin-bottom: 2px; font-size: 11px; text-align: right; font-weight: bold; }
         .label { font-weight: bold; color: #333; font-size: 11px; }
         table { width: 100%; border-collapse: collapse; margin-top: 3px; }
@@ -54,11 +58,14 @@
         td.product-name { text-align: right; padding-right: 6px; }
         td.quantity { font-family: 'DejaVu Sans', sans-serif; direction: ltr; }
         tr:nth-child(even) td { background-color: #f5f5f5; }
-        .totals-box { background-color: #f8f9fa; padding: 8px; border-radius: 3px; margin-top: 10px; border: 1px solid #333; text-align: right; direction: rtl; }
-        .total-row { display: block; margin-bottom: 4px; font-size: 11px; font-weight: bold; direction: rtl; }
-        .total-row.final { font-size: 14px; color: #000; background-color: #e9ecef; padding: 4px; border-radius: 2px; direction: rtl; }
-        .signatures { position: fixed; bottom: 10px; left: 10px; right: 10px; }
-        .signature-box { display: inline-block; width: 30%; text-align: center; border-top: 1px solid #000; padding-top: 10px; margin: 0 1.5%; font-size: 10px; }
+        .totals { margin-top: 10px; width: 50%; margin-right: 0; border: 2px solid #333; padding: 10px; border-radius: 5px; background-color: #f8f9fa; }
+        .total-row { padding: 3px 0; font-size: 12px; display: table; width: 100%; direction: rtl; }
+        .total-row .label { display: table-cell; text-align: right; width: 60%; font-weight: bold; }
+        .total-row .value { display: table-cell; text-align: left; width: 40%; direction: ltr; }
+        .total-row.grand { font-size: 14px; font-weight: 900; border-top: 2px solid #333; padding-top: 5px; margin-top: 5px; }
+        .notes-box { margin-top: 10px; border: 1px solid #333; padding: 10px; border-radius: 5px; background-color: #fff; }
+        .notes-box .notes-label { font-weight: bold; font-size: 12px; margin-bottom: 5px; }
+        .notes-box .notes-content { font-size: 11px; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -71,18 +78,28 @@
         </div>
     </div>
 
-    <div class="info-box">
-        <div class="info-row">
-            {{ $marketerName }} :<span class="label">{{ $labels['marketer'] }}</span>
+    <div class="company-header">
+        <div class="company-logo">
+            @if($logoBase64)
+            <img src="data:image/png;base64,{{ $logoBase64 }}" alt="شعار الشركة">
+            @endif
         </div>
-        <div class="info-row">
-            {{ $storeName }} :<span class="label">{{ $labels['store'] }}</span>
-        </div>
-        <div class="info-row">
-            {{ $date }} :<span class="label">{{ $labels['date'] }}</span>
-        </div>
-        <div class="info-row">
-            {{ $status }} :<span class="label">{{ $labels['status'] }}</span>
+        <div class="company-name">
+            {{ $companyName }}
+            <div class="info-box">
+                <div class="info-row">
+                    {{ $customerName }} :<span class="label">{{ $labels['customer'] }}</span>
+                </div>
+                <div class="info-row">
+                    {{ $customerPhone }} :<span class="label">{{ $labels['phone'] }}</span>
+                </div>
+                <div class="info-row">
+                    {{ $date }} :<span class="label">{{ $labels['date'] }}</span>
+                </div>
+                <div class="info-row">
+                    {{ $paymentType }} :<span class="label">{{ $labels['paymentType'] }}</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -90,8 +107,7 @@
         <thead>
             <tr>
                 <th>{{ $labels['total'] }}</th>
-                <th>{{ $labels['price'] }}</th>
-                <th>{{ $labels['free'] }}</th>
+                <th>{{ $labels['unitPrice'] }}</th>
                 <th>{{ $labels['quantity'] }}</th>
                 <th>{{ $labels['product'] }}</th>
                 <th>#</th>
@@ -100,9 +116,8 @@
         <tbody>
             @foreach($items as $index => $item)
             <tr>
-                <td class="quantity">{{ $item->total_price }}</td>
-                <td class="quantity">{{ $item->unit_price }}</td>
-                <td class="quantity">{{ $item->free_quantity > 0 ? $item->free_quantity : '---' }}</td>
+                <td class="quantity">{{ $item->totalPrice }}</td>
+                <td class="quantity">{{ $item->unitPrice }}</td>
                 <td class="quantity">{{ $item->quantity }}</td>
                 <td class="product-name">{{ $item->name }}</td>
                 <td class="quantity">{{ $index + 1 }}</td>
@@ -111,29 +126,21 @@
         </tbody>
     </table>
 
-    <div class="totals-box">
+    <div class="totals">
         <div class="total-row">
-            {{ $labels['currency'] }} {{ $subtotal }} :<span class="label">{{ $labels['subtotal'] }}</span>
+            <span class="value">{{ $subtotal }} {{ $currency }}</span>
+            <span class="label">:{{ $labels['subtotal'] }}</span>
         </div>
-        @if($productDiscount > 0)
-        <div class="total-row" style="color: #059669;">
-            {{ $labels['currency'] }} {{ $productDiscount }} :<span class="label">{{ $labels['productDiscount'] }}</span>
-        </div>
-        @endif
-        @if($invoiceDiscount > 0)
-        <div class="total-row" style="color: #2563eb;">
-            {{ $labels['currency'] }} {{ $invoiceDiscount }} :<span class="label">{{ $labels['invoiceDiscount'] }}</span>
+        @if($discountAmount > 0)
+        <div class="total-row">
+            <span class="value">{{ $discountAmount }} {{ $currency }}</span>
+            <span class="label">:{{ $labels['discount'] }}</span>
         </div>
         @endif
-        <div class="total-row final">
-            {{ $labels['currency'] }} {{ $totalAmount }} :<span class="label">{{ $labels['finalTotal'] }}</span>
+        <div class="total-row grand">
+            <span class="value">{{ $totalAmount }} {{ $currency }}</span>
+            <span class="label">:{{ $labels['grandTotal'] }}</span>
         </div>
-    </div>
-
-    <div class="signatures">
-        <div class="signature-box">{{ $labels['store'] }}</div>
-        <div class="signature-box">{{ $labels['marketer'] }}</div>
-        <div class="signature-box">{{ $labels['keeper'] }}</div>
     </div>
 </body>
 </html>

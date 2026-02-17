@@ -27,7 +27,7 @@
                     </div>
                     <h1 class="text-4xl font-black text-gray-900 dark:text-white">تفاصيل الفاتورة</h1>
                 </div>
-                <button onclick="window.print()" class="px-6 py-3 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all flex items-center gap-2">
+                <button onclick="window.location.href='{{ route('sales.invoices.pdf', $invoice) }}'" class="px-6 py-3 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all flex items-center gap-2">
                     <i data-lucide="printer" class="w-5 h-5"></i>
                     طباعة
                 </button>

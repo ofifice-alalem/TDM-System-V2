@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Shared\Sales\CustomerInvoiceController as SharedCustomerInvoiceController;
 use App\Models\CustomerInvoice;
 use App\Models\Customer;
 use App\Models\Product;
@@ -11,7 +12,10 @@ use Illuminate\Http\Request;
 
 class CustomerInvoiceController extends Controller
 {
-    public function __construct(private CustomerInvoiceService $invoiceService)
+    public function __construct(
+        private CustomerInvoiceService $invoiceService,
+        private SharedCustomerInvoiceController $pdfController
+    )
     {
     }
 
@@ -88,5 +92,10 @@ class CustomerInvoiceController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    public function pdf(CustomerInvoice $invoice)
+    {
+        return $this->pdfController->generateInvoicePdf($invoice);
     }
 }
