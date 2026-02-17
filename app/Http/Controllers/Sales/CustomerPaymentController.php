@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Shared\Sales\CustomerPaymentController as SharedCustomerPaymentController;
 use App\Models\CustomerPayment;
 use App\Models\Customer;
 use App\Services\Sales\CustomerPaymentService;
@@ -10,7 +11,10 @@ use Illuminate\Http\Request;
 
 class CustomerPaymentController extends Controller
 {
-    public function __construct(private CustomerPaymentService $paymentService)
+    public function __construct(
+        private CustomerPaymentService $paymentService,
+        private SharedCustomerPaymentController $pdfController
+    )
     {
     }
 
@@ -68,5 +72,10 @@ class CustomerPaymentController extends Controller
     {
         $customer = Customer::findOrFail($customerId);
         return response()->json(['debt' => $customer->total_debt]);
+    }
+
+    public function pdf(CustomerPayment $payment)
+    {
+        return $this->pdfController->generatePaymentPdf($payment);
     }
 }
