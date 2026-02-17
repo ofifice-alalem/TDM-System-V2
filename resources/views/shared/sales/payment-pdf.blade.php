@@ -82,12 +82,16 @@
                         <td class="value">{{ $paymentMethod }}</td>
                         <td class="label">{{ $labels['paymentMethod'] }}</td>
                     </tr>
+                    <tr>
+                        <td class="value">{{ $employeeName }}</td>
+                        <td class="label">{{ $labels['employee'] }}</td>
+                    </tr>
                 </table>
             </div>
             
             <div class="amount-section">
                 <div class="label">{{ $labels['amount'] }}</div>
-                <div class="value">{{ $amount }} {{ $labels['currency'] }}</div>
+                <div class="value">{{ $labels['currency'] }} {{ $amount }}</div>
             </div>
         </div>
     </div>

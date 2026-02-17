@@ -10,7 +10,7 @@ class CustomerInvoiceController extends Controller
 {
     public function generateInvoicePdf(CustomerInvoice $invoice)
     {
-        $invoice->load('items.product', 'customer');
+        $invoice->load('items.product', 'customer', 'salesUser');
         
         $arabic = new \ArPHP\I18N\Arabic();
         
@@ -36,7 +36,7 @@ class CustomerInvoiceController extends Controller
             'date' => $invoice->created_at->format('Y-m-d H:i'),
             'customerName' => $arabic->utf8Glyphs($invoice->customer->name),
             'customerPhone' => $invoice->customer->phone,
-            'paymentType' => $arabic->utf8Glyphs($paymentTypeLabels[$invoice->payment_type]),
+            'employeeName' => $arabic->utf8Glyphs($invoice->salesUser->full_name ?? 'غير متوفر'),
             'isInvalid' => $invoice->status === 'cancelled',
             'logoBase64' => $logoBase64,
             'companyName' => $companyName,
@@ -58,7 +58,7 @@ class CustomerInvoiceController extends Controller
                 'customer' => $arabic->utf8Glyphs('العميل'),
                 'phone' => $arabic->utf8Glyphs('الهاتف'),
                 'date' => $arabic->utf8Glyphs('التاريخ'),
-                'paymentType' => $arabic->utf8Glyphs('نوع الدفع'),
+                'employee' => $arabic->utf8Glyphs('الموظف'),
                 'product' => $arabic->utf8Glyphs('المنتج'),
                 'quantity' => $arabic->utf8Glyphs('الكمية'),
                 'unitPrice' => $arabic->utf8Glyphs('سعر الوحدة'),

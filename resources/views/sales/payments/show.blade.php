@@ -78,15 +78,19 @@
                             <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase">معلومات الدفع</p>
                         </div>
                         <div class="space-y-2">
-                            <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
                                 <span class="text-sm text-gray-600 dark:text-gray-400">التاريخ:</span>
                                 <span class="text-sm font-bold text-gray-900 dark:text-white">{{ $payment->created_at->format('Y-m-d H:i') }}</span>
                             </div>
-                            <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
                                 <span class="text-sm text-gray-600 dark:text-gray-400">طريقة الدفع:</span>
                                 <span class="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 rounded-lg text-xs font-bold">
                                     {{ $payment->payment_method === 'cash' ? 'نقدي' : ($payment->payment_method === 'transfer' ? 'تحويل' : 'شيك') }}
                                 </span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">الموظف:</span>
+                                <span class="text-sm font-bold text-gray-900 dark:text-white">{{ $payment->salesUser->full_name ?? 'غير متوفر' }}</span>
                             </div>
                         </div>
                     </div>

@@ -10,7 +10,7 @@ class CustomerPaymentController extends Controller
 {
     public function generatePaymentPdf(CustomerPayment $payment)
     {
-        $payment->load('customer');
+        $payment->load('customer', 'salesUser');
         
         $arabic = new \ArPHP\I18N\Arabic();
         
@@ -31,6 +31,7 @@ class CustomerPaymentController extends Controller
             'customerName' => $arabic->utf8Glyphs($payment->customer->name),
             'customerPhone' => $payment->customer->phone,
             'paymentMethod' => $arabic->utf8Glyphs($methodLabels[$payment->payment_method]),
+            'employeeName' => $arabic->utf8Glyphs($payment->salesUser->full_name ?? 'غير متوفر'),
             'amount' => number_format($payment->amount, 0),
             'logoBase64' => $logoBase64,
             'companyName' => $companyName,
@@ -40,6 +41,7 @@ class CustomerPaymentController extends Controller
                 'phone' => $arabic->utf8Glyphs('الهاتف'),
                 'date' => $arabic->utf8Glyphs('التاريخ'),
                 'paymentMethod' => $arabic->utf8Glyphs('طريقة الدفع'),
+                'employee' => $arabic->utf8Glyphs('الموظف'),
                 'amount' => $arabic->utf8Glyphs('المبلغ المسدد'),
                 'currency' => $arabic->utf8Glyphs('دينار'),
             ]

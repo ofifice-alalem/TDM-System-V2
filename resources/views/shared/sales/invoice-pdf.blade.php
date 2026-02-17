@@ -97,7 +97,7 @@
                     {{ $date }} :<span class="label">{{ $labels['date'] }}</span>
                 </div>
                 <div class="info-row">
-                    {{ $paymentType }} :<span class="label">{{ $labels['paymentType'] }}</span>
+                    {{ $employeeName }} :<span class="label">{{ $labels['employee'] }}</span>
                 </div>
             </div>
         </div>
@@ -128,17 +128,17 @@
 
     <div class="totals">
         <div class="total-row">
-            <span class="value">{{ $subtotal }} {{ $currency }}</span>
+            <span class="value">{{ $currency }} {{ $subtotal }}</span>
             <span class="label">:{{ $labels['subtotal'] }}</span>
         </div>
         @if($discountAmount > 0)
         <div class="total-row">
-            <span class="value">{{ $discountAmount }} {{ $currency }}</span>
+            <span class="value">{{ $currency }} {{ $discountAmount }}</span>
             <span class="label">:{{ $labels['discount'] }}</span>
         </div>
         @endif
         <div class="total-row grand">
-            <span class="value">{{ $totalAmount }} {{ $currency }}</span>
+            <span class="value">{{ $currency }} {{ $totalAmount }}</span>
             <span class="label">:{{ $labels['grandTotal'] }}</span>
         </div>
     </div>

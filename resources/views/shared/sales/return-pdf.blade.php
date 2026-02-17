@@ -128,7 +128,7 @@
 
     <div class="totals">
         <div class="total-row grand">
-            <span class="value">{{ $totalAmount }} {{ $currency }}</span>
+            <span class="value">{{ $currency }} {{ $totalAmount }}</span>
             <span class="label">:{{ $labels['grandTotal'] }}</span>
         </div>
     </div>
