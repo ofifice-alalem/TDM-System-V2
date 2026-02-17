@@ -66,6 +66,21 @@ class CustomerReturnController extends Controller
         return view('sales.returns.show', compact('return'));
     }
 
+    public function getInvoiceItems($invoiceId)
+    {
+        $invoice = CustomerInvoice::with('items.product')->findOrFail($invoiceId);
+        return response()->json([
+            'items' => $invoice->items->map(function($item) {
+                return [
+                    'id' => $item->id,
+                    'product_name' => $item->product->name,
+                    'quantity' => $item->quantity,
+                    'unit_price' => $item->unit_price,
+                ];
+            })
+        ]);
+    }
+
     public function cancel(CustomerReturn $return)
     {
         try {
