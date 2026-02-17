@@ -4,9 +4,13 @@ use App\Http\Controllers\Sales\CustomerController;
 use App\Http\Controllers\Sales\CustomerInvoiceController;
 use App\Http\Controllers\Sales\CustomerPaymentController;
 use App\Http\Controllers\Sales\CustomerReturnController;
+use App\Http\Controllers\Sales\StatisticsController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'role:sales'])->prefix('sales')->name('sales.')->group(function () {
+    
+    // Statistics
+    Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics.index');
     
     // Customers
     Route::prefix('customers')->name('customers.')->group(function () {
