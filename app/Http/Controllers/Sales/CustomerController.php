@@ -29,10 +29,13 @@ class CustomerController extends Controller
             'name' => 'required|string|max:100',
             'phone' => 'required|string|max:20',
             'address' => 'nullable|string',
-            'id_number' => 'nullable|string|max:50',
         ]);
 
         $customer = Customer::create($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'customer' => $customer]);
+        }
 
         return redirect()->route('sales.customers.show', $customer->id)
             ->with('success', 'تم إضافة العميل بنجاح');
@@ -44,11 +47,14 @@ class CustomerController extends Controller
             $q->latest()->take(10);
         }, 'debtLedger' => function($q) {
             $q->latest()->take(20);
-        }]);
+        }, 'returns']);
 
         $totalDebt = $customer->debtLedger()->sum('amount');
+        $totalInvoices = $customer->invoices()->sum('total_amount');
+        $totalPayments = $customer->payments()->sum('amount');
+        $totalReturns = $customer->returns()->sum('total_amount');
 
-        return view('sales.customers.show', compact('customer', 'totalDebt'));
+        return view('sales.customers.show', compact('customer', 'totalDebt', 'totalInvoices', 'totalPayments', 'totalReturns'));
     }
 
     public function edit(Customer $customer)

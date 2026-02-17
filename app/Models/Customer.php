@@ -18,6 +18,8 @@ class Customer extends Model
         'is_active' => 'boolean',
     ];
 
+    protected $appends = ['total_debt'];
+
     public function invoices()
     {
         return $this->hasMany(CustomerInvoice::class);

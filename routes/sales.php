@@ -32,8 +32,8 @@ Route::middleware(['web', 'auth', 'role:sales'])->prefix('sales')->name('sales.'
         Route::get('/', [CustomerPaymentController::class, 'index'])->name('index');
         Route::get('/create', [CustomerPaymentController::class, 'create'])->name('create');
         Route::post('/', [CustomerPaymentController::class, 'store'])->name('store');
-        Route::get('/{payment}', [CustomerPaymentController::class, 'show'])->name('show');
         Route::get('/customer/{customerId}/debt', [CustomerPaymentController::class, 'getCustomerDebt'])->name('customer.debt');
+        Route::get('/{payment}', [CustomerPaymentController::class, 'show'])->name('show');
     });
 
     // Returns

@@ -31,11 +31,35 @@
             <div class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-dark-border">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-12 h-12 bg-blue-100 dark:bg-blue-600/20 rounded-xl flex items-center justify-center">
-                        <i data-lucide="phone" class="w-6 h-6 text-blue-600 dark:text-blue-400"></i>
+                        <i data-lucide="file-text" class="w-6 h-6 text-blue-600 dark:text-blue-400"></i>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-500 dark:text-dark-muted">الهاتف</p>
-                        <p class="text-lg font-bold text-gray-900 dark:text-white">{{ $customer->phone }}</p>
+                        <p class="text-xs text-gray-500 dark:text-dark-muted">إجمالي الفواتير</p>
+                        <p class="text-lg font-bold text-blue-600">{{ number_format($totalInvoices, 0) }} دينار</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-dark-border">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-12 h-12 bg-green-100 dark:bg-green-600/20 rounded-xl flex items-center justify-center">
+                        <i data-lucide="banknote" class="w-6 h-6 text-green-600 dark:text-green-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-dark-muted">إجمالي الدفع</p>
+                        <p class="text-lg font-bold text-green-600">{{ number_format($totalPayments, 0) }} دينار</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-dark-border">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-12 h-12 bg-orange-100 dark:bg-orange-600/20 rounded-xl flex items-center justify-center">
+                        <i data-lucide="undo-2" class="w-6 h-6 text-orange-600 dark:text-orange-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-dark-muted">إجمالي المرتجعات</p>
+                        <p class="text-lg font-bold text-orange-600">{{ number_format($totalReturns, 0) }} دينار</p>
                     </div>
                 </div>
             </div>
@@ -47,33 +71,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 dark:text-dark-muted">الدين الحالي</p>
-                        <p class="text-lg font-bold {{ $totalDebt > 0 ? 'text-red-600' : 'text-green-600' }}">{{ number_format($totalDebt, 0) }} د.ع</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-dark-border">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-12 h-12 bg-green-100 dark:bg-green-600/20 rounded-xl flex items-center justify-center">
-                        <i data-lucide="file-text" class="w-6 h-6 text-green-600 dark:text-green-400"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 dark:text-dark-muted">عدد الفواتير</p>
-                        <p class="text-lg font-bold text-gray-900 dark:text-white">{{ $customer->invoices->count() }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-dark-border">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-12 h-12 bg-purple-100 dark:bg-purple-600/20 rounded-xl flex items-center justify-center">
-                        <i data-lucide="check-circle" class="w-6 h-6 text-purple-600 dark:text-purple-400"></i>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500 dark:text-dark-muted">الحالة</p>
-                        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold {{ $customer->is_active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' }}">
-                            {{ $customer->is_active ? 'نشط' : 'غير نشط' }}
-                        </span>
+                        <p class="text-lg font-bold {{ $totalDebt > 0 ? 'text-red-600' : 'text-green-600' }}">{{ number_format($totalDebt, 0) }} دينار</p>
                     </div>
                 </div>
             </div>
