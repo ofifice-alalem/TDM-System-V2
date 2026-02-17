@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\DB;
 
 class CustomerInvoiceService
 {
-    public function createInvoice($salesUserId, $customerId, array $items, $discountAmount, $paymentType, $paidAmount = null, $notes = null)
+    public function createInvoice($salesUserId, $customerId, array $items, $discountAmount, $paidAmount = 0, $paymentMethod = 'cash', $notes = null)
     {
-        return DB::transaction(function () use ($salesUserId, $customerId, $items, $discountAmount, $paymentType, $paidAmount, $notes) {
+        return DB::transaction(function () use ($salesUserId, $customerId, $items, $discountAmount, $paidAmount, $paymentMethod, $notes) {
             $this->checkMainStock($items);
 
             $subtotal = 0;
@@ -34,6 +34,15 @@ class CustomerInvoiceService
             }
 
             $totalAmount = $subtotal - $discountAmount;
+            
+            // Determine payment type
+            if ($paidAmount >= $totalAmount) {
+                $paymentType = 'cash';
+            } elseif ($paidAmount > 0) {
+                $paymentType = 'partial';
+            } else {
+                $paymentType = 'credit';
+            }
 
             $invoice = CustomerInvoice::create([
                 'invoice_number' => $this->generateInvoiceNumber(),
@@ -61,6 +70,7 @@ class CustomerInvoiceService
                     ->decrement('quantity', $item['quantity']);
             }
 
+            // Record sale in debt ledger
             CustomerDebtLedger::create([
                 'customer_id' => $customerId,
                 'entry_type' => 'sale',
@@ -68,10 +78,9 @@ class CustomerInvoiceService
                 'amount' => $totalAmount,
             ]);
 
-            if ($paymentType === 'cash') {
-                $this->createPayment($salesUserId, $customerId, $totalAmount, 'cash');
-            } elseif ($paymentType === 'partial' && $paidAmount > 0) {
-                $this->createPayment($salesUserId, $customerId, $paidAmount, 'cash');
+            // Create payment if amount paid
+            if ($paidAmount > 0) {
+                $this->createPayment($salesUserId, $customerId, $paidAmount, $paymentMethod);
             }
 
             return $invoice->load('items.product', 'customer');

@@ -27,7 +27,17 @@ class CustomerInvoiceController extends Controller
     public function create()
     {
         $customers = Customer::where('is_active', true)->get();
-        $products = Product::where('is_active', true)->get();
+        $products = Product::where('is_active', true)
+            ->with('mainStock')
+            ->get()
+            ->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'price' => $p->customer_price ?? $p->current_price,
+                    'stock' => $p->mainStock->quantity ?? 0
+                ];
+            });
 
         return view('sales.invoices.create', compact('customers', 'products'));
     }
@@ -40,8 +50,8 @@ class CustomerInvoiceController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'discount_amount' => 'nullable|numeric|min:0',
-            'payment_type' => 'required|in:cash,credit,partial',
-            'paid_amount' => 'required_if:payment_type,partial|nullable|numeric|min:0',
+            'paid_amount' => 'nullable|numeric|min:0',
+            'payment_method' => 'nullable|in:cash,transfer,check',
             'notes' => 'nullable|string',
         ]);
 
@@ -51,8 +61,8 @@ class CustomerInvoiceController extends Controller
                 $validated['customer_id'],
                 $validated['items'],
                 $validated['discount_amount'] ?? 0,
-                $validated['payment_type'],
-                $validated['paid_amount'] ?? null,
+                $validated['paid_amount'] ?? 0,
+                $validated['payment_method'] ?? 'cash',
                 $validated['notes'] ?? null
             );
 

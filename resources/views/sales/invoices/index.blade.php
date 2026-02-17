@@ -1,66 +1,117 @@
-<x-app-layout>
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-800">الفواتير</h2>
-                <a href="{{ route('sales.invoices.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+@extends('layouts.app')
+
+@section('title', 'فواتير المبيعات')
+
+@section('content')
+
+<div class="min-h-screen py-8">
+    <div class="max-w-[1600px] mx-auto space-y-8 px-2">
+        
+        {{-- Header & Quick Actions --}}
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-down">
+            <div class="lg:col-span-8">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="bg-primary-100 dark:bg-primary-600/20 text-primary-600 dark:text-primary-400 px-3 py-1 rounded-lg text-xs font-bold border border-primary-100 dark:border-primary-600/30">
+                        إدارة الفواتير
+                    </span>
+                </div>
+                <h1 class="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
+                    فواتير المبيعات
+                </h1>
+            </div>
+
+            <div class="lg:col-span-4 lg:translate-y-[30px]">
+                <a href="{{ route('sales.invoices.create') }}" class="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2 w-full">
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i>
                     فاتورة جديدة
                 </a>
             </div>
+        </div>
 
-            @if(session('success'))
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                    {{ session('success') }}
+        {{-- Invoices List --}}
+        <div class="bg-white dark:bg-dark-card rounded-[2rem] p-6 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
+            @forelse($invoices as $invoice)
+                <div class="bg-gray-50 dark:bg-dark-bg rounded-2xl p-6 mb-4 border border-gray-200 dark:border-dark-border hover:shadow-lg transition-all">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-12 h-12 bg-primary-100 dark:bg-primary-600/20 rounded-xl flex items-center justify-center">
+                                    <i data-lucide="file-text" class="w-6 h-6 text-primary-600 dark:text-primary-400"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">#{{ $invoice->invoice_number }}</h3>
+                                    <p class="text-sm text-gray-500 dark:text-dark-muted flex items-center gap-2">
+                                        <i data-lucide="user" class="w-4 h-4"></i>
+                                        {{ $invoice->customer->name }}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-4 gap-4 mt-4">
+                                <div class="bg-white dark:bg-dark-card rounded-xl p-3 border border-gray-200 dark:border-dark-border">
+                                    <p class="text-xs text-gray-500 dark:text-dark-muted mb-1">المبلغ</p>
+                                    <p class="text-lg font-bold text-gray-900 dark:text-white">{{ number_format($invoice->total_amount, 0) }} د.ع</p>
+                                </div>
+                                <div class="bg-white dark:bg-dark-card rounded-xl p-3 border border-gray-200 dark:border-dark-border">
+                                    <p class="text-xs text-gray-500 dark:text-dark-muted mb-1">نوع الدفع</p>
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold 
+                                        {{ $invoice->payment_type === 'cash' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : '' }}
+                                        {{ $invoice->payment_type === 'credit' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : '' }}
+                                        {{ $invoice->payment_type === 'partial' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : '' }}">
+                                        {{ $invoice->payment_type === 'cash' ? 'نقدي' : ($invoice->payment_type === 'credit' ? 'آجل' : 'جزئي') }}
+                                    </span>
+                                </div>
+                                <div class="bg-white dark:bg-dark-card rounded-xl p-3 border border-gray-200 dark:border-dark-border">
+                                    <p class="text-xs text-gray-500 dark:text-dark-muted mb-1">الحالة</p>
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold {{ $invoice->status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' }}">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $invoice->status === 'completed' ? 'bg-green-500' : 'bg-red-500' }}"></span>
+                                        {{ $invoice->status === 'completed' ? 'مكتمل' : 'ملغي' }}
+                                    </span>
+                                </div>
+                                <div class="bg-white dark:bg-dark-card rounded-xl p-3 border border-gray-200 dark:border-dark-border">
+                                    <p class="text-xs text-gray-500 dark:text-dark-muted mb-1">التاريخ</p>
+                                    <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $invoice->created_at->format('Y-m-d') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-2 mr-4">
+                            <a href="{{ route('sales.invoices.show', $invoice) }}" class="px-5 py-2.5 bg-white dark:bg-dark-card border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-sm flex items-center gap-2">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                                التفاصيل
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="text-center py-12">
+                    <div class="w-20 h-20 bg-gray-100 dark:bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="file-text" class="w-10 h-10 text-gray-400 dark:text-gray-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">لا توجد فواتير</h3>
+                    <p class="text-gray-500 dark:text-dark-muted mb-6">لم تقم بإنشاء أي فواتير بعد</p>
+                    <a href="{{ route('sales.invoices.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all">
+                        <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                        إنشاء فاتورة جديدة
+                    </a>
+                </div>
+            @endforelse
+
+            {{-- Pagination --}}
+            @if($invoices->hasPages())
+                <div class="mt-6 pt-6 border-t border-gray-200 dark:border-dark-border">
+                    {{ $invoices->links() }}
                 </div>
             @endif
-
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">رقم الفاتورة</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العميل</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المبلغ</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">نوع الدفع</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse($invoices as $invoice)
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap font-semibold">{{ $invoice->invoice_number }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ $invoice->customer->name }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ number_format($invoice->total_amount, 2) }} د.ع</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($invoice->payment_type === 'cash') نقدي
-                                    @elseif($invoice->payment_type === 'credit') آجل
-                                    @else جزئي
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-xs rounded-full {{ $invoice->status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                        {{ $invoice->status === 'completed' ? 'مكتملة' : 'ملغاة' }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ $invoice->created_at->format('Y-m-d') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <a href="{{ route('sales.invoices.show', $invoice->id) }}" class="text-blue-600 hover:text-blue-900">عرض</a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="px-6 py-4 text-center text-gray-500">لا توجد فواتير</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="mt-4">
-                {{ $invoices->links() }}
-            </div>
         </div>
     </div>
-</x-app-layout>
+</div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        lucide.createIcons();
+    });
+</script>
+@endpush
+@endsection
