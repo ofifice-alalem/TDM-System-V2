@@ -45,6 +45,7 @@ Route::middleware(['web', 'auth', 'role:sales'])->prefix('sales')->name('sales.'
         Route::post('/', [CustomerReturnController::class, 'store'])->name('store');
         Route::get('/invoice/{invoiceId}/items', [CustomerReturnController::class, 'getInvoiceItems'])->name('invoice.items');
         Route::get('/{return}', [CustomerReturnController::class, 'show'])->name('show');
+        Route::get('/{return}/pdf', [CustomerReturnController::class, 'pdf'])->name('pdf');
         Route::delete('/{return}/cancel', [CustomerReturnController::class, 'cancel'])->name('cancel');
     });
 });

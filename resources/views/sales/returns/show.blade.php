@@ -5,7 +5,7 @@
 @section('content')
 
 <div class="min-h-screen py-8">
-    <div class="max-w-4xl mx-auto px-4">
+    <div class="max-w-6xl mx-auto px-4">
         
         {{-- Header --}}
         <div class="animate-fade-in-down mb-8">
@@ -27,7 +27,7 @@
                     </div>
                     <h1 class="text-4xl font-black text-gray-900 dark:text-white">تفاصيل المرتجع</h1>
                 </div>
-                <button onclick="window.print()" class="px-6 py-3 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all flex items-center gap-2">
+                <button onclick="window.location.href='{{ route('sales.returns.pdf', $return) }}'" class="px-6 py-3 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all flex items-center gap-2">
                     <i data-lucide="printer" class="w-5 h-5"></i>
                     طباعة
                 </button>
@@ -83,15 +83,15 @@
                             <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase">معلومات المرتجع</p>
                         </div>
                         <div class="space-y-2">
-                            <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
                                 <span class="text-sm text-gray-600 dark:text-gray-400">التاريخ:</span>
                                 <span class="text-sm font-bold text-gray-900 dark:text-white">{{ $return->created_at->format('Y-m-d H:i') }}</span>
                             </div>
-                            <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
                                 <span class="text-sm text-gray-600 dark:text-gray-400">الفاتورة الأصلية:</span>
                                 <a href="{{ route('sales.invoices.show', $return->invoice) }}" class="text-sm font-bold text-primary-600 dark:text-primary-400 hover:underline">#{{ $return->invoice->invoice_number }}</a>
                             </div>
-                            <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
                                 <span class="text-sm text-gray-600 dark:text-gray-400">الموظف:</span>
                                 <span class="text-sm font-bold text-gray-900 dark:text-white">{{ $return->salesUser->full_name ?? 'غير متوفر' }}</span>
                             </div>
@@ -126,6 +126,10 @@
                                     <td class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white">{{ number_format($item->total_price, 0) }} دينار</td>
                                 </tr>
                                 @endforeach
+                                <tr class="bg-orange-50 dark:bg-orange-500/10 border-t-2 border-orange-200 dark:border-orange-500/30">
+                                    <td colspan="3" class="px-4 py-4 text-right font-black text-gray-900 dark:text-white">الإجمالي:</td>
+                                    <td class="px-4 py-4 text-center font-black text-orange-600 dark:text-orange-400 text-lg">{{ number_format($return->total_amount, 0) }} دينار</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>

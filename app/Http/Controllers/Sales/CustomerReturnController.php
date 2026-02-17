@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Shared\Sales\CustomerReturnController as SharedCustomerReturnController;
 use App\Models\CustomerReturn;
 use App\Models\CustomerInvoice;
 use App\Services\Sales\CustomerReturnService;
@@ -10,7 +11,10 @@ use Illuminate\Http\Request;
 
 class CustomerReturnController extends Controller
 {
-    public function __construct(private CustomerReturnService $returnService)
+    public function __construct(
+        private CustomerReturnService $returnService,
+        private SharedCustomerReturnController $pdfController
+    )
     {
     }
 
@@ -90,5 +94,10 @@ class CustomerReturnController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    public function pdf(CustomerReturn $return)
+    {
+        return $this->pdfController->generateReturnPdf($return);
     }
 }
