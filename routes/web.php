@@ -17,6 +17,7 @@ Route::get('/dashboard', function () {
         3 => redirect()->route('marketer.stock.index'),
         2 => redirect()->route('warehouse.dashboard'),
         1 => redirect()->route('admin.main-stock.index'),
+        4 => redirect()->route('sales.customers.index'),
         default => abort(403, 'دور غير معروف'),
     };
 })->middleware('auth')->name('dashboard');
@@ -63,3 +64,4 @@ require __DIR__.'/auth.php';
 require __DIR__.'/marketer.php';
 require __DIR__.'/warehouse.php';
 require __DIR__.'/admin.php';
+require __DIR__.'/sales.php';

@@ -59,4 +59,9 @@ class User extends Authenticatable
     {
         return $this->role_id === 1;
     }
+
+    public function isSales(): bool
+    {
+        return $this->role_id === 4;
+    }
 }
