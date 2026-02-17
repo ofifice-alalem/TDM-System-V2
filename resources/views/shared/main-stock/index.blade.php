@@ -70,6 +70,7 @@
                             <th class="px-6 py-4 text-right text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">المنتج</th>
                             <th class="px-6 py-4 text-right text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">الباركود</th>
                             <th class="px-6 py-4 text-right text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">السعر</th>
+                            <th class="px-6 py-4 text-right text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">سعر الزوار</th>
                             <th class="px-6 py-4 text-center text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">الكمية المتوفرة</th>
                             <th class="px-6 py-4 text-center text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">آخر تحديث</th>
                             @if(request()->routeIs('admin.*'))
@@ -99,6 +100,9 @@
                             <td class="px-6 py-4">
                                 <span class="text-sm font-bold text-gray-900 dark:text-white">{{ number_format($product->current_price, 2) }} دينار</span>
                             </td>
+                            <td class="px-6 py-4">
+                                <span class="text-sm font-bold text-primary-600 dark:text-primary-400">{{ $product->customer_price ? number_format($product->customer_price, 2) . ' دينار' : '-' }}</span>
+                            </td>
                             <td class="px-6 py-4 text-center">
                                 @php
                                     $quantity = $product->stock_quantity ?? 0;
@@ -124,7 +128,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="{{ request()->routeIs('admin.*') ? '6' : '5' }}" class="px-6 py-12 text-center">
+                            <td colspan="{{ request()->routeIs('admin.*') ? '7' : '6' }}" class="px-6 py-12 text-center">
                                 <div class="w-20 h-20 bg-gray-100 dark:bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
                                     <i data-lucide="inbox" class="w-10 h-10 text-gray-400 dark:text-gray-600"></i>
                                 </div>

@@ -229,6 +229,44 @@
                 </a>
             @endif
 
+            @if(request()->routeIs('sales.*'))
+                {{-- Section Title --}}
+                <div class="px-5 text-[0.65rem] font-black text-gray-300 dark:text-gray-600 uppercase tracking-widest mb-1">المبيعات المباشرة</div>
+                
+                {{-- Sales Links --}}
+                <a href="{{ route('sales.customers.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('sales.customers.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="users" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('sales.customers.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>العملاء</span>
+                    @if(request()->routeIs('sales.customers.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
+
+                <a href="{{ route('sales.invoices.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('sales.invoices.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="file-text" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('sales.invoices.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>الفواتير</span>
+                    @if(request()->routeIs('sales.invoices.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
+
+                <a href="{{ route('sales.payments.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('sales.payments.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="banknote" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('sales.payments.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>المدفوعات</span>
+                    @if(request()->routeIs('sales.payments.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
+
+                <a href="{{ route('sales.returns.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('sales.returns.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="undo-2" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('sales.returns.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>المرتجعات</span>
+                    @if(request()->routeIs('sales.returns.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
+            @endif
+
             {{-- Divider --}}
             <div class="pt-6 pb-2 px-5">
                 <div class="h-px bg-gradient-to-r from-transparent via-gray-100 to-transparent"></div>

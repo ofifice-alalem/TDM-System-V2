@@ -64,6 +64,16 @@
                         @enderror
                     </div>
 
+                    {{-- Customer Price --}}
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">سعر الزوار (دينار)</label>
+                        <input type="number" step="0.01" name="customer_price" value="{{ old('customer_price', $product->customer_price) }}" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">سعر البيع للعملاء المباشرين (اختياري)</p>
+                        @error('customer_price')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     {{-- Active Status --}}
                     <div class="flex items-center gap-3">
                         <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', $product->is_active) ? 'checked' : '' }} class="w-5 h-5 text-primary-600 bg-gray-50 dark:bg-dark-bg border-gray-300 dark:border-dark-border rounded focus:ring-2 focus:ring-primary-500">

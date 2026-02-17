@@ -20,6 +20,7 @@ class CheckRole
             'marketer' => 3,
             'warehouse' => 2,
             'admin' => 1,
+            'sales' => 4,
             default => null,
         };
 

@@ -20,6 +20,7 @@ class AdminProductController extends Controller
             'barcode' => 'nullable|string|max:255|unique:products,barcode,' . $product->id,
             'description' => 'nullable|string',
             'current_price' => 'required|numeric|min:0',
+            'customer_price' => 'nullable|numeric|min:0',
             'is_active' => 'boolean',
         ]);
 
