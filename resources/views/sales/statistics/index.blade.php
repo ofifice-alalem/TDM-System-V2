@@ -40,8 +40,8 @@
                         <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">الحالة</label>
                         <select name="status" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                             <option value="">الكل</option>
-                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>معلق</option>
-                            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>موثق</option>
+                            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مكتمل</option>
+                            <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغي</option>
                         </select>
                     </div>
 
@@ -80,7 +80,15 @@
             <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg overflow-hidden">
                 <div class="p-6 border-b border-gray-200 dark:border-dark-border">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-xl font-black text-gray-900 dark:text-white">النتائج</h2>
+                        <div>
+                            <h2 class="text-xl font-black text-gray-900 dark:text-white">النتائج</h2>
+                            @if(!request('status'))
+                            <div class="flex items-center gap-2 mt-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-500/30 rounded-lg">
+                                <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i>
+                                <p class="text-xs font-bold text-blue-700 dark:text-blue-400">يتم احتساب العمليات المكتملة فقط</p>
+                            </div>
+                            @endif
+                        </div>
                         <div class="text-left">
                             <p class="text-xs text-gray-500 dark:text-gray-400">الإجمالي</p>
                             <p class="text-2xl font-black text-primary-600 dark:text-primary-400">{{ number_format($results['total'], 2) }} دينار</p>
@@ -110,14 +118,11 @@
                         <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
                             @forelse($results['data'] as $item)
                                 @php
-                                    if ($results['operation'] == 'payments') {
-                                        $statusConfig = ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'مكتمل'];
-                                    } else {
-                                        $statusConfig = [
-                                            'pending' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-700 dark:text-amber-400', 'label' => 'معلق'],
-                                            'completed' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'موثق'],
-                                        ][$item->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => $item->status];
-                                    }
+                                    $statusConfig = match($item->status) {
+                                        'completed' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'مكتمل'],
+                                        'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'ملغي'],
+                                        default => ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => $item->status]
+                                    };
                                 @endphp
                                 <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
                                     <td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">

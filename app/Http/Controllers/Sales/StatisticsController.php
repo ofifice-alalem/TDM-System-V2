@@ -43,7 +43,7 @@ class StatisticsController extends Controller
 
         if (!$query) return null;
 
-        if ($request->filled('status') && $request->operation != 'payments') {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
@@ -54,18 +54,19 @@ class StatisticsController extends Controller
         
         $total = match($request->operation) {
             'invoices' => CustomerInvoice::where('customer_id', $request->customer_id)
+                ->where('status', $request->filled('status') ? $request->status : 'completed')
                 ->whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date)
-                ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
                 ->sum('total_amount'),
             'payments' => CustomerPayment::where('customer_id', $request->customer_id)
+                ->where('status', $request->filled('status') ? $request->status : 'completed')
                 ->whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date)
                 ->sum('amount'),
             'returns' => CustomerReturn::where('customer_id', $request->customer_id)
+                ->where('status', $request->filled('status') ? $request->status : 'completed')
                 ->whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date)
-                ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
                 ->sum('total_amount'),
             default => 0
         };
@@ -93,8 +94,8 @@ class StatisticsController extends Controller
         };
         
         $statusName = match($request->status) {
-            'pending' => 'معلق',
-            'completed' => 'موثق',
+            'completed' => 'مكتمل',
+            'cancelled' => 'ملغي',
             default => 'الكل'
         };
         
@@ -107,8 +108,13 @@ class StatisticsController extends Controller
             ['من تاريخ', $request->from_date],
             ['إلى تاريخ', $request->to_date],
             ['الحالة', $statusName],
-            ['الإجمالي', number_format($results['total'], 2) . ' دينار'],
         ];
+        
+        if (!$request->filled('status')) {
+            $infoData[] = ['ملاحظة', 'يتم احتساب العمليات المكتملة فقط'];
+        }
+        
+        $infoData[] = ['الإجمالي', number_format($results['total'], 2) . ' دينار'];
         
         foreach ($infoData as $info) {
             $sheet->setCellValue('A' . $row, $info[0]);
@@ -150,18 +156,27 @@ class StatisticsController extends Controller
             };
             
             if ($results['operation'] == 'payments') {
-                $status = 'مكتمل';
-                $statusColor = '66BB6A';
-            } else {
                 $status = match($item->status) {
-                    'pending' => 'معلق',
-                    'completed' => 'موثق',
+                    'completed' => 'مكتمل',
+                    'cancelled' => 'ملغي',
                     default => $item->status
                 };
                 
                 $statusColor = match($item->status) {
-                    'pending' => 'FFA726',
                     'completed' => '66BB6A',
+                    'cancelled' => 'EF5350',
+                    default => 'FFFFFF'
+                };
+            } else {
+                $status = match($item->status) {
+                    'completed' => 'مكتمل',
+                    'cancelled' => 'ملغي',
+                    default => $item->status
+                };
+                
+                $statusColor = match($item->status) {
+                    'completed' => '66BB6A',
+                    'cancelled' => 'EF5350',
                     default => 'FFFFFF'
                 };
             }
