@@ -37,6 +37,29 @@ class CustomerPaymentService
         });
     }
 
+    public function cancelPayment(CustomerPayment $payment, $cancelNotes = null)
+    {
+        return DB::transaction(function () use ($payment, $cancelNotes) {
+            if ($payment->status === 'cancelled') {
+                throw new \Exception('هذه الدفعة ملغاة بالفعل');
+            }
+
+            $payment->update([
+                'status' => 'cancelled',
+                'notes' => $cancelNotes ? ($payment->notes ? $payment->notes . '\n\n[إلغاء]: ' . $cancelNotes : '[إلغاء]: ' . $cancelNotes) : $payment->notes
+            ]);
+
+            CustomerDebtLedger::create([
+                'customer_id' => $payment->customer_id,
+                'entry_type' => 'payment',
+                'payment_id' => $payment->id,
+                'amount' => $payment->amount,
+            ]);
+
+            return $payment;
+        });
+    }
+
     private function generatePaymentNumber()
     {
         return 'CP-' . date('Ymd') . '-' . str_pad(CustomerPayment::count() + 1, 5, '0', STR_PAD_LEFT);

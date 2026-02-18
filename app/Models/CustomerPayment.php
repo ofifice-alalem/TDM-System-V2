@@ -12,6 +12,7 @@ class CustomerPayment extends Model
         'sales_user_id',
         'amount',
         'payment_method',
+        'status',
         'notes',
     ];
 

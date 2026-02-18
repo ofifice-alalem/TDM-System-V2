@@ -55,7 +55,7 @@
                                 </div>
                             </div>
                             
-                            <div class="grid grid-cols-3 gap-4 mt-4">
+                            <div class="grid grid-cols-4 gap-4 mt-4">
                                 <div class="bg-white dark:bg-dark-card rounded-xl p-3 border border-gray-200 dark:border-dark-border">
                                     <p class="text-xs text-gray-500 dark:text-dark-muted mb-1">المبلغ</p>
                                     <p class="text-lg font-bold text-green-600">{{ number_format($payment->amount, 0) }} دينار</p>
@@ -69,6 +69,20 @@
                                 <div class="bg-white dark:bg-dark-card rounded-xl p-3 border border-gray-200 dark:border-dark-border">
                                     <p class="text-xs text-gray-500 dark:text-dark-muted mb-1">التاريخ</p>
                                     <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $payment->created_at->format('Y-m-d') }}</p>
+                                </div>
+                                <div class="bg-white dark:bg-dark-card rounded-xl p-3 border border-gray-200 dark:border-dark-border">
+                                    <p class="text-xs text-gray-500 dark:text-dark-muted mb-1">الحالة</p>
+                                    @if($payment->status === 'completed')
+                                    <span class="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                                        <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                                        مكتمل
+                                    </span>
+                                    @else
+                                    <span class="inline-flex items-center gap-1 text-xs font-bold text-red-700 dark:text-red-400">
+                                        <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                                        ملغي
+                                    </span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -113,6 +127,7 @@
                         <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">العميل</th>
                         <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">المبلغ</th>
                         <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">طريقة الدفع</th>
+                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">الحالة</th>
                         <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">التاريخ</th>
                         <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">الإجراءات</th>
                     </tr>
@@ -132,6 +147,19 @@
                         <td class="px-6 py-4 text-center font-bold text-green-600">{{ number_format($payment->amount, 0) }} دينار</td>
                         <td class="px-6 py-4 text-center text-gray-900 dark:text-white font-bold">
                             {{ $payment->payment_method === 'cash' ? 'نقدي' : ($payment->payment_method === 'transfer' ? 'تحويل' : 'شيك') }}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            @if($payment->status === 'completed')
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-bold border border-emerald-200 dark:border-emerald-500/30">
+                                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                                مكتمل
+                            </span>
+                            @else
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 rounded-lg text-xs font-bold border border-red-200 dark:border-red-500/30">
+                                <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                                ملغي
+                            </span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 text-center text-gray-600 dark:text-gray-400">{{ $payment->created_at->format('Y-m-d') }}</td>
                         <td class="px-6 py-4">

@@ -70,9 +70,9 @@ class CustomerReturnService
         });
     }
 
-    public function cancelReturn($returnId, $salesUserId)
+    public function cancelReturn($returnId, $salesUserId, $cancelNotes = null)
     {
-        return DB::transaction(function () use ($returnId, $salesUserId) {
+        return DB::transaction(function () use ($returnId, $salesUserId, $cancelNotes) {
             $return = CustomerReturn::where('id', $returnId)
                 ->where('sales_user_id', $salesUserId)
                 ->where('status', 'completed')
@@ -91,7 +91,10 @@ class CustomerReturnService
                 'amount' => $return->total_amount,
             ]);
 
-            $return->update(['status' => 'cancelled']);
+            $return->update([
+                'status' => 'cancelled',
+                'notes' => $cancelNotes ? ($return->notes ? $return->notes . '\n\n[إلغاء]: ' . $cancelNotes : '[إلغاء]: ' . $cancelNotes) : $return->notes
+            ]);
             return $return;
         });
     }

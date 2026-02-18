@@ -33,22 +33,35 @@
         <div class="bg-white dark:bg-dark-card rounded-3xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border overflow-hidden animate-slide-up">
             
             {{-- Header Section --}}
-            <div class="bg-gradient-to-r from-green-500 to-emerald-600 p-8 text-white">
+            <div class="bg-white dark:bg-dark-card p-8 border-b border-gray-200 dark:border-dark-border">
                 <div class="flex items-center justify-between">
-                    <div>
-                        <div class="flex items-center gap-3 mb-2">
-                            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                                <i data-lucide="banknote" class="w-7 h-7"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm opacity-90">إيصال قبض</p>
-                                <h2 class="text-2xl font-black">#{{ $payment->payment_number }}</h2>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-green-100 dark:bg-green-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="banknote" class="w-7 h-7 text-green-600 dark:text-green-400"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">إيصال قبض</p>
+                                    <h2 class="text-2xl font-black text-gray-900 dark:text-white">#{{ $payment->payment_number }}</h2>
+                                </div>
+                                @if($payment->status === 'completed')
+                                <span class="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-bold border border-emerald-200 dark:border-emerald-500/30 flex items-center gap-1.5">
+                                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                                    مكتمل
+                                </span>
+                                @else
+                                <span class="px-3 py-1.5 bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 rounded-lg text-xs font-bold border border-red-200 dark:border-red-500/30 flex items-center gap-1.5">
+                                    <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                                    ملغي
+                                </span>
+                                @endif
                             </div>
                         </div>
                     </div>
                     <div class="text-left">
-                        <p class="text-sm opacity-90 mb-1">المبلغ المدفوع</p>
-                        <p class="text-3xl font-black">{{ number_format($payment->amount, 0) }} دينار</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">المبلغ المدفوع</p>
+                        <p class="text-3xl font-black text-gray-900 dark:text-white">{{ number_format($payment->amount, 0) }} دينار</p>
                     </div>
                 </div>
             </div>
@@ -104,6 +117,35 @@
                     </div>
                     <p class="text-sm text-amber-800 dark:text-amber-200">{{ $payment->notes }}</p>
                 </div>
+                @endif
+
+                @if($payment->status === 'completed')
+                    <div class="bg-red-50 dark:bg-red-500/10 rounded-2xl p-5 border border-red-200 dark:border-red-500/30 mt-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600 dark:text-red-400"></i>
+                                <div>
+                                    <h3 class="text-sm font-bold text-red-900 dark:text-red-300">إلغاء الدفعة</h3>
+                                    <p class="text-xs text-red-700 dark:text-red-400 mt-0.5">سيتم إرجاع المبلغ إلى دين العميل</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="document.getElementById('cancelForm').classList.toggle('hidden')" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-red-500/30">
+                                <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                إلغاء الدفعة
+                            </button>
+                        </div>
+                        <form id="cancelForm" action="{{ route('sales.payments.cancel', $payment) }}" method="POST" class="hidden">
+                            @csrf
+                            @method('DELETE')
+                            <div class="space-y-3">
+                                <textarea name="cancel_notes" rows="3" class="w-full px-4 py-3 bg-white dark:bg-dark-bg border border-red-300 dark:border-red-500/30 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="سبب الإلغاء (اختياري)"></textarea>
+                                <button type="submit" class="w-full px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                    تأكيد الإلغاء
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 @endif
             </div>
 

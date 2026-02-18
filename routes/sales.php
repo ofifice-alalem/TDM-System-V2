@@ -40,6 +40,7 @@ Route::middleware(['web', 'auth', 'role:sales'])->prefix('sales')->name('sales.'
         Route::get('/customer/{customerId}/debt', [CustomerPaymentController::class, 'getCustomerDebt'])->name('customer.debt');
         Route::get('/{payment}', [CustomerPaymentController::class, 'show'])->name('show');
         Route::get('/{payment}/pdf', [CustomerPaymentController::class, 'pdf'])->name('pdf');
+        Route::delete('/{payment}/cancel', [CustomerPaymentController::class, 'cancel'])->name('cancel');
     });
 
     // Returns

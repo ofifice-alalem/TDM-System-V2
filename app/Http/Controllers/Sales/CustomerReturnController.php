@@ -148,10 +148,10 @@ class CustomerReturnController extends Controller
         ]);
     }
 
-    public function cancel(CustomerReturn $return)
+    public function cancel(CustomerReturn $return, Request $request)
     {
         try {
-            $this->returnService->cancelReturn($return->id, auth()->id());
+            $this->returnService->cancelReturn($return->id, auth()->id(), $request->cancel_notes);
             return redirect()->route('sales.returns.show', $return->id)
                 ->with('success', 'تم إلغاء المرتجع بنجاح');
         } catch (\Exception $e) {

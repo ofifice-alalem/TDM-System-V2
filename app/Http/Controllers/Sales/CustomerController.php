@@ -71,23 +71,35 @@ class CustomerController extends Controller
         $customer->load(['invoices' => function($q) {
             $q->latest()->take(10);
         }, 'debtLedger' => function($q) {
-            $q->with('invoice')->latest()->take(20);
+            $q->with(['invoice', 'payment', 'return'])->latest()->take(20);
         }, 'returns']);
 
         // Mark cancellation entries
         $invoiceIds = $customer->debtLedger->where('entry_type', 'sale')->pluck('invoice_id');
         $duplicateInvoiceIds = $invoiceIds->duplicates()->values();
         
+        $paymentIds = $customer->debtLedger->where('entry_type', 'payment')->pluck('payment_id');
+        $duplicatePaymentIds = $paymentIds->duplicates()->values();
+        
+        $returnIds = $customer->debtLedger->where('entry_type', 'return')->pluck('return_id');
+        $duplicateReturnIds = $returnIds->duplicates()->values();
+        
         foreach ($customer->debtLedger as $entry) {
             if ($entry->entry_type === 'sale' && $duplicateInvoiceIds->contains($entry->invoice_id)) {
                 $entry->is_cancellation = $entry->amount < 0;
             }
+            if ($entry->entry_type === 'payment' && $duplicatePaymentIds->contains($entry->payment_id)) {
+                $entry->is_cancellation = $entry->amount > 0;
+            }
+            if ($entry->entry_type === 'return' && $duplicateReturnIds->contains($entry->return_id)) {
+                $entry->is_cancellation = $entry->amount > 0;
+            }
         }
 
         $totalDebt = $customer->debtLedger()->sum('amount');
-        $totalInvoices = $customer->invoices()->sum('total_amount');
-        $totalPayments = $customer->payments()->sum('amount');
-        $totalReturns = $customer->returns()->sum('total_amount');
+        $totalInvoices = $customer->invoices()->where('status', 'completed')->sum('total_amount');
+        $totalPayments = $customer->payments()->where('status', 'completed')->sum('amount');
+        $totalReturns = $customer->returns()->where('status', 'completed')->sum('total_amount');
 
         return view('sales.customers.show', compact('customer', 'totalDebt', 'totalInvoices', 'totalPayments', 'totalReturns'));
     }

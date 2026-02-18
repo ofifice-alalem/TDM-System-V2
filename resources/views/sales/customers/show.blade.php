@@ -72,9 +72,17 @@
                                                             فاتورة مبيعات
                                                         @endif
                                                     @elseif($entry->entry_type === 'payment')
-                                                        إيصال قبض
+                                                        @if(isset($entry->is_cancellation) && $entry->is_cancellation)
+                                                            إلغاء إيصال قبض
+                                                        @else
+                                                            إيصال قبض
+                                                        @endif
                                                     @else
-                                                        مرتجعات
+                                                        @if(isset($entry->is_cancellation) && $entry->is_cancellation)
+                                                            إلغاء مرتجعات
+                                                        @else
+                                                            مرتجعات
+                                                        @endif
                                                     @endif
                                                 </h3>
                                             </div>

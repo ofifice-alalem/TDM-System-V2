@@ -78,4 +78,15 @@ class CustomerPaymentController extends Controller
     {
         return $this->pdfController->generatePaymentPdf($payment);
     }
+
+    public function cancel(CustomerPayment $payment, Request $request)
+    {
+        try {
+            $this->paymentService->cancelPayment($payment, $request->cancel_notes);
+            return redirect()->route('sales.payments.show', $payment->id)
+                ->with('success', 'تم إلغاء الدفعة بنجاح');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
 }
