@@ -71,8 +71,18 @@ class CustomerController extends Controller
         $customer->load(['invoices' => function($q) {
             $q->latest()->take(10);
         }, 'debtLedger' => function($q) {
-            $q->latest()->take(20);
+            $q->with('invoice')->latest()->take(20);
         }, 'returns']);
+
+        // Mark cancellation entries
+        $invoiceIds = $customer->debtLedger->where('entry_type', 'sale')->pluck('invoice_id');
+        $duplicateInvoiceIds = $invoiceIds->duplicates()->values();
+        
+        foreach ($customer->debtLedger as $entry) {
+            if ($entry->entry_type === 'sale' && $duplicateInvoiceIds->contains($entry->invoice_id)) {
+                $entry->is_cancellation = $entry->amount < 0;
+            }
+        }
 
         $totalDebt = $customer->debtLedger()->sum('amount');
         $totalInvoices = $customer->invoices()->sum('total_amount');

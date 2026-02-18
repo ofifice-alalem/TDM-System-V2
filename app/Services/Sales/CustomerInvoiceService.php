@@ -95,6 +95,11 @@ class CustomerInvoiceService
                 ->where('status', 'completed')
                 ->firstOrFail();
 
+            // Check if invoice has returns
+            if ($invoice->returns()->where('status', '!=', 'cancelled')->exists()) {
+                throw new \Exception('لا يمكن إلغاء الفاتورة لأنها تحتوي على مرتجعات');
+            }
+
             foreach ($invoice->items as $item) {
                 DB::table('main_stock')
                     ->where('product_id', $item->product_id)

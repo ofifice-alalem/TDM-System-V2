@@ -38,22 +38,35 @@
         <div class="bg-white dark:bg-dark-card rounded-3xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border overflow-hidden animate-slide-up">
             
             {{-- Header Section --}}
-            <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-8 text-white">
+            <div class="bg-white dark:bg-dark-card p-8 border-b border-gray-200 dark:border-dark-border">
                 <div class="flex items-center justify-between">
-                    <div>
-                        <div class="flex items-center gap-3 mb-2">
-                            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                                <i data-lucide="file-text" class="w-7 h-7"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm opacity-90">فاتورة</p>
-                                <h2 class="text-2xl font-black">#{{ $invoice->invoice_number }}</h2>
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-primary-100 dark:bg-primary-500/10 rounded-xl flex items-center justify-center">
+                            <i data-lucide="file-text" class="w-7 h-7 text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">فاتورة</p>
+                                    <h2 class="text-2xl font-black text-gray-900 dark:text-white">#{{ $invoice->invoice_number }}</h2>
+                                </div>
+                                @if($invoice->status === 'completed')
+                                <span class="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-bold border border-emerald-200 dark:border-emerald-500/30 flex items-center gap-1.5">
+                                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                                    مكتمل
+                                </span>
+                                @else
+                                <span class="px-3 py-1.5 bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 rounded-lg text-xs font-bold border border-red-200 dark:border-red-500/30 flex items-center gap-1.5">
+                                    <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                                    ملغي
+                                </span>
+                                @endif
                             </div>
                         </div>
                     </div>
                     <div class="text-left">
-                        <p class="text-sm opacity-90 mb-1">إجمالي الفاتورة</p>
-                        <p class="text-3xl font-black">{{ number_format($invoice->total_amount, 0) }} دينار</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">إجمالي الفاتورة</p>
+                        <p class="text-3xl font-black text-gray-900 dark:text-white">{{ number_format($invoice->total_amount, 0) }} دينار</p>
                     </div>
                 </div>
             </div>
@@ -173,6 +186,28 @@
                             <h3 class="text-sm font-bold text-amber-900 dark:text-amber-300">ملاحظات</h3>
                         </div>
                         <p class="text-sm text-amber-800 dark:text-amber-200 bg-white dark:bg-dark-bg rounded-xl p-4">{{ $invoice->notes }}</p>
+                    </div>
+                @endif
+
+                @if($invoice->status === 'completed' && $invoice->returns()->where('status', '!=', 'cancelled')->count() === 0)
+                    <div class="bg-red-50 dark:bg-red-500/10 rounded-2xl p-5 border border-red-200 dark:border-red-500/30 mt-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600 dark:text-red-400"></i>
+                                <div>
+                                    <h3 class="text-sm font-bold text-red-900 dark:text-red-300">إلغاء الفاتورة</h3>
+                                    <p class="text-xs text-red-700 dark:text-red-400 mt-0.5">سيتم إرجاع الكميات للمخزون وإلغاء الدين</p>
+                                </div>
+                            </div>
+                            <form action="{{ route('sales.invoices.cancel', $invoice) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من إلغاء هذه الفاتورة؟')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-red-500/30">
+                                    <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                    إلغاء الفاتورة
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 @endif
 

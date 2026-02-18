@@ -66,7 +66,11 @@
                                             <div class="flex flex-wrap items-center gap-2 mb-2">
                                                 <h3 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">
                                                     @if($entry->entry_type === 'sale')
-                                                        فاتورة مبيعات
+                                                        @if(isset($entry->is_cancellation) && $entry->is_cancellation)
+                                                            إلغاء فاتورة مبيعات
+                                                        @else
+                                                            فاتورة مبيعات
+                                                        @endif
                                                     @elseif($entry->entry_type === 'payment')
                                                         إيصال قبض
                                                     @else
