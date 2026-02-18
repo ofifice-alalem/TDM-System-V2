@@ -37,13 +37,17 @@ class StatisticsController extends Controller
         $query = match($request->operation) {
             'invoices' => CustomerInvoice::with(['customer', 'salesUser', 'returns' => function($q) {
                 $q->where('status', '!=', 'cancelled');
-            }])->where('customer_id', $request->customer_id),
-            'payments' => CustomerPayment::with('customer', 'salesUser')->where('customer_id', $request->customer_id),
-            'returns' => CustomerReturn::with('customer', 'salesUser')->where('customer_id', $request->customer_id),
+            }]),
+            'payments' => CustomerPayment::with('customer', 'salesUser'),
+            'returns' => CustomerReturn::with('customer', 'salesUser'),
             default => null
         };
 
         if (!$query) return null;
+
+        if ($request->customer_id && $request->customer_id !== 'all') {
+            $query->where('customer_id', $request->customer_id);
+        }
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -54,47 +58,43 @@ class StatisticsController extends Controller
 
         $data = $forExport ? $query->latest()->get() : $query->latest()->paginate(50);
         
+        $totalQuery = match($request->operation) {
+            'invoices' => CustomerInvoice::query(),
+            'payments' => CustomerPayment::query(),
+            'returns' => CustomerReturn::query(),
+            default => null
+        };
+        
+        if ($request->customer_id && $request->customer_id !== 'all') {
+            $totalQuery->where('customer_id', $request->customer_id);
+        }
+        
+        $totalQuery->where('status', $request->filled('status') ? $request->status : 'completed')
+            ->whereDate('created_at', '>=', $request->from_date)
+            ->whereDate('created_at', '<=', $request->to_date);
+        
         $total = match($request->operation) {
-            'invoices' => CustomerInvoice::where('customer_id', $request->customer_id)
-                ->where('status', $request->filled('status') ? $request->status : 'completed')
-                ->whereDate('created_at', '>=', $request->from_date)
-                ->whereDate('created_at', '<=', $request->to_date)
-                ->sum('total_amount'),
-            'payments' => CustomerPayment::where('customer_id', $request->customer_id)
-                ->where('status', $request->filled('status') ? $request->status : 'completed')
-                ->whereDate('created_at', '>=', $request->from_date)
-                ->whereDate('created_at', '<=', $request->to_date)
-                ->sum('amount'),
-            'returns' => CustomerReturn::where('customer_id', $request->customer_id)
-                ->where('status', $request->filled('status') ? $request->status : 'completed')
-                ->whereDate('created_at', '>=', $request->from_date)
-                ->whereDate('created_at', '<=', $request->to_date)
-                ->sum('total_amount'),
+            'invoices' => $totalQuery->sum('total_amount'),
+            'payments' => $totalQuery->sum('amount'),
+            'returns' => $totalQuery->sum('total_amount'),
             default => 0
         };
 
         $paymentMethodTotals = null;
         if ($request->operation === 'payments') {
             $status = $request->filled('status') ? $request->status : 'completed';
+            $pmQuery = CustomerPayment::where('status', $status)
+                ->whereDate('created_at', '>=', $request->from_date)
+                ->whereDate('created_at', '<=', $request->to_date);
+            
+            if ($request->customer_id && $request->customer_id !== 'all') {
+                $pmQuery->where('customer_id', $request->customer_id);
+            }
+            
             $paymentMethodTotals = [
-                'cash' => CustomerPayment::where('customer_id', $request->customer_id)
-                    ->where('status', $status)
-                    ->where('payment_method', 'cash')
-                    ->whereDate('created_at', '>=', $request->from_date)
-                    ->whereDate('created_at', '<=', $request->to_date)
-                    ->sum('amount'),
-                'transfer' => CustomerPayment::where('customer_id', $request->customer_id)
-                    ->where('status', $status)
-                    ->where('payment_method', 'transfer')
-                    ->whereDate('created_at', '>=', $request->from_date)
-                    ->whereDate('created_at', '<=', $request->to_date)
-                    ->sum('amount'),
-                'check' => CustomerPayment::where('customer_id', $request->customer_id)
-                    ->where('status', $status)
-                    ->where('payment_method', 'check')
-                    ->whereDate('created_at', '>=', $request->from_date)
-                    ->whereDate('created_at', '<=', $request->to_date)
-                    ->sum('amount'),
+                'cash' => (clone $pmQuery)->where('payment_method', 'cash')->sum('amount'),
+                'transfer' => (clone $pmQuery)->where('payment_method', 'transfer')->sum('amount'),
+                'check' => (clone $pmQuery)->where('payment_method', 'check')->sum('amount'),
             ];
         }
 
@@ -112,7 +112,7 @@ class StatisticsController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setRightToLeft(true);
         
-        $customer = Customer::find($request->customer_id);
+        $customer = $request->customer_id === 'all' ? null : Customer::find($request->customer_id);
         
         $operationName = match($request->operation) {
             'invoices' => 'الفواتير',
@@ -130,13 +130,19 @@ class StatisticsController extends Controller
         $row = 1;
         
         $infoData = [
-            ['اسم العميل', $customer->name ?? ''],
-            ['رقم الهاتف', $customer->phone ?? ''],
+            ['اسم العميل', $customer ? $customer->name : 'الكل'],
+        ];
+        
+        if ($customer) {
+            $infoData[] = ['رقم الهاتف', $customer->phone ?? ''];
+        }
+        
+        $infoData = array_merge($infoData, [
             ['العملية', $operationName],
             ['من تاريخ', $request->from_date],
             ['إلى تاريخ', $request->to_date],
             ['الحالة', $statusName],
-        ];
+        ]);
         
         if (!$request->filled('status')) {
             $infoData[] = ['ملاحظة', 'يتم احتساب العمليات المكتملة فقط'];
@@ -179,14 +185,14 @@ class StatisticsController extends Controller
         $row++;
         
         $headers = $results['operation'] == 'invoices' 
-            ? ['الرقم', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ', 'المرتجعات']
+            ? ['الرقم', 'العميل', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ', 'المرتجعات']
             : ($results['operation'] == 'payments' 
-                ? ['الرقم', 'الموظف', 'التاريخ', 'الحالة', 'طريقة الدفع', 'المبلغ']
-                : ['الرقم', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ']);
+                ? ['الرقم', 'العميل', 'الموظف', 'التاريخ', 'الحالة', 'طريقة الدفع', 'المبلغ']
+                : ['الرقم', 'العميل', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ']);
         
         $sheet->fromArray($headers, null, 'A' . $row);
         
-        $lastCol = $results['operation'] == 'invoices' ? 'F' : ($results['operation'] == 'payments' ? 'F' : 'E');
+        $lastCol = $results['operation'] == 'invoices' ? 'G' : ($results['operation'] == 'payments' ? 'G' : 'F');
         $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
@@ -238,6 +244,7 @@ class StatisticsController extends Controller
             
             $rowData = [
                 $number,
+                $item->customer->name ?? '',
                 $item->salesUser->full_name ?? '',
                 $item->created_at->format('Y-m-d'),
                 $status,
@@ -262,12 +269,12 @@ class StatisticsController extends Controller
             
             $sheet->fromArray($rowData, null, 'A' . $row);
             
-            $lastCol = $results['operation'] == 'invoices' ? 'F' : ($results['operation'] == 'payments' ? 'F' : 'E');
+            $lastCol = $results['operation'] == 'invoices' ? 'G' : ($results['operation'] == 'payments' ? 'G' : 'F');
             $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             ]);
             
-            $sheet->getStyle('D' . $row)->applyFromArray([
+            $sheet->getStyle('E' . $row)->applyFromArray([
                 'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $statusColor]],
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
@@ -314,7 +321,7 @@ class StatisticsController extends Controller
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        $filename = date('y_m_d') . '_' . $customer->name . '_' . $operationName . '.xlsx';
+        $filename = date('y_m_d') . '_' . ($customer ? $customer->name : 'الكل') . '_' . $operationName . '.xlsx';
         
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');

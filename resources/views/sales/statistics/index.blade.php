@@ -18,8 +18,9 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">اسم العميل</label>
-                        <select name="customer_id" required class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <select name="customer_id" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                             <option value="">اختر العميل...</option>
+                            <option value="all" {{ request('customer_id') == 'all' ? 'selected' : '' }}>الكل</option>
                             @foreach($customers as $customer)
                                 <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->name }}</option>
                             @endforeach
@@ -125,6 +126,7 @@
                                         رقم الإرجاع
                                     @endif
                                 </th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">العميل</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">الموظف</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">التاريخ</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">الحالة</th>
@@ -156,6 +158,7 @@
                                             {{ $item->return_number }}
                                         @endif
                                     </td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->customer->name ?? '-' }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->salesUser->full_name ?? '-' }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->created_at->format('Y-m-d') }}</td>
                                     <td class="px-6 py-4">
@@ -192,7 +195,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ $results['operation'] == 'invoices' ? '6' : ($results['operation'] == 'payments' ? '6' : '5') }}" class="px-6 py-12 text-center">
+                                    <td colspan="{{ $results['operation'] == 'invoices' ? '7' : ($results['operation'] == 'payments' ? '7' : '6') }}" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center">
                                             <i data-lucide="inbox" class="w-12 h-12 text-gray-400 dark:text-gray-600 mb-3"></i>
                                             <p class="text-gray-500 dark:text-gray-400">لا توجد نتائج</p>
