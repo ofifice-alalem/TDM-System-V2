@@ -52,6 +52,10 @@ class CustomerPaymentController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('payment_method')) {
+            $query->where('payment_method', $request->payment_method);
+        }
+
         $payments = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         return view('sales.payments.index', compact('payments'));
@@ -59,12 +63,24 @@ class CustomerPaymentController extends Controller
 
     public function create()
     {
+        return view('sales.payments.create');
+    }
+
+    public function searchCustomers(Request $request)
+    {
+        $query = $request->get('query');
+        
         $customers = Customer::where('is_active', true)
             ->whereHas('debtLedger')
-            ->get()
-            ->filter(fn($c) => $c->total_debt > 0);
+            ->where(function($q) use ($query) {
+                $q->where('name', 'like', '%' . $query . '%')
+                  ->orWhere('phone', 'like', '%' . $query . '%');
+            })
+            ->get(['id', 'name', 'phone'])
+            ->filter(fn($c) => $c->total_debt > 0)
+            ->values();
 
-        return view('sales.payments.create', compact('customers'));
+        return response()->json($customers);
     }
 
     public function store(Request $request)

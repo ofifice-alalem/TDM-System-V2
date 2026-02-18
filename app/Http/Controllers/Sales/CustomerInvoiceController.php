@@ -51,6 +51,10 @@ class CustomerInvoiceController extends Controller
             $query->where('total_amount', '<=', $request->amount_to);
         }
 
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
         $invoices = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         return view('sales.invoices.index', compact('invoices'));
@@ -125,10 +129,10 @@ class CustomerInvoiceController extends Controller
         return view('sales.invoices.show', compact('invoice'));
     }
 
-    public function cancel(CustomerInvoice $invoice)
+    public function cancel(CustomerInvoice $invoice, Request $request)
     {
         try {
-            $this->invoiceService->cancelInvoice($invoice->id, auth()->id());
+            $this->invoiceService->cancelInvoice($invoice->id, auth()->id(), $request->cancel_notes);
             return redirect()->route('sales.invoices.show', $invoice->id)
                 ->with('success', 'تم إلغاء الفاتورة بنجاح');
         } catch (\Exception $e) {

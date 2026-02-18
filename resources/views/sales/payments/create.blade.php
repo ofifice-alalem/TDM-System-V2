@@ -28,12 +28,15 @@
                 <div class="space-y-6">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">العميل *</label>
-                        <select name="customer_id" id="customer_id" required onchange="loadCustomerDebt()" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">اختر العميل</option>
-                            @foreach($customers as $customer)
-                                <option value="{{ $customer->id }}">{{ $customer->name }} - {{ $customer->phone }}</option>
-                            @endforeach
-                        </select>
+                        <div class="flex gap-2">
+                            <input type="text" id="customer-search" placeholder="ابحث بالاسم أو رقم الهاتف..." class="flex-1 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <button type="button" onclick="searchCustomers()" class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all flex items-center gap-2">
+                                <i data-lucide="search" class="w-4 h-4"></i>
+                                بحث
+                            </button>
+                        </div>
+                        <input type="hidden" name="customer_id" id="customer_id" required>
+                        <div id="customer-results" class="mt-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-lg max-h-60 overflow-y-auto" style="display: none;"></div>
                         <p id="debt-text" class="text-base font-bold text-red-600 dark:text-red-400 mt-3 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-lg border border-red-200 dark:border-red-800" style="display: none;">
                             <i data-lucide="alert-circle" class="w-4 h-4 inline-block ml-1"></i>
                             إجمالي دين العميل: <span id="debt-amount" class="text-lg"></span>
@@ -86,8 +89,54 @@
 <script>
     let currentDebt = 0;
 
+    const searchInput = document.getElementById('customer-search');
+    const resultsDiv = document.getElementById('customer-results');
+    const customerIdInput = document.getElementById('customer_id');
+
+    async function searchCustomers() {
+        const query = searchInput.value.trim();
+        if (query.length < 1) {
+            resultsDiv.style.display = 'none';
+            return;
+        }
+
+        try {
+            const response = await fetch(`{{ route('sales.payments.search.customers') }}?query=${encodeURIComponent(query)}`);
+            const customers = await response.json();
+
+            if (customers.length > 0) {
+                resultsDiv.innerHTML = customers.map(c => `
+                    <div onclick="selectCustomer(${c.id}, '${c.name}', '${c.phone}')" class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-dark-border last:border-0">
+                        <p class="font-bold text-gray-900 dark:text-white">${c.name}</p>
+                        <p class="text-sm text-gray-500 dark:text-dark-muted">${c.phone}</p>
+                    </div>
+                `).join('');
+                resultsDiv.style.display = 'block';
+            } else {
+                resultsDiv.innerHTML = '<div class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">لا توجد نتائج</div>';
+                resultsDiv.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('خطأ في البحث:', error);
+        }
+    }
+
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchCustomers();
+        }
+    });
+
+    function selectCustomer(id, name, phone) {
+        customerIdInput.value = id;
+        searchInput.value = `${name} - ${phone}`;
+        resultsDiv.style.display = 'none';
+        loadCustomerDebt();
+    }
+
     async function loadCustomerDebt() {
-        const customerId = document.getElementById('customer_id').value;
+        const customerId = customerIdInput.value;
         if (!customerId) {
             document.getElementById('debt-text').style.display = 'none';
             return;

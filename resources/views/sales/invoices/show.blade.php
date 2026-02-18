@@ -191,7 +191,7 @@
 
                 @if($invoice->status === 'completed' && $invoice->returns()->where('status', '!=', 'cancelled')->count() === 0)
                     <div class="bg-red-50 dark:bg-red-500/10 rounded-2xl p-5 border border-red-200 dark:border-red-500/30 mt-6">
-                        <div class="flex items-center justify-between">
+                        <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center gap-3">
                                 <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600 dark:text-red-400"></i>
                                 <div>
@@ -199,15 +199,22 @@
                                     <p class="text-xs text-red-700 dark:text-red-400 mt-0.5">سيتم إرجاع الكميات للمخزون وإلغاء الدين</p>
                                 </div>
                             </div>
-                            <form action="{{ route('sales.invoices.cancel', $invoice) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من إلغاء هذه الفاتورة؟')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-red-500/30">
-                                    <i data-lucide="x-circle" class="w-4 h-4"></i>
-                                    إلغاء الفاتورة
-                                </button>
-                            </form>
+                            <button type="button" onclick="document.getElementById('cancelForm').classList.toggle('hidden')" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-red-500/30">
+                                <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                إلغاء الفاتورة
+                            </button>
                         </div>
+                        <form id="cancelForm" action="{{ route('sales.invoices.cancel', $invoice) }}" method="POST" class="hidden">
+                            @csrf
+                            @method('DELETE')
+                            <div class="space-y-3">
+                                <textarea name="cancel_notes" rows="3" class="w-full px-4 py-3 bg-white dark:bg-dark-bg border border-red-300 dark:border-red-500/30 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="سبب الإلغاء (اختياري)"></textarea>
+                                <button type="submit" onclick="return confirm('هل أنت متأكد من إلغاء هذه الفاتورة؟')" class="w-full px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                    تأكيد الإلغاء
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 @endif
 

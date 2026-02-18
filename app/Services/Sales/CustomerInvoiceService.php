@@ -87,9 +87,9 @@ class CustomerInvoiceService
         });
     }
 
-    public function cancelInvoice($invoiceId, $salesUserId)
+    public function cancelInvoice($invoiceId, $salesUserId, $cancelNotes = null)
     {
-        return DB::transaction(function () use ($invoiceId, $salesUserId) {
+        return DB::transaction(function () use ($invoiceId, $salesUserId, $cancelNotes) {
             $invoice = CustomerInvoice::where('id', $invoiceId)
                 ->where('sales_user_id', $salesUserId)
                 ->where('status', 'completed')
@@ -113,7 +113,15 @@ class CustomerInvoiceService
                 'amount' => -$invoice->total_amount,
             ]);
 
-            $invoice->update(['status' => 'cancelled']);
+            $notes = $invoice->notes;
+            if ($cancelNotes) {
+                $notes = $notes ? $notes . "\n\n[إلغاء]: " . $cancelNotes : "[إلغاء]: " . $cancelNotes;
+            }
+
+            $invoice->update([
+                'status' => 'cancelled',
+                'notes' => $notes
+            ]);
             return $invoice;
         });
     }

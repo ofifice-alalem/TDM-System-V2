@@ -43,7 +43,7 @@
                     <div class="flex items-center gap-3">
                         <i data-lucide="filter" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i>
                         <span class="font-bold text-gray-900 dark:text-white">فلترة متقدمة</span>
-                        @if(request()->hasAny(['invoice_number', 'customer', 'date_from', 'date_to', 'amount_from', 'amount_to']))
+                        @if(request()->hasAny(['invoice_number', 'customer', 'date_from', 'date_to', 'amount_from', 'amount_to', 'status']))
                             <span class="px-2 py-1 bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400 rounded-lg text-xs font-bold">نشط</span>
                         @endif
                     </div>
@@ -75,13 +75,21 @@
                             <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">إلى مبلغ</label>
                             <input type="number" name="amount_to" value="{{ request('amount_to') }}" placeholder="0" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all">
                         </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">الحالة</label>
+                            <select name="status" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all">
+                                <option value="">الكل</option>
+                                <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>مكتمل</option>
+                                <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>ملغي</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="flex gap-2 mt-6">
                         <button type="submit" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-md">
                             <i data-lucide="search" class="w-4 h-4"></i>
                             بحث
                         </button>
-                        @if(request()->hasAny(['invoice_number', 'customer', 'date_from', 'date_to', 'amount_from', 'amount_to']))
+                        @if(request()->hasAny(['invoice_number', 'customer', 'date_from', 'date_to', 'amount_from', 'amount_to', 'status']))
                             <a href="{{ route('sales.invoices.index') }}" class="px-6 py-2.5 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all flex items-center gap-2">
                                 <i data-lucide="x" class="w-4 h-4"></i>
                                 إعادة تعيين
