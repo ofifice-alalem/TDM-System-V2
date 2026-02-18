@@ -79,7 +79,7 @@ class CustomerInvoiceController extends Controller
 
     public function show(CustomerInvoice $invoice)
     {
-        $invoice->load(['items.product', 'customer', 'salesUser']);
+        $invoice->load(['items.product', 'customer', 'salesUser', 'returns']);
         return view('sales.invoices.show', compact('invoice'));
     }
 

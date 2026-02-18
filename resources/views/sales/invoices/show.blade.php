@@ -175,6 +175,24 @@
                         <p class="text-sm text-amber-800 dark:text-amber-200 bg-white dark:bg-dark-bg rounded-xl p-4">{{ $invoice->notes }}</p>
                     </div>
                 @endif
+
+                @if($invoice->returns->count() > 0)
+                    <div class="bg-orange-50 dark:bg-orange-500/10 rounded-2xl p-5 border border-orange-200 dark:border-orange-500/30 mt-6">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i data-lucide="undo-2" class="w-5 h-5 text-orange-600 dark:text-orange-400"></i>
+                            <h3 class="text-sm font-bold text-orange-900 dark:text-orange-300">مرتجعات هذه الفاتورة</h3>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($invoice->returns as $return)
+                                <a href="{{ route('sales.returns.show', $return->id) }}" target="_blank" class="inline-flex items-center gap-2 px-3 py-2 bg-white dark:bg-dark-bg text-orange-600 dark:text-orange-400 rounded-lg text-sm font-bold hover:bg-orange-100 dark:hover:bg-orange-900/20 transition-colors border border-orange-200 dark:border-orange-500/30">
+                                    <i data-lucide="external-link" class="w-4 h-4"></i>
+                                    {{ $return->return_number }}
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">{{ number_format($return->total_amount, 0) }} دينار</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
         </div>

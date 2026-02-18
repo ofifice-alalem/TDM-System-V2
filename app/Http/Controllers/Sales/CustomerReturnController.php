@@ -29,12 +29,36 @@ class CustomerReturnController extends Controller
 
     public function create()
     {
+        return view('sales.returns.create');
+    }
+
+    public function searchInvoices(Request $request)
+    {
+        $query = $request->get('q');
+        
         $invoices = CustomerInvoice::with('customer')
             ->where('status', 'completed')
+            ->where(function($q) use ($query) {
+                $q->where('invoice_number', 'like', '%' . $query . '%')
+                  ->orWhereHas('customer', function($q) use ($query) {
+                      $q->where('name', 'like', '%' . $query . '%');
+                  });
+            })
             ->orderBy('created_at', 'desc')
+            ->limit(20)
             ->get();
 
-        return view('sales.returns.create', compact('invoices'));
+        return response()->json([
+            'invoices' => $invoices->map(function($invoice) {
+                return [
+                    'id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'customer_id' => $invoice->customer_id,
+                    'customer_name' => $invoice->customer->name,
+                    'total_amount' => $invoice->total_amount,
+                ];
+            })
+        ]);
     }
 
     public function store(Request $request)

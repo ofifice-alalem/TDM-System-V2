@@ -21,14 +21,23 @@
             {{-- Invoice Selection --}}
             <div class="mb-6">
                 <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">اختر الفاتورة</label>
-                <select name="invoice_id" id="invoice_id" required class="w-full px-4 py-3 bg-white dark:bg-dark-bg border-2 border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 dark:focus:border-primary-500 focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all">
-                    <option value="">اختر فاتورة...</option>
-                    @foreach($invoices as $invoice)
-                        <option value="{{ $invoice->id }}" data-customer-id="{{ $invoice->customer_id }}" data-customer-name="{{ $invoice->customer->name }}">
-                            #{{ $invoice->invoice_number }} - {{ $invoice->customer->name }} - {{ number_format($invoice->total_amount, 0) }} دينار
-                        </option>
-                    @endforeach
-                </select>
+                <div class="flex gap-2">
+                    <input type="text" 
+                           id="invoice-search" 
+                           placeholder="ابحث برقم الفاتورة أو اسم العميل..." 
+                           class="flex-1 px-4 py-3 bg-white dark:bg-dark-bg border-2 border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 dark:focus:border-primary-500 focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all">
+                    <button type="button" 
+                            id="search-btn" 
+                            class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all flex items-center gap-2">
+                        <i data-lucide="search" class="w-5 h-5"></i>
+                        بحث
+                    </button>
+                </div>
+                <div id="search-results" class="mt-3 hidden">
+                    <select name="invoice_id" id="invoice_id" required class="w-full px-4 py-3 bg-white dark:bg-dark-bg border-2 border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 dark:focus:border-primary-500 focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all">
+                        <option value="">اختر فاتورة...</option>
+                    </select>
+                </div>
                 <input type="hidden" name="customer_id" id="customer_id">
             </div>
 
@@ -68,6 +77,9 @@
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
 
+        const invoiceSearch = document.getElementById('invoice-search');
+        const searchBtn = document.getElementById('search-btn');
+        const searchResults = document.getElementById('search-results');
         const invoiceSelect = document.getElementById('invoice_id');
         const customerIdInput = document.getElementById('customer_id');
         const invoiceItemsDiv = document.getElementById('invoice-items');
@@ -75,6 +87,52 @@
         const totalAmountSpan = document.getElementById('total-amount');
         const submitBtn = document.getElementById('submit-btn');
         let invoiceItems = [];
+
+        searchBtn.addEventListener('click', async function() {
+            const query = invoiceSearch.value.trim();
+            if (!query) {
+                alert('الرجاء إدخال رقم الفاتورة أو اسم العميل');
+                return;
+            }
+
+            // Clear previous data
+            invoiceSelect.innerHTML = '<option value="">اختر فاتورة...</option>';
+            invoiceItemsDiv.classList.add('hidden');
+            itemsContainer.innerHTML = '';
+            customerIdInput.value = '';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(`/sales/returns/search-invoices?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.invoices.length === 0) {
+                    alert('لم يتم العثور على فواتير');
+                    searchResults.classList.add('hidden');
+                    return;
+                }
+                
+                data.invoices.forEach(invoice => {
+                    const option = document.createElement('option');
+                    option.value = invoice.id;
+                    option.dataset.customerId = invoice.customer_id;
+                    option.textContent = `#${invoice.invoice_number} - ${invoice.customer_name} - ${Number(invoice.total_amount).toLocaleString()} دينار`;
+                    invoiceSelect.appendChild(option);
+                });
+                
+                searchResults.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('حدث خطأ في البحث');
+            }
+        });
+
+        invoiceSearch.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchBtn.click();
+            }
+        });
 
         invoiceSelect.addEventListener('change', async function() {
             const invoiceId = this.value;
@@ -114,40 +172,66 @@
             
             invoiceItems.forEach((item, index) => {
                 const itemDiv = document.createElement('div');
-                itemDiv.className = 'bg-gray-50 dark:bg-dark-bg rounded-xl p-4 border border-gray-200 dark:border-dark-border';
+                itemDiv.className = '';
                 itemDiv.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <div class="flex-1">
-                            <p class="font-bold text-gray-900 dark:text-white mb-1">${item.product_name}</p>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
-                                الكمية الأصلية: ${item.quantity} | 
-                                المُرجع سابقاً: ${item.returned_quantity} | 
-                                المتاح للإرجاع: <span class="font-bold text-orange-600">${item.available_quantity}</span> | 
-                                السعر: ${Number(item.unit_price).toLocaleString()} دينار
-                                ${item.previous_returns.length > 0 ? `<br><span class="text-xs">مرتجعات سابقة: ${item.previous_returns.map(r => `<a href="/sales/returns/${r.id}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">${r.number}</a>`).join(', ')}</span>` : ''}
-                            </p>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <input type="checkbox" 
-                                   id="item-check-${index}" 
-                                   class="item-checkbox w-5 h-5 text-primary-600 rounded" 
-                                   data-index="${index}">
-                            <input type="number" 
-                                   id="item-qty-${index}" 
-                                   class="item-quantity w-24 px-3 py-2 border-2 border-gray-200 dark:border-dark-border rounded-lg text-center" 
-                                   min="1" 
-                                   max="${item.available_quantity}" 
-                                   value="1" 
-                                   disabled 
-                                   data-index="${index}" 
-                                   data-price="${item.unit_price}">
-                            <input type="hidden" name="items[${index}][invoice_item_id]" value="${item.id}" disabled id="hidden-${index}">
-                            <input type="hidden" name="items[${index}][quantity]" value="1" disabled id="hidden-qty-${index}">
+                    <div class="bg-gray-50 dark:bg-dark-bg rounded-xl p-4 border border-gray-200 dark:border-dark-border">
+                        <div class="flex items-start justify-between gap-4 mb-3">
+                            <div class="flex-1">
+                                <p class="font-bold text-gray-900 dark:text-white text-lg mb-2">${item.product_name}</p>
+                                <div class="grid grid-cols-2 gap-2 text-sm">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gray-500 dark:text-gray-400">الكمية الأصلية:</span>
+                                        <span class="font-bold text-gray-900 dark:text-white">${item.quantity}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gray-500 dark:text-gray-400">السعر:</span>
+                                        <span class="font-bold text-gray-900 dark:text-white">${Number(item.unit_price).toLocaleString()} دينار</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gray-500 dark:text-gray-400">المُرجع سابقاً:</span>
+                                        <span class="font-bold text-red-600 dark:text-red-400">${item.returned_quantity}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gray-500 dark:text-gray-400">المتاح للإرجاع:</span>
+                                        <span class="font-bold text-orange-600 dark:text-orange-400">${item.available_quantity}</span>
+                                    </div>
+                                </div>
+                                ${item.previous_returns.length > 0 ? `
+                                    <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">مرتجعات سابقة:</p>
+                                        <div class="flex flex-wrap gap-2">
+                                            ${item.previous_returns.map(r => `<a href="/sales/returns/${r.id}" target="_blank" class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                                                <i data-lucide="external-link" class="w-3 h-3"></i>
+                                                ${r.number}
+                                            </a>`).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" 
+                                       id="item-check-${index}" 
+                                       class="item-checkbox w-5 h-5 text-primary-600 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500 dark:focus:ring-primary-600" 
+                                       data-index="${index}">
+                                <input type="number" 
+                                       id="item-qty-${index}" 
+                                       class="item-quantity w-24 px-3 py-2.5 border-2 border-gray-200 dark:border-dark-border rounded-lg text-center font-bold bg-white dark:bg-dark-bg text-gray-900 dark:text-white" 
+                                       min="1" 
+                                       max="${item.available_quantity}" 
+                                       value="1" 
+                                       disabled 
+                                       data-index="${index}" 
+                                       data-price="${item.unit_price}">
+                                <input type="hidden" name="items[${index}][invoice_item_id]" value="${item.id}" disabled id="hidden-${index}">
+                                <input type="hidden" name="items[${index}][quantity]" value="1" disabled id="hidden-qty-${index}">
+                            </div>
                         </div>
                     </div>
                 `;
                 itemsContainer.appendChild(itemDiv);
             });
+
+            lucide.createIcons();
 
             // Add event listeners
             document.querySelectorAll('.item-checkbox').forEach(checkbox => {

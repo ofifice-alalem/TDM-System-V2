@@ -47,6 +47,7 @@ Route::middleware(['web', 'auth', 'role:sales'])->prefix('sales')->name('sales.'
         Route::get('/', [CustomerReturnController::class, 'index'])->name('index');
         Route::get('/create', [CustomerReturnController::class, 'create'])->name('create');
         Route::post('/', [CustomerReturnController::class, 'store'])->name('store');
+        Route::get('/search-invoices', [CustomerReturnController::class, 'searchInvoices'])->name('search.invoices');
         Route::get('/invoice/{invoiceId}/items', [CustomerReturnController::class, 'getInvoiceItems'])->name('invoice.items');
         Route::get('/{return}', [CustomerReturnController::class, 'show'])->name('show');
         Route::get('/{return}/pdf', [CustomerReturnController::class, 'pdf'])->name('pdf');
