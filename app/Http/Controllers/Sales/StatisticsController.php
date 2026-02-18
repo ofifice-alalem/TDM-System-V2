@@ -35,7 +35,9 @@ class StatisticsController extends Controller
     private function getStatistics($request, $forExport = false)
     {
         $query = match($request->operation) {
-            'invoices' => CustomerInvoice::with('customer', 'salesUser')->where('customer_id', $request->customer_id),
+            'invoices' => CustomerInvoice::with(['customer', 'salesUser', 'returns' => function($q) {
+                $q->where('status', '!=', 'cancelled');
+            }])->where('customer_id', $request->customer_id),
             'payments' => CustomerPayment::with('customer', 'salesUser')->where('customer_id', $request->customer_id),
             'returns' => CustomerReturn::with('customer', 'salesUser')->where('customer_id', $request->customer_id),
             default => null
@@ -129,10 +131,14 @@ class StatisticsController extends Controller
         
         $row++;
         
-        $headers = ['الرقم', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ'];
+        $headers = $results['operation'] == 'invoices' 
+            ? ['الرقم', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ', 'المرتجعات']
+            : ['الرقم', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ'];
+        
         $sheet->fromArray($headers, null, 'A' . $row);
         
-        $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+        $lastCol = $results['operation'] == 'invoices' ? 'F' : 'E';
+        $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
@@ -189,9 +195,15 @@ class StatisticsController extends Controller
                 number_format($amount, 2)
             ];
             
+            if ($results['operation'] == 'invoices') {
+                $returns = $item->returns->pluck('return_number')->implode(', ');
+                $rowData[] = $returns ?: '-';
+            }
+            
             $sheet->fromArray($rowData, null, 'A' . $row);
             
-            $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+            $lastCol = $results['operation'] == 'invoices' ? 'F' : 'E';
+            $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             ]);
             
@@ -203,7 +215,7 @@ class StatisticsController extends Controller
             $row++;
         }
         
-        foreach (range('A', 'E') as $col) {
+        foreach (range('A', $results['operation'] == 'invoices' ? 'F' : 'E') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         

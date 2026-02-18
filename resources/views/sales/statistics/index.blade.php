@@ -113,6 +113,9 @@
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">التاريخ</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">الحالة</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المبلغ</th>
+                                @if($results['operation'] == 'invoices')
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المرتجعات</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
@@ -151,10 +154,21 @@
                                         @endif
                                         دينار
                                     </td>
+                                    @if($results['operation'] == 'invoices')
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                        @if($item->returns->count() > 0)
+                                            @foreach($item->returns as $return)
+                                                <span class="inline-block px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded text-xs font-bold mr-1 mb-1">{{ $return->return_number }}</span>
+                                            @endforeach
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    @endif
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-12 text-center">
+                                    <td colspan="{{ $results['operation'] == 'invoices' ? '6' : '5' }}" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center">
                                             <i data-lucide="inbox" class="w-12 h-12 text-gray-400 dark:text-gray-600 mb-3"></i>
                                             <p class="text-gray-500 dark:text-gray-400">لا توجد نتائج</p>
