@@ -54,4 +54,7 @@ Route::middleware(['web', 'auth', 'role:sales'])->prefix('sales')->name('sales.'
         Route::get('/{return}/pdf', [CustomerReturnController::class, 'pdf'])->name('pdf');
         Route::delete('/{return}/cancel', [CustomerReturnController::class, 'cancel'])->name('cancel');
     });
+
+    // Main Stock
+    Route::get('/main-stock', [\App\Http\Controllers\Shared\MainStockController::class, 'index'])->name('main-stock.index');
 });
