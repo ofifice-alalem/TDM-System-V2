@@ -73,10 +73,36 @@ class StatisticsController extends Controller
             default => 0
         };
 
+        $paymentMethodTotals = null;
+        if ($request->operation === 'payments') {
+            $status = $request->filled('status') ? $request->status : 'completed';
+            $paymentMethodTotals = [
+                'cash' => CustomerPayment::where('customer_id', $request->customer_id)
+                    ->where('status', $status)
+                    ->where('payment_method', 'cash')
+                    ->whereDate('created_at', '>=', $request->from_date)
+                    ->whereDate('created_at', '<=', $request->to_date)
+                    ->sum('amount'),
+                'transfer' => CustomerPayment::where('customer_id', $request->customer_id)
+                    ->where('status', $status)
+                    ->where('payment_method', 'transfer')
+                    ->whereDate('created_at', '>=', $request->from_date)
+                    ->whereDate('created_at', '<=', $request->to_date)
+                    ->sum('amount'),
+                'check' => CustomerPayment::where('customer_id', $request->customer_id)
+                    ->where('status', $status)
+                    ->where('payment_method', 'check')
+                    ->whereDate('created_at', '>=', $request->from_date)
+                    ->whereDate('created_at', '<=', $request->to_date)
+                    ->sum('amount'),
+            ];
+        }
+
         return [
             'operation' => $request->operation,
             'data' => $data,
-            'total' => $total
+            'total' => $total,
+            'paymentMethodTotals' => $paymentMethodTotals
         ];
     }
 
@@ -129,15 +155,38 @@ class StatisticsController extends Controller
             $row++;
         }
         
+        if ($results['operation'] == 'payments' && $results['paymentMethodTotals']) {
+            $row++;
+            
+            $paymentMethodData = [
+                ['إجمالي النقدي', number_format($results['paymentMethodTotals']['cash'], 2) . ' دينار'],
+                ['إجمالي التحويل', number_format($results['paymentMethodTotals']['transfer'], 2) . ' دينار'],
+                ['إجمالي الشيك', number_format($results['paymentMethodTotals']['check'], 2) . ' دينار'],
+            ];
+            
+            foreach ($paymentMethodData as $pmData) {
+                $sheet->setCellValue('A' . $row, $pmData[0]);
+                $sheet->setCellValue('B' . $row, $pmData[1]);
+                $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E8F5E9']],
+                    'font' => ['bold' => true, 'size' => 12],
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                ]);
+                $row++;
+            }
+        }
+        
         $row++;
         
         $headers = $results['operation'] == 'invoices' 
             ? ['الرقم', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ', 'المرتجعات']
-            : ['الرقم', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ'];
+            : ($results['operation'] == 'payments' 
+                ? ['الرقم', 'الموظف', 'التاريخ', 'الحالة', 'طريقة الدفع', 'المبلغ']
+                : ['الرقم', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ']);
         
         $sheet->fromArray($headers, null, 'A' . $row);
         
-        $lastCol = $results['operation'] == 'invoices' ? 'F' : 'E';
+        $lastCol = $results['operation'] == 'invoices' ? 'F' : ($results['operation'] == 'payments' ? 'F' : 'E');
         $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
@@ -192,8 +241,19 @@ class StatisticsController extends Controller
                 $item->salesUser->full_name ?? '',
                 $item->created_at->format('Y-m-d'),
                 $status,
-                number_format($amount, 2)
             ];
+            
+            if ($results['operation'] == 'payments') {
+                $paymentMethod = match($item->payment_method) {
+                    'cash' => 'نقدي',
+                    'transfer' => 'تحويل',
+                    'check' => 'شيك',
+                    default => $item->payment_method
+                };
+                $rowData[] = $paymentMethod;
+            }
+            
+            $rowData[] = number_format($amount, 2);
             
             if ($results['operation'] == 'invoices') {
                 $returns = $item->returns->pluck('return_number')->implode(', ');
@@ -202,7 +262,7 @@ class StatisticsController extends Controller
             
             $sheet->fromArray($rowData, null, 'A' . $row);
             
-            $lastCol = $results['operation'] == 'invoices' ? 'F' : 'E';
+            $lastCol = $results['operation'] == 'invoices' ? 'F' : ($results['operation'] == 'payments' ? 'F' : 'E');
             $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             ]);
@@ -213,6 +273,41 @@ class StatisticsController extends Controller
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
             ]);
             $row++;
+        }
+        
+        if ($results['operation'] == 'payments' && $results['paymentMethodTotals']) {
+            $row++;
+            $sheet->setCellValue('A' . $row, 'ملاحظات:');
+            $sheet->getStyle('A' . $row)->applyFromArray([
+                'font' => ['bold' => true, 'size' => 12],
+            ]);
+            $row++;
+            
+            $sheet->setCellValue('A' . $row, 'إجمالي النقدي:');
+            $sheet->setCellValue('B' . $row, number_format($results['paymentMethodTotals']['cash'], 2) . ' دينار');
+            $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E8F5E9']],
+                'font' => ['bold' => true],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
+            $row++;
+            
+            $sheet->setCellValue('A' . $row, 'إجمالي التحويل:');
+            $sheet->setCellValue('B' . $row, number_format($results['paymentMethodTotals']['transfer'], 2) . ' دينار');
+            $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E3F2FD']],
+                'font' => ['bold' => true],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
+            $row++;
+            
+            $sheet->setCellValue('A' . $row, 'إجمالي الشيك:');
+            $sheet->setCellValue('B' . $row, number_format($results['paymentMethodTotals']['check'], 2) . ' دينار');
+            $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF3E0']],
+                'font' => ['bold' => true],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
         }
         
         foreach (range('A', $results['operation'] == 'invoices' ? 'F' : 'E') as $col) {

@@ -94,6 +94,22 @@
                             <p class="text-2xl font-black text-primary-600 dark:text-primary-400">{{ number_format($results['total'], 2) }} دينار</p>
                         </div>
                     </div>
+                    @if($results['operation'] == 'payments' && $results['paymentMethodTotals'])
+                    <div class="mt-4 grid grid-cols-3 gap-3">
+                        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-500/30 rounded-xl p-3">
+                            <p class="text-xs text-green-700 dark:text-green-400 font-bold">إجمالي النقدي</p>
+                            <p class="text-lg font-black text-green-600 dark:text-green-400">{{ number_format($results['paymentMethodTotals']['cash'], 2) }} دينار</p>
+                        </div>
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-500/30 rounded-xl p-3">
+                            <p class="text-xs text-blue-700 dark:text-blue-400 font-bold">إجمالي التحويل</p>
+                            <p class="text-lg font-black text-blue-600 dark:text-blue-400">{{ number_format($results['paymentMethodTotals']['transfer'], 2) }} دينار</p>
+                        </div>
+                        <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-500/30 rounded-xl p-3">
+                            <p class="text-xs text-amber-700 dark:text-amber-400 font-bold">إجمالي الشيك</p>
+                            <p class="text-lg font-black text-amber-600 dark:text-amber-400">{{ number_format($results['paymentMethodTotals']['check'], 2) }} دينار</p>
+                        </div>
+                    </div>
+                    @endif
                 </div>
 
                 <div class="overflow-x-auto">
@@ -112,6 +128,9 @@
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">الموظف</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">التاريخ</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">الحالة</th>
+                                @if($results['operation'] == 'payments')
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">طريقة الدفع</th>
+                                @endif
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المبلغ</th>
                                 @if($results['operation'] == 'invoices')
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المرتجعات</th>
@@ -144,6 +163,11 @@
                                             {{ $statusConfig['label'] }}
                                         </span>
                                     </td>
+                                    @if($results['operation'] == 'payments')
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                        {{ $item->payment_method === 'cash' ? 'نقدي' : ($item->payment_method === 'transfer' ? 'تحويل' : 'شيك') }}
+                                    </td>
+                                    @endif
                                     <td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">
                                         @if($results['operation'] == 'invoices')
                                             {{ number_format($item->total_amount, 2) }}
@@ -168,7 +192,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ $results['operation'] == 'invoices' ? '6' : '5' }}" class="px-6 py-12 text-center">
+                                    <td colspan="{{ $results['operation'] == 'invoices' ? '6' : ($results['operation'] == 'payments' ? '6' : '5') }}" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center">
                                             <i data-lucide="inbox" class="w-12 h-12 text-gray-400 dark:text-gray-600 mb-3"></i>
                                             <p class="text-gray-500 dark:text-gray-400">لا توجد نتائج</p>
