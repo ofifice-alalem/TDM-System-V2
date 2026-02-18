@@ -19,11 +19,39 @@ class CustomerInvoiceController extends Controller
     {
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = CustomerInvoice::with(['customer', 'salesUser'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $query = CustomerInvoice::with(['customer', 'salesUser']);
+
+        // Filter by invoice number
+        if ($request->filled('invoice_number')) {
+            $query->where('invoice_number', 'like', '%' . $request->invoice_number . '%');
+        }
+
+        // Filter by customer
+        if ($request->filled('customer')) {
+            $query->whereHas('customer', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->customer . '%');
+            });
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        // Filter by amount range
+        if ($request->filled('amount_from')) {
+            $query->where('total_amount', '>=', $request->amount_from);
+        }
+        if ($request->filled('amount_to')) {
+            $query->where('total_amount', '<=', $request->amount_to);
+        }
+
+        $invoices = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         return view('sales.invoices.index', compact('invoices'));
     }
