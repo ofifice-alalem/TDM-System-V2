@@ -58,7 +58,6 @@ class CustomerInvoiceController extends Controller
 
     public function create()
     {
-        $customers = Customer::where('is_active', true)->get();
         $products = Product::where('is_active', true)
             ->with('mainStock')
             ->get()
@@ -71,7 +70,22 @@ class CustomerInvoiceController extends Controller
                 ];
             });
 
-        return view('sales.invoices.create', compact('customers', 'products'));
+        return view('sales.invoices.create', compact('products'));
+    }
+
+    public function searchCustomers(Request $request)
+    {
+        $query = $request->get('query');
+        
+        $customers = Customer::where('is_active', true)
+            ->where(function($q) use ($query) {
+                $q->where('name', 'like', '%' . $query . '%')
+                  ->orWhere('phone', 'like', '%' . $query . '%');
+            })
+            ->limit(20)
+            ->get(['id', 'name', 'phone']);
+
+        return response()->json($customers);
     }
 
     public function store(Request $request)

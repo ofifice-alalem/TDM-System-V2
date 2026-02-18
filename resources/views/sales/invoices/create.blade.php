@@ -40,11 +40,15 @@
                         
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">العميل *</label>
-                            <div class="relative">
-                                <input type="text" id="customer-search" placeholder="ابحث بالاسم أو رقم الهاتف..." class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                                <input type="hidden" name="customer_id" id="customer_id" required>
-                                <div id="customer-results" class="absolute z-10 w-full mt-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-lg max-h-60 overflow-y-auto" style="display: none;"></div>
+                            <div class="flex gap-2">
+                                <input type="text" id="customer-search" placeholder="ابحث بالاسم أو رقم الهاتف..." class="flex-1 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                <button type="button" onclick="searchCustomers()" class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all flex items-center gap-2">
+                                    <i data-lucide="search" class="w-4 h-4"></i>
+                                    بحث
+                                </button>
                             </div>
+                            <input type="hidden" name="customer_id" id="customer_id" required>
+                            <div id="customer-results" class="mt-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-lg max-h-60 overflow-y-auto" style="display: none;"></div>
                             <button type="button" onclick="openAddCustomerModal()" class="mt-3 text-sm text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1">
                                 <i data-lucide="plus" class="w-4 h-4"></i>
                                 إضافة عميل جديد
@@ -327,32 +331,42 @@
     });
 
     // Customer search
-    const customers = @json($customers);
     const searchInput = document.getElementById('customer-search');
     const resultsDiv = document.getElementById('customer-results');
     const customerIdInput = document.getElementById('customer_id');
 
-    searchInput.addEventListener('input', function() {
-        const query = this.value.toLowerCase();
+    async function searchCustomers() {
+        const query = searchInput.value.trim();
         if (query.length < 1) {
             resultsDiv.style.display = 'none';
             return;
         }
 
-        const filtered = customers.filter(c => 
-            c.name.toLowerCase().includes(query) || c.phone.includes(query)
-        );
+        try {
+            const response = await fetch(`{{ route('sales.invoices.search.customers') }}?query=${encodeURIComponent(query)}`);
+            const customers = await response.json();
 
-        if (filtered.length > 0) {
-            resultsDiv.innerHTML = filtered.map(c => `
-                <div onclick="selectCustomer(${c.id}, '${c.name}', '${c.phone}')" class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-dark-border last:border-0">
-                    <p class="font-bold text-gray-900 dark:text-white">${c.name}</p>
-                    <p class="text-sm text-gray-500 dark:text-dark-muted">${c.phone}</p>
-                </div>
-            `).join('');
-            resultsDiv.style.display = 'block';
-        } else {
-            resultsDiv.style.display = 'none';
+            if (customers.length > 0) {
+                resultsDiv.innerHTML = customers.map(c => `
+                    <div onclick="selectCustomer(${c.id}, '${c.name}', '${c.phone}')" class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-dark-border last:border-0">
+                        <p class="font-bold text-gray-900 dark:text-white">${c.name}</p>
+                        <p class="text-sm text-gray-500 dark:text-dark-muted">${c.phone}</p>
+                    </div>
+                `).join('');
+                resultsDiv.style.display = 'block';
+            } else {
+                resultsDiv.innerHTML = '<div class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">لا توجد نتائج</div>';
+                resultsDiv.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('خطأ في البحث:', error);
+        }
+    }
+
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchCustomers();
         }
     });
 
@@ -383,18 +397,23 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({ name, phone, address })
             });
 
+            if (!response.ok) {
+                throw new Error('فشل الطلب');
+            }
+
             const data = await response.json();
             if (data.success) {
-                customers.push(data.customer);
                 selectCustomer(data.customer.id, data.customer.name, data.customer.phone);
                 closeAddCustomerModal();
             }
         } catch (error) {
+            console.error(error);
             alert('حدث خطأ أثناء إضافة العميل');
         }
     }

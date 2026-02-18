@@ -59,7 +59,14 @@ class CustomerController extends Controller
         $customer = Customer::create($validated);
 
         if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'customer' => $customer]);
+            return response()->json([
+                'success' => true, 
+                'customer' => [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                    'phone' => $customer->phone
+                ]
+            ]);
         }
 
         return redirect()->route('sales.customers.show', $customer->id)

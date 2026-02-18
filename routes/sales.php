@@ -27,6 +27,7 @@ Route::middleware(['web', 'auth', 'role:sales'])->prefix('sales')->name('sales.'
         Route::get('/', [CustomerInvoiceController::class, 'index'])->name('index');
         Route::get('/create', [CustomerInvoiceController::class, 'create'])->name('create');
         Route::post('/', [CustomerInvoiceController::class, 'store'])->name('store');
+        Route::get('/search-customers', [CustomerInvoiceController::class, 'searchCustomers'])->name('search.customers');
         Route::get('/{invoice}', [CustomerInvoiceController::class, 'show'])->name('show');
         Route::get('/{invoice}/pdf', [CustomerInvoiceController::class, 'pdf'])->name('pdf');
         Route::delete('/{invoice}/cancel', [CustomerInvoiceController::class, 'cancel'])->name('cancel');
