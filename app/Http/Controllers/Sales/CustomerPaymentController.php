@@ -18,11 +18,41 @@ class CustomerPaymentController extends Controller
     {
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $payments = CustomerPayment::with(['customer', 'salesUser'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $query = CustomerPayment::with(['customer', 'salesUser']);
+
+        if ($request->filled('payment_number')) {
+            $query->where('payment_number', 'like', '%' . $request->payment_number . '%');
+        }
+
+        if ($request->filled('customer')) {
+            $query->whereHas('customer', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->customer . '%');
+            });
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        if ($request->filled('amount_from')) {
+            $query->where('amount', '>=', $request->amount_from);
+        }
+
+        if ($request->filled('amount_to')) {
+            $query->where('amount', '<=', $request->amount_to);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $payments = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         return view('sales.payments.index', compact('payments'));
     }

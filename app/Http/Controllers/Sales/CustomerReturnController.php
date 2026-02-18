@@ -18,11 +18,41 @@ class CustomerReturnController extends Controller
     {
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $returns = CustomerReturn::with(['customer', 'invoice', 'salesUser'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $query = CustomerReturn::with(['customer', 'invoice', 'salesUser']);
+
+        if ($request->filled('return_number')) {
+            $query->where('return_number', 'like', '%' . $request->return_number . '%');
+        }
+
+        if ($request->filled('customer')) {
+            $query->whereHas('customer', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->customer . '%');
+            });
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        if ($request->filled('amount_from')) {
+            $query->where('total_amount', '>=', $request->amount_from);
+        }
+
+        if ($request->filled('amount_to')) {
+            $query->where('total_amount', '<=', $request->amount_to);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $returns = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         return view('sales.returns.index', compact('returns'));
     }
