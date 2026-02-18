@@ -94,6 +94,13 @@
                 const data = await response.json();
                 invoiceItems = data.items;
                 
+                if (invoiceItems.length === 0) {
+                    itemsContainer.innerHTML = '<div class="p-6 text-center bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-500/30"><p class="text-amber-700 dark:text-amber-400 font-bold">جميع منتجات هذه الفاتورة تم إرجاعها بالكامل</p></div>';
+                    invoiceItemsDiv.classList.remove('hidden');
+                    submitBtn.disabled = true;
+                    return;
+                }
+                
                 renderItems();
                 invoiceItemsDiv.classList.remove('hidden');
             } catch (error) {
@@ -112,7 +119,13 @@
                     <div class="flex items-center gap-4">
                         <div class="flex-1">
                             <p class="font-bold text-gray-900 dark:text-white mb-1">${item.product_name}</p>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">الكمية المتاحة: ${item.quantity} | السعر: ${Number(item.unit_price).toLocaleString()} دينار</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                الكمية الأصلية: ${item.quantity} | 
+                                المُرجع سابقاً: ${item.returned_quantity} | 
+                                المتاح للإرجاع: <span class="font-bold text-orange-600">${item.available_quantity}</span> | 
+                                السعر: ${Number(item.unit_price).toLocaleString()} دينار
+                                ${item.previous_returns.length > 0 ? `<br><span class="text-xs">مرتجعات سابقة: ${item.previous_returns.map(r => `<a href="/sales/returns/${r.id}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">${r.number}</a>`).join(', ')}</span>` : ''}
+                            </p>
                         </div>
                         <div class="flex items-center gap-3">
                             <input type="checkbox" 
@@ -123,7 +136,7 @@
                                    id="item-qty-${index}" 
                                    class="item-quantity w-24 px-3 py-2 border-2 border-gray-200 dark:border-dark-border rounded-lg text-center" 
                                    min="1" 
-                                   max="${item.quantity}" 
+                                   max="${item.available_quantity}" 
                                    value="1" 
                                    disabled 
                                    data-index="${index}" 

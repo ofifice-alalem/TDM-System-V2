@@ -73,15 +73,54 @@ class CustomerReturnController extends Controller
     public function getInvoiceItems($invoiceId)
     {
         $invoice = CustomerInvoice::with('items.product')->findOrFail($invoiceId);
+        
+        // Get all previous returns for this invoice
+        $previousReturns = CustomerReturn::where('invoice_id', $invoiceId)
+            ->where('status', '!=', 'cancelled')
+            ->with('items')
+            ->get();
+        
+        // Calculate returned quantities per item
+        $returnedQuantities = [];
+        $returnData = [];
+        foreach ($previousReturns as $return) {
+            foreach ($return->items as $returnItem) {
+                $itemId = $returnItem->invoice_item_id;
+                $returnedQuantities[$itemId] = ($returnedQuantities[$itemId] ?? 0) + $returnItem->quantity;
+                if (!isset($returnData[$itemId])) {
+                    $returnData[$itemId] = [];
+                }
+                $exists = false;
+                foreach ($returnData[$itemId] as $existing) {
+                    if ($existing['id'] == $return->id) {
+                        $exists = true;
+                        break;
+                    }
+                }
+                if (!$exists) {
+                    $returnData[$itemId][] = [
+                        'id' => $return->id,
+                        'number' => $return->return_number
+                    ];
+                }
+            }
+        }
+        
         return response()->json([
-            'items' => $invoice->items->map(function($item) {
+            'items' => $invoice->items->map(function($item) use ($returnedQuantities, $returnData) {
+                $returnedQty = $returnedQuantities[$item->id] ?? 0;
+                $availableQty = $item->quantity - $returnedQty;
+                
                 return [
                     'id' => $item->id,
                     'product_name' => $item->product->name,
                     'quantity' => $item->quantity,
+                    'returned_quantity' => $returnedQty,
+                    'available_quantity' => $availableQty,
                     'unit_price' => $item->unit_price,
+                    'previous_returns' => $returnData[$item->id] ?? [],
                 ];
-            })
+            })->filter(fn($item) => $item['available_quantity'] > 0)
         ]);
     }
 
