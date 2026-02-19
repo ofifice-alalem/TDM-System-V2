@@ -66,6 +66,38 @@
                 </div>
             </div>
 
+            @if($payment->status === 'cancelled')
+            <div class="bg-red-50 dark:bg-red-500/10 border-t-4 border-red-500 dark:border-red-600 p-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
+                            <i data-lucide="x-octagon" class="w-7 h-7 text-red-600 dark:text-red-400"></i>
+                        </div>
+                        <h3 class="text-xl font-black text-red-900 dark:text-red-300">تم إلغاء الدفعة</h3>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <div class="flex items-center gap-2 text-red-700 dark:text-red-400">
+                            <i data-lucide="calendar" class="w-5 h-5"></i>
+                            <span class="font-bold">بتاريخ:</span>
+                            <span class="text-base">{{ $payment->updated_at->format('Y-m-d') }}</span>
+                        </div>
+                        <div class="w-px h-6 bg-red-300 dark:bg-red-700"></div>
+                        <div class="flex items-center gap-2 text-red-700 dark:text-red-400">
+                            <i data-lucide="clock" class="w-5 h-5"></i>
+                            <span class="font-bold">الساعة:</span>
+                            <span class="text-base">{{ $payment->updated_at->format('H:i') }}</span>
+                        </div>
+                    </div>
+                </div>
+                @if($payment->cancel_notes)
+                <div class="mt-6 bg-white dark:bg-dark-bg rounded-xl p-4 border border-red-200 dark:border-red-700/30">
+                    <p class="text-xs text-red-600 dark:text-red-400 font-bold mb-2">سبب الإلغاء:</p>
+                    <p class="text-sm text-red-800 dark:text-red-300">{{ $payment->cancel_notes }}</p>
+                </div>
+                @endif
+            </div>
+            @endif
+
             {{-- Details Section --}}
             <div class="p-8">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
