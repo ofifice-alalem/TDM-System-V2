@@ -452,6 +452,48 @@ class StatisticsController extends Controller
         return view('sales.statistics.quick-returns', compact('customers', 'totalReturns', 'totalAmount', 'fromDate', 'toDate'));
     }
 
+    public function quickSummary(Request $request)
+    {
+        $fromDate = $request->input('from_date', now()->startOfMonth()->format('Y-m-d'));
+        $toDate = $request->input('to_date', now()->format('Y-m-d'));
+
+        $customers = Customer::with([
+            'invoices' => function($q) use ($fromDate, $toDate) {
+                $q->where('status', 'completed')
+                  ->whereDate('created_at', '>=', $fromDate)
+                  ->whereDate('created_at', '<=', $toDate);
+            },
+            'payments' => function($q) use ($fromDate, $toDate) {
+                $q->where('status', 'completed')
+                  ->whereDate('created_at', '>=', $fromDate)
+                  ->whereDate('created_at', '<=', $toDate);
+            },
+            'returns' => function($q) use ($fromDate, $toDate) {
+                $q->where('status', 'completed')
+                  ->whereDate('created_at', '>=', $fromDate)
+                  ->whereDate('created_at', '<=', $toDate);
+            }
+        ])
+        ->get()
+        ->map(function($customer) {
+            $customer->total_invoices = $customer->invoices->sum('total_amount');
+            $customer->total_payments = $customer->payments->sum('amount');
+            $customer->total_returns = $customer->returns->sum('total_amount');
+            $customer->total_debt = $customer->total_invoices - $customer->total_payments - $customer->total_returns;
+            return $customer;
+        })
+        ->filter(function($customer) {
+            return $customer->total_invoices > 0 || $customer->total_payments > 0 || $customer->total_returns > 0;
+        })
+        ->sortByDesc('total_debt');
+
+        if ($request->has('export')) {
+            return $this->exportQuickSummary($customers, $fromDate, $toDate);
+        }
+
+        return view('sales.statistics.quick-summary', compact('customers', 'fromDate', 'toDate'));
+    }
+
     private function exportQuickInvoices($customers, $totalInvoices, $totalAmount)
     {
         $spreadsheet = new Spreadsheet();
@@ -694,6 +736,73 @@ class StatisticsController extends Controller
         }
 
         $filename = date('Y_m_d') . '_المرتجعات_المكتملة.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+    private function exportQuickSummary($customers, $fromDate, $toDate)
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setRightToLeft(true);
+
+        $row = 1;
+        $sheet->setCellValue('A' . $row, 'من تاريخ');
+        $sheet->setCellValue('B' . $row, \Carbon\Carbon::parse($fromDate)->format('d/m/Y'));
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF3E0']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row++;
+
+        $sheet->setCellValue('A' . $row, 'إلى تاريخ');
+        $sheet->setCellValue('B' . $row, \Carbon\Carbon::parse($toDate)->format('d/m/Y'));
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF3E0']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row += 2;
+
+        $sheet->fromArray(['العميل', 'إجمالي الفواتير', 'إجمالي المدفوعات', 'إجمالي المرتجعات', 'الدين الحالي'], null, 'A' . $row);
+        $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '9C27B0']],
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row++;
+
+        foreach ($customers as $customer) {
+            $sheet->fromArray([
+                $customer->name,
+                number_format($customer->total_invoices, 2),
+                number_format($customer->total_payments, 2),
+                number_format($customer->total_returns, 2),
+                number_format($customer->total_debt, 2)
+            ], null, 'A' . $row);
+            $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
+            
+            $debtColor = $customer->total_debt > 0 ? 'FFCDD2' : ($customer->total_debt < 0 ? 'C8E6C9' : 'F5F5F5');
+            $sheet->getStyle('E' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $debtColor]],
+                'font' => ['bold' => true],
+            ]);
+            $row++;
+        }
+
+        foreach (range('A', 'E') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $filename = date('Y_m_d') . '_الملخص_المالي.xlsx';
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
         header('Cache-Control: max-age=0');

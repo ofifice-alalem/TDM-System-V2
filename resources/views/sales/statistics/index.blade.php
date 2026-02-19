@@ -26,6 +26,10 @@
                         <i data-lucide="package-x" class="w-4 h-4"></i>
                         المرتجعات
                     </button>
+                    <button onclick="openQuickModal('summary')" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-md">
+                        <i data-lucide="wallet" class="w-4 h-4"></i>
+                        الملخص المالي
+                    </button>
                 </div>
             </div>
         </div>
@@ -289,7 +293,8 @@
         const routes = {
             'invoices': '{{ route('sales.statistics.quick-invoices') }}',
             'payments': '{{ route('sales.statistics.quick-payments') }}',
-            'returns': '{{ route('sales.statistics.quick-returns') }}'
+            'returns': '{{ route('sales.statistics.quick-returns') }}',
+            'summary': '{{ route('sales.statistics.quick-summary') }}'
         };
         
         window.location.href = routes[currentType] + '?from_date=' + fromDate + '&to_date=' + toDate;
