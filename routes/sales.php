@@ -11,6 +11,9 @@ Route::middleware(['web', 'auth', 'role:sales'])->prefix('sales')->name('sales.'
     
     // Statistics
     Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics.index');
+    Route::get('/statistics/quick-invoices', [StatisticsController::class, 'quickInvoices'])->name('statistics.quick-invoices');
+    Route::get('/statistics/quick-payments', [StatisticsController::class, 'quickPayments'])->name('statistics.quick-payments');
+    Route::get('/statistics/quick-returns', [StatisticsController::class, 'quickReturns'])->name('statistics.quick-returns');
     
     // Customers
     Route::prefix('customers')->name('customers.')->group(function () {

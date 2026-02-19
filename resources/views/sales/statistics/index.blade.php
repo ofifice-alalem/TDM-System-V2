@@ -8,8 +8,26 @@
     <div class="max-w-7xl mx-auto px-4">
         
         <div class="mb-8">
-            <h1 class="text-3xl font-black text-gray-900 dark:text-white">الإحصائيات</h1>
-            <p class="text-gray-500 dark:text-dark-muted mt-1">تقارير وإحصائيات العملاء</p>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-black text-gray-900 dark:text-white">الإحصائيات</h1>
+                    <p class="text-gray-500 dark:text-dark-muted mt-1">تقارير وإحصائيات العملاء</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="openQuickModal('invoices')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-md">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        الفواتير
+                    </button>
+                    <button onclick="openQuickModal('payments')" class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-md">
+                        <i data-lucide="banknote" class="w-4 h-4"></i>
+                        المدفوعات
+                    </button>
+                    <button onclick="openQuickModal('returns')" class="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-md">
+                        <i data-lucide="package-x" class="w-4 h-4"></i>
+                        المرتجعات
+                    </button>
+                </div>
+            </div>
         </div>
 
         {{-- Filters --}}
@@ -218,8 +236,71 @@
     </div>
 </div>
 
+{{-- Quick Date Modal --}}
+<div id="quickDateModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-dark-card rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 dark:border-dark-border">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-black text-gray-900 dark:text-white">تحديد الفترة الزمنية</h3>
+            <button onclick="closeQuickModal()" class="w-8 h-8 bg-gray-100 dark:bg-dark-bg rounded-lg flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <i data-lucide="x" class="w-5 h-5 text-gray-600 dark:text-gray-400"></i>
+            </button>
+        </div>
+        <form id="quickDateForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">من تاريخ</label>
+                <input type="date" id="quickFromDate" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all dark:[color-scheme:dark]">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">إلى تاريخ</label>
+                <input type="date" id="quickToDate" required class="w-full px-4 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all dark:[color-scheme:dark]">
+            </div>
+            <button type="submit" class="w-full px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                عرض النتائج
+            </button>
+        </form>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+    let currentType = '';
+    
+    function openQuickModal(type) {
+        currentType = type;
+        const today = new Date().toISOString().split('T')[0];
+        const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+        
+        document.getElementById('quickFromDate').value = firstDay;
+        document.getElementById('quickToDate').value = today;
+        document.getElementById('quickDateModal').classList.remove('hidden');
+        lucide.createIcons();
+    }
+    
+    function closeQuickModal() {
+        document.getElementById('quickDateModal').classList.add('hidden');
+    }
+    
+    document.getElementById('quickDateForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const fromDate = document.getElementById('quickFromDate').value;
+        const toDate = document.getElementById('quickToDate').value;
+        
+        const routes = {
+            'invoices': '{{ route('sales.statistics.quick-invoices') }}',
+            'payments': '{{ route('sales.statistics.quick-payments') }}',
+            'returns': '{{ route('sales.statistics.quick-returns') }}'
+        };
+        
+        window.location.href = routes[currentType] + '?from_date=' + fromDate + '&to_date=' + toDate;
+    });
+    
+    document.getElementById('quickDateModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeQuickModal();
+        }
+    });
+    
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
     });

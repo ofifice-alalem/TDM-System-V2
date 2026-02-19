@@ -331,4 +331,375 @@ class StatisticsController extends Controller
         $writer->save('php://output');
         exit;
     }
+
+    public function quickInvoices(Request $request)
+    {
+        $fromDate = $request->input('from_date', now()->startOfMonth()->format('Y-m-d'));
+        $toDate = $request->input('to_date', now()->format('Y-m-d'));
+
+        $customers = Customer::withCount(['invoices' => function($q) use ($fromDate, $toDate) {
+            $q->where('status', 'completed')
+              ->whereDate('created_at', '>=', $fromDate)
+              ->whereDate('created_at', '<=', $toDate);
+        }])
+        ->withSum(['invoices as invoices_total' => function($q) use ($fromDate, $toDate) {
+            $q->where('status', 'completed')
+              ->whereDate('created_at', '>=', $fromDate)
+              ->whereDate('created_at', '<=', $toDate);
+        }], 'total_amount')
+        ->having('invoices_count', '>', 0)
+        ->orderBy('invoices_total', 'desc')
+        ->get();
+
+        $totalInvoices = CustomerInvoice::where('status', 'completed')
+            ->whereDate('created_at', '>=', $fromDate)
+            ->whereDate('created_at', '<=', $toDate)
+            ->count();
+        $totalAmount = CustomerInvoice::where('status', 'completed')
+            ->whereDate('created_at', '>=', $fromDate)
+            ->whereDate('created_at', '<=', $toDate)
+            ->sum('total_amount');
+
+        if ($request->has('export')) {
+            return $this->exportQuickInvoices($customers, $totalInvoices, $totalAmount);
+        }
+
+        return view('sales.statistics.quick-invoices', compact('customers', 'totalInvoices', 'totalAmount', 'fromDate', 'toDate'));
+    }
+
+    public function quickPayments(Request $request)
+    {
+        $fromDate = $request->input('from_date', now()->startOfMonth()->format('Y-m-d'));
+        $toDate = $request->input('to_date', now()->format('Y-m-d'));
+
+        $customers = Customer::with(['payments' => function($q) use ($fromDate, $toDate) {
+            $q->where('status', 'completed')
+              ->whereDate('created_at', '>=', $fromDate)
+              ->whereDate('created_at', '<=', $toDate);
+        }])
+        ->whereHas('payments', function($q) use ($fromDate, $toDate) {
+            $q->where('status', 'completed')
+              ->whereDate('created_at', '>=', $fromDate)
+              ->whereDate('created_at', '<=', $toDate);
+        })
+        ->get()
+        ->map(function($customer) {
+            $payments = $customer->payments;
+            $customer->cash_total = $payments->where('payment_method', 'cash')->sum('amount');
+            $customer->transfer_total = $payments->where('payment_method', 'transfer')->sum('amount');
+            $customer->check_total = $payments->where('payment_method', 'check')->sum('amount');
+            $customer->total_payments = $payments->sum('amount');
+            return $customer;
+        })
+        ->sortByDesc('total_payments');
+
+        $cashTotal = CustomerPayment::where('status', 'completed')
+            ->where('payment_method', 'cash')
+            ->whereDate('created_at', '>=', $fromDate)
+            ->whereDate('created_at', '<=', $toDate)
+            ->sum('amount');
+        $transferTotal = CustomerPayment::where('status', 'completed')
+            ->where('payment_method', 'transfer')
+            ->whereDate('created_at', '>=', $fromDate)
+            ->whereDate('created_at', '<=', $toDate)
+            ->sum('amount');
+        $checkTotal = CustomerPayment::where('status', 'completed')
+            ->where('payment_method', 'check')
+            ->whereDate('created_at', '>=', $fromDate)
+            ->whereDate('created_at', '<=', $toDate)
+            ->sum('amount');
+        $totalAmount = $cashTotal + $transferTotal + $checkTotal;
+
+        if ($request->has('export')) {
+            return $this->exportQuickPayments($customers, $cashTotal, $transferTotal, $checkTotal, $totalAmount);
+        }
+
+        return view('sales.statistics.quick-payments', compact('customers', 'cashTotal', 'transferTotal', 'checkTotal', 'totalAmount', 'fromDate', 'toDate'));
+    }
+
+    public function quickReturns(Request $request)
+    {
+        $fromDate = $request->input('from_date', now()->startOfMonth()->format('Y-m-d'));
+        $toDate = $request->input('to_date', now()->format('Y-m-d'));
+
+        $customers = Customer::withCount(['returns' => function($q) use ($fromDate, $toDate) {
+            $q->where('status', 'completed')
+              ->whereDate('created_at', '>=', $fromDate)
+              ->whereDate('created_at', '<=', $toDate);
+        }])
+        ->withSum(['returns as returns_total' => function($q) use ($fromDate, $toDate) {
+            $q->where('status', 'completed')
+              ->whereDate('created_at', '>=', $fromDate)
+              ->whereDate('created_at', '<=', $toDate);
+        }], 'total_amount')
+        ->having('returns_count', '>', 0)
+        ->orderBy('returns_total', 'desc')
+        ->get();
+
+        $totalReturns = CustomerReturn::where('status', 'completed')
+            ->whereDate('created_at', '>=', $fromDate)
+            ->whereDate('created_at', '<=', $toDate)
+            ->count();
+        $totalAmount = CustomerReturn::where('status', 'completed')
+            ->whereDate('created_at', '>=', $fromDate)
+            ->whereDate('created_at', '<=', $toDate)
+            ->sum('total_amount');
+
+        if ($request->has('export')) {
+            return $this->exportQuickReturns($customers, $totalReturns, $totalAmount);
+        }
+
+        return view('sales.statistics.quick-returns', compact('customers', 'totalReturns', 'totalAmount', 'fromDate', 'toDate'));
+    }
+
+    private function exportQuickInvoices($customers, $totalInvoices, $totalAmount)
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setRightToLeft(true);
+
+        $row = 1;
+        $sheet->setCellValue('A' . $row, 'من تاريخ');
+        $sheet->setCellValue('B' . $row, \Carbon\Carbon::parse(request('from_date'))->format('d/m/Y'));
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF3E0']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row++;
+
+        $sheet->setCellValue('A' . $row, 'إلى تاريخ');
+        $sheet->setCellValue('B' . $row, \Carbon\Carbon::parse(request('to_date'))->format('d/m/Y'));
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF3E0']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row += 2;
+
+        $sheet->setCellValue('A' . $row, 'إجمالي عدد الفواتير');
+        $sheet->setCellValue('B' . $row, number_format($totalInvoices));
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E3F2FD']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row++;
+
+        $sheet->setCellValue('A' . $row, 'إجمالي المبلغ');
+        $sheet->setCellValue('B' . $row, number_format($totalAmount, 2) . ' دينار');
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E8F5E9']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row += 2;
+
+        $sheet->fromArray(['العميل', 'عدد الفواتير', 'إجمالي المبلغ'], null, 'A' . $row);
+        $sheet->getStyle('A' . $row . ':C' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row++;
+
+        foreach ($customers as $customer) {
+            $sheet->fromArray([
+                $customer->name,
+                number_format($customer->invoices_count),
+                number_format($customer->invoices_total ?? 0, 2)
+            ], null, 'A' . $row);
+            $sheet->getStyle('A' . $row . ':C' . $row)->applyFromArray([
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
+            $row++;
+        }
+
+        foreach (range('A', 'C') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $filename = date('Y_m_d') . '_الفواتير_المكتملة.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+    private function exportQuickPayments($customers, $cashTotal, $transferTotal, $checkTotal, $totalAmount)
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setRightToLeft(true);
+
+        $row = 1;
+        $sheet->setCellValue('A' . $row, 'من تاريخ');
+        $sheet->setCellValue('B' . $row, \Carbon\Carbon::parse(request('from_date'))->format('d/m/Y'));
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF3E0']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row++;
+
+        $sheet->setCellValue('A' . $row, 'إلى تاريخ');
+        $sheet->setCellValue('B' . $row, \Carbon\Carbon::parse(request('to_date'))->format('d/m/Y'));
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF3E0']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row += 2;
+
+        $sheet->setCellValue('A' . $row, 'إجمالي النقدي');
+        $sheet->setCellValue('B' . $row, number_format($cashTotal, 2) . ' دينار');
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E8F5E9']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row++;
+
+        $sheet->setCellValue('A' . $row, 'إجمالي التحويل');
+        $sheet->setCellValue('B' . $row, number_format($transferTotal, 2) . ' دينار');
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E3F2FD']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row++;
+
+        $sheet->setCellValue('A' . $row, 'إجمالي الشيك');
+        $sheet->setCellValue('B' . $row, number_format($checkTotal, 2) . ' دينار');
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF3E0']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row++;
+
+        $sheet->setCellValue('A' . $row, 'الإجمالي');
+        $sheet->setCellValue('B' . $row, number_format($totalAmount, 2) . ' دينار');
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F3E5F5']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row += 2;
+
+        $sheet->fromArray(['العميل', 'نقدي', 'تحويل', 'شيك', 'الإجمالي'], null, 'A' . $row);
+        $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row++;
+
+        foreach ($customers as $customer) {
+            $sheet->fromArray([
+                $customer->name,
+                number_format($customer->cash_total, 2),
+                number_format($customer->transfer_total, 2),
+                number_format($customer->check_total, 2),
+                number_format($customer->total_payments, 2)
+            ], null, 'A' . $row);
+            $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
+            $row++;
+        }
+
+        foreach (range('A', 'E') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $filename = date('Y_m_d') . '_المدفوعات_المكتملة.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+    private function exportQuickReturns($customers, $totalReturns, $totalAmount)
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setRightToLeft(true);
+
+        $row = 1;
+        $sheet->setCellValue('A' . $row, 'من تاريخ');
+        $sheet->setCellValue('B' . $row, \Carbon\Carbon::parse(request('from_date'))->format('d/m/Y'));
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF3E0']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row++;
+
+        $sheet->setCellValue('A' . $row, 'إلى تاريخ');
+        $sheet->setCellValue('B' . $row, \Carbon\Carbon::parse(request('to_date'))->format('d/m/Y'));
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF3E0']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row += 2;
+
+        $sheet->setCellValue('A' . $row, 'إجمالي عدد المرتجعات');
+        $sheet->setCellValue('B' . $row, number_format($totalReturns));
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF3E0']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row++;
+
+        $sheet->setCellValue('A' . $row, 'إجمالي المبلغ');
+        $sheet->setCellValue('B' . $row, number_format($totalAmount, 2) . ' دينار');
+        $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFEBEE']],
+            'font' => ['bold' => true, 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row += 2;
+
+        $sheet->fromArray(['العميل', 'عدد المرتجعات', 'إجمالي المبلغ'], null, 'A' . $row);
+        $sheet->getStyle('A' . $row . ':C' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FF9800']],
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        ]);
+        $row++;
+
+        foreach ($customers as $customer) {
+            $sheet->fromArray([
+                $customer->name,
+                number_format($customer->returns_count),
+                number_format($customer->returns_total ?? 0, 2)
+            ], null, 'A' . $row);
+            $sheet->getStyle('A' . $row . ':C' . $row)->applyFromArray([
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
+            $row++;
+        }
+
+        foreach (range('A', 'C') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $filename = date('Y_m_d') . '_المرتجعات_المكتملة.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
 }
