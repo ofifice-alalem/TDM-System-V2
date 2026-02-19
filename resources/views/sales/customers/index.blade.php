@@ -105,12 +105,13 @@
                             </div>
                             <div class="text-sm font-black text-gray-900 dark:text-white">{{ $customer->invoices_count ?? 0 }}</div>
                         </div>
-                        <div class="bg-gray-50 dark:bg-dark-bg rounded-2xl p-4 text-center">
+                        <div class="bg-gradient-to-br {{ ($customer->debt_ledger_sum_amount ?? 0) > 0 ? 'from-red-50 to-red-100 dark:from-red-500/10 dark:to-red-600/10 border-red-200 dark:border-red-500/30' : (($customer->debt_ledger_sum_amount ?? 0) < 0 ? 'from-emerald-50 to-emerald-100 dark:from-emerald-500/10 dark:to-emerald-600/10 border-emerald-200 dark:border-emerald-500/30' : 'from-gray-50 to-gray-100 dark:from-gray-500/10 dark:to-gray-600/10 border-gray-200 dark:border-gray-500/30') }} border rounded-2xl p-4 text-center shadow-sm">
                             <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center justify-center gap-1">
                                 <i data-lucide="wallet" class="w-3.5 h-3.5"></i>
                                 الدين
                             </div>
-                            <div class="text-sm font-black {{ ($customer->debt_ledger_sum_amount ?? 0) > 0 ? 'text-red-600 dark:text-red-400' : (($customer->debt_ledger_sum_amount ?? 0) < 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white') }}">
+                            <div class="text-sm font-black flex items-center justify-center gap-1.5 {{ ($customer->debt_ledger_sum_amount ?? 0) > 0 ? 'text-red-600 dark:text-red-400' : (($customer->debt_ledger_sum_amount ?? 0) < 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white') }}">
+                                <i data-lucide="{{ ($customer->debt_ledger_sum_amount ?? 0) > 0 ? 'trending-up' : (($customer->debt_ledger_sum_amount ?? 0) < 0 ? 'trending-down' : 'minus') }}" class="w-4 h-4"></i>
                                 {{ number_format(abs($customer->debt_ledger_sum_amount ?? 0), 0) }} دينار
                             </div>
                         </div>
@@ -174,7 +175,8 @@
                         <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ $customer->phone }}</td>
                         <td class="px-6 py-4 text-center font-bold text-gray-900 dark:text-white">{{ $customer->invoices_count ?? 0 }}</td>
                         <td class="px-6 py-4 text-center">
-                            <span class="font-bold {{ ($customer->debt_ledger_sum_amount ?? 0) > 0 ? 'text-red-600 dark:text-red-400' : (($customer->debt_ledger_sum_amount ?? 0) < 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white') }}">
+                            <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold shadow-sm {{ ($customer->debt_ledger_sum_amount ?? 0) > 0 ? 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-500/10 dark:to-red-600/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/30' : (($customer->debt_ledger_sum_amount ?? 0) < 0 ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-500/10 dark:to-emerald-600/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30' : 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-500/10 dark:to-gray-600/10 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-500/30') }}">
+                                <i data-lucide="{{ ($customer->debt_ledger_sum_amount ?? 0) > 0 ? 'trending-up' : (($customer->debt_ledger_sum_amount ?? 0) < 0 ? 'trending-down' : 'minus') }}" class="w-4 h-4"></i>
                                 {{ number_format(abs($customer->debt_ledger_sum_amount ?? 0), 0) }} دينار
                             </span>
                         </td>

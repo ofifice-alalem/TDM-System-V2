@@ -103,57 +103,61 @@
         {{-- Invoices List --}}
         <div id="cardView" class="bg-white dark:bg-dark-card rounded-[2rem] p-6 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
             @forelse($invoices as $invoice)
-                <div class="bg-gray-50 dark:bg-dark-bg rounded-2xl p-6 mb-4 border border-gray-200 dark:border-dark-border hover:shadow-lg transition-all">
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-3">
-                                <div class="w-12 h-12 bg-primary-100 dark:bg-primary-600/20 rounded-xl flex items-center justify-center">
-                                    <i data-lucide="file-text" class="w-6 h-6 text-primary-600 dark:text-primary-400"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">#{{ $invoice->invoice_number }}</h3>
-                                    <p class="text-sm text-gray-500 dark:text-dark-muted flex items-center gap-2">
-                                        <i data-lucide="user" class="w-4 h-4"></i>
-                                        {{ $invoice->customer->name }}
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <div class="grid grid-cols-4 gap-4 mt-4">
-                                <div class="bg-white dark:bg-dark-card rounded-xl p-3 border border-gray-200 dark:border-dark-border">
-                                    <p class="text-xs text-gray-500 dark:text-dark-muted mb-1">المبلغ</p>
-                                    <p class="text-lg font-bold text-gray-900 dark:text-white">{{ number_format($invoice->total_amount, 0) }} د.ع</p>
-                                </div>
-                                <div class="bg-white dark:bg-dark-card rounded-xl p-3 border border-gray-200 dark:border-dark-border">
-                                    <p class="text-xs text-gray-500 dark:text-dark-muted mb-1">نوع الدفع</p>
-                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold 
-                                        {{ $invoice->payment_type === 'cash' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : '' }}
-                                        {{ $invoice->payment_type === 'credit' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : '' }}
-                                        {{ $invoice->payment_type === 'partial' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : '' }}">
-                                        {{ $invoice->payment_type === 'cash' ? 'نقدي' : ($invoice->payment_type === 'credit' ? 'آجل' : 'جزئي') }}
-                                    </span>
-                                </div>
-                                <div class="bg-white dark:bg-dark-card rounded-xl p-3 border border-gray-200 dark:border-dark-border">
-                                    <p class="text-xs text-gray-500 dark:text-dark-muted mb-1">الحالة</p>
-                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold {{ $invoice->status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' }}">
-                                        <span class="w-1.5 h-1.5 rounded-full {{ $invoice->status === 'completed' ? 'bg-green-500' : 'bg-red-500' }}"></span>
-                                        {{ $invoice->status === 'completed' ? 'مكتمل' : 'ملغي' }}
-                                    </span>
-                                </div>
-                                <div class="bg-white dark:bg-dark-card rounded-xl p-3 border border-gray-200 dark:border-dark-border">
-                                    <p class="text-xs text-gray-500 dark:text-dark-muted mb-1">التاريخ</p>
-                                    <p class="text-sm font-bold text-gray-900 dark:text-white">{{ $invoice->created_at->format('Y-m-d') }}</p>
-                                </div>
-                            </div>
+                <div class="bg-gradient-to-br from-white to-gray-50 dark:from-dark-bg dark:to-dark-card rounded-2xl p-6 mb-4 border-2 border-gray-200 dark:border-dark-border hover:shadow-2xl hover:border-primary-300 dark:hover:border-primary-600/50 transition-all duration-300 group">
+                    <div class="flex items-start gap-4 mb-5">
+                        <div class="w-14 h-14 bg-gradient-to-br from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-200 dark:shadow-primary-900/30 group-hover:scale-110 transition-transform">
+                            <i data-lucide="file-text" class="w-7 h-7 text-white"></i>
                         </div>
-                        
-                        <div class="flex gap-2 mr-4">
-                            <a href="{{ route('sales.invoices.show', $invoice) }}" class="px-5 py-2.5 bg-white dark:bg-dark-card border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-sm flex items-center gap-2">
-                                <i data-lucide="eye" class="w-4 h-4"></i>
-                                التفاصيل
-                            </a>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-black text-gray-900 dark:text-white mb-2">#{{ $invoice->invoice_number }}</h3>
+                            <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                                <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="user" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i>
+                                </div>
+                                <span class="font-bold">{{ $invoice->customer->name }}</span>
+                            </div>
                         </div>
                     </div>
+                    
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-4 border border-blue-200 dark:border-blue-700/30 shadow-sm">
+                            <div class="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 mb-2 font-bold">
+                                <i data-lucide="banknote" class="w-3.5 h-3.5"></i>
+                                المبلغ
+                            </div>
+                            <p class="text-lg font-black text-blue-700 dark:text-blue-300">{{ number_format($invoice->total_amount, 0) }} د.ع</p>
+                        </div>
+                        <div class="bg-white dark:bg-dark-card rounded-xl p-4 border-2 border-gray-200 dark:border-dark-border shadow-sm">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2 font-bold">نوع الدفع</p>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black shadow-sm
+                                {{ $invoice->payment_type === 'cash' ? 'bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-700/30' : '' }}
+                                {{ $invoice->payment_type === 'credit' ? 'bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/30 dark:to-red-800/30 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-700/30' : '' }}
+                                {{ $invoice->payment_type === 'partial' ? 'bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/30 dark:to-yellow-800/30 text-yellow-700 dark:text-yellow-400 border border-yellow-300 dark:border-yellow-700/30' : '' }}">
+                                <i data-lucide="{{ $invoice->payment_type === 'cash' ? 'wallet' : ($invoice->payment_type === 'credit' ? 'clock' : 'coins') }}" class="w-3.5 h-3.5"></i>
+                                {{ $invoice->payment_type === 'cash' ? 'نقدي' : ($invoice->payment_type === 'credit' ? 'آجل' : 'جزئي') }}
+                            </span>
+                        </div>
+                        <div class="bg-white dark:bg-dark-card rounded-xl p-4 border-2 border-gray-200 dark:border-dark-border shadow-sm">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2 font-bold">الحالة</p>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black shadow-sm
+                                {{ $invoice->status === 'completed' ? 'bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-700/30' : 'bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/30 dark:to-red-800/30 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-700/30' }}">
+                                <span class="w-2 h-2 rounded-full {{ $invoice->status === 'completed' ? 'bg-green-500 animate-pulse' : 'bg-red-500' }}"></span>
+                                {{ $invoice->status === 'completed' ? 'مكتمل' : 'ملغي' }}
+                            </span>
+                        </div>
+                        <div class="bg-white dark:bg-dark-card rounded-xl p-4 border-2 border-gray-200 dark:border-dark-border shadow-sm">
+                            <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2 font-bold">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                التاريخ
+                            </div>
+                            <p class="text-sm font-black text-gray-900 dark:text-white">{{ $invoice->created_at->format('Y-m-d') }}</p>
+                        </div>
+                    </div>
+
+                    <a href="{{ route('sales.invoices.show', $invoice) }}" class="block w-full px-5 py-3 bg-white dark:bg-dark-card hover:bg-primary-50 dark:hover:bg-primary-900/20 text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 rounded-xl font-black transition-all text-center flex items-center justify-center gap-2 border-2 border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-500 shadow-sm hover:shadow-md">
+                        <i data-lucide="eye" class="w-5 h-5"></i>
+                        عرض التفاصيل
+                    </a>
                 </div>
             @empty
                 <div class="text-center py-12">
