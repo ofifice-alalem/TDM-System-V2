@@ -27,7 +27,10 @@ class CustomerInvoiceController extends Controller
         ];
 
         $logoPath = public_path('images/company.png');
-        $logoBase64 = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : null;
+        $logoBase64 = null;
+        if (file_exists($logoPath) && is_file($logoPath) && str_starts_with(realpath($logoPath), public_path('images'))) {
+            $logoBase64 = base64_encode(file_get_contents($logoPath));
+        }
         
         $companyName = $arabic->utf8Glyphs('شركة المتفوقون الأوائل للصناعات البلاستيكية');
 
