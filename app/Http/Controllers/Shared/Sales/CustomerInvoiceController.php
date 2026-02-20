@@ -40,10 +40,14 @@ class CustomerInvoiceController extends Controller
             'isInvalid' => $invoice->status === 'cancelled',
             'logoBase64' => $logoBase64,
             'companyName' => $companyName,
+            'productDiscount' => 0,
+            'invoiceDiscount' => 0,
             'items' => $invoice->items->map(function($item) use ($arabic, $toEnglishNumbers) {
                 return (object)[
                     'name' => $toEnglishNumbers($arabic->utf8Glyphs($item->product->name)),
                     'quantity' => $item->quantity,
+                    'freeQuantity' => 0,
+                    'totalQuantity' => $item->quantity,
                     'unitPrice' => number_format($item->unit_price, 0),
                     'totalPrice' => number_format($item->total_price, 0)
                 ];
@@ -61,6 +65,7 @@ class CustomerInvoiceController extends Controller
                 'employee' => $arabic->utf8Glyphs('الموظف'),
                 'product' => $arabic->utf8Glyphs('المنتج'),
                 'quantity' => $arabic->utf8Glyphs('الكمية'),
+                'free' => $arabic->utf8Glyphs('مجاني'),
                 'unitPrice' => $arabic->utf8Glyphs('سعر الوحدة'),
                 'total' => $arabic->utf8Glyphs('الإجمالي'),
                 'subtotal' => $arabic->utf8Glyphs('المجموع الفرعي'),
@@ -68,10 +73,15 @@ class CustomerInvoiceController extends Controller
                 'grandTotal' => $arabic->utf8Glyphs('الإجمالي النهائي'),
                 'notes' => $arabic->utf8Glyphs('ملاحظات'),
                 'invalidInvoice' => $arabic->utf8Glyphs('الفاتورة لا يعتد بها'),
+                'invoiceNumber' => $arabic->utf8Glyphs('رقم الفاتورة'),
+                'marketer' => $arabic->utf8Glyphs('المسوق'),
+                'store' => $arabic->utf8Glyphs('المتجر'),
+                'productDiscount' => $arabic->utf8Glyphs('خصم المنتجات'),
+                'invoiceDiscount' => $arabic->utf8Glyphs('خصم الفاتورة'),
             ]
         ];
 
-        $pdf = Pdf::loadView('shared.sales.invoice-pdf', $data)
+        $pdf = Pdf::loadView('sales.invoices.invoice-pdf', $data)
             ->setPaper('a4')
             ->setOption('isRemoteEnabled', false)
             ->setOption('isHtml5ParserEnabled', true)
