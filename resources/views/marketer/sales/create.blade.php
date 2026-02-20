@@ -64,13 +64,15 @@
                                 <select name="items[0][product_id]" class="product-select w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm" required>
                                     <option value="">اختر المنتج</option>
                                     @foreach($products as $product)
+                                        @if($product->stock > 0)
                                         <option value="{{ $product->id }}" 
                                                 data-stock="{{ $product->stock }}" 
                                                 data-price="{{ $product->current_price }}"
                                                 data-promotion-free="{{ $product->activePromotion->free_quantity ?? 0 }}"
                                                 data-promotion-buy="{{ $product->activePromotion->min_quantity ?? 0 }}">
-                                            {{ $product->name }} @if($product->activePromotion) ⭐ @endif - {{ $product->current_price }} دينار (متوفر: {{ $product->stock }})
+                                            {{ $product->name }} @if($product->activePromotion) ⭐ @endif  |  متوفر: {{ $product->stock }}  |  {{ $product->current_price }} دينار
                                         </option>
+                                        @endif
                                     @endforeach
                                 </select>
                                 <div class="promotion-label hidden mt-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 text-amber-700 dark:text-amber-400 text-xs font-bold flex items-center gap-2">

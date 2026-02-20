@@ -24,7 +24,7 @@
         }
         @page { margin: 10px; }
         * { font-family: 'Cairo', 'DejaVu Sans', sans-serif; }
-        body { font-family: 'Cairo', 'DejaVu Sans', sans-serif; color: #333; font-size: 11px; margin: 0; position: relative; }
+        body { font-family: 'Cairo', 'DejaVu Sans', sans-serif; color: #333; font-size: 11px; margin: 0; position: relative; min-height: 100vh; }
         @if($isInvalid)
         body::before {
             content: "{{ $labels['invalidInvoice'] }}";
@@ -66,6 +66,8 @@
         .notes-box { margin-top: 10px; border: 1px solid #333; padding: 10px; border-radius: 5px; background-color: #fff; }
         .notes-box .notes-label { font-weight: bold; font-size: 12px; margin-bottom: 5px; }
         .notes-box .notes-content { font-size: 11px; line-height: 1.5; }
+        .signatures { position: fixed; bottom: 10px; left: 10px; right: 10px; }
+        .signature-box { display: inline-block; width: 45%; text-align: center; border-top: 1px solid #000; padding-top: 10px; margin: 0 2%; font-size: 10px; }
     </style>
 </head>
 <body>
@@ -108,6 +110,7 @@
             <tr>
                 <th>{{ $labels['total'] }}</th>
                 <th>{{ $labels['unitPrice'] }}</th>
+                <th>{{ $labels['free'] }}</th>
                 <th>{{ $labels['quantity'] }}</th>
                 <th>{{ $labels['product'] }}</th>
                 <th>#</th>
@@ -118,7 +121,8 @@
             <tr>
                 <td class="quantity">{{ $item->totalPrice }}</td>
                 <td class="quantity">{{ $item->unitPrice }}</td>
-                <td class="quantity">{{ $item->quantity }}</td>
+                <td class="quantity">{{ $item->freeQuantity }}</td>
+                <td class="quantity">{{ $item->totalQuantity }}</td>
                 <td class="product-name">{{ $item->name }}</td>
                 <td class="quantity">{{ $index + 1 }}</td>
             </tr>
@@ -131,16 +135,27 @@
             <span class="value">{{ $currency }} {{ $subtotal }}</span>
             <span class="label">:{{ $labels['subtotal'] }}</span>
         </div>
-        @if($discountAmount > 0)
+        @if($productDiscount > 0)
         <div class="total-row">
-            <span class="value">{{ $currency }} {{ $discountAmount }}</span>
-            <span class="label">:{{ $labels['discount'] }}</span>
+            <span class="value">{{ $currency }} {{ $productDiscount }}</span>
+            <span class="label">:{{ $labels['productDiscount'] }}</span>
+        </div>
+        @endif
+        @if($invoiceDiscount > 0)
+        <div class="total-row">
+            <span class="value">{{ $currency }} {{ $invoiceDiscount }}</span>
+            <span class="label">:{{ $labels['invoiceDiscount'] }}</span>
         </div>
         @endif
         <div class="total-row grand">
             <span class="value">{{ $currency }} {{ $totalAmount }}</span>
             <span class="label">:{{ $labels['grandTotal'] }}</span>
         </div>
+    </div>
+
+    <div class="signatures">
+        <div class="signature-box">{{ $labels['marketer'] }}</div>
+        <div class="signature-box">{{ $labels['store'] }}</div>
     </div>
 </body>
 </html>
