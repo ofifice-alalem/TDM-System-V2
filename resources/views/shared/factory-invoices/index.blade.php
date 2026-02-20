@@ -3,6 +3,9 @@
 @section('title', 'فواتير المصنع')
 
 @section('content')
+@php
+    $routePrefix = request()->routeIs('admin.*') ? 'admin' : 'warehouse';
+@endphp
 
 <div class="min-h-screen py-8">
     <div class="max-w-[1600px] mx-auto space-y-8 px-2">
@@ -20,14 +23,12 @@
                 </h1>
             </div>
 
-            @if(request()->routeIs('warehouse.*'))
             <div class="lg:col-span-4 lg:translate-y-[30px]">
-                <a href="{{ route('warehouse.factory-invoices.create') }}" class="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2 w-full">
+                <a href="{{ route($routePrefix . '.factory-invoices.create') }}" class="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2 w-full">
                     <i data-lucide="plus-circle" class="w-5 h-5"></i>
                     فاتورة جديدة
                 </a>
             </div>
-            @endif
         </div>
 
         {{-- Filters --}}
@@ -46,7 +47,7 @@
                         فلترة
                     </button>
                     @if(request('invoice_number'))
-                        <a href="{{ route('warehouse.factory-invoices.index', ['status' => request('status'), 'all' => request('all')]) }}" class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2 justify-center">
+                        <a href="{{ route($routePrefix . '.factory-invoices.index', ['status' => request('status'), 'all' => request('all')]) }}" class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2 justify-center">
                             <i data-lucide="x" class="w-4 h-4"></i>
                             إلغاء
                         </a>
@@ -55,22 +56,21 @@
             </form>
         </div>
 
-        {{-- Status Tabs --}}
         <div class="bg-white dark:bg-dark-card rounded-2xl p-2 shadow-lg shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6">
             <div class="flex flex-wrap gap-2">
-                <a href="{{ route('warehouse.factory-invoices.index', ['status' => 'pending']) }}" class="{{ !request('all') && (!request('status') || request('status') === 'pending') ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-2 border-amber-200 dark:border-amber-800' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(50%-0.5rem)] md:basis-auto justify-center">
+                <a href="{{ route($routePrefix . '.factory-invoices.index', ['status' => 'pending']) }}" class="{{ !request('all') && (!request('status') || request('status') === 'pending') ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-2 border-amber-200 dark:border-amber-800' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(50%-0.5rem)] md:basis-auto justify-center">
                     <i data-lucide="clock" class="w-4 h-4"></i>
                     قيد الانتظار
                 </a>
-                <a href="{{ route('warehouse.factory-invoices.index', ['status' => 'documented']) }}" class="{{ request('status') === 'documented' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-200 dark:border-emerald-800' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(50%-0.5rem)] md:basis-auto justify-center">
+                <a href="{{ route($routePrefix . '.factory-invoices.index', ['status' => 'documented']) }}" class="{{ request('status') === 'documented' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-200 dark:border-emerald-800' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(50%-0.5rem)] md:basis-auto justify-center">
                     <i data-lucide="file-check" class="w-4 h-4"></i>
                     موثق
                 </a>
-                <a href="{{ route('warehouse.factory-invoices.index', ['status' => 'cancelled']) }}" class="{{ request('status') === 'cancelled' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-2 border-red-200 dark:border-red-800' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(50%-0.5rem)] md:basis-auto justify-center">
+                <a href="{{ route($routePrefix . '.factory-invoices.index', ['status' => 'cancelled']) }}" class="{{ request('status') === 'cancelled' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-2 border-red-200 dark:border-red-800' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(50%-0.5rem)] md:basis-auto justify-center">
                     <i data-lucide="x-circle" class="w-4 h-4"></i>
                     ملغى
                 </a>
-                <a href="{{ route('warehouse.factory-invoices.index', ['all' => '1']) }}" class="{{ request('all') ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(50%-0.5rem)] md:basis-auto justify-center">
+                <a href="{{ route($routePrefix . '.factory-invoices.index', ['all' => '1']) }}" class="{{ request('all') ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-dark-border' }} px-3 py-2.5 rounded-xl font-bold transition-all text-sm flex items-center gap-1.5 flex-1 basis-[calc(50%-0.5rem)] md:basis-auto justify-center">
                     <i data-lucide="list" class="w-4 h-4"></i>
                     الكل
                 </a>
@@ -100,7 +100,7 @@
                         <div class="flex-1 p-4 md:p-6 flex items-center">
                             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
                                 <div class="flex gap-2 md:order-2">
-                                    <a href="{{ route('warehouse.factory-invoices.show', $invoice) }}" class="px-5 py-2.5 bg-white dark:bg-dark-card border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-all text-sm flex items-center gap-2 shadow-sm">
+                                    <a href="{{ route($routePrefix . '.factory-invoices.show', $invoice) }}" class="px-5 py-2.5 bg-white dark:bg-dark-card border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-all text-sm flex items-center gap-2 shadow-sm">
                                         <i data-lucide="eye" class="w-4 h-4"></i>
                                         التفاصيل
                                     </a>
@@ -133,7 +133,7 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">لا توجد فواتير</h3>
                     <p class="text-gray-500 dark:text-dark-muted mb-6">لم تقم بإنشاء أي فواتير مصنع بعد</p>
-                    <a href="{{ route('warehouse.factory-invoices.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all">
+                    <a href="{{ route($routePrefix . '.factory-invoices.create') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all">
                         <i data-lucide="plus-circle" class="w-5 h-5"></i>
                         إنشاء فاتورة جديدة
                     </a>

@@ -74,11 +74,11 @@ Route::middleware(['web', 'auth', 'role:warehouse'])->group(function () {
 
         Route::prefix('factory-invoices')->name('factory-invoices.')->group(function () {
             Route::get('/', [FactoryInvoiceController::class, 'index'])->name('index');
-            Route::get('/create', [FactoryInvoiceController::class, 'create'])->name('create');
-            Route::post('/', [FactoryInvoiceController::class, 'store'])->name('store');
+            Route::get('/create', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'store'])->name('store');
             Route::get('/{factoryInvoice}', [FactoryInvoiceController::class, 'show'])->name('show');
-            Route::post('/{factoryInvoice}/document', [FactoryInvoiceController::class, 'document'])->name('document');
-            Route::post('/{factoryInvoice}/cancel', [FactoryInvoiceController::class, 'cancel'])->name('cancel');
+            Route::post('/{factoryInvoice}/document', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'document'])->name('document');
+            Route::post('/{factoryInvoice}/cancel', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'cancel'])->name('cancel');
             Route::get('/{factoryInvoice}/pdf', [FactoryInvoiceController::class, 'pdf'])->name('pdf');
         });
     });

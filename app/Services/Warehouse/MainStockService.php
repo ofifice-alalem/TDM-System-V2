@@ -9,12 +9,12 @@ use Illuminate\Support\Facades\DB;
 
 class MainStockService
 {
-    public function createFactoryInvoice($keeperId, array $items, $notes = null)
+    public function createFactoryInvoice($userId, array $items, $notes = null)
     {
-        return DB::transaction(function () use ($keeperId, $items, $notes) {
+        return DB::transaction(function () use ($userId, $items, $notes) {
             $invoice = FactoryInvoice::create([
                 'invoice_number' => $this->generateInvoiceNumber(),
-                'keeper_id' => $keeperId,
+                'created_by' => $userId,
                 'status' => 'pending',
                 'notes' => $notes,
             ]);
@@ -31,9 +31,9 @@ class MainStockService
         });
     }
 
-    public function documentInvoice($invoiceId, $keeperId, $stampedImage)
+    public function documentInvoice($invoiceId, $userId, $stampedImage)
     {
-        return DB::transaction(function () use ($invoiceId, $keeperId, $stampedImage) {
+        return DB::transaction(function () use ($invoiceId, $userId, $stampedImage) {
             $invoice = FactoryInvoice::where('id', $invoiceId)
                 ->where('status', 'pending')
                 ->firstOrFail();
@@ -42,7 +42,7 @@ class MainStockService
 
             $invoice->update([
                 'status' => 'documented',
-                'documented_by' => $keeperId,
+                'documented_by' => $userId,
                 'documented_at' => now(),
                 'stamped_image' => $stampedImage,
             ]);
@@ -50,7 +50,7 @@ class MainStockService
             WarehouseStockLog::create([
                 'invoice_type' => 'factory',
                 'invoice_id' => $invoice->id,
-                'keeper_id' => $keeperId,
+                'keeper_id' => $userId,
                 'action' => 'add',
             ]);
 
@@ -58,16 +58,16 @@ class MainStockService
         });
     }
 
-    public function cancelInvoice($invoiceId, $keeperId, $reason)
+    public function cancelInvoice($invoiceId, $userId, $reason)
     {
-        return DB::transaction(function () use ($invoiceId, $keeperId, $reason) {
+        return DB::transaction(function () use ($invoiceId, $userId, $reason) {
             $invoice = FactoryInvoice::where('id', $invoiceId)
                 ->where('status', 'pending')
                 ->firstOrFail();
 
             $invoice->update([
                 'status' => 'cancelled',
-                'cancelled_by' => $keeperId,
+                'cancelled_by' => $userId,
                 'cancelled_at' => now(),
                 'cancellation_reason' => $reason,
             ]);

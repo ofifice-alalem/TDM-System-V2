@@ -36,13 +36,13 @@ class FactoryInvoiceController extends Controller
 
         $invoices = $query->latest()->paginate(20)->withQueryString();
 
-        return view('warehouse.factory-invoices.index', compact('invoices'));
+        return view('shared.factory-invoices.index', compact('invoices'));
     }
 
     public function create()
     {
         $products = Product::where('is_active', true)->get();
-        return view('warehouse.factory-invoices.create', compact('products'));
+        return view('shared.factory-invoices.create', compact('products'));
     }
 
     public function store(Request $request)
@@ -66,7 +66,7 @@ class FactoryInvoiceController extends Controller
 
     public function show(FactoryInvoice $factoryInvoice)
     {
-        return view('warehouse.factory-invoices.show', [
+        return view('shared.factory-invoices.show', [
             'invoice' => $factoryInvoice->load('items.product', 'keeper', 'documenter')
         ]);
     }

@@ -67,10 +67,14 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
         Route::patch('/{product}', [\App\Http\Controllers\Admin\AdminProductController::class, 'update'])->name('update');
     });
 
-    // Factory Invoices (Read-only)
+    // Factory Invoices
     Route::prefix('factory-invoices')->name('factory-invoices.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\AdminFactoryInvoiceController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'store'])->name('store');
         Route::get('/{factoryInvoice}', [\App\Http\Controllers\Admin\AdminFactoryInvoiceController::class, 'show'])->name('show');
+        Route::post('/{factoryInvoice}/document', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'document'])->name('document');
+        Route::post('/{factoryInvoice}/cancel', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'cancel'])->name('cancel');
         Route::get('/{factoryInvoice}/pdf', [\App\Http\Controllers\Admin\AdminFactoryInvoiceController::class, 'pdf'])->name('pdf');
     });
 

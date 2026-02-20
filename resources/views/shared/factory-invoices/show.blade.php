@@ -3,6 +3,9 @@
 @section('title', 'تفاصيل فاتورة المصنع #' . $invoice->invoice_number)
 
 @section('content')
+@php
+    $routePrefix = request()->routeIs('admin.*') ? 'admin' : 'warehouse';
+@endphp
 
 <div class="min-h-screen py-8">
     <div class="max-w-7xl mx-auto space-y-8 px-4 lg:px-8">
@@ -24,7 +27,7 @@
             </div>
 
             <div class="flex gap-3 w-full md:w-auto">
-                <a href="{{ route('warehouse.factory-invoices.index') }}" class="px-12 py-4 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors shadow-lg shadow-gray-200/50 dark:shadow-none flex items-center justify-center gap-2 flex-1 md:flex-auto">
+                <a href="{{ route($routePrefix . '.factory-invoices.index') }}" class="px-12 py-4 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors shadow-lg shadow-gray-200/50 dark:shadow-none flex items-center justify-center gap-2 flex-1 md:flex-auto">
                     <i data-lucide="arrow-right" class="w-5 h-5"></i>
                     عودة
                 </a>
@@ -172,14 +175,14 @@
 
                     {{-- Actions Area --}}
                     <div class="mt-8 pt-6 border-t border-gray-200 dark:border-dark-border z-10 relative">
-                        <a href="{{ route('warehouse.factory-invoices.pdf', $invoice) }}" target="_blank" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group">
+                        <a href="{{ route($routePrefix . '.factory-invoices.pdf', $invoice) }}" target="_blank" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group">
                             <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
                             طباعة PDF
                         </a>
                     </div>
                 </div>
 
-                @if($invoice->status === 'pending' && request()->routeIs('warehouse.*'))
+                @if($invoice->status === 'pending' && auth()->user()->role_id === 2)
                 {{-- Document Form --}}
                 <div class="bg-white dark:bg-dark-card rounded-[1.5rem] border border-gray-200 dark:border-dark-border p-6 shadow-lg shadow-gray-200/50 dark:shadow-sm">
                     <h3 class="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
@@ -187,7 +190,7 @@
                         توثيق الفاتورة
                     </h3>
                     
-                    <form method="POST" action="{{ route('warehouse.factory-invoices.document', $invoice) }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route($routePrefix . '.factory-invoices.document', $invoice) }}" enctype="multipart/form-data">
                         @csrf
                         
                         <div class="mb-6">
@@ -214,7 +217,9 @@
                         </button>
                     </form>
                 </div>
+                @endif
 
+                @if($invoice->status === 'pending')
                 {{-- Cancel Form --}}
                 <div class="bg-white dark:bg-dark-card rounded-[1.5rem] border border-gray-200 dark:border-dark-border p-6 shadow-lg shadow-gray-200/50 dark:shadow-sm">
                     <h3 class="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
@@ -229,7 +234,7 @@
                         </button>
                     </div>
 
-                    <form id="cancel-form" method="POST" action="{{ route('warehouse.factory-invoices.cancel', $invoice) }}" class="hidden">
+                    <form id="cancel-form" method="POST" action="{{ route($routePrefix . '.factory-invoices.cancel', $invoice) }}" class="hidden">
                         @csrf
                         
                         <div class="mb-6">

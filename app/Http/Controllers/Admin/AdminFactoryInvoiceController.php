@@ -26,12 +26,12 @@ class AdminFactoryInvoiceController extends Controller
 
         $invoices = $query->latest()->paginate(20)->withQueryString();
 
-        return view('warehouse.factory-invoices.index', compact('invoices'));
+        return view('shared.factory-invoices.index', compact('invoices'));
     }
 
     public function show(FactoryInvoice $factoryInvoice)
     {
-        return view('warehouse.factory-invoices.show', [
+        return view('shared.factory-invoices.show', [
             'invoice' => $factoryInvoice->load('items.product', 'keeper', 'documenter')
         ]);
     }

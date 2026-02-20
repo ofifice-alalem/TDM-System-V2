@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class FactoryInvoice extends Model
 {
     protected $fillable = [
-        'invoice_number', 'keeper_id', 'status', 'notes',
+        'invoice_number', 'created_by', 'status', 'notes',
         'documented_by', 'documented_at', 'stamped_image',
         'cancelled_by', 'cancelled_at', 'cancellation_reason'
     ];
@@ -17,9 +17,14 @@ class FactoryInvoice extends Model
         'cancelled_at' => 'datetime',
     ];
 
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function keeper()
     {
-        return $this->belongsTo(User::class, 'keeper_id');
+        return $this->creator();
     }
 
     public function documenter()

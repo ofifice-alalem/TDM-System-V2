@@ -3,6 +3,9 @@
 @section('title', 'فاتورة مصنع جديدة')
 
 @section('content')
+@php
+    $routePrefix = request()->routeIs('admin.*') ? 'admin' : 'warehouse';
+@endphp
 
 <div class="min-h-screen py-8">
     <div class="max-w-[1600px] mx-auto space-y-8 px-2">
@@ -21,7 +24,7 @@
             </div>
 
             <div class="lg:col-span-4 lg:translate-y-[30px]">
-                <a href="{{ route('warehouse.factory-invoices.index') }}" class="px-8 py-4 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 w-full">
+                <a href="{{ route($routePrefix . '.factory-invoices.index') }}" class="px-8 py-4 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 w-full">
                     <i data-lucide="arrow-right" class="w-5 h-5"></i>
                     عودة
                 </a>
@@ -29,7 +32,7 @@
         </div>
 
         {{-- Form --}}
-        <form method="POST" action="{{ route('warehouse.factory-invoices.store') }}">
+        <form method="POST" action="{{ route($routePrefix . '.factory-invoices.store') }}">
             @csrf
             
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -67,7 +70,7 @@
                                 <i data-lucide="save" class="w-5 h-5"></i>
                                 حفظ الفاتورة
                             </button>
-                            <a href="{{ route('warehouse.factory-invoices.index') }}" class="w-full px-8 py-4 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                            <a href="{{ route($routePrefix . '.factory-invoices.index') }}" class="w-full px-8 py-4 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
                                 <i data-lucide="x" class="w-5 h-5"></i>
                                 إلغاء
                             </a>
