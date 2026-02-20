@@ -34,7 +34,7 @@ class SalesService
                 }
 
                 $totalPrice = $quantity * $unitPrice;
-                $subtotal += $totalPrice;
+                $subtotal += $totalPrice + ($freeQuantity * $unitPrice);
 
                 $invoiceItems[] = [
                     'product_id' => $item['product_id'],
@@ -47,8 +47,8 @@ class SalesService
                 ];
             }
 
-            $invoiceDiscount = $this->calculateInvoiceDiscount($subtotal);
-            $totalAmount = $subtotal - $invoiceDiscount['amount'];
+            $invoiceDiscount = $this->calculateInvoiceDiscount($subtotal - $productDiscount);
+            $totalAmount = $subtotal - $productDiscount - $invoiceDiscount['amount'];
 
             $invoice = SalesInvoice::create([
                 'invoice_number' => $this->generateInvoiceNumber(),

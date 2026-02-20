@@ -129,7 +129,7 @@
                             </div>
                             <div class="flex justify-between text-sm md:text-base">
                                 <span class="font-semibold text-gray-700 dark:text-white">المجموع الفرعي:</span>
-                                <span class="font-black text-base md:text-xl text-gray-900 dark:text-white">{{ number_format($invoice->subtotal + $invoice->product_discount, 2) }} دينار</span>
+                                <span class="font-black text-base md:text-xl text-gray-900 dark:text-white">{{ number_format($invoice->subtotal, 2) }} دينار</span>
                             </div>
                             @if($invoice->product_discount > 0)
                             <div class="flex justify-between text-sm md:text-base text-emerald-600 dark:text-emerald-300">
