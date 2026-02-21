@@ -29,7 +29,35 @@ class CustomerInvoiceController extends Controller
         $logoPath = public_path('images/company.png');
         $logoBase64 = null;
         if (file_exists($logoPath) && is_file($logoPath) && str_starts_with(realpath($logoPath), public_path('images'))) {
-            $logoBase64 = base64_encode(file_get_contents($logoPath));
+            // Resize and compress image to reduce PDF size
+            $image = imagecreatefrompng($logoPath);
+            if ($image) {
+                $width = imagesx($image);
+                $height = imagesy($image);
+                // Resize to max 300px width while maintaining aspect ratio
+                $maxWidth = 300;
+                if ($width > $maxWidth) {
+                    $newWidth = $maxWidth;
+                    $newHeight = ($height / $width) * $newWidth;
+                    $resized = imagecreatetruecolor($newWidth, $newHeight);
+                    imagealphablending($resized, false);
+                    imagesavealpha($resized, true);
+                    $transparent = imagecolorallocatealpha($resized, 255, 255, 255, 127);
+                    imagefilledrectangle($resized, 0, 0, $newWidth, $newHeight, $transparent);
+                    imagecopyresampled($resized, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                    imagedestroy($image);
+                    $image = $resized;
+                }
+                imagealphablending($image, false);
+                imagesavealpha($image, true);
+                ob_start();
+                imagepng($image, null, 9);
+                $compressedImage = ob_get_clean();
+                imagedestroy($image);
+                $logoBase64 = base64_encode($compressedImage);
+            } else {
+                $logoBase64 = base64_encode(file_get_contents($logoPath));
+            }
         }
         
         $companyName = $arabic->utf8Glyphs('شركة المتفوقون الأوائل للصناعات البلاستيكية');
@@ -88,7 +116,9 @@ class CustomerInvoiceController extends Controller
             ->setPaper('a4')
             ->setOption('isRemoteEnabled', false)
             ->setOption('isHtml5ParserEnabled', true)
-            ->setOption('isFontSubsettingEnabled', true);
+            ->setOption('isFontSubsettingEnabled', true)
+            ->setOption('compress', 1)
+            ->setOption('dpi', 96);
         return $pdf->download('invoice-' . $invoice->invoice_number . '.pdf');
     }
 }
