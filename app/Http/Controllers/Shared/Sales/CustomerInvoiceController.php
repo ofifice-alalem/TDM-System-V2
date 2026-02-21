@@ -34,8 +34,8 @@ class CustomerInvoiceController extends Controller
             if ($image) {
                 $width = imagesx($image);
                 $height = imagesy($image);
-                // Resize to max 300px width while maintaining aspect ratio
-                $maxWidth = 300;
+                // Resize to max 200px width while maintaining aspect ratio
+                $maxWidth = 200;
                 if ($width > $maxWidth) {
                     $newWidth = $maxWidth;
                     $newHeight = ($height / $width) * $newWidth;

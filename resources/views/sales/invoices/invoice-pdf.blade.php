@@ -31,7 +31,7 @@
         .info-row > div { display: table-cell; width: 50%; padding: 3px 6px; font-size: 13px; }
         .info-label { font-weight: bold; color: #000; }
         table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 10px; direction: rtl; border-radius: 10px; overflow: hidden; border: 1px solid #000; }
-        th { background: #000; color: white; text-align: right; padding: 5px 4px; font-size: 13px; font-weight: bold; }
+        th { background: #eee; color: #000; text-align: right; padding: 5px 4px; font-size: 13px; font-weight: bold; border-bottom: 2px solid #000; }
         td { border-bottom: 1px solid #ddd; padding: 4px 4px; text-align: right; font-size: 12px; background: white; color: #000; font-weight: bold; }
         th:first-child { border-radius: 10px 0 0 0; }
         th:last-child { border-radius: 0 10px 0 0; }
@@ -42,7 +42,7 @@
         .totals { margin-top: 10px; float: right; width: 45%; direction: rtl; background: #f5f5f5; padding: 10px; border-radius: 10px; border: 1px solid #ddd; }
         .totals-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #ddd; direction: rtl; font-size: 13px; }
         .totals-row:last-child { border-bottom: none; }
-        .totals-row.final { background: #000; color: white; margin: 6px -10px -10px -10px; padding: 10px; border-radius: 0 0 10px 10px; font-weight: bold; font-size: 14px; border: none; }
+        .totals-row.final { background: #eee; color: #000; margin: 6px -10px -10px -10px; padding: 10px; border-radius: 0 0 10px 10px; font-weight: bold; font-size: 14px; border: none; border-top: 2px solid #000; }
         .notes { clear: both; margin-top: 10px; padding: 10px; border-right: 4px solid #000; background: #f5f5f5; border-radius: 8px; font-size: 12px; }
         .invalid-stamp { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100px; color: rgba(220, 53, 69, 0.15); font-weight: bold; border: 10px solid rgba(220, 53, 69, 0.15); padding: 20px; z-index: 1000; border-radius: 20px; }
     </style>
