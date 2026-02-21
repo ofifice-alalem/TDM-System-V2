@@ -52,7 +52,7 @@
         .signatures { position: fixed; bottom: 55px; left: 15px; right: 15px; display: table; width: calc(100% - 30px); }
         .signature { display: table-cell; width: 50%; text-align: center; padding: 0 20px; font-weight: bold; }
         .signature span { display: inline-block; padding-top: 10px; border-top: 2px dotted #000; min-width: 150px; }
-        .invalid-stamp { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100px; color: rgba(220, 53, 69, 0.15); font-weight: bold; border: 10px solid rgba(220, 53, 69, 0.15); padding: 20px; z-index: 1000; border-radius: 20px; }
+        .invalid-stamp { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 80px; color: rgba(220, 53, 69, 0.2); font-weight: bold; border: 8px solid rgba(220, 53, 69, 0.2); padding: 30px 50px; z-index: 1000; border-radius: 20px; white-space: nowrap; }
     </style>
 </head>
 <body>
