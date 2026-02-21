@@ -333,7 +333,12 @@
                             </div>
                             <div>
                                 <h4 class="font-bold text-red-800 dark:text-red-400 text-sm">تم الرفض</h4>
-                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: أمين المخزن</p>
+                                @if($invoice->rejectedBy)
+                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $invoice->rejectedBy->full_name }}</p>
+                                @endif
+                                @if($invoice->rejected_at)
+                                <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $invoice->rejected_at->format('Y-m-d h:i A') }}</span>
+                                @endif
                             </div>
                         </div>
                         @else

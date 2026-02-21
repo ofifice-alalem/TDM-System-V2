@@ -74,7 +74,7 @@ class WarehouseSalesReturnController extends Controller
     public function approve(Request $request, $id)
     {
         $salesReturn = SalesReturn::findOrFail($id);
-        $keeperId = 1; // Temporary
+        $keeperId = auth()->id();
 
         try {
             $stampedImage = null;
@@ -96,13 +96,14 @@ class WarehouseSalesReturnController extends Controller
     public function reject(Request $request, $id)
     {
         $salesReturn = SalesReturn::findOrFail($id);
+        $keeperId = auth()->id();
 
         $request->validate([
             'notes' => 'required|string|max:500',
         ]);
 
         try {
-            $this->salesReturnService->rejectReturn($salesReturn, $request->notes);
+            $this->salesReturnService->rejectReturn($salesReturn, $keeperId, $request->notes);
             return redirect()->route('warehouse.sales-returns.index')
                 ->with('success', 'تم رفض طلب الإرجاع');
         } catch (\Exception $e) {

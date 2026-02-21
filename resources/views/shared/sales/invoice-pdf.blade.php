@@ -83,6 +83,16 @@
                 <div>{{ $customerPhone }} :<span class="info-label">{!! $labels['phone'] !!}</span></div>
                 <div>{{ $employeeName }} :<span class="info-label">{!! $labels['employee'] !!}</span></div>
             </div>
+            <div class="info-row">
+                <div>{{ $status }} :<span class="info-label">{!! $labels['status'] !!}</span></div>
+                @if($statusValue === 'approved' && $keeperName && $confirmedDate)
+                <div>{{ $keeperName }} ({{ $confirmedDate }}) :<span class="info-label">{!! $labels['approvedBy'] !!}</span></div>
+                @elseif($statusValue === 'rejected' && $rejectedByName && $rejectedDate)
+                <div>{{ $rejectedByName }} ({{ $rejectedDate }}) :<span class="info-label">{!! $labels['rejectedBy'] !!}</span></div>
+                @elseif($statusValue === 'cancelled' && $keeperName && $confirmedDate)
+                <div>{{ $keeperName }} ({{ $confirmedDate }}) :<span class="info-label">{!! $labels['cancelledBy'] !!}</span></div>
+                @endif
+            </div>
         </div>
 
         <table>

@@ -10,7 +10,7 @@ class InvoiceController extends Controller
 {
     public function generateSalesInvoicePdf(SalesInvoice $sale)
     {
-        $sale->load('items.product', 'store', 'marketer');
+        $sale->load('items.product', 'store', 'marketer', 'keeper', 'rejectedBy');
         
         $arabic = new \ArPHP\I18N\Arabic();
         
@@ -65,6 +65,11 @@ class InvoiceController extends Controller
             'marketerName' => $arabic->utf8Glyphs($sale->marketer->full_name ?? 'غير متوفر'),
             'storeName' => $arabic->utf8Glyphs($sale->store->name ?? 'غير متوفر'),
             'status' => $arabic->utf8Glyphs($statusLabels[$sale->status] ?? 'غير محدد'),
+            'statusValue' => $sale->status,
+            'keeperName' => $sale->keeper ? $arabic->utf8Glyphs($sale->keeper->full_name) : null,
+            'rejectedByName' => $sale->rejectedBy ? $arabic->utf8Glyphs($sale->rejectedBy->full_name) : null,
+            'confirmedDate' => $sale->confirmed_at ? $sale->confirmed_at->format('Y-m-d H:i') : null,
+            'rejectedDate' => $sale->rejected_at ? $sale->rejected_at->format('Y-m-d H:i') : null,
             'isInvalid' => in_array($sale->status, ['cancelled', 'rejected']),
             'logoBase64' => $logoBase64,
             'companyName' => $arabic->utf8Glyphs('شركة المتفوقون الأوائل للصناعات البلاستيكية'),
@@ -98,6 +103,9 @@ class InvoiceController extends Controller
                 'date' => $arabic->utf8Glyphs('التاريخ'),
                 'status' => $arabic->utf8Glyphs('الحالة'),
                 'keeper' => $arabic->utf8Glyphs('أمين المخزن'),
+                'approvedBy' => $arabic->utf8Glyphs('وثق بواسطة'),
+                'rejectedBy' => $arabic->utf8Glyphs('رفض بواسطة'),
+                'cancelledBy' => $arabic->utf8Glyphs('ألغى بواسطة'),
                 'product' => $arabic->utf8Glyphs('المنتج'),
                 'quantity' => $arabic->utf8Glyphs('الكمية'),
                 'unitPrice' => $arabic->utf8Glyphs('سعر الوحدة'),

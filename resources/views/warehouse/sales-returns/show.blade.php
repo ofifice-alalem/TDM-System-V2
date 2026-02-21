@@ -290,8 +290,8 @@
                             </div>
                         </div>
 
-                        {{-- Step 2: Approved --}}
-                        @if($salesReturn->confirmed_at)
+                        {{-- Step 2: Approved or Rejected --}}
+                        @if($salesReturn->status == 'approved' && $salesReturn->confirmed_at)
                         <div class="relative flex items-start gap-4 animate-slide-up">
                             <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
                                 <i data-lucide="check" class="w-5 h-5"></i>
@@ -309,7 +309,12 @@
                             </div>
                             <div>
                                 <h4 class="font-bold text-red-800 dark:text-red-400 text-sm">تم الرفض</h4>
-                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: أمين المخزن</p>
+                                @if($salesReturn->keeper)
+                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $salesReturn->keeper->full_name }}</p>
+                                @endif
+                                @if($salesReturn->confirmed_at)
+                                <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $salesReturn->confirmed_at->format('Y-m-d h:i A') }}</span>
+                                @endif
                             </div>
                         </div>
                         @else

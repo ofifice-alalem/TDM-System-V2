@@ -66,7 +66,7 @@ class WarehouseSalesController extends Controller
 
     public function show($id)
     {
-        $invoice = SalesInvoice::with('items.product', 'marketer', 'store', 'keeper')
+        $invoice = SalesInvoice::with('items.product', 'marketer', 'store', 'keeper', 'rejectedBy')
             ->findOrFail($id);
         return view('warehouse.sales.show', compact('invoice'));
     }

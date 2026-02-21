@@ -53,13 +53,13 @@ class WarehouseSalesReturnService
         });
     }
 
-    public function rejectReturn(SalesReturn $return, $notes)
+    public function rejectReturn(SalesReturn $return, $keeperId, $notes)
     {
         if ($return->status !== 'pending') {
             throw new \Exception('لا يمكن رفض هذا الطلب');
         }
 
-        return DB::transaction(function () use ($return, $notes) {
+        return DB::transaction(function () use ($return, $keeperId, $notes) {
             // Return stock to store
             foreach ($return->items as $item) {
                 $storeStock = StoreActualStock::where('store_id', $return->store_id)
@@ -73,7 +73,9 @@ class WarehouseSalesReturnService
 
             $return->update([
                 'status' => 'rejected',
+                'keeper_id' => $keeperId,
                 'notes' => $notes,
+                'confirmed_at' => now(),
             ]);
 
             return $return;
