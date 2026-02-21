@@ -17,33 +17,33 @@
         }
         @page { margin: 15px; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', 'DejaVu Sans', sans-serif; }
-        body { font-family: 'Cairo', 'DejaVu Sans', sans-serif; font-size: 11px; color: #000; direction: rtl; background: white; }
-        .container { padding: 15px; background: white; max-width: 800px; margin: 0 auto; }
-        .header { border-bottom: 3px solid #000; padding: 15px 0; margin-bottom: 15px; display: table; width: 100%; }
-        .header > div { display: table-cell; vertical-align: top; width: 50%; }
-        .logo { width: 120px; height: auto; }
-        .header-right { text-align: right; }
-        .company-name { font-size: 20px; font-weight: bold; margin-bottom: 5px; color: #000; }
-        .invoice-title { font-size: 16px; font-weight: 600; margin-top: 5px; color: #000; }
-        .invoice-number { margin-top: 10px; font-size: 13px; padding: 8px 15px; border: 2px solid #000; border-radius: 6px; display: inline-block; background: white; }
-        .info-section { margin-bottom: 15px; background: #f5f5f5; padding: 10px; border-radius: 10px; border-right: 4px solid #000; display: table; width: 100%; }
+        body { font-family: 'Cairo', 'DejaVu Sans', sans-serif; font-size: 13px; color: #000; direction: rtl; background: white; }
+        .container { padding: 10px; background: white; max-width: 800px; margin: 0 auto; }
+        .header { border-bottom: 3px solid #000; padding: 10px 0; margin-bottom: 10px; display: table; width: 100%; }
+        .header-right { display: table-cell; text-align: right; width: 70%; vertical-align: top; }
+        .header-left { display: table-cell; text-align: left; width: 30%; vertical-align: top; }
+        .logo { max-height: 190px; width: auto; }
+        .company-name { font-size: 20px; font-weight: bold; margin-bottom: 3px; color: #000; }
+        .invoice-title { font-size: 16px; font-weight: 600; margin-top: 3px; color: #000; }
+        .invoice-number { margin-top: 5px; font-size: 13px; padding: 5px 10px; border: 2px solid #000; border-radius: 6px; display: inline-block; background: white; }
+        .info-section { margin-bottom: 10px; background: #f5f5f5; padding: 8px; border-radius: 10px; border-right: 4px solid #000; display: table; width: 100%; }
         .info-row { display: table-row; }
-        .info-row > div { display: table-cell; width: 50%; padding: 5px 8px; font-size: 11px; }
+        .info-row > div { display: table-cell; width: 50%; padding: 3px 6px; font-size: 13px; }
         .info-label { font-weight: bold; color: #000; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 15px; direction: rtl; border-radius: 10px; overflow: hidden; border: 1px solid #000; }
-        th { background: #000; color: white; font-weight: bold; text-align: right; padding: 8px 6px; font-size: 11px; }
-        td { border-bottom: 1px solid #ddd; padding: 6px 6px; text-align: right; font-size: 10px; background: white; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 10px; direction: rtl; border-radius: 10px; overflow: hidden; border: 1px solid #000; }
+        th { background: #000; color: white; text-align: right; padding: 5px 4px; font-size: 13px; font-weight: bold; }
+        td { border-bottom: 1px solid #ddd; padding: 4px 4px; text-align: right; font-size: 12px; background: white; color: #000; font-weight: bold; }
         th:first-child { border-radius: 10px 0 0 0; }
         th:last-child { border-radius: 0 10px 0 0; }
         td:first-child { text-align: right; }
         tbody tr:nth-child(even) td { background-color: #f5f5f5; }
         tbody tr:last-child td:first-child { border-radius: 0 0 0 10px; }
         tbody tr:last-child td:last-child { border-radius: 0 0 10px 0; }
-        .totals { margin-top: 15px; float: right; width: 45%; direction: rtl; background: #f5f5f5; padding: 12px; border-radius: 10px; border: 1px solid #ddd; }
-        .totals-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #ddd; direction: rtl; font-size: 11px; }
+        .totals { margin-top: 10px; float: right; width: 45%; direction: rtl; background: #f5f5f5; padding: 10px; border-radius: 10px; border: 1px solid #ddd; }
+        .totals-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #ddd; direction: rtl; font-size: 13px; }
         .totals-row:last-child { border-bottom: none; }
-        .totals-row.final { background: #000; color: white; margin: 8px -12px -12px -12px; padding: 12px; border-radius: 0 0 10px 10px; font-weight: bold; font-size: 14px; border: none; }
-        .notes { clear: both; margin-top: 15px; padding: 12px; border-right: 4px solid #000; background: #f5f5f5; border-radius: 8px; font-size: 10px; }
+        .totals-row.final { background: #000; color: white; margin: 6px -10px -10px -10px; padding: 10px; border-radius: 0 0 10px 10px; font-weight: bold; font-size: 14px; border: none; }
+        .notes { clear: both; margin-top: 10px; padding: 10px; border-right: 4px solid #000; background: #f5f5f5; border-radius: 8px; font-size: 12px; }
         .invalid-stamp { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100px; color: rgba(220, 53, 69, 0.15); font-weight: bold; border: 10px solid rgba(220, 53, 69, 0.15); padding: 20px; z-index: 1000; border-radius: 20px; }
     </style>
 </head>
@@ -54,16 +54,16 @@
 
     <div class="container">
         <div class="header">
+            <div class="header-left">
+                @if($logoBase64)
+                <img src="data:image/png;base64,{{ $logoBase64 }}" class="logo" alt="Logo">
+                @endif
+            </div>
             <div class="header-right">
                 <div class="company-name"><strong>{!! $companyName !!}</strong></div>
                 <div class="title" style="font-size: 18px;"><strong>{{ $title }}</strong></div>
                 <div class="invoice-number">{{ $invoiceNumber }} :<strong>{!! $labels['invoiceNumber'] !!}</strong></div>
             </div>
-            @if($logoBase64)
-            <div style="text-align: left;">
-                <img src="data:image/png;base64,{{ $logoBase64 }}" class="logo" alt="Logo">
-            </div>
-            @endif
         </div>
 
         <div class="info-section">
