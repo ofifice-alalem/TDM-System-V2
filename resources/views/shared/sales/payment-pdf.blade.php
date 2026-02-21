@@ -32,7 +32,7 @@
         .company-header img { max-height: 150px; margin-bottom: 10px; }
         .company-header .company-name { font-size: 18px; font-weight: bold; color: #333; }
         
-        .header { background: #000; color: #fff; padding: 20px; text-align: center; border-bottom: 3px solid #000; }
+        .header { background: #eee; color: #000; padding: 20px; text-align: center; border-bottom: 3px solid #000; }
         .header .title { font-size: 32px; font-weight: 900; margin: 0 0 12px 0; letter-spacing: 2px; }
         .header .receipt-number { font-size: 18px; font-weight: bold; margin: 0; letter-spacing: 1px; }
         
