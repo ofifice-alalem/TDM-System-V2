@@ -96,7 +96,7 @@ class WarehousePaymentController extends Controller
         ]);
 
         try {
-            $payment = $this->service->rejectPayment($id, $validated['notes']);
+            $payment = $this->service->rejectPayment($id, auth()->id(), $validated['notes']);
 
             return redirect()->route('warehouse.payments.show', $payment)
                 ->with('success', 'تم رفض إيصال القبض');

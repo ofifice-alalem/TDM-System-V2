@@ -48,15 +48,17 @@ class WarehousePaymentService
         });
     }
 
-    public function rejectPayment($paymentId, $notes)
+    public function rejectPayment($paymentId, $keeperId, $notes)
     {
-        return DB::transaction(function () use ($paymentId, $notes) {
+        return DB::transaction(function () use ($paymentId, $keeperId, $notes) {
             $payment = StorePayment::where('id', $paymentId)
                 ->where('status', 'pending')
                 ->firstOrFail();
 
             $payment->update([
                 'status' => 'rejected',
+                'keeper_id' => $keeperId,
+                'confirmed_at' => now(),
                 'notes' => $notes,
             ]);
 
