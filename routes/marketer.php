@@ -48,6 +48,7 @@ Route::middleware(['web', 'auth', 'role:marketer'])->group(function () {
             Route::get('/{sale}', [SalesController::class, 'show'])->name('show');
             Route::delete('/{sale}/cancel', [SalesController::class, 'cancel'])->name('cancel');
             Route::get('/{sale}/pdf', [\App\Http\Controllers\Shared\Sales\InvoiceController::class, 'generateSalesInvoicePdf'])->name('pdf');
+            Route::get('/{sale}/pdf-thermal', [\App\Http\Controllers\Shared\Sales\InvoiceController::class, 'generateSalesInvoiceThermalPdf'])->name('pdf-thermal');
             Route::get('/{sale}/documentation', [SalesController::class, 'viewDocumentation'])->name('documentation');
         });
 

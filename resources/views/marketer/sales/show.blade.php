@@ -207,10 +207,32 @@
                     </div>
 
                     <div class="mt-8 pt-6 border-t border-gray-200 dark:border-dark-border z-10 relative">
-                        <a href="{{ route('marketer.sales.pdf', $invoice) }}" target="_blank" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group">
-                            <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
-                            طباعة PDF
-                        </a>
+                        <div x-data="{ showPrintOptions: false }" class="relative">
+                            <button 
+                                @click="showPrintOptions = !showPrintOptions"
+                                class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group">
+                                <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                طباعة PDF
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="showPrintOptions ? 'rotate-180' : ''"></i>
+                            </button>
+
+                            <div 
+                                x-show="showPrintOptions"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 -translate-y-2"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                class="mt-3 space-y-2"
+                                style="display: none;">
+                                <a href="{{ route('marketer.sales.pdf', $invoice) }}" target="_blank" class="w-full bg-white dark:bg-dark-card border-2 border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-bg py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group">
+                                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                                    A4 - النظام القديم
+                                </a>
+                                <a href="{{ route('marketer.sales.pdf-thermal', $invoice) }}" target="_blank" class="w-full bg-white dark:bg-dark-card border-2 border-emerald-200 dark:border-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group">
+                                    <i data-lucide="receipt" class="w-5 h-5"></i>
+                                    80mm - X-Printer
+                                </a>
+                            </div>
+                        </div>
 
                         @if($invoice->status === 'pending')
                             <div x-data="{ showCancel: false }" class="mt-4">
