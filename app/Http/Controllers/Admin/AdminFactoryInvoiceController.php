@@ -24,7 +24,7 @@ class AdminFactoryInvoiceController extends Controller
             $query->where('invoice_number', 'like', '%' . $request->invoice_number . '%');
         }
 
-        $invoices = $query->latest()->paginate(20)->withQueryString();
+        $invoices = $query->latest('updated_at')->paginate(20)->withQueryString();
 
         return view('shared.factory-invoices.index', compact('invoices'));
     }
