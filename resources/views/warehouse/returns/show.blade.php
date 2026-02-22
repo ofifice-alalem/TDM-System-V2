@@ -272,7 +272,9 @@
                                 <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $request->approved_at->format('Y-m-d h:i A') }}</span>
                             </div>
                         </div>
-                        @elseif($request->status == 'rejected')
+                        @endif
+
+                        @if($request->status == 'rejected')
                         <div class="relative flex items-start gap-4 animate-slide-up">
                             <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0 shadow-sm z-10 border-2 border-white dark:border-dark-card">
                                 <i data-lucide="x" class="w-5 h-5"></i>
@@ -280,10 +282,13 @@
                             <div>
                                 <h4 class="font-bold text-red-800 dark:text-red-400 text-sm">تم رفض الإرجاع</h4>
                                 <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">بواسطة: {{ $request->rejecter->full_name }}</p>
+                                @if($request->notes)
+                                <p class="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">السبب: {{ $request->notes }}</p>
+                                @endif
                                 <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $request->rejected_at->format('Y-m-d h:i A') }}</span>
                             </div>
                         </div>
-                        @else
+                        @elseif(!$request->approved_at)
                         <div class="relative flex items-start gap-4 opacity-50 grayscale">
                             <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-dark-bg text-gray-400 dark:text-gray-600 flex items-center justify-center shrink-0 z-10 border-2 border-white dark:border-dark-card relative overflow-hidden">
                                 <div class="absolute inset-0 bg-gray-200/50 dark:bg-gray-800/50 animate-pulse"></div>
@@ -325,6 +330,9 @@
                             </div>
                             <div>
                                 <h4 class="font-bold text-gray-600 dark:text-gray-300 text-sm">تم إلغاء الإرجاع</h4>
+                                @if($request->notes)
+                                <p class="text-xs text-gray-500 dark:text-dark-muted mt-1">السبب: {{ $request->notes }}</p>
+                                @endif
                                 <span class="text-[10px] bg-gray-100 dark:bg-dark-bg px-2 py-0.5 rounded text-gray-500 dark:text-dark-muted mt-2 inline-block font-mono">{{ $request->updated_at->format('Y-m-d h:i A') }}</span>
                             </div>
                         </div>

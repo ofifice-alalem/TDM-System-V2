@@ -57,10 +57,10 @@
                                                 <span class="text-gray-700 dark:text-gray-400 font-black text-base">{{ $index + 1 }}</span>
                                             </td>
                                             <td class="px-4 md:px-6 py-4 md:py-5 bg-gray-100 dark:bg-dark-bg/60 border-y-2 border-gray-200 dark:border-dark-border group-hover:bg-blue-50 dark:group-hover:bg-dark-card group-hover:shadow-lg group-hover:border-blue-200 dark:group-hover:border-accent-500/30 transition-all">
-                                                <div class="font-black text-gray-900 dark:text-gray-100 text-base">{{ $item->name }}</div>
+                                                <div class="font-black text-gray-900 dark:text-gray-100 text-xs md:text-base">{{ $item->name }}</div>
                                             </td>
                                             <td class="px-4 md:px-6 py-4 md:py-5 bg-gray-100 dark:bg-dark-bg/60 rounded-l-2xl border-2 border-gray-200 dark:border-dark-border group-hover:bg-blue-50 dark:group-hover:bg-dark-card group-hover:shadow-lg group-hover:border-blue-200 dark:group-hover:border-accent-500/30 transition-all text-center">
-                                                <span class="inline-flex items-center justify-center bg-gray-600 dark:bg-blue-900/30 border-2 border-gray-700 dark:border-blue-800 text-white dark:text-blue-400 font-black px-6 py-2 rounded-xl text-lg shadow-md">
+                                                <span class="inline-flex items-center justify-center bg-gray-600 dark:bg-blue-900/30 border-2 border-gray-700 dark:border-blue-800 text-white dark:text-blue-400 font-black px-3 md:px-6 py-1 md:py-2 rounded-xl text-sm md:text-lg shadow-md">
                                                     {{ $item->quantity }}
                                                 </span>
                                             </td>
@@ -103,10 +103,10 @@
                                                 <span class="text-gray-700 dark:text-gray-400 font-black text-base">{{ $index + 1 }}</span>
                                             </td>
                                             <td class="px-4 md:px-6 py-4 md:py-5 bg-gray-100 dark:bg-dark-bg/60 border-y-2 border-gray-200 dark:border-dark-border group-hover:bg-amber-50 dark:group-hover:bg-dark-card group-hover:shadow-lg group-hover:border-amber-200 dark:group-hover:border-accent-500/30 transition-all">
-                                                <div class="font-black text-gray-900 dark:text-gray-100 text-base">{{ $item->name }}</div>
+                                                <div class="font-black text-gray-900 dark:text-gray-100 text-xs md:text-base">{{ $item->name }}</div>
                                             </td>
                                             <td class="px-4 md:px-6 py-4 md:py-5 bg-gray-100 dark:bg-dark-bg/60 rounded-l-2xl border-2 border-gray-200 dark:border-dark-border group-hover:bg-amber-50 dark:group-hover:bg-dark-card group-hover:shadow-lg group-hover:border-amber-200 dark:group-hover:border-accent-500/30 transition-all text-center">
-                                                <span class="inline-flex items-center justify-center bg-amber-500 dark:bg-amber-900/30 border-2 border-amber-600 dark:border-amber-800 text-white dark:text-amber-400 font-black px-6 py-2 rounded-xl text-lg shadow-md">
+                                                <span class="inline-flex items-center justify-center bg-amber-500 dark:bg-amber-900/30 border-2 border-amber-600 dark:border-amber-800 text-white dark:text-amber-400 font-black px-3 md:px-6 py-1 md:py-2 rounded-xl text-sm md:text-lg shadow-md">
                                                     {{ $item->quantity }}
                                                 </span>
                                             </td>

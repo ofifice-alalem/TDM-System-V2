@@ -72,14 +72,20 @@
             </div>
             <div class="info-row">
                 <div>{{ $status }} :<span class="info-label">{!! $labels['status'] !!}</span></div>
-                @if(isset($approvedBy))
+                @if(isset($rejectedBy))
+                <div>{{ $rejectedBy }} ({{ $rejectedDate }}) :<span class="info-label">{!! $labels['rejectedBy'] !!}</span></div>
+                @elseif(isset($approvedBy))
                 <div>{{ $approvedBy }} :<span class="info-label">{!! $labels['approvedBy'] !!}</span></div>
-                @elseif(isset($rejectedBy))
-                <div>{{ $rejectedBy }} :<span class="info-label">{!! $labels['rejectedBy'] !!}</span></div>
                 @else
                 <div></div>
                 @endif
             </div>
+            @if(isset($approvedBy) && isset($rejectedBy))
+            <div class="info-row">
+                <div>{{ $approvedBy }} ({{ $approvedDate }}) :<span class="info-label">{!! $labels['approvedBy'] !!}</span></div>
+                <div></div>
+            </div>
+            @endif
         </div>
 
         <table>
