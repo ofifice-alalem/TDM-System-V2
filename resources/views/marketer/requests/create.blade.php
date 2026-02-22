@@ -53,8 +53,8 @@
                                 <select name="items[0][product_id]" class="product-select w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all" required>
                                     <option value="">اختر المنتج</option>
                                     @foreach($products as $product)
-                                        <option value="{{ $product->id }}" data-stock="{{ $product->stock }}" data-price="{{ $product->current_price }}">
-                                            {{ $product->name }} - {{ $product->current_price }} دينار (متوفر: {{ $product->stock }})
+                                        <option value="{{ $product->id }}" data-stock="{{ $product->stock }}">
+                                            {{ $product->name }} (متوفر: {{ $product->stock }})
                                         </option>
                                     @endforeach
                                 </select>
