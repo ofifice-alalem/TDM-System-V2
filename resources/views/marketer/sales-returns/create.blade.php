@@ -117,14 +117,35 @@
 
 @push('scripts')
 <script>
-const allInvoices = {!! json_encode($approvedInvoices->map(function($invoice) {
+const allInvoices = {!! json_encode($approvedInvoices->map(function($invoice) use ($approvedInvoices) {
     return [
         'id' => $invoice->id,
         'number' => $invoice->invoice_number,
         'store' => $invoice->store->name,
         'store_active' => $invoice->store->is_active,
         'amount' => $invoice->total_amount,
-        'items' => $invoice->items->map(function($item) {
+        'items' => $invoice->items->map(function($item) use ($invoice) {
+            $alreadyReturned = \App\Models\SalesReturnItem::whereHas('salesReturn', function ($q) use ($invoice) {
+                $q->where('sales_invoice_id', $invoice->id)
+                  ->whereIn('status', ['pending', 'approved']);
+            })->where('sales_invoice_item_id', $item->id)
+              ->sum('quantity');
+            
+            $previousReturns = \App\Models\SalesReturnItem::whereHas('salesReturn', function ($q) use ($invoice) {
+                $q->where('sales_invoice_id', $invoice->id)
+                  ->whereIn('status', ['pending', 'approved']);
+            })->where('sales_invoice_item_id', $item->id)
+              ->with('salesReturn:id,return_number')
+              ->get()
+              ->pluck('salesReturn')
+              ->unique('id')
+              ->map(function($return) {
+                  return [
+                      'id' => $return->id,
+                      'number' => $return->return_number
+                  ];
+              })->values();
+            
             return [
                 'id' => $item->id,
                 'product_id' => $item->product_id,
@@ -132,7 +153,10 @@ const allInvoices = {!! json_encode($approvedInvoices->map(function($invoice) {
                 'quantity' => $item->quantity,
                 'free_quantity' => $item->free_quantity,
                 'unit_price' => $item->unit_price,
-                'total' => $item->quantity + $item->free_quantity
+                'total' => $item->quantity + $item->free_quantity,
+                'already_returned' => $alreadyReturned,
+                'available' => ($item->quantity + $item->free_quantity) - $alreadyReturned,
+                'previous_returns' => $previousReturns
             ];
         })->toArray()
     ];
@@ -274,24 +298,54 @@ document.addEventListener('DOMContentLoaded', function() {
         
         items.forEach((item, index) => {
             const itemHtml = `
-                <div class="bg-gray-50/50 dark:bg-dark-bg/60 rounded-2xl p-4 md:p-6 border border-gray-100 dark:border-dark-border">
-                    <div class="grid grid-cols-12 gap-3">
-                        <div class="col-span-12 md:col-span-5">
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">${item.product_name}</label>
-                            <input type="hidden" name="items[${index}][sales_invoice_item_id]" value="${item.id}">
-                            <div class="text-xs text-gray-500 dark:text-gray-400">الكمية المتاحة: ${item.total}</div>
+                <div class="bg-white dark:bg-dark-card rounded-2xl p-4 md:p-6 border-2 ${item.available === 0 ? 'border-red-200 dark:border-red-900/30 opacity-60' : 'border-gray-200 dark:border-dark-border'} shadow-sm">
+                    <div class="flex flex-col gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex-1">
+                                    <label class="block text-lg font-bold text-gray-900 dark:text-white mb-2">${item.product_name}</label>
+                                    <input type="hidden" name="items[${index}][sales_invoice_item_id]" value="${item.id}">
+                                    <div class="flex flex-wrap gap-2 text-sm">
+                                        <div class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-dark-bg rounded-lg">
+                                            <i data-lucide="package" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
+                                            <span class="text-gray-700 dark:text-gray-300 font-medium">الأصلية: <span class="font-bold">${item.total}</span></span>
+                                        </div>
+                                        ${item.already_returned > 0 ? `
+                                        <div class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                                            <i data-lucide="corner-up-left" class="w-4 h-4 text-red-500 dark:text-red-400"></i>
+                                            <span class="text-red-700 dark:text-red-300 font-medium">مرجع: <span class="font-bold">${item.already_returned}</span></span>
+                                        </div>` : ''}
+                                        <div class="flex items-center gap-1.5 px-3 py-1.5 ${item.available > 0 ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20'} rounded-lg">
+                                            <i data-lucide="check-circle" class="w-4 h-4 ${item.available > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}"></i>
+                                            <span class="${item.available > 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-700 dark:text-red-300'} font-medium">متاح: <span class="font-bold">${item.available}</span></span>
+                                        </div>
+                                    </div>
+                                    ${item.previous_returns && item.previous_returns.length > 0 ? `
+                                    <div class="mt-2 flex items-center gap-1.5 text-sm">
+                                        <i data-lucide="history" class="w-4 h-4 text-amber-500 dark:text-amber-400"></i>
+                                        <span class="text-amber-700 dark:text-amber-300 font-medium">مرتجعات سابقة:</span>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            ${item.previous_returns.map(r => `<span class="px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 rounded font-mono text-xs">#${r.number}</span>`).join('')}
+                                        </div>
+                                    </div>` : ''}
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-span-6 md:col-span-3">
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">الكمية المرجعة</label>
-                            <input type="number" name="items[${index}][quantity]" class="return-quantity w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm" min="0" max="${item.total}" data-price="${item.unit_price}" data-max="${item.total}" value="0">
-                        </div>
-                        <div class="col-span-6 md:col-span-2">
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">السعر</label>
-                            <input type="text" class="w-full bg-gray-100 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm font-bold text-center" value="${item.unit_price}" readonly>
-                        </div>
-                        <div class="col-span-6 md:col-span-2">
-                            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">الإجمالي</label>
-                            <input type="text" class="item-total w-full bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl px-4 py-3 text-primary-700 dark:text-primary-400 text-sm font-bold text-center" value="0" readonly>
+                        <div class="flex flex-col md:flex-row gap-3">
+                            <div class="flex gap-3 flex-1">
+                                <div class="flex-1">
+                                    <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-2">الكمية المرجعة</label>
+                                    <input type="number" name="items[${index}][quantity]" class="return-quantity w-full bg-gray-50 dark:bg-dark-bg border-2 border-gray-200 dark:border-dark-border rounded-xl px-4 py-3.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all text-base font-bold" min="0" max="${item.available}" data-price="${item.unit_price}" data-max="${item.available}" value="0" ${item.available === 0 ? 'disabled' : ''}>
+                                </div>
+                                <div class="w-28">
+                                    <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-2">السعر</label>
+                                    <input type="text" class="w-full bg-gray-100 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-3 py-3.5 text-gray-900 dark:text-white text-base font-bold text-center" value="${item.unit_price}" readonly>
+                                </div>
+                            </div>
+                            <div class="w-full md:w-32">
+                                <label class="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-2">الإجمالي</label>
+                                <input type="text" class="item-total w-full bg-primary-50 dark:bg-primary-900/20 border-2 border-primary-200 dark:border-primary-600/30 rounded-xl px-3 py-3.5 text-primary-700 dark:text-primary-400 text-base font-bold text-center" value="0.00" readonly>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -305,13 +359,19 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.return-quantity').forEach(input => {
             input.addEventListener('input', function() {
                 const max = parseInt(this.dataset.max || this.max);
-                const value = parseInt(this.value || 0);
+                let value = parseInt(this.value || 0);
                 if (value > max) {
                     this.value = max;
+                    value = max;
+                }
+                if (value < 0) {
+                    this.value = 0;
                 }
                 calculateSummary();
             });
         });
+        
+        lucide.createIcons();
         
         lucide.createIcons();
     }
@@ -325,8 +385,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const price = parseFloat(input.dataset.price || 0);
             const itemTotal = quantity * price;
             
-            const row = input.closest('.bg-gray-50\\/50');
-            row.querySelector('.item-total').value = itemTotal.toFixed(2);
+            const row = input.closest('.bg-white');
+            if (row) {
+                const totalInput = row.querySelector('.item-total');
+                if (totalInput) {
+                    totalInput.value = itemTotal.toFixed(2);
+                }
+            }
             
             if (quantity > 0) {
                 totalItems += quantity;
@@ -340,18 +405,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Handle form submission - remove items with quantity 0
     document.querySelector('form').addEventListener('submit', function(e) {
-        const quantityInputs = document.querySelectorAll('.return-quantity');
         let hasItems = false;
         
-        quantityInputs.forEach(input => {
+        document.querySelectorAll('.return-quantity').forEach(input => {
             const quantity = parseInt(input.value || 0);
-            if (quantity === 0) {
-                // Remove the entire item container
-                const container = input.closest('.bg-gray-50\\/50');
-                if (container) {
-                    container.remove();
-                }
-            } else {
+            if (quantity > 0) {
                 hasItems = true;
             }
         });
