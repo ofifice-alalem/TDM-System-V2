@@ -58,7 +58,15 @@ class WarehouseRequestController extends Controller
             });
         }
 
-        $requests = $query->latest()->paginate(20)->withQueryString();
+        // ترتيب: الأقدم للمعلقة، الأحدث للباقي
+        $status = $request->has('status') ? $request->status : ($hasFilter ? null : 'pending');
+        if ($status === 'pending') {
+            $query->oldest('updated_at');
+        } else {
+            $query->latest('updated_at');
+        }
+
+        $requests = $query->paginate(20)->withQueryString();
         $marketers = \App\Models\MarketerRequest::with('marketer')
             ->select('marketer_id')
             ->distinct()
