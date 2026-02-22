@@ -98,6 +98,10 @@
                     <td>{{ $index + 1 }}</td>
                 </tr>
                 @endforeach
+                <tr style="background: #f5f5f5; font-weight: bold;">
+                    <td style="background: #eee; font-size: 14px;">{{ array_sum(array_column($items->toArray(), 'quantity')) }}</td>
+                    <td colspan="2" style="background: #eee; text-align: right; font-size: 14px;">{!! $labels['total'] !!}</td>
+                </tr>
             </tbody>
         </table>
 

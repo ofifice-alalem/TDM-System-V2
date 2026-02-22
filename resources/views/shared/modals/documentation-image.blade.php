@@ -21,9 +21,10 @@
         
         {{-- Image Content --}}
         <div class="p-6 overflow-auto max-h-[calc(90vh-120px)]">
-            <div class="bg-gray-50 dark:bg-dark-bg rounded-2xl p-4 border border-gray-200 dark:border-dark-border">
-                <img id="documentationImage" data-src="{{ $imageUrl }}" alt="صورة التوثيق" class="w-full h-auto rounded-xl shadow-lg">
+            <div class="bg-gray-50 dark:bg-dark-bg rounded-2xl p-4 border border-gray-200 dark:border-dark-border cursor-zoom-in" onclick="toggleImageZoom()">
+                <img id="documentationImage" data-src="{{ $imageUrl }}" alt="صورة التوثيق" class="w-full h-auto rounded-xl shadow-lg transition-transform duration-300" style="max-width: 100%;">
             </div>
+            <p class="text-xs text-center text-gray-500 dark:text-gray-400 mt-3">اضغط على الصورة للتكبير</p>
         </div>
         
         {{-- Footer --}}
@@ -42,6 +43,31 @@
 @once
 @push('scripts')
 <script>
+    let isZoomed = false;
+    
+    function toggleImageZoom() {
+        const img = document.getElementById('documentationImage');
+        const container = img.parentElement;
+        
+        if (!isZoomed) {
+            img.style.maxWidth = 'none';
+            img.style.width = 'auto';
+            img.style.cursor = 'zoom-out';
+            container.style.cursor = 'zoom-out';
+            container.classList.remove('cursor-zoom-in');
+            container.classList.add('cursor-zoom-out');
+            isZoomed = true;
+        } else {
+            img.style.maxWidth = '100%';
+            img.style.width = '100%';
+            img.style.cursor = 'zoom-in';
+            container.style.cursor = 'zoom-in';
+            container.classList.remove('cursor-zoom-out');
+            container.classList.add('cursor-zoom-in');
+            isZoomed = false;
+        }
+    }
+    
     function showDocumentationModal() {
         const modal = document.getElementById('documentationModal');
         const img = document.getElementById('documentationImage');
@@ -52,6 +78,7 @@
             if (img && !img.src) {
                 img.src = img.dataset.src;
             }
+            isZoomed = false;
             setTimeout(() => lucide.createIcons(), 50);
         }
     }
@@ -63,6 +90,10 @@
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
                 document.body.style.overflow = '';
+                const img = document.getElementById('documentationImage');
+                img.style.maxWidth = '100%';
+                img.style.width = '100%';
+                isZoomed = false;
             }
         }
     }
