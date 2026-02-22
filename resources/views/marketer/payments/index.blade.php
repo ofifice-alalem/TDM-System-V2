@@ -30,41 +30,53 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
             <div class="lg:col-span-8">
                 {{-- Filters --}}
-                <div class="bg-white dark:bg-dark-card rounded-2xl p-4 shadow-lg shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6">
-                    <form method="GET" action="{{ route('marketer.payments.index') }}" class="flex flex-col md:flex-row gap-3">
+                <details class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6">
+                    <summary class="px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-bg/50 transition-colors rounded-2xl flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="filter" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i>
+                            <span class="font-bold text-gray-900 dark:text-white">فلترة متقدمة</span>
+                            @if(request('payment_number') || request('from_date') || request('to_date') || request('store'))
+                                <span class="px-2 py-0.5 bg-primary-100 dark:bg-primary-600/20 text-primary-600 dark:text-primary-400 text-xs font-bold rounded-full">نشط</span>
+                            @endif
+                        </div>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 transition-transform"></i>
+                    </summary>
+                    <form method="GET" action="{{ route('marketer.payments.index') }}" class="p-4 pt-2">
                         <input type="hidden" name="status" value="{{ request('status') }}">
                         <input type="hidden" name="all" value="{{ request('all') }}">
                         
-                        <div class="flex-1">
-                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">رقم الإيصال</label>
-                            <input type="text" name="payment_number" value="{{ request('payment_number') }}" placeholder="ابحث برقم الإيصال..." class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">رقم الإيصال</label>
+                                <input type="text" name="payment_number" value="{{ request('payment_number') }}" placeholder="ابحث برقم الإيصال..." class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">من تاريخ</label>
+                                <input type="date" name="from_date" value="{{ request('from_date') }}" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:[color-scheme:dark]">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">إلى تاريخ</label>
+                                <input type="date" name="to_date" value="{{ request('to_date') }}" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:[color-scheme:dark]">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">المتجر</label>
+                                <input type="text" name="store" value="{{ request('store') }}" placeholder="ابحث عن متجر..." class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            </div>
                         </div>
-                        <div class="flex-1">
-                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">من تاريخ</label>
-                            <input type="date" name="from_date" value="{{ request('from_date') }}" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:[color-scheme:dark]">
-                        </div>
-                        <div class="flex-1">
-                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">إلى تاريخ</label>
-                            <input type="date" name="to_date" value="{{ request('to_date') }}" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:[color-scheme:dark]">
-                        </div>
-                        <div class="flex-1">
-                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">المتجر</label>
-                            <input type="text" name="store" value="{{ request('store') }}" placeholder="ابحث عن متجر..." class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        </div>
-                        <div class="flex gap-2 items-end">
+                        <div class="flex gap-2">
                             <button type="submit" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2 justify-center">
-                                <i data-lucide="filter" class="w-4 h-4"></i>
-                                فلترة
+                                <i data-lucide="search" class="w-4 h-4"></i>
+                                بحث
                             </button>
                             @if(request('payment_number') || request('from_date') || request('to_date') || request('store'))
                                 <a href="{{ route('marketer.payments.index', ['status' => request('status'), 'all' => request('all')]) }}" class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2 justify-center">
                                     <i data-lucide="x" class="w-4 h-4"></i>
-                                    إلغاء
+                                    إعادة تعيين
                                 </a>
                             @endif
                         </div>
                     </form>
-                </div>
+                </details>
 
                 @include('shared.payments._status-tabs', ['route' => fn($params) => route('marketer.payments.index', $params)])
 
