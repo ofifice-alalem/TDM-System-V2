@@ -63,6 +63,9 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
 
     // Products Management
     Route::prefix('products')->name('products.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ProductController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\ProductController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\ProductController::class, 'store'])->name('store');
         Route::get('/{product}/edit', [\App\Http\Controllers\Admin\AdminProductController::class, 'edit'])->name('edit');
         Route::patch('/{product}', [\App\Http\Controllers\Admin\AdminProductController::class, 'update'])->name('update');
     });

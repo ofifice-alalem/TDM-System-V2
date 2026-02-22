@@ -20,9 +20,9 @@
                 </h1>
             </div>
 
-            @if(request()->routeIs('warehouse.*'))
+            @if(request()->routeIs('warehouse.*') || request()->routeIs('admin.*'))
             <div class="lg:col-span-4 lg:translate-y-[30px]">
-                <a href="{{ route('warehouse.factory-invoices.index') }}" class="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2 w-full">
+                <a href="{{ request()->routeIs('admin.*') ? route('admin.factory-invoices.index') : route('warehouse.factory-invoices.index') }}" class="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2 w-full">
                     <i data-lucide="package-plus" class="w-5 h-5"></i>
                     فواتير المصنع
                 </a>
@@ -70,7 +70,7 @@
                             <th class="px-6 py-4 text-right text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">المنتج</th>
                             <th class="px-6 py-4 text-right text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">الباركود</th>
                             <th class="px-6 py-4 text-right text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">السعر</th>
-                            <th class="px-6 py-4 text-right text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">سعر الزوار</th>
+                            <th class="px-6 py-4 text-right text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">سعر الجملة</th>
                             <th class="px-6 py-4 text-center text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">الكمية المتوفرة</th>
                             <th class="px-6 py-4 text-center text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">آخر تحديث</th>
                             @if(request()->routeIs('admin.*'))
