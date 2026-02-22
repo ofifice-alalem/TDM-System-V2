@@ -58,7 +58,14 @@ class SalesController extends Controller
             });
         }
 
-        $invoices = $query->latest()->paginate(20)->withQueryString();
+        $status = $request->has('status') ? $request->status : ($hasFilter ? null : 'pending');
+        if ($status === 'pending') {
+            $query->oldest('updated_at');
+        } else {
+            $query->latest('updated_at');
+        }
+
+        $invoices = $query->paginate(20)->withQueryString();
 
         return view('marketer.sales.index', compact('invoices'));
     }
