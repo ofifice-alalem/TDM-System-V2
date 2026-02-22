@@ -258,6 +258,21 @@
                         <span class="text-3xl font-black text-gray-900 dark:text-white bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 px-5 py-3 rounded-xl shadow-sm dark:shadow-md border border-gray-200 dark:border-gray-700">{{ $pendingPayments }}</span>
                     </div>
                 </a>
+
+                <a href="{{ route('warehouse.factory-invoices.index', ['status' => 'pending']) }}" class="block bg-white dark:bg-dark-card rounded-xl p-5 border {{ $pendingFactoryInvoices > 0 ? 'border-indigo-200 dark:border-indigo-800/50 alert-card' : 'border-gray-200 dark:border-dark-border' }} hover:shadow-xl transition-all hover:-translate-y-1">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center">
+                                <i data-lucide="package-plus" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-gray-900 dark:text-white">فواتير المصنع</div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">تحتاج توثيق</p>
+                            </div>
+                        </div>
+                        <span class="text-3xl font-black text-gray-900 dark:text-white bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 px-5 py-3 rounded-xl shadow-sm dark:shadow-md border border-gray-200 dark:border-gray-700">{{ $pendingFactoryInvoices }}</span>
+                    </div>
+                </a>
                 </div>
 
                 {{-- قسم: الطلبات العاجلة --}}
@@ -374,4 +389,5 @@
 .alert-card.border-emerald-200::before { color: rgb(16, 185, 129); }
 .alert-card.border-orange-200::before { color: rgb(249, 115, 22); }
 .alert-card.border-cyan-200::before { color: rgb(6, 182, 212); }
+.alert-card.border-indigo-200::before { color: rgb(99, 102, 241); }
 </style>

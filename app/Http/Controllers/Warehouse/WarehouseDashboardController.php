@@ -47,6 +47,9 @@ class WarehouseDashboardController extends Controller
         // إيصالات القبض
         $pendingPayments = StorePayment::where('status', 'pending')->count();
 
+        // فواتير المصنع
+        $pendingFactoryInvoices = FactoryInvoice::where('status', 'pending')->count();
+
         // إرجاعات المتاجر
         $pendingSalesReturns = SalesReturn::where('status', 'pending')->count();
 
@@ -63,6 +66,7 @@ class WarehouseDashboardController extends Controller
             'approvedReturns',
             'pendingSales',
             'pendingPayments',
+            'pendingFactoryInvoices',
             'pendingSalesReturns',
             'unreadNotifications',
             'searchResult'
