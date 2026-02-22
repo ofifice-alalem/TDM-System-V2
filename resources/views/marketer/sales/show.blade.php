@@ -92,26 +92,23 @@
                                 <tr class="group hover:-translate-y-0.5 transition-transform duration-300">
                                     <td class="px-4 md:px-6 py-4 md:py-5 bg-gray-50/50 dark:bg-dark-bg/60 rounded-r-2xl border border-gray-100 dark:border-dark-border group-hover:bg-white dark:group-hover:bg-dark-card group-hover:shadow-md group-hover:border-primary-100 dark:group-hover:border-accent-500/30 transition-all">
                                         <div class="flex items-center gap-4">
-                                            <div class="hidden md:flex w-12 h-12 rounded-xl bg-white dark:bg-dark-card items-center justify-center text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-dark-border shadow-sm group-hover:text-primary-600 dark:group-hover:text-accent-400 transition-colors shrink-0">
-                                                <i data-lucide="package" class="w-6 h-6"></i>
-                                            </div>
                                             <div class="flex-1 min-w-0">
-                                                <div class="font-bold text-gray-900 dark:text-gray-100 text-base md:text-lg truncate">{{ $item->product->name }}</div>
+                                                <div class="font-bold text-gray-900 dark:text-gray-100 text-xs md:text-base truncate">{{ $item->product->name }}</div>
                                                 <div class="text-xs text-gray-400 dark:text-dark-muted mt-1 font-mono">{{ $item->product->barcode ?? '---' }}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="px-4 md:px-6 py-4 md:py-5 bg-gray-50/50 dark:bg-dark-bg/60 border-y border-gray-100 dark:border-dark-border group-hover:bg-white dark:group-hover:bg-dark-card group-hover:shadow-md group-hover:border-primary-100 dark:group-hover:border-accent-500/30 transition-all text-center">
-                                        <span class="inline-flex items-center justify-center bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 font-black px-6 py-2 rounded-xl text-lg shadow-sm">{{ $item->quantity }}</span>
+                                        <span class="inline-flex items-center justify-center bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border text-gray-900 dark:text-gray-100 font-black px-2 md:px-4 py-1 md:py-1.5 rounded-xl text-sm shadow-sm">{{ $item->quantity }}</span>
                                     </td>
                                     <td class="px-4 md:px-6 py-4 md:py-5 bg-gray-50/50 dark:bg-dark-bg/60 border-y border-gray-100 dark:border-dark-border group-hover:bg-white dark:group-hover:bg-dark-card group-hover:shadow-md group-hover:border-primary-100 dark:group-hover:border-accent-500/30 transition-all text-center">
-                                        <span class="inline-flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-black px-6 py-2 rounded-xl text-lg shadow-sm">{{ $item->free_quantity }}</span>
+                                        <span class="inline-flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-black px-2 md:px-4 py-1 md:py-1.5 rounded-xl text-sm shadow-sm">{{ $item->free_quantity }}</span>
                                     </td>
                                     <td class="px-4 md:px-6 py-4 md:py-5 bg-gray-50/50 dark:bg-dark-bg/60 border-y border-gray-100 dark:border-dark-border group-hover:bg-white dark:group-hover:bg-dark-card group-hover:shadow-md group-hover:border-primary-100 dark:group-hover:border-accent-500/30 transition-all text-center">
-                                        <span class="font-bold text-gray-700 dark:text-gray-300">{{ number_format($item->unit_price, 2) }} دينار</span>
+                                        <span class="font-bold text-gray-700 dark:text-gray-300 text-xs">{{ number_format($item->unit_price, 2) }} دينار</span>
                                     </td>
                                     <td class="px-4 md:px-6 py-4 md:py-5 bg-gray-50/50 dark:bg-dark-bg/60 rounded-l-2xl border border-gray-100 dark:border-dark-border group-hover:bg-white dark:group-hover:bg-dark-card group-hover:shadow-md group-hover:border-primary-100 dark:group-hover:border-accent-500/30 transition-all text-center">
-                                        <span class="font-black text-gray-900 dark:text-gray-100 text-lg">{{ number_format(($item->quantity + $item->free_quantity) * $item->unit_price, 2) }} دينار</span>
+                                        <span class="font-black text-gray-900 dark:text-gray-100 text-sm">{{ number_format(($item->quantity + $item->free_quantity) * $item->unit_price, 2) }} دينار</span>
                                     </td>
                                 </tr>
                                 @endforeach

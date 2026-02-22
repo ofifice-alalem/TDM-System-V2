@@ -122,6 +122,9 @@
 
         <div class="totals">
             <div class="totals-row">
+                {{ $totalProducts }} : <strong>{!! $labels['totalProducts'] !!}</strong>
+            </div>
+            <div class="totals-row">
                 {!! $currency !!} {{ $subtotal }} : <strong>{!! $labels['subtotal'] !!}</strong>
             </div>
             @if($productDiscount > 0)
