@@ -109,7 +109,7 @@
                 </div>
             </div>
 
-            <div class="lg:col-span-4 order-first lg:order-last">
+            <div class="lg:col-span-4">
                 <div class="bg-white dark:bg-dark-card rounded-2xl md:rounded-[2rem] p-4 md:p-6 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border mb-4 md:mb-6 animate-slide-up">
                     <div class="flex items-center gap-3 mb-3 md:mb-4">
                         <span class="bg-emerald-50 dark:bg-emerald-900/20 p-2 md:p-2.5 rounded-xl text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-100 dark:border-emerald-600/30">
