@@ -98,6 +98,11 @@
                     <td>{{ $index + 1 }}</td>
                 </tr>
                 @endforeach
+                <tr style="background: #eee !important;">
+                    <td style="font-weight: bold; font-size: 13px;">{{ $totalQuantity }}</td>
+                    <td style="font-weight: bold; font-size: 13px;">{!! $labels['totalGoods'] !!}</td>
+                    <td></td>
+                </tr>
             </tbody>
         </table>
 

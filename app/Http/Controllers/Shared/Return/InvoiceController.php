@@ -81,6 +81,7 @@ class InvoiceController extends Controller
                 ];
             }),
             'title' => $arabic->utf8Glyphs('إرجاع بضاعة'),
+            'totalQuantity' => $return->items->sum('quantity'),
             'labels' => [
                 'marketer' => $arabic->utf8Glyphs('المسوق'),
                 'date' => $arabic->utf8Glyphs('التاريخ'),
@@ -90,7 +91,7 @@ class InvoiceController extends Controller
                 'keeper' => $arabic->utf8Glyphs('أمين المخزن'),
                 'product' => $arabic->utf8Glyphs('المنتج'),
                 'quantity' => $arabic->utf8Glyphs('الكمية'),
-                'total' => $arabic->utf8Glyphs('الإجمالي'),
+                'totalGoods' => $arabic->utf8Glyphs('إجمالي البضاعة'),
                 'invalidInvoice' => $arabic->utf8Glyphs('الفاتورة لا يعتد بها'),
             ]
         ];
