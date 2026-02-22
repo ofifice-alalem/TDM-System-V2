@@ -44,6 +44,8 @@ class MainStockController extends Controller
 
         $products = $query->orderBy('products.name')->paginate(20)->withQueryString();
 
-        return view('shared.main-stock.index', compact('products'));
+        $totalStock = MainStock::sum('quantity');
+
+        return view('shared.main-stock.index', compact('products', 'totalStock'));
     }
 }

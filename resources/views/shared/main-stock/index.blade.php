@@ -31,6 +31,22 @@
         </div>
 
         {{-- Filters --}}
+        <div class="bg-white dark:bg-dark-card rounded-2xl p-4 shadow-lg shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
+                        <i data-lucide="package" class="w-6 h-6 text-emerald-600 dark:text-emerald-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">إجمالي البضاعة في المخزن</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">مجموع جميع الكميات</p>
+                    </div>
+                </div>
+                <div class="text-4xl font-black text-emerald-600 dark:text-emerald-400">{{ number_format($totalStock) }}</div>
+            </div>
+        </div>
+
+        {{-- Filters --}}
         <div class="bg-white dark:bg-dark-card rounded-2xl p-4 shadow-lg shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-dark-border">
             <form method="GET" class="flex flex-col md:flex-row gap-3">
                 <div class="flex-1">
