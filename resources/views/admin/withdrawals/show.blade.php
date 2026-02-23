@@ -68,10 +68,30 @@
                         </span>
                         <h2 class="font-bold text-xl text-gray-900 dark:text-white">تفاصيل السحب</h2>
                     </div>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center py-3 border-b border-gray-200 dark:border-dark-border">
-                            <span class="text-gray-600 dark:text-gray-400 font-medium">المبلغ المطلوب</span>
-                            <span class="text-2xl font-black text-amber-600 dark:text-amber-400">{{ number_format($withdrawal->requested_amount, 2) }} دينار</span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-dark-bg dark:to-dark-border rounded-2xl p-6 border-2 border-amber-200 dark:border-dark-border">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-amber-700 dark:text-amber-400 font-medium mb-2">المبلغ المطلوب</p>
+                                    <p class="text-4xl font-black text-amber-600 dark:text-amber-400">{{ number_format($withdrawal->requested_amount, 2) }}</p>
+                                    <p class="text-sm text-amber-600 dark:text-amber-400 font-bold mt-1">دينار</p>
+                                </div>
+                                <div class="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center">
+                                    <i data-lucide="wallet" class="w-8 h-8 text-amber-600 dark:text-amber-400"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-dark-bg dark:to-dark-border rounded-2xl p-6 border-2 border-emerald-200 dark:border-dark-border">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-emerald-700 dark:text-emerald-400 font-medium mb-2">الرصيد المتاح</p>
+                                    <p class="text-4xl font-black text-emerald-600 dark:text-emerald-400">{{ number_format($availableBalance, 2) }}</p>
+                                    <p class="text-sm text-emerald-600 dark:text-emerald-400 font-bold mt-1">دينار</p>
+                                </div>
+                                <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+                                    <i data-lucide="coins" class="w-8 h-8 text-emerald-600 dark:text-emerald-400"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -125,11 +145,7 @@
 
                     @if($withdrawal->status === 'pending')
                         <div class="mt-8 pt-6 border-t border-gray-200 dark:border-dark-border space-y-3">
-                            <a href="{{ route('admin.withdrawals.pdf', $withdrawal) }}" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group mb-3">
-                                <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
-                                طباعة PDF
-                            </a>
-                            <a href="{{ route('admin.withdrawals.pdf', $withdrawal) }}" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group mb-3">
+                            <a href="{{ route('admin.withdrawals.pdf', $withdrawal) }}" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group">
                                 <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
                                 طباعة PDF
                             </a>
@@ -148,22 +164,59 @@
                                 x-show="showApprove" 
                                 x-transition
                                 class="bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl p-4 border border-emerald-100 dark:border-emerald-900/30"
-                                style="display: none;">
+                                style="display: none;" x-data="{ fileName: '', imagePreview: null }">
                                 
                                 <form action="{{ route('admin.withdrawals.approve', $withdrawal) }}" method="POST" enctype="multipart/form-data">
                                     @csrf
                                     
-                                    <label class="block text-xs font-bold text-emerald-800 dark:text-emerald-300 mb-2">إيصال الاستلام الموقع:</label>
-                                    <input 
-                                        type="file" 
-                                        name="signed_receipt_image" 
-                                        accept="image/*"
-                                        class="w-full bg-white dark:bg-dark-bg border border-emerald-200 dark:border-emerald-800 rounded-xl p-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200 mb-3" 
-                                        required>
+                                    <label class="block text-xs font-bold text-emerald-800 dark:text-emerald-300 mb-3">صورة الإيصال المختوم</label>
+                                    
+                                    <div class="relative mb-4">
+                                        <input 
+                                            type="file" 
+                                            name="signed_receipt_image" 
+                                            accept="image/*"
+                                            id="signed_receipt_image"
+                                            @change="
+                                                fileName = $event.target.files[0]?.name || '';
+                                                if ($event.target.files[0]) {
+                                                    const reader = new FileReader();
+                                                    reader.onload = (e) => imagePreview = e.target.result;
+                                                    reader.readAsDataURL($event.target.files[0]);
+                                                }
+                                            "
+                                            class="hidden" 
+                                            required>
+                                        
+                                        <label 
+                                            for="signed_receipt_image" 
+                                            class="flex items-center justify-center gap-3 w-full bg-white dark:bg-dark-bg border-2 border-dashed border-emerald-300 dark:border-emerald-600 rounded-xl px-4 py-6 text-sm cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-400 dark:hover:border-emerald-500 transition-all group"
+                                            x-show="!imagePreview">
+                                            <div class="text-center">
+                                                <div class="w-12 h-12 mx-auto mb-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                                                    <i data-lucide="upload" class="w-6 h-6"></i>
+                                                </div>
+                                                <p class="font-bold text-emerald-700 dark:text-emerald-300 mb-1">اضغط لاختيار الصورة</p>
+                                                <p class="text-xs text-emerald-600 dark:text-emerald-400">JPG, PNG أو JPEG</p>
+                                            </div>
+                                        </label>
+
+                                        <div x-show="imagePreview" class="relative bg-white dark:bg-dark-bg border-2 border-emerald-300 dark:border-emerald-600 rounded-xl p-3">
+                                            <img :src="imagePreview" class="w-full h-48 object-contain rounded-lg">
+                                            <button 
+                                                type="button" 
+                                                @click="imagePreview = null; fileName = ''; document.getElementById('signed_receipt_image').value = ''"
+                                                class="absolute top-5 left-5 bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg transition-colors">
+                                                <i data-lucide="x" class="w-4 h-4"></i>
+                                            </button>
+                                            <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-2 text-center font-medium" x-text="fileName"></p>
+                                        </div>
+                                    </div>
                                     
                                     <div class="flex gap-2">
-                                        <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
-                                            تأكيد الموافقة
+                                        <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+                                            <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                            توثيق الإيصال
                                         </button>
                                         <button 
                                             type="button" 

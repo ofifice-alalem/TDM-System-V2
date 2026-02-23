@@ -45,9 +45,19 @@
             {{-- Main List --}}
             <div class="lg:col-span-8 lg:-mt-[130px]">
                 {{-- Filters --}}
-                <div class="bg-white dark:bg-dark-card rounded-2xl p-4 md:p-6 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6 animate-slide-up">
-                    <form method="GET" action="{{ route('marketer.withdrawals.index') }}" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <details class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6 animate-slide-up">
+                    <summary class="px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-bg/50 transition-colors rounded-2xl flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="filter" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i>
+                            <span class="font-bold text-gray-900 dark:text-white">فلترة متقدمة</span>
+                            @if(request('withdrawal_id') || request('from_date') || request('to_date'))
+                                <span class="px-2 py-0.5 bg-primary-100 dark:bg-primary-600/20 text-primary-600 dark:text-primary-400 text-xs font-bold rounded-full">نشط</span>
+                            @endif
+                        </div>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 transition-transform"></i>
+                    </summary>
+                    <form method="GET" action="{{ route('marketer.withdrawals.index') }}" class="p-4 pt-2">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">رقم السحب</label>
                                 <input type="number" name="withdrawal_id" value="{{ request('withdrawal_id') }}" placeholder="1" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm">
@@ -63,16 +73,18 @@
                         </div>
                         <div class="flex gap-3">
                             <button type="submit" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all flex items-center gap-2">
-                                <i data-lucide="filter" class="w-4 h-4"></i>
-                                فلترة
+                                <i data-lucide="search" class="w-4 h-4"></i>
+                                بحث
                             </button>
-                            <a href="{{ route('marketer.withdrawals.index') }}" class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all flex items-center gap-2">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                                إلغاء
-                            </a>
+                            @if(request('withdrawal_id') || request('from_date') || request('to_date'))
+                                <a href="{{ route('marketer.withdrawals.index') }}" class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all flex items-center gap-2">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                    إعادة تعيين
+                                </a>
+                            @endif
                         </div>
                     </form>
-                </div>
+                </details>
 
                 @include('shared.withdrawals._status-tabs', ['route' => fn($params) => route('marketer.withdrawals.index', $params)])
 

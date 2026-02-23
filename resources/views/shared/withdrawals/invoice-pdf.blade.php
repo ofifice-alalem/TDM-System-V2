@@ -99,10 +99,22 @@
                         <td class="label">{{ $labels['approvedBy'] }}</td>
                     </tr>
                     @endif
+                    @if($approvedAt)
+                    <tr>
+                        <td class="value">{{ $approvedAt }}</td>
+                        <td class="label">{{ $labels['approvedAt'] }}</td>
+                    </tr>
+                    @endif
                     @if($rejectedBy)
                     <tr>
                         <td class="value">{{ $rejectedBy }}</td>
                         <td class="label">{{ $labels['rejectedBy'] }}</td>
+                    </tr>
+                    @endif
+                    @if($rejectedAt)
+                    <tr>
+                        <td class="value">{{ $rejectedAt }}</td>
+                        <td class="label">{{ $labels['rejectedAt'] }}</td>
                     </tr>
                     @endif
                 </table>

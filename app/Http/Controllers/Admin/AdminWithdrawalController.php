@@ -63,7 +63,15 @@ class AdminWithdrawalController extends Controller
     public function show(MarketerWithdrawalRequest $withdrawal)
     {
         $withdrawal->load('marketer', 'approver', 'rejecter');
-        return view('admin.withdrawals.show', compact('withdrawal'));
+        
+        // Calculate available balance
+        $totalCommissions = \App\Models\MarketerCommission::where('marketer_id', $withdrawal->marketer_id)->sum('commission_amount');
+        $totalWithdrawn = MarketerWithdrawalRequest::where('marketer_id', $withdrawal->marketer_id)
+            ->where('status', 'approved')
+            ->sum('requested_amount');
+        $availableBalance = max(0, $totalCommissions - $totalWithdrawn);
+        
+        return view('admin.withdrawals.show', compact('withdrawal', 'availableBalance'));
     }
 
     public function approve(Request $request, $id)

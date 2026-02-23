@@ -39,14 +39,27 @@
                         </span>
                         <h2 class="font-bold text-xl text-gray-900 dark:text-white">تفاصيل السحب</h2>
                     </div>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center py-3 border-b border-gray-200 dark:border-dark-border">
-                            <span class="text-gray-600 dark:text-gray-400 font-medium">المبلغ المطلوب</span>
-                            <span class="text-2xl font-black text-amber-600 dark:text-amber-400">{{ number_format($withdrawal->requested_amount, 2) }} دينار</span>
+                    <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-dark-bg dark:to-dark-border rounded-2xl p-6 border-2 border-amber-200 dark:border-dark-border">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-amber-700 dark:text-amber-400 font-medium mb-2">المبلغ المطلوب</p>
+                                <p class="text-4xl font-black text-amber-600 dark:text-amber-400">{{ number_format($withdrawal->requested_amount, 2) }}</p>
+                                <p class="text-sm text-amber-600 dark:text-amber-400 font-bold mt-1">دينار</p>
+                            </div>
+                            <div class="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center">
+                                <i data-lucide="wallet" class="w-10 h-10 text-amber-600 dark:text-amber-400"></i>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center py-3">
-                            <span class="text-gray-600 dark:text-gray-400 font-medium">المسوق</span>
-                            <span class="font-bold text-gray-900 dark:text-white">{{ $withdrawal->marketer->full_name }}</span>
+                    </div>
+                    <div class="mt-6 pt-6 border-t border-gray-200 dark:border-dark-border">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center">
+                                <i data-lucide="user" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">المسوق</p>
+                                <p class="font-bold text-gray-900 dark:text-white">{{ $withdrawal->marketer->full_name }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
