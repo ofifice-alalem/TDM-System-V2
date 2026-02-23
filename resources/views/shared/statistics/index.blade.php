@@ -104,17 +104,43 @@
         @if($results)
             <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg overflow-hidden">
                 <div class="p-6 border-b border-gray-200 dark:border-dark-border">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-xl font-black text-gray-900 dark:text-white">النتائج</h2>
-                        <div class="text-left">
-                            <p class="text-xs text-gray-500 dark:text-gray-400">الإجمالي</p>
-                            <p class="text-2xl font-black text-primary-600 dark:text-primary-400">{{ number_format($results['total'], 2) }} دينار</p>
-                            @if($results['operation'] == 'payments' && $results['total_commission'] > 0 && request('stat_type') == 'marketers')
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">إجمالي المستحق</p>
-                                <p class="text-lg font-black text-emerald-600 dark:text-emerald-400">{{ number_format($results['total_commission'], 2) }} دينار</p>
-                            @endif
+                    <h2 class="text-xl font-black text-gray-900 dark:text-white mb-4">النتائج</h2>
+                    @if(request('stat_type') == 'stores')
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                            <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 border border-amber-200 dark:border-amber-800">
+                                <p class="text-xs text-amber-600 dark:text-amber-400 font-bold mb-1">معلق</p>
+                                <p class="text-lg font-black text-amber-700 dark:text-amber-300">{{ number_format($results['status_totals']['pending'], 2) }}</p>
+                            </div>
+                            <div class="bg-red-50 dark:bg-red-900/20 rounded-xl p-3 border border-red-200 dark:border-red-800">
+                                <p class="text-xs text-red-600 dark:text-red-400 font-bold mb-1">ملغي</p>
+                                <p class="text-lg font-black text-red-700 dark:text-red-300">{{ number_format($results['status_totals']['cancelled'], 2) }}</p>
+                            </div>
+                            <div class="bg-red-50 dark:bg-red-900/20 rounded-xl p-3 border border-red-200 dark:border-red-800">
+                                <p class="text-xs text-red-600 dark:text-red-400 font-bold mb-1">مرفوض</p>
+                                <p class="text-lg font-black text-red-700 dark:text-red-300">{{ number_format($results['status_totals']['rejected'], 2) }}</p>
+                            </div>
+                            <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-3 border border-emerald-200 dark:border-emerald-800">
+                                <p class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-1">موثق</p>
+                                <p class="text-lg font-black text-emerald-700 dark:text-emerald-300">{{ number_format($results['status_totals']['approved'], 2) }}</p>
+                            </div>
+                            <div class="bg-blue-50 dark:bg-blue-900/30 rounded-xl p-3 border border-blue-200 dark:border-blue-800">
+                                <p class="text-xs text-blue-600 dark:text-blue-400 font-bold mb-1">الكلي</p>
+                                <p class="text-lg font-black text-blue-700 dark:text-blue-300">{{ number_format($results['status_totals']['total'], 2) }}</p>
+                            </div>
                         </div>
-                    </div>
+                    @else
+                        <div class="flex items-center justify-between">
+                            <div></div>
+                            <div class="text-left">
+                                <p class="text-xs text-gray-500 dark:text-gray-400">الإجمالي</p>
+                                <p class="text-2xl font-black text-primary-600 dark:text-primary-400">{{ number_format($results['total'], 2) }} دينار</p>
+                                @if($results['operation'] == 'payments' && $results['total_commission'] > 0 && request('stat_type') == 'marketers')
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">إجمالي المستحق</p>
+                                    <p class="text-lg font-black text-emerald-600 dark:text-emerald-400">{{ number_format($results['total_commission'], 2) }} دينار</p>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="overflow-x-auto">

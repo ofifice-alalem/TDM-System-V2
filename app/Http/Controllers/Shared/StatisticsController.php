@@ -75,50 +75,49 @@ class StatisticsController extends Controller
 
         $data = $forExport ? $query->latest()->get() : $query->latest()->paginate(50);
         
-        // Calculate totals based on operation
-        $total = 0;
-        $totalCommission = 0;
+        // Calculate totals by status
+        $statusTotals = [
+            'pending' => 0,
+            'approved' => 0,
+            'cancelled' => 0,
+            'rejected' => 0,
+            'total' => 0
+        ];
         
         if ($request->operation == 'payments') {
-            $totalQuery = StorePayment::where('store_id', $request->store_id)
-                ->where('status', 'approved')
-                ->whereDate('created_at', '>=', $request->from_date)
-                ->whereDate('created_at', '<=', $request->to_date);
-            
-            if ($request->filled('status')) {
-                $totalQuery->where('status', $request->status);
+            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
+                $statusTotals[$status] = StorePayment::where('store_id', $request->store_id)
+                    ->where('status', $status)
+                    ->whereDate('created_at', '>=', $request->from_date)
+                    ->whereDate('created_at', '<=', $request->to_date)
+                    ->sum('amount');
             }
-            
-            $total = $totalQuery->sum('amount');
         } elseif ($request->operation == 'sales') {
-            $totalQuery = SalesInvoice::where('store_id', $request->store_id)
-                ->where('status', 'approved')
-                ->whereDate('created_at', '>=', $request->from_date)
-                ->whereDate('created_at', '<=', $request->to_date);
-            
-            if ($request->filled('status')) {
-                $totalQuery->where('status', $request->status);
+            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
+                $statusTotals[$status] = SalesInvoice::where('store_id', $request->store_id)
+                    ->where('status', $status)
+                    ->whereDate('created_at', '>=', $request->from_date)
+                    ->whereDate('created_at', '<=', $request->to_date)
+                    ->sum('total_amount');
             }
-            
-            $total = $totalQuery->sum('total_amount');
         } elseif ($request->operation == 'returns') {
-            $totalQuery = SalesReturn::where('store_id', $request->store_id)
-                ->where('status', 'approved')
-                ->whereDate('created_at', '>=', $request->from_date)
-                ->whereDate('created_at', '<=', $request->to_date);
-            
-            if ($request->filled('status')) {
-                $totalQuery->where('status', $request->status);
+            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
+                $statusTotals[$status] = SalesReturn::where('store_id', $request->store_id)
+                    ->where('status', $status)
+                    ->whereDate('created_at', '>=', $request->from_date)
+                    ->whereDate('created_at', '<=', $request->to_date)
+                    ->sum('total_amount');
             }
-            
-            $total = $totalQuery->sum('total_amount');
         }
+        
+        $statusTotals['total'] = array_sum([$statusTotals['pending'], $statusTotals['approved'], $statusTotals['cancelled'], $statusTotals['rejected']]);
 
         return [
             'operation' => $request->operation,
             'data' => $data,
-            'total' => $total,
-            'total_commission' => $totalCommission
+            'total' => $statusTotals['approved'],
+            'total_commission' => 0,
+            'status_totals' => $statusTotals
         ];
     }
 
@@ -274,16 +273,59 @@ class StatisticsController extends Controller
             ['من تاريخ', $request->from_date],
             ['إلى تاريخ', $request->to_date],
             ['الحالة', $statusName],
-            ['الإجمالي (الموثق فقط)', number_format($results['total'], 2) . ' دينار'],
         ]);
-        
-        if ($request->operation == 'payments' && $results['total_commission'] > 0 && $request->stat_type == 'marketers') {
-            $infoData[] = ['إجمالي المستحق', number_format($results['total_commission'], 2) . ' دينار'];
-        }
         
         foreach ($infoData as $info) {
             $sheet->setCellValue('A' . $row, $info[0]);
             $sheet->setCellValue('B' . $row, $info[1]);
+            $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E3F2FD']],
+                'font' => ['bold' => true, 'size' => 12],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
+            $row++;
+        }
+        
+        if ($request->stat_type == 'stores' && isset($results['status_totals'])) {
+            $row++;
+            $sheet->setCellValue('A' . $row, 'الإجماليات حسب الحالة');
+            $sheet->mergeCells('A' . $row . ':E' . $row);
+            $sheet->getStyle('A' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF3E0']],
+                'font' => ['bold' => true, 'size' => 12],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            ]);
+            $row++;
+            
+            $statusHeaders = ['معلق', 'ملغي', 'مرفوض', 'موثق', 'الكلي'];
+            $sheet->fromArray($statusHeaders, null, 'A' . $row);
+            $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFE0B2']],
+                'font' => ['bold' => true],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            ]);
+            $row++;
+            
+            $statusValues = [
+                number_format($results['status_totals']['pending'], 2),
+                number_format($results['status_totals']['cancelled'], 2),
+                number_format($results['status_totals']['rejected'], 2),
+                number_format($results['status_totals']['approved'], 2),
+                number_format($results['status_totals']['total'], 2)
+            ];
+            $sheet->fromArray($statusValues, null, 'A' . $row);
+            $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+                'font' => ['bold' => true],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            ]);
+            $row++;
+        } elseif ($request->stat_type == 'marketers') {
+            $row++;
+            $sheet->setCellValue('A' . $row, 'الإجمالي (الموثق فقط)');
+            $sheet->setCellValue('B' . $row, number_format($results['total'], 2) . ' دينار');
             $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
                 'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E3F2FD']],
                 'font' => ['bold' => true, 'size' => 12],
