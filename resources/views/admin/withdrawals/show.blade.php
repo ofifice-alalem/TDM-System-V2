@@ -150,6 +150,17 @@
                                 طباعة PDF
                             </a>
 
+                            @if($withdrawal->requested_amount > $availableBalance)
+                                <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+                                    <div class="flex items-start gap-3">
+                                        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"></i>
+                                        <div>
+                                            <p class="text-amber-800 dark:text-amber-200 font-bold text-sm mb-1">لا يمكن الموافقة على الطلب</p>
+                                            <p class="text-amber-700 dark:text-amber-300 text-xs">المبلغ المطلوب أكبر من القيمة الموجودة في حسابك، سنوافق حين وصولك لهذا المبلغ</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
                             <div x-data="{ showApprove: false }">
                             <button 
                                 type="button" 
@@ -228,6 +239,7 @@
                                 </form>
                             </div>
                             </div>
+                            @endif
 
                             <div x-data="{ showReject: false }">
                             <button 
