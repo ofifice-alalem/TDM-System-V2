@@ -81,32 +81,60 @@
 
                 <div class="bg-white dark:bg-dark-card rounded-[2rem] p-6 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
                     <div class="flex items-center gap-3 mb-6">
-                        <span class="bg-primary-50 dark:bg-primary-900/20 p-2.5 rounded-xl text-primary-600 dark:text-primary-400 shadow-sm border border-primary-100 dark:border-primary-600/30">
+                        <span class="bg-purple-50 dark:bg-purple-900/20 p-2.5 rounded-xl text-purple-600 dark:text-purple-400 shadow-sm border border-purple-100 dark:border-purple-600/30">
                             <i data-lucide="dollar-sign" class="w-5 h-5"></i>
                         </span>
                         <h2 class="font-bold text-xl text-gray-900 dark:text-white">تفاصيل الدفع</h2>
                     </div>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center py-3 border-b border-gray-200 dark:border-dark-border">
-                            <span class="text-gray-600 dark:text-gray-400 font-medium">المبلغ المسدد</span>
-                            <span class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ number_format($payment->amount, 2) }} دينار</span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-dark-bg dark:to-dark-border rounded-2xl p-6 border-2 border-emerald-200 dark:border-dark-border">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-emerald-700 dark:text-emerald-400 font-medium mb-2">المبلغ المسدد</p>
+                                    <p class="text-4xl font-black text-emerald-600 dark:text-emerald-400">{{ number_format($payment->amount, 2) }}</p>
+                                    <p class="text-sm text-emerald-600 dark:text-emerald-400 font-bold mt-1">دينار</p>
+                                </div>
+                                <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+                                    <i data-lucide="banknote" class="w-8 h-8 text-emerald-600 dark:text-emerald-400"></i>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center py-3 border-b border-gray-200 dark:border-dark-border">
-                            <span class="text-gray-600 dark:text-gray-400 font-medium">طريقة الدفع</span>
-                            <span class="font-bold text-gray-900 dark:text-white">
-                                @if($payment->payment_method === 'cash') نقدي
-                                @elseif($payment->payment_method === 'transfer') تحويل بنكي
-                                @else شيك مصدق
-                                @endif
-                            </span>
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-dark-bg dark:to-dark-border rounded-2xl p-6 border-2 border-blue-200 dark:border-dark-border">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-blue-700 dark:text-blue-400 font-medium mb-2">طريقة الدفع</p>
+                                    <p class="text-2xl font-black text-blue-600 dark:text-blue-400">
+                                        @if($payment->payment_method === 'cash') نقدي
+                                        @elseif($payment->payment_method === 'transfer') تحويل بنكي
+                                        @else شيك مصدق
+                                        @endif
+                                    </p>
+                                </div>
+                                <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                                    @if($payment->payment_method === 'cash')
+                                        <i data-lucide="wallet" class="w-8 h-8 text-blue-600 dark:text-blue-400"></i>
+                                    @elseif($payment->payment_method === 'transfer')
+                                        <i data-lucide="arrow-right-left" class="w-8 h-8 text-blue-600 dark:text-blue-400"></i>
+                                    @else
+                                        <i data-lucide="file-text" class="w-8 h-8 text-blue-600 dark:text-blue-400"></i>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
-                        @if($payment->keeper)
-                        <div class="flex justify-between items-center py-3">
-                            <span class="text-gray-600 dark:text-gray-400 font-medium">أمين المخزن</span>
-                            <span class="font-bold text-gray-900 dark:text-white">{{ $payment->keeper->full_name }}</span>
-                        </div>
-                        @endif
                     </div>
+                    @if(in_array($payment->status, ['approved', 'rejected']) && $payment->keeper)
+                    <div class="mt-4 bg-gray-50/50 dark:bg-dark-bg/50 rounded-xl p-4 border border-gray-200 dark:border-dark-border">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gray-100 dark:bg-dark-bg rounded-full flex items-center justify-center">
+                                <i data-lucide="user-check" class="w-5 h-5 text-gray-600 dark:text-gray-400"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-dark-muted font-medium">أمين المخزن</p>
+                                <p class="font-bold text-gray-900 dark:text-white">{{ $payment->keeper->full_name }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 </div>
 
                 @if($payment->notes)
