@@ -111,11 +111,18 @@ class StatisticsController extends Controller
         }
         
         $statusTotals['total'] = array_sum([$statusTotals['pending'], $statusTotals['approved'], $statusTotals['cancelled'], $statusTotals['rejected']]);
+        
+        // Calculate total based on selected status or approved by default
+        if ($request->filled('status')) {
+            $total = $statusTotals[$request->status] ?? 0;
+        } else {
+            $total = $statusTotals['approved'];
+        }
 
         return [
             'operation' => $request->operation,
             'data' => $data,
-            'total' => $statusTotals['approved'],
+            'total' => $total,
             'total_commission' => 0,
             'status_totals' => $statusTotals
         ];
@@ -286,7 +293,7 @@ class StatisticsController extends Controller
             $row++;
         }
         
-        if ($request->stat_type == 'stores' && isset($results['status_totals'])) {
+        if ($request->stat_type == 'stores' && isset($results['status_totals']) && !$request->filled('status')) {
             $row++;
             $sheet->setCellValue('A' . $row, 'الإجماليات حسب الحالة');
             $sheet->mergeCells('A' . $row . ':E' . $row);
@@ -325,6 +332,18 @@ class StatisticsController extends Controller
         } elseif ($request->stat_type == 'marketers') {
             $row++;
             $sheet->setCellValue('A' . $row, 'الإجمالي (الموثق فقط)');
+            $sheet->setCellValue('B' . $row, number_format($results['total'], 2) . ' دينار');
+            $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E3F2FD']],
+                'font' => ['bold' => true, 'size' => 12],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
+            $row++;
+        }
+        
+        if ($request->stat_type == 'stores' && $request->filled('status')) {
+            $row++;
+            $sheet->setCellValue('A' . $row, 'الإجمالي');
             $sheet->setCellValue('B' . $row, number_format($results['total'], 2) . ' دينار');
             $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
                 'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E3F2FD']],

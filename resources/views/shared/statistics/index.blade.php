@@ -105,7 +105,7 @@
             <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg overflow-hidden">
                 <div class="p-6 border-b border-gray-200 dark:border-dark-border">
                     <h2 class="text-xl font-black text-gray-900 dark:text-white mb-4">النتائج</h2>
-                    @if(request('stat_type') == 'stores')
+                    @if(request('stat_type') == 'stores' && !request('status'))
                         <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                             <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 border border-amber-200 dark:border-amber-800">
                                 <p class="text-xs text-amber-600 dark:text-amber-400 font-bold mb-1">معلق</p>
