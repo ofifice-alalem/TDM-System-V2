@@ -32,6 +32,7 @@
                             <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">اسم المتجر</label>
                             <select name="store_id" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                                 <option value="">اختر المتجر...</option>
+                                <option value="all" {{ request('store_id') == 'all' ? 'selected' : '' }}>الكل</option>
                                 @foreach($stores as $store)
                                     <option value="{{ $store->id }}" {{ request('store_id') == $store->id ? 'selected' : '' }}>{{ $store->name }}</option>
                                 @endforeach
@@ -102,6 +103,59 @@
 
         {{-- Results --}}
         @if($results)
+            @if(isset($results['is_summary']) && $results['is_summary'])
+                {{-- Financial Summary --}}
+                <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg overflow-hidden">
+                    <div class="p-6 border-b border-gray-200 dark:border-dark-border">
+                        <h2 class="text-xl font-black text-gray-900 dark:text-white mb-6">الملخص المالي</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+                                <p class="text-sm text-blue-600 dark:text-blue-400 font-bold mb-2">إجمالي المبيعات</p>
+                                <p class="text-2xl font-black text-blue-700 dark:text-blue-300">{{ number_format($results['total_sales'], 2) }} دينار</p>
+                            </div>
+                            <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-4 border border-emerald-200 dark:border-emerald-800">
+                                <p class="text-sm text-emerald-600 dark:text-emerald-400 font-bold mb-2">إجمالي المدفوعات</p>
+                                <p class="text-2xl font-black text-emerald-700 dark:text-emerald-300">{{ number_format($results['total_payments'], 2) }} دينار</p>
+                            </div>
+                            <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
+                                <p class="text-sm text-amber-600 dark:text-amber-400 font-bold mb-2">إجمالي المرتجعات</p>
+                                <p class="text-2xl font-black text-amber-700 dark:text-amber-300">{{ number_format($results['total_returns'], 2) }} دينار</p>
+                            </div>
+                            <div class="bg-{{ $results['current_balance'] >= 0 ? 'red' : 'purple' }}-50 dark:bg-{{ $results['current_balance'] >= 0 ? 'red' : 'purple' }}-900/20 rounded-xl p-4 border border-{{ $results['current_balance'] >= 0 ? 'red' : 'purple' }}-200 dark:border-{{ $results['current_balance'] >= 0 ? 'red' : 'purple' }}-800">
+                                <p class="text-sm text-{{ $results['current_balance'] >= 0 ? 'red' : 'purple' }}-600 dark:text-{{ $results['current_balance'] >= 0 ? 'red' : 'purple' }}-400 font-bold mb-2">الدين</p>
+                                <p class="text-2xl font-black text-{{ $results['current_balance'] >= 0 ? 'red' : 'purple' }}-700 dark:text-{{ $results['current_balance'] >= 0 ? 'red' : 'purple' }}-300">{{ number_format($results['current_balance'], 2) }} دينار</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @if(isset($results['stores_data']) && count($results['stores_data']) > 0)
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 dark:bg-dark-bg border-b border-gray-200 dark:border-dark-border">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المتجر</th>
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">إجمالي المبيعات</th>
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">إجمالي المدفوع</th>
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">إجمالي المرتجعات</th>
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">الدين</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
+                                @foreach($results['stores_data'] as $storeData)
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
+                                        <td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">{{ $storeData['store_name'] }}</td>
+                                        <td class="px-6 py-4 text-sm text-blue-600 dark:text-blue-400 font-bold">{{ number_format($storeData['sales'], 2) }}</td>
+                                        <td class="px-6 py-4 text-sm text-emerald-600 dark:text-emerald-400 font-bold">{{ number_format($storeData['payments'], 2) }}</td>
+                                        <td class="px-6 py-4 text-sm text-amber-600 dark:text-amber-400 font-bold">{{ number_format($storeData['returns'], 2) }}</td>
+                                        <td class="px-6 py-4 text-sm font-bold {{ $storeData['balance'] >= 0 ? 'text-red-600 dark:text-red-400' : 'text-purple-600 dark:text-purple-400' }}">{{ number_format($storeData['balance'], 2) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @endif
+                </div>
+            @else
             <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg overflow-hidden">
                 <div class="p-6 border-b border-gray-200 dark:border-dark-border">
                     <h2 class="text-xl font-black text-gray-900 dark:text-white mb-4">النتائج</h2>
@@ -163,6 +217,9 @@
                                     @endif
                                 </th>
                                 @if(request('stat_type') == 'stores')
+                                    @if(request('store_id') == 'all')
+                                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المتجر</th>
+                                    @endif
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المسوق</th>
                                 @elseif(request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments']))
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المتجر</th>
@@ -202,6 +259,9 @@
                                         @endif
                                     </td>
                                     @if(request('stat_type') == 'stores')
+                                        @if(request('store_id') == 'all')
+                                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->store->name ?? '-' }}</td>
+                                        @endif
                                         <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->marketer->full_name ?? '-' }}</td>
                                     @elseif(request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments']))
                                         <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->store->name ?? '-' }}</td>
@@ -235,7 +295,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ $results['operation'] == 'payments' && request('stat_type') == 'marketers' ? ((request('stat_type') == 'stores') || (request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments'])) ? '7' : '6') : ((request('stat_type') == 'stores') || (request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments'])) ? '5' : '4') }}" class="px-6 py-12 text-center">
+                                    <td colspan="{{ $results['operation'] == 'payments' && request('stat_type') == 'marketers' ? ((request('stat_type') == 'stores') || (request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments'])) ? '7' : '6') : ((request('stat_type') == 'stores' && request('store_id') == 'all') ? '6' : ((request('stat_type') == 'stores') || (request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments'])) ? '5' : '4')) }}" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center">
                                             <i data-lucide="inbox" class="w-12 h-12 text-gray-400 dark:text-gray-600 mb-3"></i>
                                             <p class="text-gray-500 dark:text-gray-400">لا توجد نتائج</p>
@@ -252,7 +312,7 @@
                         {{ $results['data']->appends(request()->query())->links() }}
                     </div>
                 @endif
-            </div>
+            @endif
         @endif
 
     </div>
@@ -274,6 +334,7 @@
         const statusSelect = document.getElementById('status');
         
         const storeOperations = [
+            {value: 'summary', text: 'الملخص المالي'},
             {value: 'sales', text: 'فواتير البيع'},
             {value: 'payments', text: 'إيصالات القبض'},
             {value: 'returns', text: 'إرجاعات البضاعة'}
@@ -317,6 +378,7 @@
                 {value: 'cancelled', text: 'ملغي'},
                 {value: 'rejected', text: 'مرفوض'}
             ],
+            'summary': [],
             'withdrawals': [
                 {value: 'pending', text: 'معلق'},
                 {value: 'approved', text: 'موثق'},
@@ -415,6 +477,14 @@
         // Listen to operation changes
         operation.addEventListener('change', function() {
             updateStatusOptions(this.value);
+            
+            // Hide status field for summary operation
+            const statusField = statusSelect.closest('div');
+            if (this.value === 'summary') {
+                statusField.style.display = 'none';
+            } else {
+                statusField.style.display = 'block';
+            }
             
             if (statType.value === 'marketers' && ['sales', 'payments'].includes(this.value)) {
                 marketerStoreField.style.display = 'block';

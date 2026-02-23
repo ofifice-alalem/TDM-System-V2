@@ -134,7 +134,7 @@
                         <div class="bg-gray-50 dark:bg-dark-bg rounded-2xl p-4 text-center">
                             <div class="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center justify-center gap-1">
                                 <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
-                                الرصيد
+                                الدين
                             </div>
                             <div class="text-sm font-black {{ $store->total_debt > 0 ? 'text-red-600 dark:text-red-400' : ($store->total_debt < 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white') }}">
                                 {{ number_format(abs($store->total_debt), 2) }} دينار

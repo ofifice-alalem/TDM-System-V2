@@ -240,7 +240,7 @@
                         </div>
 
                         <div class="bg-gradient-to-br from-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-100 to-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-200 dark:from-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-900/40 dark:to-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-800/40 rounded-2xl p-5 border-2 border-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-200 dark:border-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-700">
-                            <div class="text-xs text-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-700 dark:text-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-300 mb-1 font-bold">الرصيد الحالي</div>
+                            <div class="text-xs text-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-700 dark:text-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-300 mb-1 font-bold">الدين</div>
                             <div class="text-2xl font-black text-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-800 dark:text-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-200">
                                 {{ $debt > 0 ? '-' : ($debt < 0 ? '+' : '') }}{{ number_format(abs($debt), 2) }} دينار
                             </div>

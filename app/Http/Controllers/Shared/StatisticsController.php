@@ -23,7 +23,7 @@ class StatisticsController extends Controller
         $results = null;
 
         if ($request->filled(['stat_type', 'from_date', 'to_date'])) {
-            if ($request->stat_type == 'stores' && $request->filled(['store_id', 'operation'])) {
+            if ($request->stat_type == 'stores' && $request->filled('operation')) {
                 $results = $this->getStatistics($request, $request->has('export'));
             } elseif ($request->stat_type == 'marketers' && $request->filled(['marketer_id', 'operation'])) {
                 $results = $this->getMarketerStatistics($request, $request->has('export'));
@@ -54,17 +54,24 @@ class StatisticsController extends Controller
 
     private function getStatistics($request, $forExport = false)
     {
+        // Handle summary operation
+        if ($request->operation == 'summary') {
+            return $this->getStoreSummary($request);
+        }
+        
         $query = match($request->operation) {
-            'sales' => SalesInvoice::with('marketer', 'store')
-                ->where('store_id', $request->store_id),
-            'payments' => StorePayment::with('marketer', 'store', 'keeper')
-                ->where('store_id', $request->store_id),
-            'returns' => SalesReturn::with('marketer', 'store')
-                ->where('store_id', $request->store_id),
+            'sales' => SalesInvoice::with('marketer', 'store'),
+            'payments' => StorePayment::with('marketer', 'store', 'keeper'),
+            'returns' => SalesReturn::with('marketer', 'store'),
             default => null
         };
 
         if (!$query) return null;
+
+        // Filter by store_id only if not "all"
+        if ($request->store_id && $request->store_id !== 'all') {
+            $query->where('store_id', $request->store_id);
+        }
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -86,27 +93,39 @@ class StatisticsController extends Controller
         
         if ($request->operation == 'payments') {
             foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
-                $statusTotals[$status] = StorePayment::where('store_id', $request->store_id)
-                    ->where('status', $status)
+                $statusQuery = StorePayment::where('status', $status)
                     ->whereDate('created_at', '>=', $request->from_date)
-                    ->whereDate('created_at', '<=', $request->to_date)
-                    ->sum('amount');
+                    ->whereDate('created_at', '<=', $request->to_date);
+                
+                if ($request->store_id && $request->store_id !== 'all') {
+                    $statusQuery->where('store_id', $request->store_id);
+                }
+                
+                $statusTotals[$status] = $statusQuery->sum('amount');
             }
         } elseif ($request->operation == 'sales') {
             foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
-                $statusTotals[$status] = SalesInvoice::where('store_id', $request->store_id)
-                    ->where('status', $status)
+                $statusQuery = SalesInvoice::where('status', $status)
                     ->whereDate('created_at', '>=', $request->from_date)
-                    ->whereDate('created_at', '<=', $request->to_date)
-                    ->sum('total_amount');
+                    ->whereDate('created_at', '<=', $request->to_date);
+                
+                if ($request->store_id && $request->store_id !== 'all') {
+                    $statusQuery->where('store_id', $request->store_id);
+                }
+                
+                $statusTotals[$status] = $statusQuery->sum('total_amount');
             }
         } elseif ($request->operation == 'returns') {
             foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
-                $statusTotals[$status] = SalesReturn::where('store_id', $request->store_id)
-                    ->where('status', $status)
+                $statusQuery = SalesReturn::where('status', $status)
                     ->whereDate('created_at', '>=', $request->from_date)
-                    ->whereDate('created_at', '<=', $request->to_date)
-                    ->sum('total_amount');
+                    ->whereDate('created_at', '<=', $request->to_date);
+                
+                if ($request->store_id && $request->store_id !== 'all') {
+                    $statusQuery->where('store_id', $request->store_id);
+                }
+                
+                $statusTotals[$status] = $statusQuery->sum('total_amount');
             }
         }
         
@@ -237,11 +256,18 @@ class StatisticsController extends Controller
         
         $entity = null;
         if ($request->stat_type == 'stores') {
-            $entity = Store::find($request->store_id);
-            $entityLabel = 'اسم المتجر';
+            if ($request->store_id == 'all') {
+                $entityLabel = 'اسم المتجر';
+                $entityName = 'الكل';
+            } else {
+                $entity = Store::find($request->store_id);
+                $entityLabel = 'اسم المتجر';
+                $entityName = $entity->name ?? '';
+            }
         } else {
             $entity = \App\Models\User::find($request->marketer_id);
             $entityLabel = 'اسم المسوق';
+            $entityName = $entity->full_name ?? '';
         }
         
         $operationName = match($request->operation) {
@@ -250,6 +276,7 @@ class StatisticsController extends Controller
             'returns' => 'إرجاعات البضاعة',
             'requests' => 'طلبات البضاعة',
             'withdrawals' => 'طلبات سحب الأرباح',
+            'summary' => 'الملخص المالي',
             default => ''
         };
         $statusName = match($request->status) {
@@ -266,7 +293,7 @@ class StatisticsController extends Controller
         // معلومات الفلتر - كارد
         $infoData = [
             ['نوع الإحصاء', $request->stat_type == 'stores' ? 'المتاجر' : 'المسوقين'],
-            [$entityLabel, $entity->name ?? $entity->full_name ?? ''],
+            [$entityLabel, $entityName],
             ['العملية', $operationName],
         ];
         
@@ -357,20 +384,27 @@ class StatisticsController extends Controller
         
         // عناوين الجدول
         if ($request->stat_type == 'stores') {
-            $headers = ['رقم الفاتورة', 'المسوق', 'التاريخ', 'الحالة', 'المبلغ'];
+            if ($request->store_id == 'all') {
+                $headers = ['رقم الفاتورة', 'المتجر', 'المسوق', 'التاريخ', 'الحالة', 'المبلغ'];
+                $lastCol = 'F';
+            } else {
+                $headers = ['رقم الفاتورة', 'المسوق', 'التاريخ', 'الحالة', 'المبلغ'];
+                $lastCol = 'E';
+            }
         } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments'])) {
             if ($request->operation == 'payments') {
                 $headers = ['رقم الفاتورة', 'المتجر', 'نسبة العمولة', 'القيمة المستحقة', 'التاريخ', 'الحالة', 'المبلغ'];
+                $lastCol = 'G';
             } else {
                 $headers = ['رقم الفاتورة', 'المتجر', 'التاريخ', 'الحالة', 'المبلغ'];
+                $lastCol = 'E';
             }
         } else {
             $headers = ['رقم الفاتورة', 'التاريخ', 'الحالة', 'المبلغ'];
+            $lastCol = 'D';
         }
         
         $sheet->fromArray($headers, null, 'A' . $row);
-        
-        $lastCol = 'E';
         
         $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
@@ -418,14 +452,26 @@ class StatisticsController extends Controller
             };
             
             if ($request->stat_type == 'stores') {
-                $rowData = [
-                    $invoiceNumber,
-                    $item->marketer->full_name ?? '',
-                    $item->created_at->format('Y-m-d'),
-                    $status,
-                    number_format($amount, 2)
-                ];
-                $statusCol = 'D';
+                if ($request->store_id == 'all') {
+                    $rowData = [
+                        $invoiceNumber,
+                        $item->store->name ?? '',
+                        $item->marketer->full_name ?? '',
+                        $item->created_at->format('Y-m-d'),
+                        $status,
+                        number_format($amount, 2)
+                    ];
+                    $statusCol = 'E';
+                } else {
+                    $rowData = [
+                        $invoiceNumber,
+                        $item->marketer->full_name ?? '',
+                        $item->created_at->format('Y-m-d'),
+                        $status,
+                        number_format($amount, 2)
+                    ];
+                    $statusCol = 'D';
+                }
             } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments'])) {
                 if ($request->operation == 'payments') {
                     $rowData = [
@@ -478,7 +524,7 @@ class StatisticsController extends Controller
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        $filename = date('Y-m-d') . '__' . $operationName . '__' . ($entity->name ?? $entity->full_name ?? '') . '.xlsx';
+        $filename = date('Y-m-d') . '__' . $operationName . '__' . $entityName . '.xlsx';
         
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
@@ -487,5 +533,74 @@ class StatisticsController extends Controller
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit;
+    }
+
+    private function getStoreSummary($request)
+    {
+        $storeQuery = $request->store_id !== 'all' ? fn($q) => $q->where('store_id', $request->store_id) : fn($q) => $q;
+        
+        $totalSales = SalesInvoice::where('status', 'approved')
+            ->whereDate('created_at', '>=', $request->from_date)
+            ->whereDate('created_at', '<=', $request->to_date)
+            ->when($request->store_id !== 'all', $storeQuery)
+            ->sum('total_amount');
+        
+        $totalPayments = StorePayment::where('status', 'approved')
+            ->whereDate('created_at', '>=', $request->from_date)
+            ->whereDate('created_at', '<=', $request->to_date)
+            ->when($request->store_id !== 'all', $storeQuery)
+            ->sum('amount');
+        
+        $totalReturns = SalesReturn::where('status', 'approved')
+            ->whereDate('created_at', '>=', $request->from_date)
+            ->whereDate('created_at', '<=', $request->to_date)
+            ->when($request->store_id !== 'all', $storeQuery)
+            ->sum('total_amount');
+        
+        $currentBalance = $totalSales - $totalPayments - $totalReturns;
+        
+        // Get stores data if "all" is selected
+        $storesData = [];
+        if ($request->store_id === 'all') {
+            $stores = Store::where('is_active', true)->get();
+            foreach ($stores as $store) {
+                $sales = SalesInvoice::where('status', 'approved')
+                    ->where('store_id', $store->id)
+                    ->whereDate('created_at', '>=', $request->from_date)
+                    ->whereDate('created_at', '<=', $request->to_date)
+                    ->sum('total_amount');
+                
+                $payments = StorePayment::where('status', 'approved')
+                    ->where('store_id', $store->id)
+                    ->whereDate('created_at', '>=', $request->from_date)
+                    ->whereDate('created_at', '<=', $request->to_date)
+                    ->sum('amount');
+                
+                $returns = SalesReturn::where('status', 'approved')
+                    ->where('store_id', $store->id)
+                    ->whereDate('created_at', '>=', $request->from_date)
+                    ->whereDate('created_at', '<=', $request->to_date)
+                    ->sum('total_amount');
+                
+                $balance = $sales - $payments - $returns;
+                
+                $storesData[] = [
+                    'store_name' => $store->name,
+                    'sales' => $sales,
+                    'payments' => $payments,
+                    'returns' => $returns,
+                    'balance' => $balance
+                ];
+            }
+        }
+        
+        return [
+            'is_summary' => true,
+            'total_sales' => $totalSales,
+            'total_payments' => $totalPayments,
+            'total_returns' => $totalReturns,
+            'current_balance' => $currentBalance,
+            'stores_data' => $storesData
+        ];
     }
 }
