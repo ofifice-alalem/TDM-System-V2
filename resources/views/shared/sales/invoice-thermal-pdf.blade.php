@@ -15,30 +15,32 @@
             src: url('{{ public_path("fonts/Cairo-Bold.ttf") }}') format('truetype');
             font-weight: bold;
         }
-        @page { margin: 3mm; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', 'DejaVu Sans', sans-serif; }
-        body { font-family: 'Cairo', 'DejaVu Sans', sans-serif; font-size: 16px; color: #000; direction: rtl; background: white; padding: 5mm; max-width: 210mm; margin: 0 auto; }
-        .header { text-align: center; border-bottom: 2px dashed #000; padding-bottom: 2mm; margin-bottom: 3mm; }
-        .logo { max-height: 50mm; width: auto; margin-bottom: 3mm; display: none; }
-        .company-name { font-size: 20px; font-weight: bold; margin-bottom: 1mm; }
-        .invoice-title { font-size: 18px; font-weight: bold; margin: 1mm 0; }
-        .invoice-number { font-size: 16px; font-weight: bold; }
-        .info-section { margin-bottom: 3mm; font-size: 16px; line-height: 1.2; }
-        .info-row { display: table; width: 100%; margin-bottom: 1mm; }
+        @page { margin: 0; size: 80mm auto; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', 'DejaVu Sans', sans-serif; page-break-inside: avoid; }
+        body { font-family: 'Cairo', 'DejaVu Sans', sans-serif; font-size: 12px; color: #000; direction: rtl; background: white; padding: 2mm 2mm 30mm 2mm; width: 76mm; max-width: 76mm; margin: 0 auto; page-break-inside: avoid; }
+        .header, .info-section, .items-table, .totals, .footer { page-break-inside: avoid; }
+        table { page-break-inside: avoid; }
+        .header { text-align: center; border-bottom: 2px dashed #000; padding-bottom: 2mm; margin-bottom: 2mm; }
+        .logo { max-height: 30mm; width: auto; margin-bottom: 2mm; display: none; }
+        .company-name { font-size: 14px; font-weight: bold; margin-bottom: 1mm; }
+        .invoice-title { font-size: 13px; font-weight: bold; margin: 1mm 0; }
+        .invoice-number { font-size: 12px; font-weight: bold; }
+        .info-section { margin-bottom: 2mm; font-size: 11px; line-height: 1.3; }
+        .info-row { display: table; width: 100%; margin-bottom: 0.5mm; }
         .info-row > div { display: table-cell; width: 50%; }
         .info-label { font-weight: bold; }
-        .items-table { width: 100%; border-collapse: collapse; margin: 3mm 0; font-size: 16px; }
-        .items-table th { background: #f0f0f0; padding: 2mm; text-align: right; font-weight: bold; border-bottom: 2px solid #000; }
-        .items-table td { padding: 2mm 1.5mm; text-align: right; border-bottom: 1px dotted #ccc; }
+        .items-table { width: 100%; border-collapse: collapse; margin: 2mm 0; font-size: 10px; }
+        .items-table th { background: #f0f0f0; padding: 1.5mm; text-align: right; font-weight: bold; border-bottom: 1px solid #000; font-size: 10px; }
+        .items-table td { padding: 1.5mm 1mm; text-align: right; border-bottom: 1px dotted #ccc; }
         .items-table .item-name { font-weight: bold; }
-        .totals { margin-top: 3mm; padding-top: 2mm; border-top: 2px dashed #000; font-size: 16px; }
-        .totals-row { display: table; width: 100%; margin-bottom: 1mm; direction: rtl; }
+        .totals { margin-top: 2mm; padding-top: 1.5mm; border-top: 2px dashed #000; font-size: 11px; }
+        .totals-row { display: table; width: 100%; margin-bottom: 0.5mm; direction: rtl; }
         .totals-row > div { display: table-cell; }
         .totals-row .label { text-align: right; font-weight: bold; width: 50%; }
         .totals-row .value { text-align: left; font-weight: bold; width: 50%; }
-        .totals-row.final { font-size: 20px; margin-top: 2mm; padding-top: 2mm; border-top: 2px solid #000; }
-        .footer { text-align: center; margin-top: 4mm; padding-top: 3mm; border-top: 2px dashed #000; font-size: 16px; }
-        .invalid-stamp { text-align: center; font-size: 22px; font-weight: bold; color: #dc3545; margin: 3mm 0; padding: 2mm; border: 2px solid #dc3545; }
+        .totals-row.final { font-size: 14px; margin-top: 1.5mm; padding-top: 1.5mm; border-top: 2px solid #000; }
+        .footer { text-align: center; margin-top: 3mm; padding-top: 2mm; border-top: 2px dashed #000; font-size: 11px; }
+        .invalid-stamp { text-align: center; font-size: 16px; font-weight: bold; color: #dc3545; margin: 2mm 0; padding: 1.5mm; border: 2px solid #dc3545; }
     </style>
 </head>
 <body>

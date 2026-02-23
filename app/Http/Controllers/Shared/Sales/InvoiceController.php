@@ -254,8 +254,12 @@ class InvoiceController extends Controller
             'thankYou' => $thankYouText,
         ];
 
+        $baseHeight = 550;
+        $itemHeight = 30;
+        $calculatedHeight = $baseHeight + ($sale->items->count() * $itemHeight);
+
         $pdf = Pdf::loadView('shared.sales.invoice-thermal-pdf', $data)
-            ->setPaper('a4', 'portrait')
+            ->setPaper([0, 0, 226.77, $calculatedHeight], 'portrait')
             ->setOption('isRemoteEnabled', false)
             ->setOption('isHtml5ParserEnabled', true)
             ->setOption('isFontSubsettingEnabled', true)
