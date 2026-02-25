@@ -96,7 +96,7 @@ class MarketerReturnController extends Controller
 
     public function show(MarketerReturnRequest $return)
     {
-        if ($return->marketer_id !== auth()->id()) {
+        if ($return->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         return view('marketer.returns.show', ['request' => $return->load('items.product', 'approver', 'rejecter', 'documenter')]);
@@ -104,7 +104,7 @@ class MarketerReturnController extends Controller
 
     public function cancel(Request $request, MarketerReturnRequest $return)
     {
-        if ($return->marketer_id !== auth()->id()) {
+        if ($return->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         $validated = $request->validate([
@@ -119,7 +119,7 @@ class MarketerReturnController extends Controller
 
     public function pdf(MarketerReturnRequest $return)
     {
-        if ($return->marketer_id !== auth()->id()) {
+        if ($return->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         return $this->invoiceController->generateReturnPdf($return);
@@ -127,7 +127,7 @@ class MarketerReturnController extends Controller
 
     public function viewDocumentation(MarketerReturnRequest $return)
     {
-        if ($return->marketer_id !== auth()->id()) {
+        if ($return->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
 

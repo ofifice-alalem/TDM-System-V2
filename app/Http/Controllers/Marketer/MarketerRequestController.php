@@ -96,7 +96,7 @@ class MarketerRequestController extends Controller
 
     public function show(MarketerRequest $request)
     {
-        if ($request->marketer_id !== auth()->id()) {
+        if ($request->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         return view('marketer.requests.show', ['request' => $request->load('items.product', 'marketer', 'approver', 'rejecter', 'documenter')]);
@@ -104,7 +104,7 @@ class MarketerRequestController extends Controller
 
     public function cancel(Request $request, MarketerRequest $marketerRequest)
     {
-        if ($marketerRequest->marketer_id !== auth()->id()) {
+        if ($marketerRequest->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         $validated = $request->validate([
@@ -119,7 +119,7 @@ class MarketerRequestController extends Controller
 
     public function pdf(MarketerRequest $request)
     {
-        if ($request->marketer_id !== auth()->id()) {
+        if ($request->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         return $this->invoiceController->generateRequestPdf($request);
@@ -127,7 +127,7 @@ class MarketerRequestController extends Controller
 
     public function viewDocumentation(MarketerRequest $request)
     {
-        if ($request->marketer_id !== auth()->id()) {
+        if ($request->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         if (!$request->stamped_image || $request->status !== 'documented') {

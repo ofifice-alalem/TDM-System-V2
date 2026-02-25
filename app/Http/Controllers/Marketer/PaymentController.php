@@ -104,7 +104,7 @@ class PaymentController extends Controller
 
     public function show(StorePayment $payment)
     {
-        if ($payment->marketer_id !== auth()->id()) {
+        if ($payment->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الإيصال');
         }
         $payment->load('store', 'marketer', 'keeper');
@@ -113,7 +113,7 @@ class PaymentController extends Controller
 
     public function cancel(StorePayment $payment, Request $request)
     {
-        if ($payment->marketer_id !== auth()->id()) {
+        if ($payment->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الإيصال');
         }
         $validated = $request->validate([

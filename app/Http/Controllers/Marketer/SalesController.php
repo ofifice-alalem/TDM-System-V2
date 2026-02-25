@@ -113,7 +113,7 @@ class SalesController extends Controller
 
     public function show(SalesInvoice $sale)
     {
-        if ($sale->marketer_id !== auth()->id()) {
+        if ($sale->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذه الفاتورة');
         }
         
@@ -140,7 +140,7 @@ class SalesController extends Controller
 
     public function viewDocumentation(SalesInvoice $sale)
     {
-        if ($sale->marketer_id !== auth()->id()) {
+        if ($sale->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذه الفاتورة');
         }
 

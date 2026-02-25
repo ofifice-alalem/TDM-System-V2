@@ -111,7 +111,7 @@ class SalesReturnController extends Controller
 
     public function show(SalesReturn $salesReturn)
     {
-        if ($salesReturn->marketer_id !== auth()->id()) {
+        if ($salesReturn->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         $salesReturn->load(['store', 'salesInvoice', 'items.product', 'items.salesInvoiceItem', 'marketer', 'keeper']);
@@ -120,7 +120,7 @@ class SalesReturnController extends Controller
 
     public function cancel(Request $request, SalesReturn $salesReturn)
     {
-        if ($salesReturn->marketer_id !== auth()->id()) {
+        if ($salesReturn->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         $request->validate([
