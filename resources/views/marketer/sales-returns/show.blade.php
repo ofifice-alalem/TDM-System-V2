@@ -329,7 +329,7 @@
 
 @if($salesReturn->status === 'approved' && $salesReturn->stamped_image)
     @include('shared.modals.documentation-image', [
-        'imageUrl' => route('warehouse.sales-returns.documentation', $salesReturn->id),
+        'imageUrl' => asset('storage/' . $salesReturn->stamped_image),
         'invoiceNumber' => $salesReturn->return_number,
         'documentedAt' => $salesReturn->confirmed_at ?? $salesReturn->updated_at
     ])
