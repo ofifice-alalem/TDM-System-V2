@@ -357,7 +357,6 @@
     });
 </script>
 @endpush
-@endsection
 
 @if($invoice->status === 'documented' && $invoice->stamped_image)
     @include('shared.modals.documentation-image', [
@@ -366,3 +365,5 @@
         'documentedAt' => $invoice->documented_at
     ])
 @endif
+
+@endsection

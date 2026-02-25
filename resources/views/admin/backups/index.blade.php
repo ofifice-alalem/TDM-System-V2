@@ -274,6 +274,10 @@
                             <i data-lucide="folder" class="w-5 h-5"></i>
                             <span>الملفات فقط</span>
                         </button>
+                        <button onclick="showUploadModal()" class="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                            <i data-lucide="upload" class="w-5 h-5"></i>
+                            <span>رفع نسخة من جهازي</span>
+                        </button>
                     </div>
                     
                     <h3 class="font-bold text-xl text-gray-900 dark:text-white mb-8 flex items-center gap-3 pt-6 border-t border-gray-200 dark:border-dark-border">
@@ -382,6 +386,41 @@
     </div>
 </div>
 
+{{-- Upload Modal --}}
+<div id="uploadModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+    <div class="bg-white dark:bg-dark-card rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-purple-100 dark:bg-purple-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="upload" class="w-8 h-8 text-purple-600 dark:text-purple-400"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">رفع نسخة احتياطية</h3>
+            <p class="text-gray-500 dark:text-gray-400">اختر ملف .zip للنسخة الاحتياطية</p>
+        </div>
+        <form method="POST" action="{{ route('admin.backups.upload') }}" enctype="multipart/form-data" id="uploadForm">
+            @csrf
+            <div class="mb-6">
+                <label class="block w-full">
+                    <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-purple-500 dark:hover:border-purple-500 transition-all cursor-pointer">
+                        <i data-lucide="file-archive" class="w-12 h-12 text-gray-400 mx-auto mb-3"></i>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">اضغط لاختيار الملف</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-500">ملفات .zip فقط</p>
+                        <input type="file" name="backup_file" accept=".zip" class="hidden" id="fileInput" required onchange="updateFileName(this)">
+                    </div>
+                </label>
+                <p id="fileName" class="text-sm text-gray-600 dark:text-gray-400 mt-2 text-center hidden"></p>
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="hideUploadModal()" class="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all hover:bg-gray-300 dark:hover:bg-gray-600">
+                    إلغاء
+                </button>
+                <button type="submit" class="flex-1 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg">
+                    رفع
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @push('scripts')
 <script>
     let currentTab = 'full';
@@ -421,6 +460,25 @@
     
     function hideCreateModal() {
         document.getElementById('createModal').classList.add('hidden');
+    }
+    
+    function showUploadModal() {
+        document.getElementById('uploadModal').classList.remove('hidden');
+        lucide.createIcons();
+    }
+    
+    function hideUploadModal() {
+        document.getElementById('uploadModal').classList.add('hidden');
+        document.getElementById('fileInput').value = '';
+        document.getElementById('fileName').classList.add('hidden');
+    }
+    
+    function updateFileName(input) {
+        const fileName = document.getElementById('fileName');
+        if (input.files && input.files[0]) {
+            fileName.textContent = 'الملف: ' + input.files[0].name;
+            fileName.classList.remove('hidden');
+        }
     }
     
     // Close modal on form submit

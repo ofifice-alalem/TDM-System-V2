@@ -174,6 +174,33 @@ class BackupController extends Controller
         return back()->with('error', 'الملف غير موجود');
     }
     
+    public function upload(Request $request)
+    {
+        $request->validate([
+            'backup_file' => 'required|file|mimes:zip|max:512000'
+        ]);
+        
+        $file = $request->file('backup_file');
+        $filename = $file->getClientOriginalName();
+        
+        // تحديد نوع النسخة من اسم الملف
+        $type = 'full';
+        if (str_contains($filename, '_database')) {
+            $type = 'database';
+        } elseif (str_contains($filename, '_files')) {
+            $type = 'files';
+        }
+        
+        $backupDir = storage_path("app/backups/{$type}");
+        if (!file_exists($backupDir)) {
+            mkdir($backupDir, 0755, true);
+        }
+        
+        $file->move($backupDir, $filename);
+        
+        return back()->with('success', 'تم رفع النسخة الاحتياطية بنجاح');
+    }
+    
     private function addDirectory($path, $zip, $base)
     {
         if (!is_dir($path)) return;

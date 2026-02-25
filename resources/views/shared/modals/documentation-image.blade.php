@@ -75,7 +75,7 @@
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             document.body.style.overflow = 'hidden';
-            if (img && !img.src) {
+            if (img && !img.src && img.dataset.src) {
                 img.src = img.dataset.src;
             }
             isZoomed = false;
