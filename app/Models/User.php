@@ -30,7 +30,13 @@ class User extends Authenticatable
         return $this->password_hash;
     }
 
+    public function getAuthIdentifierName()
+    {
+        return 'username';
+    }
+
     protected $casts = [
+        'role_id' => 'integer',
         'commission_rate' => 'decimal:2',
         'is_active' => 'boolean',
     ];
