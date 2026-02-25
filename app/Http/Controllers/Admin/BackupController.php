@@ -180,13 +180,17 @@ class BackupController extends Controller
         
         $files = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($path),
-            \RecursiveIteratorIterator::LEAVES_ONLY
+            \RecursiveIteratorIterator::SELF_FIRST
         );
         
         foreach ($files as $file) {
-            if (!$file->isDir()) {
-                $filePath = $file->getRealPath();
-                $relativePath = $base . '/' . substr($filePath, strlen($path) + 1);
+            $filePath = $file->getRealPath();
+            $relativePath = $base . '/' . substr($filePath, strlen($path) + 1);
+            $relativePath = str_replace('\\', '/', $relativePath);
+            
+            if ($file->isDir()) {
+                $zip->addEmptyDir($relativePath);
+            } else {
                 $zip->addFile($filePath, $relativePath);
             }
         }
