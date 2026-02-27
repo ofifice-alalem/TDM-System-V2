@@ -81,6 +81,7 @@ class SalesController extends Controller
                     ->where('marketer_actual_stock.marketer_id', auth()->id());
             })
             ->select('products.*', 'marketer_actual_stock.quantity as stock')
+            ->orderBy('products.name', 'asc')
             ->get();
 
         return view('marketer.sales.create', compact('stores', 'products'));

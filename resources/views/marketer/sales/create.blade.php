@@ -32,9 +32,9 @@
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- القسم الأيمن: المنتجات -->
-                <div class="lg:col-span-2 space-y-6">
+                <div class="lg:col-span-2 space-y-6 ">
                     <!-- اختيار المتجر - يظهر فقط في النقال -->
-                    <div id="store-select-mobile" class="lg:hidden bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
+                    <div id="store-select-mobile" class="lg:hidden bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up relative z-40">
                         <div class="flex items-center gap-3 mb-6">
                             <span class="bg-primary-50 dark:bg-primary-900/20 p-2.5 rounded-xl text-primary-600 dark:text-primary-400 shadow-sm border border-primary-100 dark:border-primary-600/30">
                                 <i data-lucide="store" class="w-5 h-5"></i>
@@ -43,7 +43,7 @@
                         </div>
                     </div>
                     
-                    <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border relative overflow-hidden animate-slide-up">
+                    <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border relative overflow-hidden animate-slide-up z-10">
                 <div class="flex items-center justify-between mb-8">
                     <div>
                         <h2 class="font-bold text-xl text-gray-900 dark:text-white flex items-center gap-3">
@@ -144,7 +144,7 @@
                 <!-- القسم الأيسر: المتجر والملاحظات والإجراءات -->
                 <div class="lg:col-span-1 space-y-6">
                     <!-- اختيار المتجر - يظهر فقط في الشاشات الكبيرة -->
-                    <div id="store-select-desktop" class="hidden lg:block bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
+                    <div id="store-select-desktop" class="hidden lg:block bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up relative z-50">
                         <div class="flex items-center gap-3 mb-6">
                             <span class="bg-primary-50 dark:bg-primary-900/20 p-2.5 rounded-xl text-primary-600 dark:text-primary-400 shadow-sm border border-primary-100 dark:border-primary-600/30">
                                 <i data-lucide="store" class="w-5 h-5"></i>
@@ -153,7 +153,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
+                    <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up relative z-10">
                         <div class="flex items-center gap-3 mb-6">
                             <span class="bg-primary-50 dark:bg-primary-900/20 p-2.5 rounded-xl text-primary-600 dark:text-primary-400 shadow-sm border border-primary-100 dark:border-primary-600/30">
                                 <i data-lucide="sticky-note" class="w-5 h-5"></i>
@@ -163,7 +163,7 @@
                         <textarea name="notes" rows="4" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all" placeholder="أضف أي ملاحظات إضافية..."></textarea>
                     </div>
 
-                    <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up">
+                    <div class="bg-white dark:bg-dark-card rounded-[2rem] p-3 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up relative z-10">
                         <div class="flex items-center gap-3 mb-6">
                             <span class="bg-primary-50 dark:bg-primary-900/20 p-2.5 rounded-xl text-primary-600 dark:text-primary-400 shadow-sm border border-primary-100 dark:border-primary-600/30">
                                 <i data-lucide="zap" class="w-5 h-5"></i>
@@ -190,24 +190,80 @@
 
 @push('scripts')
 <script>
-// Create single store select and move it based on screen size
-const storeSelect = document.createElement('select');
-storeSelect.name = 'store_id';
-storeSelect.required = true;
-storeSelect.className = 'w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all';
-storeSelect.innerHTML = `
-    <option value="">اختر المتجر</option>
+// Store data
+const stores = [
     @foreach($stores as $store)
-        <option value="{{ $store->id }}">{{ $store->name }} - {{ $store->owner_name }}</option>
+        { id: {{ $store->id }}, name: '{{ $store->name }}', owner: '{{ $store->owner_name }}' },
     @endforeach
+];
+
+// Create store search container
+const storeContainer = document.createElement('div');
+storeContainer.className = 'relative';
+storeContainer.innerHTML = `
+    <input type="text" id="store-search" autocomplete="off" placeholder="ابحث عن المتجر..." class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all">
+    <input type="hidden" name="store_id" id="store-id" required>
+    <div id="store-dropdown" class="hidden absolute z-[9999] w-full mt-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-60 overflow-y-auto"></div>
 `;
 
 function moveStoreSelect() {
     const isMobile = window.innerWidth < 1024;
     const container = isMobile ? document.getElementById('store-select-mobile') : document.getElementById('store-select-desktop');
-    if (container && !container.contains(storeSelect)) {
-        container.appendChild(storeSelect);
+    if (container && !container.contains(storeContainer)) {
+        container.appendChild(storeContainer);
+        initStoreSearch();
     }
+}
+
+function initStoreSearch() {
+    const searchInput = document.getElementById('store-search');
+    const storeIdInput = document.getElementById('store-id');
+    const dropdown = document.getElementById('store-dropdown');
+    
+    if (!searchInput) return;
+    
+    searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        storeIdInput.value = '';
+        
+        if (query.length === 0) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+        
+        const filtered = stores.filter(store => 
+            store.name.toLowerCase().includes(query) || 
+            store.owner.toLowerCase().includes(query)
+        );
+        
+        if (filtered.length === 0) {
+            dropdown.innerHTML = '<div class="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">لا توجد نتائج</div>';
+            dropdown.classList.remove('hidden');
+            return;
+        }
+        
+        dropdown.innerHTML = filtered.map(store => `
+            <div class="store-option px-4 py-3 hover:bg-gray-100 dark:hover:bg-dark-bg cursor-pointer border-b border-gray-100 dark:border-dark-border last:border-0" data-id="${store.id}" data-name="${store.name} - ${store.owner}">
+                <div class="font-bold text-gray-900 dark:text-white text-sm">${store.name}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">${store.owner}</div>
+            </div>
+        `).join('');
+        dropdown.classList.remove('hidden');
+        
+        document.querySelectorAll('.store-option').forEach(option => {
+            option.addEventListener('click', function() {
+                storeIdInput.value = this.dataset.id;
+                searchInput.value = this.dataset.name;
+                dropdown.classList.add('hidden');
+            });
+        });
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!storeContainer.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
 }
 
 window.addEventListener('resize', moveStoreSelect);
@@ -346,6 +402,7 @@ function enforceMaxValue(input) {
 
 document.addEventListener('DOMContentLoaded', function() {
     lucide.createIcons();
+    moveStoreSelect();
     
     document.querySelectorAll('.product-select').forEach(select => {
         select.addEventListener('change', function() {
