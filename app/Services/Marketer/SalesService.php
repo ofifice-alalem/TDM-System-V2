@@ -149,8 +149,8 @@ class SalesService
     {
         return ProductPromotion::where('product_id', $productId)
             ->where('is_active', true)
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
+            ->whereDate('start_date', '<=', now())
+            ->whereDate('end_date', '>=', now())
             ->first();
     }
 
@@ -158,8 +158,8 @@ class SalesService
     {
         $tier = InvoiceDiscountTier::where('min_amount', '<=', $subtotal)
             ->where('is_active', true)
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
+            ->whereDate('start_date', '<=', now())
+            ->whereDate('end_date', '>=', now())
             ->orderBy('min_amount', 'desc')
             ->first();
 

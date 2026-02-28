@@ -171,7 +171,7 @@
                             <h3 class="font-bold text-xl text-gray-900 dark:text-white">الإجراءات</h3>
                         </div>
                         <div class="space-y-3">
-                            <button type="submit" class="w-full px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2">
+                            <button type="submit" id="submit-btn" disabled class="w-full px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                                 <i data-lucide="send" class="w-5 h-5"></i>
                                 إنشاء الفاتورة
                             </button>
@@ -219,12 +219,14 @@ function initStoreSearch() {
     const searchInput = document.getElementById('store-search');
     const storeIdInput = document.getElementById('store-id');
     const dropdown = document.getElementById('store-dropdown');
+    const submitBtn = document.getElementById('submit-btn');
     
     if (!searchInput) return;
     
     searchInput.addEventListener('input', function() {
         const query = this.value.toLowerCase();
         storeIdInput.value = '';
+        if (submitBtn) submitBtn.disabled = true;
         
         if (query.length === 0) {
             dropdown.classList.add('hidden');
@@ -255,6 +257,7 @@ function initStoreSearch() {
                 storeIdInput.value = this.dataset.id;
                 searchInput.value = this.dataset.name;
                 dropdown.classList.add('hidden');
+                if (submitBtn) submitBtn.disabled = false;
             });
         });
     });
@@ -327,7 +330,7 @@ function calculateInvoiceSummary() {
     
     // Fetch invoice discount from server
     const subtotalBeforeDiscount = subtotal - productsDiscount;
-    fetch(`/calculate-invoice-discount?amount=${subtotalBeforeDiscount}`)
+    fetch(`{{ url('/calculate-invoice-discount') }}?amount=${subtotalBeforeDiscount}`)
         .then(response => response.json())
         .then(data => {
             const invoiceDiscount = data.discount_amount || 0;
