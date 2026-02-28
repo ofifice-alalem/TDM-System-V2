@@ -49,7 +49,7 @@
                             </select>
                         </div>
 
-                        <div id="marketer_store_field" style="display: {{ request('stat_type') == 'marketers' && in_array(request('operation'), ['sales', 'payments']) ? 'block' : 'none' }}">
+                        <div id="marketer_store_field" style="display: {{ request('stat_type') == 'marketers' && in_array(request('operation'), ['sales', 'payments', 'sales_returns']) ? 'block' : 'none' }}">
                             <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">المتجر (اختياري)</label>
                             <select name="marketer_store_id" id="marketer_store_id" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                                 <option value="">الكل</option>
@@ -159,7 +159,7 @@
             <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg overflow-hidden">
                 <div class="p-6 border-b border-gray-200 dark:border-dark-border">
                     <h2 class="text-xl font-black text-gray-900 dark:text-white mb-4">النتائج</h2>
-                    @if(request('stat_type') == 'stores' && !request('status'))
+                    @if((request('stat_type') == 'stores' || request('stat_type') == 'marketers') && !request('status') && isset($results['status_totals']))
                         <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                             <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 border border-amber-200 dark:border-amber-800">
                                 <p class="text-xs text-amber-600 dark:text-amber-400 font-bold mb-1">معلق</p>
@@ -184,7 +184,7 @@
                         </div>
                     @endif
                     @if($results['operation'] == 'payments' && isset($results['payment_method_totals']))
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 {{ request('stat_type') == 'stores' && !request('status') ? 'mt-3' : '' }}">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 {{ (request('stat_type') == 'stores' || request('stat_type') == 'marketers') && !request('status') ? 'mt-3' : '' }}">
                             <div class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-3 border border-purple-200 dark:border-purple-800">
                                 <p class="text-xs text-purple-600 dark:text-purple-400 font-bold mb-1">كاش</p>
                                 <p class="text-lg font-black text-purple-700 dark:text-purple-300">{{ number_format($results['payment_method_totals']['cash'], 2) }}</p>
@@ -203,7 +203,7 @@
                             </div>
                         </div>
                     @endif
-                    @if(request('stat_type') == 'stores' && !request('status'))
+                    @if((request('stat_type') == 'stores' || request('stat_type') == 'marketers') && !request('status'))
                         @if($results['operation'] == 'payments' && isset($results['payment_method_totals']))
                         @endif
                     @else
@@ -234,6 +234,8 @@
                                         رقم الإيصال
                                     @elseif($results['operation'] == 'returns')
                                         رقم الإرجاع
+                                    @elseif($results['operation'] == 'sales_returns')
+                                        رقم الإرجاع
                                     @elseif($results['operation'] == 'requests')
                                         رقم الطلب
                                     @elseif($results['operation'] == 'withdrawals')
@@ -245,7 +247,7 @@
                                         <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المتجر</th>
                                     @endif
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المسوق</th>
-                                @elseif(request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments']))
+                                @elseif(request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments', 'sales_returns']))
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المتجر</th>
                                 @endif
                                 @if($results['operation'] == 'payments' && request('stat_type') == 'marketers')
@@ -279,6 +281,8 @@
                                             {{ $item->payment_number }}
                                         @elseif($results['operation'] == 'returns')
                                             {{ $item->return_number }}
+                                        @elseif($results['operation'] == 'sales_returns')
+                                            {{ $item->return_number }}
                                         @elseif($results['operation'] == 'requests')
                                             {{ $item->invoice_number }}
                                         @elseif($results['operation'] == 'withdrawals')
@@ -290,7 +294,7 @@
                                             <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->store->name ?? '-' }}</td>
                                         @endif
                                         <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->marketer->full_name ?? '-' }}</td>
-                                    @elseif(request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments']))
+                                    @elseif(request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments', 'sales_returns']))
                                         <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->store->name ?? '-' }}</td>
                                     @endif
                                     @if($results['operation'] == 'payments' && request('stat_type') == 'marketers')
@@ -322,6 +326,8 @@
                                         @elseif($results['operation'] == 'payments')
                                             {{ number_format($item->amount, 2) }}
                                         @elseif($results['operation'] == 'returns')
+                                            {{ number_format($item->total_amount, 2) }}
+                                        @elseif($results['operation'] == 'sales_returns')
                                             {{ number_format($item->total_amount, 2) }}
                                         @elseif($results['operation'] == 'requests')
                                             -
@@ -383,6 +389,7 @@
         const marketerOperations = [
             {value: 'requests', text: 'طلبات البضاعة'},
             {value: 'returns', text: 'إرجاعات البضاعة'},
+            {value: 'sales_returns', text: 'إرجاعات المتاجر'},
             {value: 'sales', text: 'فواتير البيع'},
             {value: 'payments', text: 'إيصالات القبض'},
             {value: 'withdrawals', text: 'طلبات سحب الأرباح'}
@@ -402,6 +409,12 @@
                 {value: 'pending', text: 'معلق'},
                 {value: 'approved', text: 'موافق عليه'},
                 {value: 'documented', text: 'موثق'},
+                {value: 'cancelled', text: 'ملغي'},
+                {value: 'rejected', text: 'مرفوض'}
+            ],
+            'sales_returns': [
+                {value: 'pending', text: 'معلق'},
+                {value: 'approved', text: 'موثق'},
                 {value: 'cancelled', text: 'ملغي'},
                 {value: 'rejected', text: 'مرفوض'}
             ],
@@ -433,7 +446,7 @@
         marketerSelect.addEventListener('change', function() {
             const marketerId = this.value;
             // Only load if operation is sales or payments
-            if (marketerId && ['sales', 'payments'].includes(operation.value)) {
+            if (marketerId && ['sales', 'payments', 'sales_returns'].includes(operation.value)) {
                 fetch(`{{ url('/admin/statistics/marketer-stores') }}/${marketerId}`)
                     .then(response => response.json())
                     .then(stores => {
@@ -492,7 +505,7 @@
             }
             
             // Show/hide marketer store field based on operation
-            if (statType.value === 'marketers' && ['sales', 'payments'].includes(operation.value)) {
+            if (statType.value === 'marketers' && ['sales', 'payments', 'sales_returns'].includes(operation.value)) {
                 marketerStoreField.style.display = 'block';
             } else {
                 marketerStoreField.style.display = 'none';
@@ -527,7 +540,7 @@
                 statusField.style.display = 'block';
             }
             
-            if (statType.value === 'marketers' && ['sales', 'payments'].includes(this.value)) {
+            if (statType.value === 'marketers' && ['sales', 'payments', 'sales_returns'].includes(this.value)) {
                 marketerStoreField.style.display = 'block';
                 // Load stores when operation changes to sales or payments
                 if (marketerSelect.value) {
@@ -562,7 +575,7 @@
         }
         
         // Load marketer stores on page load ONLY if operation is sales or payments
-        if (marketerSelect.value && statType.value === 'marketers' && ['sales', 'payments'].includes(operation.value)) {
+        if (marketerSelect.value && statType.value === 'marketers' && ['sales', 'payments', 'sales_returns'].includes(operation.value)) {
             fetch(`{{ url('/admin/statistics/marketer-stores') }}/${marketerSelect.value}`)
                 .then(response => response.json())
                 .then(stores => {

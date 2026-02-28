@@ -311,6 +311,8 @@ class StatisticsController extends Controller
                 ->where('marketer_id', $request->marketer_id),
             'returns' => \App\Models\MarketerReturnRequest::with('marketer', 'items.product')
                 ->where('marketer_id', $request->marketer_id),
+            'sales_returns' => SalesReturn::with('marketer', 'store')
+                ->where('marketer_id', $request->marketer_id),
             'sales' => SalesInvoice::with('marketer', 'store')
                 ->where('marketer_id', $request->marketer_id),
             'payments' => StorePayment::with('marketer', 'store', 'keeper', 'commission')
@@ -322,7 +324,7 @@ class StatisticsController extends Controller
 
         if (!$query) return null;
 
-        if ($request->filled('marketer_store_id') && in_array($request->operation, ['sales', 'payments'])) {
+        if ($request->filled('marketer_store_id') && in_array($request->operation, ['sales', 'payments', 'sales_returns'])) {
             $query->where('store_id', $request->marketer_store_id);
         }
 
@@ -338,10 +340,16 @@ class StatisticsController extends Controller
         // Calculate totals based on operation
         $total = 0;
         $totalCommission = 0;
+        $statusTotals = [
+            'pending' => 0,
+            'approved' => 0,
+            'cancelled' => 0,
+            'rejected' => 0,
+            'total' => 0
+        ];
         
         if ($request->operation == 'payments') {
             $totalQuery = StorePayment::where('marketer_id', $request->marketer_id)
-                ->where('status', 'approved')
                 ->whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date);
             
@@ -351,6 +359,8 @@ class StatisticsController extends Controller
             
             if ($request->filled('status')) {
                 $totalQuery->where('status', $request->status);
+            } else {
+                $totalQuery->where('status', 'approved');
             }
             
             $total = $totalQuery->sum('amount');
@@ -358,9 +368,23 @@ class StatisticsController extends Controller
             $totalCommission = \App\Models\MarketerCommission::whereIn('payment_id', 
                 $totalQuery->pluck('id')
             )->sum('commission_amount');
+            
+            // Calculate status totals
+            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
+                $statusQuery = StorePayment::where('marketer_id', $request->marketer_id)
+                    ->where('status', $status)
+                    ->whereDate('created_at', '>=', $request->from_date)
+                    ->whereDate('created_at', '<=', $request->to_date);
+                
+                if ($request->filled('marketer_store_id')) {
+                    $statusQuery->where('store_id', $request->marketer_store_id);
+                }
+                
+                $statusTotals[$status] = $statusQuery->sum('amount');
+            }
+            $statusTotals['total'] = array_sum([$statusTotals['pending'], $statusTotals['approved'], $statusTotals['cancelled'], $statusTotals['rejected']]);
         } elseif ($request->operation == 'sales') {
             $totalQuery = SalesInvoice::where('marketer_id', $request->marketer_id)
-                ->where('status', 'approved')
                 ->whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date);
             
@@ -370,9 +394,26 @@ class StatisticsController extends Controller
             
             if ($request->filled('status')) {
                 $totalQuery->where('status', $request->status);
+            } else {
+                $totalQuery->where('status', 'approved');
             }
             
             $total = $totalQuery->sum('total_amount');
+            
+            // Calculate status totals
+            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
+                $statusQuery = SalesInvoice::where('marketer_id', $request->marketer_id)
+                    ->where('status', $status)
+                    ->whereDate('created_at', '>=', $request->from_date)
+                    ->whereDate('created_at', '<=', $request->to_date);
+                
+                if ($request->filled('marketer_store_id')) {
+                    $statusQuery->where('store_id', $request->marketer_store_id);
+                }
+                
+                $statusTotals[$status] = $statusQuery->sum('total_amount');
+            }
+            $statusTotals['total'] = array_sum([$statusTotals['pending'], $statusTotals['approved'], $statusTotals['cancelled'], $statusTotals['rejected']]);
         } elseif ($request->operation == 'returns') {
             $totalQuery = \App\Models\MarketerReturnRequest::where('marketer_id', $request->marketer_id)
                 ->where('status', 'approved')
@@ -384,6 +425,37 @@ class StatisticsController extends Controller
             }
             
             $total = $totalQuery->sum('total_amount');
+        } elseif ($request->operation == 'sales_returns') {
+            $totalQuery = SalesReturn::where('marketer_id', $request->marketer_id)
+                ->whereDate('created_at', '>=', $request->from_date)
+                ->whereDate('created_at', '<=', $request->to_date);
+            
+            if ($request->filled('marketer_store_id')) {
+                $totalQuery->where('store_id', $request->marketer_store_id);
+            }
+            
+            if ($request->filled('status')) {
+                $totalQuery->where('status', $request->status);
+            } else {
+                $totalQuery->where('status', 'approved');
+            }
+            
+            $total = $totalQuery->sum('total_amount');
+            
+            // Calculate status totals
+            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
+                $statusQuery = SalesReturn::where('marketer_id', $request->marketer_id)
+                    ->where('status', $status)
+                    ->whereDate('created_at', '>=', $request->from_date)
+                    ->whereDate('created_at', '<=', $request->to_date);
+                
+                if ($request->filled('marketer_store_id')) {
+                    $statusQuery->where('store_id', $request->marketer_store_id);
+                }
+                
+                $statusTotals[$status] = $statusQuery->sum('total_amount');
+            }
+            $statusTotals['total'] = array_sum([$statusTotals['pending'], $statusTotals['approved'], $statusTotals['cancelled'], $statusTotals['rejected']]);
         } elseif ($request->operation == 'withdrawals') {
             $totalQuery = \App\Models\MarketerWithdrawalRequest::where('marketer_id', $request->marketer_id)
                 ->where('status', 'approved')
@@ -401,7 +473,8 @@ class StatisticsController extends Controller
             'operation' => $request->operation,
             'data' => $data,
             'total' => $total,
-            'total_commission' => $totalCommission
+            'total_commission' => $totalCommission,
+            'status_totals' => $statusTotals
         ];
     }
 
@@ -436,6 +509,7 @@ class StatisticsController extends Controller
             'sales' => 'فواتير البيع',
             'payments' => 'إيصالات القبض',
             'returns' => 'إرجاعات البضاعة',
+            'sales_returns' => 'إرجاعات المتاجر',
             'requests' => 'طلبات البضاعة',
             'withdrawals' => 'طلبات سحب الأرباح',
             'summary' => 'الملخص المالي',
@@ -558,6 +632,46 @@ class StatisticsController extends Controller
             }
         } elseif ($request->stat_type == 'marketers') {
             $row++;
+            
+            // Show status totals if no status filter
+            if (!$request->filled('status') && isset($results['status_totals'])) {
+                $sheet->setCellValue('A' . $row, 'الإجماليات حسب الحالة');
+                $sheet->mergeCells('A' . $row . ':E' . $row);
+                $sheet->getStyle('A' . $row)->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF3E0']],
+                    'font' => ['bold' => true, 'size' => 12],
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
+                $row++;
+                
+                $statusHeaders = ['معلق', 'ملغي', 'مرفوض', 'موثق', 'الكلي'];
+                $sheet->fromArray($statusHeaders, null, 'A' . $row);
+                $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFE0B2']],
+                    'font' => ['bold' => true],
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
+                $row++;
+                
+                $statusValues = [
+                    number_format($results['status_totals']['pending'], 2),
+                    number_format($results['status_totals']['cancelled'], 2),
+                    number_format($results['status_totals']['rejected'], 2),
+                    number_format($results['status_totals']['approved'], 2),
+                    number_format($results['status_totals']['total'], 2)
+                ];
+                $sheet->fromArray($statusValues, null, 'A' . $row);
+                $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+                    'font' => ['bold' => true],
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
+                $row++;
+                $row++;
+            }
+            
             $sheet->setCellValue('A' . $row, 'الإجمالي (الموثق فقط)');
             $sheet->setCellValue('B' . $row, number_format($results['total'], 2) . ' دينار');
             $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
@@ -668,6 +782,7 @@ class StatisticsController extends Controller
                 'sales' => $item->invoice_number,
                 'payments' => $item->payment_number,
                 'returns' => $item->return_number ?? null,
+                'sales_returns' => $item->return_number ?? null,
                 'requests' => $item->invoice_number,
                 'withdrawals' => 'WD-' . $item->id,
                 default => ''
@@ -677,6 +792,7 @@ class StatisticsController extends Controller
                 'sales' => $item->total_amount,
                 'payments' => $item->amount,
                 'returns' => $item->total_amount ?? 0,
+                'sales_returns' => $item->total_amount ?? 0,
                 'withdrawals' => $item->requested_amount,
                 default => 0
             };
