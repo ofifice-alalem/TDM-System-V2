@@ -49,7 +49,7 @@
                             </select>
                         </div>
 
-                        <div id="marketer_store_field" style="display: none">
+                        <div id="marketer_store_field" style="display: {{ request('stat_type') == 'marketers' && in_array(request('operation'), ['sales', 'payments']) ? 'block' : 'none' }}">
                             <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">المتجر (اختياري)</label>
                             <select name="marketer_store_id" id="marketer_store_id" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                                 <option value="">الكل</option>
@@ -182,6 +182,30 @@
                                 <p class="text-lg font-black text-blue-700 dark:text-blue-300">{{ number_format($results['status_totals']['total'], 2) }}</p>
                             </div>
                         </div>
+                    @endif
+                    @if($results['operation'] == 'payments' && isset($results['payment_method_totals']))
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 {{ request('stat_type') == 'stores' && !request('status') ? 'mt-3' : '' }}">
+                            <div class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-3 border border-purple-200 dark:border-purple-800">
+                                <p class="text-xs text-purple-600 dark:text-purple-400 font-bold mb-1">كاش</p>
+                                <p class="text-lg font-black text-purple-700 dark:text-purple-300">{{ number_format($results['payment_method_totals']['cash'], 2) }}</p>
+                            </div>
+                            <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-3 border border-indigo-200 dark:border-indigo-800">
+                                <p class="text-xs text-indigo-600 dark:text-indigo-400 font-bold mb-1">حوالة</p>
+                                <p class="text-lg font-black text-indigo-700 dark:text-indigo-300">{{ number_format($results['payment_method_totals']['transfer'], 2) }}</p>
+                            </div>
+                            <div class="bg-cyan-50 dark:bg-cyan-900/20 rounded-xl p-3 border border-cyan-200 dark:border-cyan-800">
+                                <p class="text-xs text-cyan-600 dark:text-cyan-400 font-bold mb-1">شيك مصدق</p>
+                                <p class="text-lg font-black text-cyan-700 dark:text-cyan-300">{{ number_format($results['payment_method_totals']['certified_check'], 2) }}</p>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-gray-900/20 rounded-xl p-3 border border-gray-200 dark:border-gray-800">
+                                <p class="text-xs text-gray-600 dark:text-gray-400 font-bold mb-1">إجمالي</p>
+                                <p class="text-lg font-black text-gray-700 dark:text-gray-300">{{ number_format($results['payment_method_totals']['total'], 2) }}</p>
+                            </div>
+                        </div>
+                    @endif
+                    @if(request('stat_type') == 'stores' && !request('status'))
+                        @if($results['operation'] == 'payments' && isset($results['payment_method_totals']))
+                        @endif
                     @else
                         <div class="flex items-center justify-between">
                             <div></div>
@@ -228,6 +252,9 @@
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">نسبة العمولة</th>
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">القيمة المستحقة</th>
                                 @endif
+                                @if($results['operation'] == 'payments')
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">طريقة الدفع</th>
+                                @endif
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">التاريخ</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">الحالة</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المبلغ</th>
@@ -269,6 +296,19 @@
                                     @if($results['operation'] == 'payments' && request('stat_type') == 'marketers')
                                         <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->commission->commission_rate ?? '-' }}%</td>
                                         <td class="px-6 py-4 text-sm font-bold text-emerald-600 dark:text-emerald-400">{{ number_format($item->commission->commission_amount ?? 0, 2) }}</td>
+                                    @endif
+                                    @if($results['operation'] == 'payments')
+                                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                            @if($item->payment_method == 'cash')
+                                                كاش
+                                            @elseif($item->payment_method == 'transfer')
+                                                حوالة
+                                            @elseif($item->payment_method == 'certified_check')
+                                                شيك مصدق
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
                                     @endif
                                     <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->created_at->format('Y-m-d') }}</td>
                                     <td class="px-6 py-4">
@@ -392,8 +432,9 @@
         // Load marketer stores when marketer is selected
         marketerSelect.addEventListener('change', function() {
             const marketerId = this.value;
-            if (marketerId) {
-                fetch(`/admin/statistics/marketer-stores/${marketerId}`)
+            // Only load if operation is sales or payments
+            if (marketerId && ['sales', 'payments'].includes(operation.value)) {
+                fetch(`{{ url('/admin/statistics/marketer-stores') }}/${marketerId}`)
                     .then(response => response.json())
                     .then(stores => {
                         marketerStoreSelect.innerHTML = '<option value="">الكل</option>';
@@ -478,7 +519,7 @@
         operation.addEventListener('change', function() {
             updateStatusOptions(this.value);
             
-            // Hide status field for summary operation
+            // Show/hide status field for summary operation
             const statusField = statusSelect.closest('div');
             if (this.value === 'summary') {
                 statusField.style.display = 'none';
@@ -488,6 +529,23 @@
             
             if (statType.value === 'marketers' && ['sales', 'payments'].includes(this.value)) {
                 marketerStoreField.style.display = 'block';
+                // Load stores when operation changes to sales or payments
+                if (marketerSelect.value) {
+                    fetch(`{{ url('/admin/statistics/marketer-stores') }}/${marketerSelect.value}`)
+                        .then(response => response.json())
+                        .then(stores => {
+                            marketerStoreSelect.innerHTML = '<option value="">الكل</option>';
+                            stores.forEach(store => {
+                                const option = document.createElement('option');
+                                option.value = store.id;
+                                option.text = store.name;
+                                if ('{{ request('marketer_store_id') }}' == store.id) {
+                                    option.selected = true;
+                                }
+                                marketerStoreSelect.appendChild(option);
+                            });
+                        });
+                }
             } else {
                 marketerStoreField.style.display = 'none';
             }
@@ -498,9 +556,27 @@
             statType.dispatchEvent(new Event('change'));
         }
         
-        // Load marketer stores on page load if marketer is selected
-        if (marketerSelect.value && statType.value === 'marketers') {
-            marketerSelect.dispatchEvent(new Event('change'));
+        // Initialize status options on load if operation is selected
+        if (operation.value) {
+            updateStatusOptions(operation.value);
+        }
+        
+        // Load marketer stores on page load ONLY if operation is sales or payments
+        if (marketerSelect.value && statType.value === 'marketers' && ['sales', 'payments'].includes(operation.value)) {
+            fetch(`{{ url('/admin/statistics/marketer-stores') }}/${marketerSelect.value}`)
+                .then(response => response.json())
+                .then(stores => {
+                    marketerStoreSelect.innerHTML = '<option value="">الكل</option>';
+                    stores.forEach(store => {
+                        const option = document.createElement('option');
+                        option.value = store.id;
+                        option.text = store.name;
+                        if ('{{ request('marketer_store_id') }}' == store.id) {
+                            option.selected = true;
+                        }
+                        marketerStoreSelect.appendChild(option);
+                    });
+                });
         }
     });
 </script>
