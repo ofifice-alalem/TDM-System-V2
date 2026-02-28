@@ -187,6 +187,11 @@ class StatisticsController extends Controller
 
     private function exportSummaryToExcel($results, $request, $spreadsheet, $sheet)
     {
+        // Check if it's marketer summary
+        if (isset($results['is_marketer_summary']) && $results['is_marketer_summary']) {
+            return $this->exportMarketerSummaryToExcel($results, $request, $spreadsheet, $sheet);
+        }
+        
         $entity = null;
         if ($request->store_id == 'all') {
             $entityLabel = 'اسم المتجر';
@@ -306,6 +311,11 @@ class StatisticsController extends Controller
 
     private function getMarketerStatistics($request, $forExport = false)
     {
+        // Handle summary operation for marketers
+        if ($request->operation == 'summary') {
+            return $this->getMarketerSummary($request);
+        }
+        
         $query = match($request->operation) {
             'requests' => \App\Models\MarketerRequest::with('marketer', 'items.product'),
             'returns' => \App\Models\MarketerReturnRequest::with('marketer', 'items.product'),
@@ -1172,5 +1182,180 @@ class StatisticsController extends Controller
             'current_balance' => $currentBalance,
             'stores_data' => $storesData
         ];
+    }
+
+    private function getMarketerSummary($request)
+    {
+        $marketerQuery = $request->marketer_id !== 'all' ? fn($q) => $q->where('marketer_id', $request->marketer_id) : fn($q) => $q;
+        
+        // Total commissions earned
+        $totalCommissions = \App\Models\MarketerCommission::whereHas('payment', function($q) use ($request) {
+            $q->where('status', 'approved')
+              ->whereDate('created_at', '>=', $request->from_date)
+              ->whereDate('created_at', '<=', $request->to_date);
+            if ($request->marketer_id !== 'all') {
+                $q->where('marketer_id', $request->marketer_id);
+            }
+        })->sum('commission_amount');
+        
+        // Total withdrawals
+        $totalWithdrawals = \App\Models\MarketerWithdrawalRequest::where('status', 'approved')
+            ->whereDate('created_at', '>=', $request->from_date)
+            ->whereDate('created_at', '<=', $request->to_date)
+            ->when($request->marketer_id !== 'all', $marketerQuery)
+            ->sum('requested_amount');
+        
+        $remaining = $totalCommissions - $totalWithdrawals;
+        
+        // Get marketers data if "all" is selected
+        $marketersData = [];
+        if ($request->marketer_id === 'all') {
+            $marketers = \App\Models\User::where('role_id', 3)->where('is_active', true)->get();
+            foreach ($marketers as $marketer) {
+                $commissions = \App\Models\MarketerCommission::whereHas('payment', function($q) use ($request, $marketer) {
+                    $q->where('status', 'approved')
+                      ->where('marketer_id', $marketer->id)
+                      ->whereDate('created_at', '>=', $request->from_date)
+                      ->whereDate('created_at', '<=', $request->to_date);
+                })->sum('commission_amount');
+                
+                $withdrawals = \App\Models\MarketerWithdrawalRequest::where('status', 'approved')
+                    ->where('marketer_id', $marketer->id)
+                    ->whereDate('created_at', '>=', $request->from_date)
+                    ->whereDate('created_at', '<=', $request->to_date)
+                    ->sum('requested_amount');
+                
+                $balance = $commissions - $withdrawals;
+                
+                $marketersData[] = [
+                    'marketer_name' => $marketer->full_name,
+                    'commissions' => $commissions,
+                    'withdrawals' => $withdrawals,
+                    'balance' => $balance
+                ];
+            }
+        }
+        
+        return [
+            'is_summary' => true,
+            'is_marketer_summary' => true,
+            'total_commissions' => $totalCommissions,
+            'total_withdrawals' => $totalWithdrawals,
+            'remaining' => $remaining,
+            'marketers_data' => $marketersData
+        ];
+    }
+
+    private function exportMarketerSummaryToExcel($results, $request, $spreadsheet, $sheet)
+    {
+        $entity = null;
+        if ($request->marketer_id == 'all') {
+            $entityLabel = 'اسم المسوق';
+            $entityName = 'الكل';
+        } else {
+            $entity = \App\Models\User::find($request->marketer_id);
+            $entityLabel = 'اسم المسوق';
+            $entityName = $entity->full_name ?? '';
+        }
+        
+        $row = 1;
+        
+        $infoData = [
+            ['نوع الإحصاء', 'المسوقين'],
+            [$entityLabel, $entityName],
+            ['العملية', 'الملخص المالي'],
+            ['من تاريخ', $request->from_date],
+            ['إلى تاريخ', $request->to_date],
+        ];
+        
+        foreach ($infoData as $info) {
+            $sheet->setCellValue('A' . $row, $info[0]);
+            $sheet->setCellValue('B' . $row, $info[1]);
+            $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E3F2FD']],
+                'font' => ['bold' => true, 'size' => 12],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
+            $row++;
+        }
+        
+        $row++;
+        
+        $sheet->setCellValue('A' . $row, 'الملخص الإجمالي');
+        $sheet->mergeCells('A' . $row . ':B' . $row);
+        $sheet->getStyle('A' . $row)->applyFromArray([
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ]);
+        $row++;
+        
+        $summaryData = [
+            ['إجمالي الأرباح', number_format($results['total_commissions'], 2) . ' دينار'],
+            ['إجمالي المسحوب', number_format($results['total_withdrawals'], 2) . ' دينار'],
+            ['المتبقي', number_format($results['remaining'], 2) . ' دينار'],
+        ];
+        
+        foreach ($summaryData as $data) {
+            $sheet->setCellValue('A' . $row, $data[0]);
+            $sheet->setCellValue('B' . $row, $data[1]);
+            $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                'font' => ['bold' => true],
+            ]);
+            $row++;
+        }
+        
+        if (isset($results['marketers_data']) && count($results['marketers_data']) > 0) {
+            $row++;
+            $sheet->setCellValue('A' . $row, 'تفاصيل المسوقين');
+            $sheet->mergeCells('A' . $row . ':D' . $row);
+            $sheet->getStyle('A' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            ]);
+            $row++;
+            
+            $headers = ['المسوق', 'إجمالي الأرباح', 'إجمالي المسحوب', 'المتبقي'];
+            $sheet->fromArray($headers, null, 'A' . $row);
+            $sheet->getStyle('A' . $row . ':D' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '66BB6A']],
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            ]);
+            $row++;
+            
+            foreach ($results['marketers_data'] as $marketerData) {
+                $rowData = [
+                    $marketerData['marketer_name'],
+                    number_format($marketerData['commissions'], 2),
+                    number_format($marketerData['withdrawals'], 2),
+                    number_format($marketerData['balance'], 2)
+                ];
+                $sheet->fromArray($rowData, null, 'A' . $row);
+                $sheet->getStyle('A' . $row . ':D' . $row)->applyFromArray([
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                ]);
+                $row++;
+            }
+        }
+        
+        foreach (range('A', 'D') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        
+        $filename = date('Y-m-d') . '__الملخص_المالي__' . $entityName . '.xlsx';
+        
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 }

@@ -105,7 +105,54 @@
         {{-- Results --}}
         @if($results)
             @if(isset($results['is_summary']) && $results['is_summary'])
-                {{-- Financial Summary --}}
+                @if(isset($results['is_marketer_summary']) && $results['is_marketer_summary'])
+                    {{-- Marketer Financial Summary --}}
+                    <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-200 dark:border-dark-border">
+                            <h2 class="text-xl font-black text-gray-900 dark:text-white mb-6">الملخص المالي</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-4 border border-emerald-200 dark:border-emerald-800">
+                                    <p class="text-sm text-emerald-600 dark:text-emerald-400 font-bold mb-2">إجمالي الأرباح</p>
+                                    <p class="text-2xl font-black text-emerald-700 dark:text-emerald-300">{{ number_format($results['total_commissions'], 2) }} دينار</p>
+                                </div>
+                                <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
+                                    <p class="text-sm text-amber-600 dark:text-amber-400 font-bold mb-2">إجمالي المسحوب</p>
+                                    <p class="text-2xl font-black text-amber-700 dark:text-amber-300">{{ number_format($results['total_withdrawals'], 2) }} دينار</p>
+                                </div>
+                                <div class="bg-{{ $results['remaining'] >= 0 ? 'blue' : 'red' }}-50 dark:bg-{{ $results['remaining'] >= 0 ? 'blue' : 'red' }}-900/20 rounded-xl p-4 border border-{{ $results['remaining'] >= 0 ? 'blue' : 'red' }}-200 dark:border-{{ $results['remaining'] >= 0 ? 'blue' : 'red' }}-800">
+                                    <p class="text-sm text-{{ $results['remaining'] >= 0 ? 'blue' : 'red' }}-600 dark:text-{{ $results['remaining'] >= 0 ? 'blue' : 'red' }}-400 font-bold mb-2">المتبقي</p>
+                                    <p class="text-2xl font-black text-{{ $results['remaining'] >= 0 ? 'blue' : 'red' }}-700 dark:text-{{ $results['remaining'] >= 0 ? 'blue' : 'red' }}-300">{{ number_format($results['remaining'], 2) }} دينار</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        @if(isset($results['marketers_data']) && count($results['marketers_data']) > 0)
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50 dark:bg-dark-bg border-b border-gray-200 dark:border-dark-border">
+                                    <tr>
+                                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المسوق</th>
+                                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">إجمالي الأرباح</th>
+                                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">إجمالي المسحوب</th>
+                                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المتبقي</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
+                                    @foreach($results['marketers_data'] as $marketerData)
+                                        <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
+                                            <td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">{{ $marketerData['marketer_name'] }}</td>
+                                            <td class="px-6 py-4 text-sm text-emerald-600 dark:text-emerald-400 font-bold">{{ number_format($marketerData['commissions'], 2) }}</td>
+                                            <td class="px-6 py-4 text-sm text-amber-600 dark:text-amber-400 font-bold">{{ number_format($marketerData['withdrawals'], 2) }}</td>
+                                            <td class="px-6 py-4 text-sm font-bold {{ $marketerData['balance'] >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400' }}">{{ number_format($marketerData['balance'], 2) }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        @endif
+                    </div>
+                @else
+                {{-- Store Financial Summary --}}
                 <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg overflow-hidden">
                     <div class="p-6 border-b border-gray-200 dark:border-dark-border">
                         <h2 class="text-xl font-black text-gray-900 dark:text-white mb-6">الملخص المالي</h2>
@@ -155,7 +202,8 @@
                         </table>
                     </div>
                     @endif
-                </div>
+                    </div>
+                @endif
             @else
             <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg overflow-hidden">
                 <div class="p-6 border-b border-gray-200 dark:border-dark-border">
@@ -396,6 +444,7 @@
         ];
         
         const marketerOperations = [
+            {value: 'summary', text: 'الملخص المالي'},
             {value: 'requests', text: 'طلبات البضاعة'},
             {value: 'returns', text: 'إرجاعات البضاعة'},
             {value: 'sales_returns', text: 'إرجاعات المتاجر'},
