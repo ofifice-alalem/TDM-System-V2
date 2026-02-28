@@ -307,22 +307,21 @@ class StatisticsController extends Controller
     private function getMarketerStatistics($request, $forExport = false)
     {
         $query = match($request->operation) {
-            'requests' => \App\Models\MarketerRequest::with('marketer', 'items.product')
-                ->where('marketer_id', $request->marketer_id),
-            'returns' => \App\Models\MarketerReturnRequest::with('marketer', 'items.product')
-                ->where('marketer_id', $request->marketer_id),
-            'sales_returns' => SalesReturn::with('marketer', 'store')
-                ->where('marketer_id', $request->marketer_id),
-            'sales' => SalesInvoice::with('marketer', 'store')
-                ->where('marketer_id', $request->marketer_id),
-            'payments' => StorePayment::with('marketer', 'store', 'keeper', 'commission')
-                ->where('marketer_id', $request->marketer_id),
-            'withdrawals' => \App\Models\MarketerWithdrawalRequest::with('marketer')
-                ->where('marketer_id', $request->marketer_id),
+            'requests' => \App\Models\MarketerRequest::with('marketer', 'items.product'),
+            'returns' => \App\Models\MarketerReturnRequest::with('marketer', 'items.product'),
+            'sales_returns' => SalesReturn::with('marketer', 'store'),
+            'sales' => SalesInvoice::with('marketer', 'store'),
+            'payments' => StorePayment::with('marketer', 'store', 'keeper', 'commission'),
+            'withdrawals' => \App\Models\MarketerWithdrawalRequest::with('marketer'),
             default => null
         };
 
         if (!$query) return null;
+
+        // Filter by marketer_id only if not "all"
+        if ($request->marketer_id && $request->marketer_id !== 'all') {
+            $query->where('marketer_id', $request->marketer_id);
+        }
 
         if ($request->filled('marketer_store_id') && in_array($request->operation, ['sales', 'payments', 'sales_returns'])) {
             $query->where('store_id', $request->marketer_store_id);
@@ -350,9 +349,12 @@ class StatisticsController extends Controller
         $paymentMethodTotals = null;
         
         if ($request->operation == 'payments') {
-            $totalQuery = StorePayment::where('marketer_id', $request->marketer_id)
-                ->whereDate('created_at', '>=', $request->from_date)
+            $totalQuery = StorePayment::whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date);
+            
+            if ($request->marketer_id && $request->marketer_id !== 'all') {
+                $totalQuery->where('marketer_id', $request->marketer_id);
+            }
             
             if ($request->filled('marketer_store_id')) {
                 $totalQuery->where('store_id', $request->marketer_store_id);
@@ -372,10 +374,13 @@ class StatisticsController extends Controller
             
             // Calculate status totals
             foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
-                $statusQuery = StorePayment::where('marketer_id', $request->marketer_id)
-                    ->where('status', $status)
+                $statusQuery = StorePayment::where('status', $status)
                     ->whereDate('created_at', '>=', $request->from_date)
                     ->whereDate('created_at', '<=', $request->to_date);
+                
+                if ($request->marketer_id && $request->marketer_id !== 'all') {
+                    $statusQuery->where('marketer_id', $request->marketer_id);
+                }
                 
                 if ($request->filled('marketer_store_id')) {
                     $statusQuery->where('store_id', $request->marketer_store_id);
@@ -394,10 +399,13 @@ class StatisticsController extends Controller
             ];
             
             foreach (['cash', 'transfer', 'certified_check'] as $method) {
-                $methodQuery = StorePayment::where('marketer_id', $request->marketer_id)
-                    ->where('payment_method', $method)
+                $methodQuery = StorePayment::where('payment_method', $method)
                     ->whereDate('created_at', '>=', $request->from_date)
                     ->whereDate('created_at', '<=', $request->to_date);
+                
+                if ($request->marketer_id && $request->marketer_id !== 'all') {
+                    $methodQuery->where('marketer_id', $request->marketer_id);
+                }
                 
                 if ($request->filled('marketer_store_id')) {
                     $methodQuery->where('store_id', $request->marketer_store_id);
@@ -412,9 +420,12 @@ class StatisticsController extends Controller
             
             $paymentMethodTotals['total'] = array_sum([$paymentMethodTotals['cash'], $paymentMethodTotals['transfer'], $paymentMethodTotals['certified_check']]);
         } elseif ($request->operation == 'sales') {
-            $totalQuery = SalesInvoice::where('marketer_id', $request->marketer_id)
-                ->whereDate('created_at', '>=', $request->from_date)
+            $totalQuery = SalesInvoice::whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date);
+            
+            if ($request->marketer_id && $request->marketer_id !== 'all') {
+                $totalQuery->where('marketer_id', $request->marketer_id);
+            }
             
             if ($request->filled('marketer_store_id')) {
                 $totalQuery->where('store_id', $request->marketer_store_id);
@@ -430,10 +441,13 @@ class StatisticsController extends Controller
             
             // Calculate status totals
             foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
-                $statusQuery = SalesInvoice::where('marketer_id', $request->marketer_id)
-                    ->where('status', $status)
+                $statusQuery = SalesInvoice::where('status', $status)
                     ->whereDate('created_at', '>=', $request->from_date)
                     ->whereDate('created_at', '<=', $request->to_date);
+                
+                if ($request->marketer_id && $request->marketer_id !== 'all') {
+                    $statusQuery->where('marketer_id', $request->marketer_id);
+                }
                 
                 if ($request->filled('marketer_store_id')) {
                     $statusQuery->where('store_id', $request->marketer_store_id);
@@ -443,10 +457,13 @@ class StatisticsController extends Controller
             }
             $statusTotals['total'] = array_sum([$statusTotals['pending'], $statusTotals['approved'], $statusTotals['cancelled'], $statusTotals['rejected']]);
         } elseif ($request->operation == 'returns') {
-            $totalQuery = \App\Models\MarketerReturnRequest::where('marketer_id', $request->marketer_id)
-                ->where('status', 'approved')
+            $totalQuery = \App\Models\MarketerReturnRequest::where('status', 'approved')
                 ->whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date);
+            
+            if ($request->marketer_id && $request->marketer_id !== 'all') {
+                $totalQuery->where('marketer_id', $request->marketer_id);
+            }
             
             if ($request->filled('status')) {
                 $totalQuery->where('status', $request->status);
@@ -454,9 +471,12 @@ class StatisticsController extends Controller
             
             $total = $totalQuery->sum('total_amount');
         } elseif ($request->operation == 'sales_returns') {
-            $totalQuery = SalesReturn::where('marketer_id', $request->marketer_id)
-                ->whereDate('created_at', '>=', $request->from_date)
+            $totalQuery = SalesReturn::whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date);
+            
+            if ($request->marketer_id && $request->marketer_id !== 'all') {
+                $totalQuery->where('marketer_id', $request->marketer_id);
+            }
             
             if ($request->filled('marketer_store_id')) {
                 $totalQuery->where('store_id', $request->marketer_store_id);
@@ -472,10 +492,13 @@ class StatisticsController extends Controller
             
             // Calculate status totals
             foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
-                $statusQuery = SalesReturn::where('marketer_id', $request->marketer_id)
-                    ->where('status', $status)
+                $statusQuery = SalesReturn::where('status', $status)
                     ->whereDate('created_at', '>=', $request->from_date)
                     ->whereDate('created_at', '<=', $request->to_date);
+                
+                if ($request->marketer_id && $request->marketer_id !== 'all') {
+                    $statusQuery->where('marketer_id', $request->marketer_id);
+                }
                 
                 if ($request->filled('marketer_store_id')) {
                     $statusQuery->where('store_id', $request->marketer_store_id);
@@ -485,16 +508,33 @@ class StatisticsController extends Controller
             }
             $statusTotals['total'] = array_sum([$statusTotals['pending'], $statusTotals['approved'], $statusTotals['cancelled'], $statusTotals['rejected']]);
         } elseif ($request->operation == 'withdrawals') {
-            $totalQuery = \App\Models\MarketerWithdrawalRequest::where('marketer_id', $request->marketer_id)
-                ->where('status', 'approved')
+            $totalQuery = \App\Models\MarketerWithdrawalRequest::where('status', 'approved')
                 ->whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date);
+            
+            if ($request->marketer_id && $request->marketer_id !== 'all') {
+                $totalQuery->where('marketer_id', $request->marketer_id);
+            }
             
             if ($request->filled('status')) {
                 $totalQuery->where('status', $request->status);
             }
             
             $total = $totalQuery->sum('requested_amount');
+            
+            // Calculate status totals
+            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
+                $statusQuery = \App\Models\MarketerWithdrawalRequest::where('status', $status)
+                    ->whereDate('created_at', '>=', $request->from_date)
+                    ->whereDate('created_at', '<=', $request->to_date);
+                
+                if ($request->marketer_id && $request->marketer_id !== 'all') {
+                    $statusQuery->where('marketer_id', $request->marketer_id);
+                }
+                
+                $statusTotals[$status] = $statusQuery->sum('requested_amount');
+            }
+            $statusTotals['total'] = array_sum([$statusTotals['pending'], $statusTotals['approved'], $statusTotals['cancelled'], $statusTotals['rejected']]);
         }
 
         return [
@@ -531,7 +571,7 @@ class StatisticsController extends Controller
         } else {
             $entity = \App\Models\User::find($request->marketer_id);
             $entityLabel = 'اسم المسوق';
-            $entityName = $entity->full_name ?? '';
+            $entityName = $request->marketer_id == 'all' ? 'الكل' : ($entity->full_name ?? '');
         }
         
         $operationName = match($request->operation) {
@@ -826,15 +866,30 @@ class StatisticsController extends Controller
             }
         } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments'])) {
             if ($request->operation == 'payments') {
-                $headers = ['رقم الفاتورة', 'المتجر', 'نسبة العمولة', 'القيمة المستحقة', 'طريقة الدفع', 'التاريخ', 'الحالة', 'المبلغ'];
-                $lastCol = 'H';
+                if ($request->marketer_id == 'all') {
+                    $headers = ['رقم الفاتورة', 'المسوق', 'المتجر', 'نسبة العمولة', 'القيمة المستحقة', 'طريقة الدفع', 'التاريخ', 'الحالة', 'المبلغ'];
+                    $lastCol = 'I';
+                } else {
+                    $headers = ['رقم الفاتورة', 'المتجر', 'نسبة العمولة', 'القيمة المستحقة', 'طريقة الدفع', 'التاريخ', 'الحالة', 'المبلغ'];
+                    $lastCol = 'H';
+                }
             } else {
-                $headers = ['رقم الفاتورة', 'المتجر', 'التاريخ', 'الحالة', 'المبلغ'];
-                $lastCol = 'E';
+                if ($request->marketer_id == 'all') {
+                    $headers = ['رقم الفاتورة', 'المسوق', 'المتجر', 'التاريخ', 'الحالة', 'المبلغ'];
+                    $lastCol = 'F';
+                } else {
+                    $headers = ['رقم الفاتورة', 'المتجر', 'التاريخ', 'الحالة', 'المبلغ'];
+                    $lastCol = 'E';
+                }
             }
         } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['requests', 'returns'])) {
-            $headers = ['رقم الفاتورة', 'التاريخ', 'الحالة'];
-            $lastCol = 'C';
+            if ($request->marketer_id == 'all') {
+                $headers = ['رقم الفاتورة', 'المسوق', 'التاريخ', 'الحالة'];
+                $lastCol = 'D';
+            } else {
+                $headers = ['رقم الفاتورة', 'التاريخ', 'الحالة'];
+                $lastCol = 'C';
+            }
         } else {
             $headers = ['رقم الفاتورة', 'التاريخ', 'الحالة', 'المبلغ'];
             $lastCol = 'D';
@@ -944,34 +999,71 @@ class StatisticsController extends Controller
                 }
             } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments'])) {
                 if ($request->operation == 'payments') {
+                    if ($request->marketer_id == 'all') {
+                        $rowData = [
+                            $invoiceNumber,
+                            $item->marketer->full_name ?? '',
+                            $item->store->name ?? '',
+                            ($item->commission->commission_rate ?? '-') . '%',
+                            number_format($item->commission->commission_amount ?? 0, 2),
+                            $paymentMethod,
+                            $item->created_at->format('Y-m-d'),
+                            $status,
+                            number_format($amount, 2)
+                        ];
+                        $statusCol = 'H';
+                    } else {
+                        $rowData = [
+                            $invoiceNumber,
+                            $item->store->name ?? '',
+                            ($item->commission->commission_rate ?? '-') . '%',
+                            number_format($item->commission->commission_amount ?? 0, 2),
+                            $paymentMethod,
+                            $item->created_at->format('Y-m-d'),
+                            $status,
+                            number_format($amount, 2)
+                        ];
+                        $statusCol = 'G';
+                    }
+                } else {
+                    if ($request->marketer_id == 'all') {
+                        $rowData = [
+                            $invoiceNumber,
+                            $item->marketer->full_name ?? '',
+                            $item->store->name ?? '',
+                            $item->created_at->format('Y-m-d'),
+                            $status,
+                            number_format($amount, 2)
+                        ];
+                        $statusCol = 'E';
+                    } else {
+                        $rowData = [
+                            $invoiceNumber,
+                            $item->store->name ?? '',
+                            $item->created_at->format('Y-m-d'),
+                            $status,
+                            number_format($amount, 2)
+                        ];
+                        $statusCol = 'D';
+                    }
+                }
+            } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['requests', 'returns'])) {
+                if ($request->marketer_id == 'all') {
                     $rowData = [
                         $invoiceNumber,
-                        $item->store->name ?? '',
-                        ($item->commission->commission_rate ?? '-') . '%',
-                        number_format($item->commission->commission_amount ?? 0, 2),
-                        $paymentMethod,
+                        $item->marketer->full_name ?? '',
                         $item->created_at->format('Y-m-d'),
-                        $status,
-                        number_format($amount, 2)
+                        $status
                     ];
-                    $statusCol = 'G';
+                    $statusCol = 'D';
                 } else {
                     $rowData = [
                         $invoiceNumber,
-                        $item->store->name ?? '',
                         $item->created_at->format('Y-m-d'),
-                        $status,
-                        number_format($amount, 2)
+                        $status
                     ];
-                    $statusCol = 'D';
+                    $statusCol = 'C';
                 }
-            } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['requests', 'returns'])) {
-                $rowData = [
-                    $invoiceNumber,
-                    $item->created_at->format('Y-m-d'),
-                    $status
-                ];
-                $statusCol = 'C';
             } else {
                 $rowData = [
                     $invoiceNumber,

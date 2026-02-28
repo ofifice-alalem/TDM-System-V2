@@ -43,6 +43,7 @@
                             <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">اسم المسوق</label>
                             <select name="marketer_id" id="marketer_id" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                                 <option value="">اختر المسوق...</option>
+                                <option value="all" {{ request('marketer_id') == 'all' ? 'selected' : '' }}>الكل</option>
                                 @foreach($marketers as $marketer)
                                     <option value="{{ $marketer->id }}" {{ request('marketer_id') == $marketer->id ? 'selected' : '' }}>{{ $marketer->full_name }}</option>
                                 @endforeach
@@ -247,8 +248,13 @@
                                         <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المتجر</th>
                                     @endif
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المسوق</th>
-                                @elseif(request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments', 'sales_returns']))
-                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المتجر</th>
+                                @elseif(request('stat_type') == 'marketers')
+                                    @if(request('marketer_id') == 'all')
+                                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المسوق</th>
+                                    @endif
+                                    @if(in_array($results['operation'], ['sales', 'payments', 'sales_returns']))
+                                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المتجر</th>
+                                    @endif
                                 @endif
                                 @if($results['operation'] == 'payments' && request('stat_type') == 'marketers')
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">نسبة العمولة</th>
@@ -296,8 +302,13 @@
                                             <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->store->name ?? '-' }}</td>
                                         @endif
                                         <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->marketer->full_name ?? '-' }}</td>
-                                    @elseif(request('stat_type') == 'marketers' && in_array($results['operation'], ['sales', 'payments', 'sales_returns']))
-                                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->store->name ?? '-' }}</td>
+                                    @elseif(request('stat_type') == 'marketers')
+                                        @if(request('marketer_id') == 'all')
+                                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->marketer->full_name ?? '-' }}</td>
+                                        @endif
+                                        @if(in_array($results['operation'], ['sales', 'payments', 'sales_returns']))
+                                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->store->name ?? '-' }}</td>
+                                        @endif
                                     @endif
                                     @if($results['operation'] == 'payments' && request('stat_type') == 'marketers')
                                         <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->commission->commission_rate ?? '-' }}%</td>
