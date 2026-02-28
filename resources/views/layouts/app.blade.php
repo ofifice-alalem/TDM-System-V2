@@ -47,9 +47,10 @@
         </div>
 
         {{-- Navigation Links --}}
-        <nav class="flex-1 overflow-y-auto sidebar-scroll py-8 px-5 space-y-2">
+        <nav class="flex-1 overflow-y-auto sidebar-scroll py-4 px-5 space-y-2">
             
-            {{-- Dashboard --}}
+            {{-- Dashboard - Not for admin and sales --}}
+            @if(!request()->routeIs('admin.*') && !request()->routeIs('sales.*'))
             <a href="{{ url('/dashboard') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->is('dashboard') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                 <i data-lucide="layout-dashboard" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->is('dashboard') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
                 <span>لوحة التحكم</span>
@@ -57,6 +58,7 @@
                     <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
                 @endif
             </a>
+            @endif
 
             @if(request()->routeIs('marketer.*'))
                 @if(Route::has('marketer.stock.index'))
@@ -68,6 +70,14 @@
                     @endif
                 </a>
                 @endif
+
+                <a href="{{ route('marketer.stores.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('marketer.stores.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="store" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.stores.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>المتاجر</span>
+                    @if(request()->routeIs('marketer.stores.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
 
                 {{-- Divider --}}
                 <div class="pt-6 pb-2 px-5">
@@ -351,9 +361,6 @@
                 <div class="h-px bg-gradient-to-r from-transparent via-gray-100 to-transparent"></div>
             </div>
 
-            {{-- Placeholder Links --}}
-            <div class="px-5 text-[0.65rem] font-black text-gray-300 uppercase tracking-widest mb-1">أخرى</div>
-            
             {{-- Users Link - Admin only --}}
             @if(request()->routeIs('admin.*'))
             <a href="{{ route('admin.users.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('admin.users.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
@@ -381,19 +388,16 @@
             </a>
             @endif
             
-            {{-- Stores Link - Available for all users --}}
-            <a href="{{ request()->routeIs('marketer.*') ? route('marketer.stores.index') : (request()->routeIs('warehouse.*') ? route('warehouse.stores.index') : route('admin.stores.index')) }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('*.stores.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+            {{-- Stores Link - Available for warehouse and admin only --}}
+            @if(!request()->routeIs('marketer.*'))
+            <a href="{{ request()->routeIs('warehouse.*') ? route('warehouse.stores.index') : route('admin.stores.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('*.stores.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                 <i data-lucide="store" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('*.stores.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
                 <span>المتاجر</span>
                 @if(request()->routeIs('*.stores.*'))
                     <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
                 @endif
             </a>
-            
-            <a href="#" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold text-gray-400 transition-all opacity-60 cursor-not-allowed hover:bg-gray-50">
-                <i data-lucide="settings" class="w-[1.35rem] h-[1.35rem]"></i>
-                <span>الإعدادات</span>
-            </a>
+            @endif
            
         </nav>
 
