@@ -39,8 +39,9 @@
     <aside id="sidebar" class="fixed top-0 right-0 h-screen w-80 lg:w-72 bg-white dark:bg-[#151f32] border-l border-gray-100 dark:border-[#2a354c] z-50 flex flex-col transition-transform duration-300 translate-x-full lg:translate-x-0 shadow-sm dark:shadow-none">
         
         {{-- Logo Section --}}
-        <div class="h-28 flex items-center justify-center px-8 border-b border-gray-50 dark:border-dark-border">
+        <div class="h-28 flex flex-col items-center justify-center px-8 border-b border-gray-50 dark:border-dark-border">
             <img src="/logo.png" alt="Logo" class="object-contain" style="width: 150px;">
+            <p class="text-[0.7rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500 mt-2 tracking-wider uppercase" style="font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif; letter-spacing: 0.1em;">Taqnia Distribution Manager</p>
             <button id="sidebar-close-btn" class="lg:hidden absolute left-8 w-10 h-10 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-border transition-colors">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
