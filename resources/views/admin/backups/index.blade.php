@@ -20,9 +20,29 @@
         </div>
 
         {{-- Main Layout Grid --}}
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="grid grid-cols-1 gap-8">
+            {{-- Action Buttons --}}
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <button onclick="showCreateModal('full')" class="px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                    <i data-lucide="package" class="w-5 h-5"></i>
+                    <span>نسخة كاملة</span>
+                </button>
+                <button onclick="showCreateModal('database')" class="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                    <i data-lucide="database" class="w-5 h-5"></i>
+                    <span>قاعدة البيانات فقط</span>
+                </button>
+                <button onclick="showCreateModal('files')" class="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                    <i data-lucide="folder" class="w-5 h-5"></i>
+                    <span>الملفات فقط</span>
+                </button>
+                <button onclick="showUploadModal()" class="px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                    <i data-lucide="upload" class="w-5 h-5"></i>
+                    <span>رفع نسخة</span>
+                </button>
+            </div>
+
             {{-- Backups List --}}
-            <div class="lg:col-span-8">
+            <div>
                 {{-- Tabs --}}
                 <div class="bg-white dark:bg-dark-card rounded-2xl p-2 shadow-lg shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6">
                     <div class="flex gap-2">
@@ -54,7 +74,8 @@
                                     <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">اسم الملف</th>
                                     <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">التاريخ</th>
                                     <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الحجم</th>
-                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الإجراءات</th>
+                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider"><i data-lucide="settings" class="w-4 h-4 mx-auto"></i></th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الملاحظة</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
@@ -77,26 +98,32 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-center">
                                         <div class="flex items-center justify-center gap-2">
-                                            <a href="{{ route('admin.backups.download', $backup['name']) }}" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
-                                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                                تحميل
+                                            <a href="{{ route('admin.backups.download', $backup['name']) }}" class="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all" title="تحميل">
+                                                <i data-lucide="download" class="w-4 h-4"></i>
                                             </a>
                                             <form method="POST" action="{{ route('admin.backups.restore', $backup['name']) }}" class="restore-form inline">
                                                 @csrf
-                                                <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
-                                                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                                                    استعادة
+                                                <button type="submit" class="p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all" title="استعادة">
+                                                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                                                 </button>
                                             </form>
                                             <form method="POST" action="{{ route('admin.backups.delete', $backup['name']) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه النسخة؟')" class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
-                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                                    حذف
+                                                <button type="submit" class="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all" title="حذف">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
                                                 </button>
                                             </form>
                                         </div>
+                                    </td>
+                                    <td class="px-6 py-4 w-1/3">
+                                        @if($backup['note'])
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                {{ $backup['note'] }}
+                                            </div>
+                                        @else
+                                            <span class="text-xs text-gray-400 dark:text-gray-600">-</span>
+                                        @endif
                                     </td>
                                 </tr>
                                 @endforeach
@@ -126,7 +153,8 @@
                                     <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">اسم الملف</th>
                                     <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">التاريخ</th>
                                     <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الحجم</th>
-                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الإجراءات</th>
+                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider"><i data-lucide="settings" class="w-4 h-4 mx-auto"></i></th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الملاحظة</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
@@ -149,26 +177,32 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-center">
                                         <div class="flex items-center justify-center gap-2">
-                                            <a href="{{ route('admin.backups.download', $backup['name']) }}" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
-                                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                                تحميل
+                                            <a href="{{ route('admin.backups.download', $backup['name']) }}" class="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all" title="تحميل">
+                                                <i data-lucide="download" class="w-4 h-4"></i>
                                             </a>
                                             <form method="POST" action="{{ route('admin.backups.restore', $backup['name']) }}" class="restore-form inline">
                                                 @csrf
-                                                <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
-                                                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                                                    استعادة
+                                                <button type="submit" class="p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all" title="استعادة">
+                                                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                                                 </button>
                                             </form>
                                             <form method="POST" action="{{ route('admin.backups.delete', $backup['name']) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه النسخة؟')" class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
-                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                                    حذف
+                                                <button type="submit" class="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all" title="حذف">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
                                                 </button>
                                             </form>
                                         </div>
+                                    </td>
+                                    <td class="px-6 py-4 w-1/3">
+                                        @if($backup['note'])
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                {{ $backup['note'] }}
+                                            </div>
+                                        @else
+                                            <span class="text-xs text-gray-400 dark:text-gray-600">-</span>
+                                        @endif
                                     </td>
                                 </tr>
                                 @endforeach
@@ -197,7 +231,8 @@
                                     <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">اسم الملف</th>
                                     <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">التاريخ</th>
                                     <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الحجم</th>
-                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الإجراءات</th>
+                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider"><i data-lucide="settings" class="w-4 h-4 mx-auto"></i></th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الملاحظة</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
@@ -220,26 +255,32 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-center">
                                         <div class="flex items-center justify-center gap-2">
-                                            <a href="{{ route('admin.backups.download', $backup['name']) }}" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
-                                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                                تحميل
+                                            <a href="{{ route('admin.backups.download', $backup['name']) }}" class="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all" title="تحميل">
+                                                <i data-lucide="download" class="w-4 h-4"></i>
                                             </a>
                                             <form method="POST" action="{{ route('admin.backups.restore', $backup['name']) }}" class="restore-form inline">
                                                 @csrf
-                                                <button type="submit" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
-                                                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                                                    استعادة
+                                                <button type="submit" class="p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all" title="استعادة">
+                                                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                                                 </button>
                                             </form>
                                             <form method="POST" action="{{ route('admin.backups.delete', $backup['name']) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه النسخة؟')" class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold transition-all text-xs flex items-center gap-1">
-                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                                    حذف
+                                                <button type="submit" class="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all" title="حذف">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
                                                 </button>
                                             </form>
                                         </div>
+                                    </td>
+                                    <td class="px-6 py-4 w-1/3">
+                                        @if($backup['note'])
+                                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                {{ $backup['note'] }}
+                                            </div>
+                                        @else
+                                            <span class="text-xs text-gray-400 dark:text-gray-600">-</span>
+                                        @endif
                                     </td>
                                 </tr>
                                 @endforeach
@@ -257,88 +298,6 @@
                 </div>
                 </div>
             </div>
-
-            {{-- Info Guide --}}
-            <div class="lg:col-span-4">
-                <div class="bg-white dark:bg-dark-card rounded-[1.5rem] border border-gray-200 dark:border-dark-border p-8 shadow-lg shadow-gray-200/50 dark:shadow-sm lg:sticky lg:top-[150px]">
-                    <div class="space-y-3 mb-6">
-                        <button onclick="showCreateModal('full')" class="w-full px-4 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-                            <i data-lucide="package" class="w-5 h-5"></i>
-                            <span>نسخة كاملة</span>
-                        </button>
-                        <button onclick="showCreateModal('database')" class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-                            <i data-lucide="database" class="w-5 h-5"></i>
-                            <span>قاعدة البيانات فقط</span>
-                        </button>
-                        <button onclick="showCreateModal('files')" class="w-full px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-                            <i data-lucide="folder" class="w-5 h-5"></i>
-                            <span>الملفات فقط</span>
-                        </button>
-                        <button onclick="showUploadModal()" class="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-                            <i data-lucide="upload" class="w-5 h-5"></i>
-                            <span>رفع نسخة من جهازي</span>
-                        </button>
-                    </div>
-                    
-                    <h3 class="font-bold text-xl text-gray-900 dark:text-white mb-8 flex items-center gap-3 pt-6 border-t border-gray-200 dark:border-dark-border">
-                        <i data-lucide="info" class="w-6 h-6 text-primary-500"></i>
-                        ملاحظات مهمة
-                    </h3>
-                    
-                    <div class="space-y-6">
-                        <div class="relative">
-                            <div class="flex items-start gap-4">
-                                <div class="w-11 h-11 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-sm">
-                                    <i data-lucide="database" class="w-5 h-5"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">نسخة كاملة</h4>
-                                    <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">تشمل قاعدة البيانات + جميع الملفات المرفوعة</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative">
-                            <div class="flex items-start gap-4">
-                                <div class="w-11 h-11 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-sm">
-                                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">الاستعادة</h4>
-                                    <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">عملية الاستعادة ستستبدل جميع البيانات الحالية</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative">
-                            <div class="flex items-start gap-4">
-                                <div class="w-11 h-11 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center shrink-0 shadow-sm">
-                                    <i data-lucide="shield" class="w-5 h-5"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-gray-900 dark:text-white text-base mb-1">النسخ الدوري</h4>
-                                    <p class="text-sm text-gray-500 dark:text-dark-muted leading-relaxed">يُنصح بإنشاء نسخة احتياطية قبل أي تحديث كبير</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 rounded-xl p-4 mt-6">
-                            <div class="flex gap-3">
-                                <i data-lucide="alert-circle" class="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"></i>
-                                <div class="text-sm text-amber-800 dark:text-amber-300">
-                                    <p class="font-bold mb-1">تحذير:</p>
-                                    <p>عملية الاستعادة لا يمكن التراجع عنها. تأكد من اختيار النسخة الصحيحة.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="space-y-3 pt-6 border-t border-gray-200 dark:border-dark-border">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
     </div>
@@ -351,18 +310,22 @@
             <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i data-lucide="alert-circle" class="w-8 h-8 text-blue-600 dark:text-blue-400"></i>
             </div>
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">تأكيد إنشاء النسخة</h3>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">إنشاء نسخة احتياطية</h3>
             <p class="text-gray-500 dark:text-gray-400" id="modalMessage">هل تريد حقاً إنشاء نسخة احتياطية؟</p>
         </div>
         <form method="POST" action="{{ route('admin.backups.create') }}" id="createForm">
             @csrf
             <input type="hidden" name="type" id="backupType">
+            <div class="mb-4">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">ملاحظة (اختياري)</label>
+                <textarea name="note" rows="3" class="w-full px-4 py-2.5 text-sm bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="أدخل ملاحظة لهذه النسخة..."></textarea>
+            </div>
             <div class="flex gap-3">
                 <button type="button" onclick="hideCreateModal()" class="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all hover:bg-gray-300 dark:hover:bg-gray-600">
                     إلغاء
                 </button>
                 <button type="submit" class="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg">
-                    تأكيد
+                    إنشاء
                 </button>
             </div>
         </form>

@@ -11,6 +11,10 @@ class BackupController extends Controller
 {
     public function create(Request $request)
     {
+        $request->validate([
+            'note' => 'nullable|string|max:500'
+        ]);
+        
         set_time_limit(300);
         ini_set('memory_limit', '512M');
         
@@ -26,6 +30,11 @@ class BackupController extends Controller
         
         $zip = new ZipArchive;
         $zip->open($zipFile, ZipArchive::CREATE);
+        
+        // Add note if provided
+        if ($request->filled('note')) {
+            $zip->addFromString('note.txt', $request->input('note'));
+        }
         
         // Database backup
         if ($type === 'full' || $type === 'database') {
@@ -85,12 +94,23 @@ class BackupController extends Controller
             if (is_dir($dir)) {
                 $files = glob("{$dir}/*.zip");
                 foreach ($files as $file) {
+                    // Read note from zip if exists
+                    $note = null;
+                    $zip = new ZipArchive;
+                    if ($zip->open($file) === TRUE) {
+                        if ($zip->locateName('note.txt') !== false) {
+                            $note = $zip->getFromName('note.txt');
+                        }
+                        $zip->close();
+                    }
+                    
                     $backups->push([
                         'name' => basename($file),
                         'size' => $this->formatBytes(filesize($file)),
                         'date' => date('Y-m-d H:i:s', filemtime($file)),
                         'path' => $file,
-                        'type' => $type
+                        'type' => $type,
+                        'note' => $note
                     ]);
                 }
             }
