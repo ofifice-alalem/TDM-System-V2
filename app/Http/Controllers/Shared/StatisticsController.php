@@ -347,6 +347,7 @@ class StatisticsController extends Controller
             'rejected' => 0,
             'total' => 0
         ];
+        $paymentMethodTotals = null;
         
         if ($request->operation == 'payments') {
             $totalQuery = StorePayment::where('marketer_id', $request->marketer_id)
@@ -383,6 +384,33 @@ class StatisticsController extends Controller
                 $statusTotals[$status] = $statusQuery->sum('amount');
             }
             $statusTotals['total'] = array_sum([$statusTotals['pending'], $statusTotals['approved'], $statusTotals['cancelled'], $statusTotals['rejected']]);
+            
+            // Calculate payment method totals
+            $paymentMethodTotals = [
+                'cash' => 0,
+                'transfer' => 0,
+                'certified_check' => 0,
+                'total' => 0
+            ];
+            
+            foreach (['cash', 'transfer', 'certified_check'] as $method) {
+                $methodQuery = StorePayment::where('marketer_id', $request->marketer_id)
+                    ->where('payment_method', $method)
+                    ->whereDate('created_at', '>=', $request->from_date)
+                    ->whereDate('created_at', '<=', $request->to_date);
+                
+                if ($request->filled('marketer_store_id')) {
+                    $methodQuery->where('store_id', $request->marketer_store_id);
+                }
+                
+                if ($request->filled('status')) {
+                    $methodQuery->where('status', $request->status);
+                }
+                
+                $paymentMethodTotals[$method] = $methodQuery->sum('amount');
+            }
+            
+            $paymentMethodTotals['total'] = array_sum([$paymentMethodTotals['cash'], $paymentMethodTotals['transfer'], $paymentMethodTotals['certified_check']]);
         } elseif ($request->operation == 'sales') {
             $totalQuery = SalesInvoice::where('marketer_id', $request->marketer_id)
                 ->whereDate('created_at', '>=', $request->from_date)
@@ -474,7 +502,8 @@ class StatisticsController extends Controller
             'data' => $data,
             'total' => $total,
             'total_commission' => $totalCommission,
-            'status_totals' => $statusTotals
+            'status_totals' => $statusTotals,
+            'payment_method_totals' => $paymentMethodTotals
         ];
     }
 
@@ -633,8 +662,8 @@ class StatisticsController extends Controller
         } elseif ($request->stat_type == 'marketers') {
             $row++;
             
-            // Show status totals if no status filter
-            if (!$request->filled('status') && isset($results['status_totals'])) {
+            // Show status totals if no status filter and not requests/returns operations
+            if (!$request->filled('status') && isset($results['status_totals']) && !in_array($request->operation, ['requests', 'returns'])) {
                 $sheet->setCellValue('A' . $row, 'الإجماليات حسب الحالة');
                 $sheet->mergeCells('A' . $row . ':E' . $row);
                 $sheet->getStyle('A' . $row)->applyFromArray([
@@ -672,14 +701,56 @@ class StatisticsController extends Controller
                 $row++;
             }
             
-            $sheet->setCellValue('A' . $row, 'الإجمالي (الموثق فقط)');
-            $sheet->setCellValue('B' . $row, number_format($results['total'], 2) . ' دينار');
-            $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
-                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E3F2FD']],
-                'font' => ['bold' => true, 'size' => 12],
-                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
-            ]);
-            $row++;
+            // Show total only if not requests/returns operations
+            if (!in_array($request->operation, ['requests', 'returns'])) {
+                $totalLabel = $request->filled('status') ? 'الإجمالي (' . $statusName . ')' : 'الإجمالي (الموثق فقط)';
+                $sheet->setCellValue('A' . $row, $totalLabel);
+                $sheet->setCellValue('B' . $row, number_format($results['total'], 2) . ' دينار');
+                $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E3F2FD']],
+                    'font' => ['bold' => true, 'size' => 12],
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                ]);
+                $row++;
+            }
+            
+            // Add payment method totals if payments operation
+            if ($request->operation == 'payments' && isset($results['payment_method_totals'])) {
+                $row++;
+                $sheet->setCellValue('A' . $row, 'الإجماليات حسب طريقة الدفع');
+                $sheet->mergeCells('A' . $row . ':D' . $row);
+                $sheet->getStyle('A' . $row)->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E1F5FE']],
+                    'font' => ['bold' => true, 'size' => 12],
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
+                $row++;
+                
+                $methodHeaders = ['كاش', 'حوالة', 'شيك مصدق', 'الإجمالي'];
+                $sheet->fromArray($methodHeaders, null, 'A' . $row);
+                $sheet->getStyle('A' . $row . ':D' . $row)->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'B3E5FC']],
+                    'font' => ['bold' => true],
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
+                $row++;
+                
+                $methodValues = [
+                    number_format($results['payment_method_totals']['cash'], 2),
+                    number_format($results['payment_method_totals']['transfer'], 2),
+                    number_format($results['payment_method_totals']['certified_check'], 2),
+                    number_format($results['payment_method_totals']['total'], 2)
+                ];
+                $sheet->fromArray($methodValues, null, 'A' . $row);
+                $sheet->getStyle('A' . $row . ':D' . $row)->applyFromArray([
+                    'font' => ['bold' => true],
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
+                $row++;
+            }
         }
         
         if ($request->stat_type == 'stores' && $request->filled('status')) {
@@ -761,6 +832,9 @@ class StatisticsController extends Controller
                 $headers = ['رقم الفاتورة', 'المتجر', 'التاريخ', 'الحالة', 'المبلغ'];
                 $lastCol = 'E';
             }
+        } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['requests', 'returns'])) {
+            $headers = ['رقم الفاتورة', 'التاريخ', 'الحالة'];
+            $lastCol = 'C';
         } else {
             $headers = ['رقم الفاتورة', 'التاريخ', 'الحالة', 'المبلغ'];
             $lastCol = 'D';
@@ -891,6 +965,13 @@ class StatisticsController extends Controller
                     ];
                     $statusCol = 'D';
                 }
+            } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['requests', 'returns'])) {
+                $rowData = [
+                    $invoiceNumber,
+                    $item->created_at->format('Y-m-d'),
+                    $status
+                ];
+                $statusCol = 'C';
             } else {
                 $rowData = [
                     $invoiceNumber,

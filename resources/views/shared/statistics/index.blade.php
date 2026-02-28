@@ -159,7 +159,7 @@
             <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg overflow-hidden">
                 <div class="p-6 border-b border-gray-200 dark:border-dark-border">
                     <h2 class="text-xl font-black text-gray-900 dark:text-white mb-4">النتائج</h2>
-                    @if((request('stat_type') == 'stores' || request('stat_type') == 'marketers') && !request('status') && isset($results['status_totals']))
+                    @if((request('stat_type') == 'stores' || request('stat_type') == 'marketers') && !request('status') && isset($results['status_totals']) && !in_array($results['operation'], ['requests', 'returns']))
                         <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                             <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 border border-amber-200 dark:border-amber-800">
                                 <p class="text-xs text-amber-600 dark:text-amber-400 font-bold mb-1">معلق</p>
@@ -206,7 +206,7 @@
                     @if((request('stat_type') == 'stores' || request('stat_type') == 'marketers') && !request('status'))
                         @if($results['operation'] == 'payments' && isset($results['payment_method_totals']))
                         @endif
-                    @else
+                    @elseif(!in_array($results['operation'], ['requests', 'returns']))
                         <div class="flex items-center justify-between">
                             <div></div>
                             <div class="text-left">
@@ -259,7 +259,9 @@
                                 @endif
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">التاريخ</th>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">الحالة</th>
-                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المبلغ</th>
+                                @if(!in_array($results['operation'], ['requests', 'returns']))
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المبلغ</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
@@ -320,24 +322,20 @@
                                             {{ $statusConfig['label'] }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">
-                                        @if($results['operation'] == 'sales')
-                                            {{ number_format($item->total_amount, 2) }}
-                                        @elseif($results['operation'] == 'payments')
-                                            {{ number_format($item->amount, 2) }}
-                                        @elseif($results['operation'] == 'returns')
-                                            {{ number_format($item->total_amount, 2) }}
-                                        @elseif($results['operation'] == 'sales_returns')
-                                            {{ number_format($item->total_amount, 2) }}
-                                        @elseif($results['operation'] == 'requests')
-                                            -
-                                        @elseif($results['operation'] == 'withdrawals')
-                                            {{ number_format($item->requested_amount, 2) }}
-                                        @endif
-                                        @if($results['operation'] != 'requests')
+                                    @if(!in_array($results['operation'], ['requests', 'returns']))
+                                        <td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">
+                                            @if($results['operation'] == 'sales')
+                                                {{ number_format($item->total_amount, 2) }}
+                                            @elseif($results['operation'] == 'payments')
+                                                {{ number_format($item->amount, 2) }}
+                                            @elseif($results['operation'] == 'sales_returns')
+                                                {{ number_format($item->total_amount, 2) }}
+                                            @elseif($results['operation'] == 'withdrawals')
+                                                {{ number_format($item->requested_amount, 2) }}
+                                            @endif
                                             دينار
-                                        @endif
-                                    </td>
+                                        </td>
+                                    @endif
                                 </tr>
                             @empty
                                 <tr>
