@@ -37,6 +37,43 @@
             {{-- Right Column (Main Content - Table) - ORDER 2 on mobile, ORDER 1 on desktop --}}
             <div class="lg:col-span-8 space-y-6 animate-slide-up order-2 lg:order-1">
                 
+                {{-- Marketer Info Card --}}
+                <div class="bg-white dark:bg-dark-card rounded-[2rem] p-4 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="font-bold text-xl text-gray-900 dark:text-white flex items-center gap-3">
+                                <span class="bg-primary-50 dark:bg-primary-900/20 p-2.5 rounded-xl text-primary-600 dark:text-primary-400 shadow-sm border border-primary-100 dark:border-primary-600/30">
+                                    <i data-lucide="user" class="w-5 h-5"></i>
+                                </span>
+                                معلومات الطلب
+                            </h2>
+                            <p class="text-sm text-gray-500 dark:text-dark-muted mt-2 mr-14 font-medium">بيانات المسوق</p>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-dark-bg rounded-xl p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="user" class="w-5 h-5 text-gray-400 dark:text-gray-500"></i>
+                                <div class="flex-1">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">المسوق</p>
+                                    <p class="font-bold text-gray-900 dark:text-white">{{ $request->marketer?->full_name ?? '---' }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="phone" class="w-5 h-5 text-gray-400 dark:text-gray-500"></i>
+                                <div class="flex-1">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">رقم الهاتف</p>
+                                    @if($request->marketer?->phone)
+                                        <a href="tel:{{ $request->marketer->phone }}" class="font-bold text-primary-600 dark:text-primary-400 hover:underline">{{ $request->marketer->phone }}</a>
+                                    @else
+                                        <p class="font-bold text-gray-900 dark:text-white">---</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Products Table Container --}}
                 <div class="bg-white dark:bg-dark-card rounded-[2rem] p-4 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border relative overflow-hidden">
                     <div class="flex items-center justify-between mb-8">
