@@ -39,17 +39,9 @@
     <aside id="sidebar" class="fixed top-0 right-0 h-screen w-80 lg:w-72 bg-white dark:bg-[#151f32] border-l border-gray-100 dark:border-[#2a354c] z-50 flex flex-col transition-transform duration-300 translate-x-full lg:translate-x-0 shadow-sm dark:shadow-none">
         
         {{-- Logo Section --}}
-        <div class="h-28 flex items-center justify-between px-8 border-b border-gray-50 dark:border-dark-border">
-            <div class="flex items-center gap-4 group cursor-pointer">
-                <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 dark:from-accent-500 dark:to-accent-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-200/50 dark:shadow-accent-500/20 transform group-hover:rotate-6 transition-all duration-300">
-                    <i data-lucide="zap" class="w-6 h-6 fill-current"></i>
-                </div>
-                <div>
-                    <h1 class="font-black text-2xl text-gray-900 dark:text-white tracking-tight leading-none group-hover:text-amber-600 dark:group-hover:text-accent-400 transition-colors">تقنية</h1>
-                    <span class="text-[0.65rem] text-gray-400 dark:text-dark-muted font-bold tracking-[0.2em] uppercase mt-1 block">Distribution Sys</span>
-                </div>
-            </div>
-            <button id="sidebar-close-btn" class="lg:hidden w-10 h-10 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-border transition-colors">
+        <div class="h-28 flex items-center justify-center px-8 border-b border-gray-50 dark:border-dark-border">
+            <img src="/logo.png" alt="Logo" class="object-contain" style="width: 150px;">
+            <button id="sidebar-close-btn" class="lg:hidden absolute left-8 w-10 h-10 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-border transition-colors">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
