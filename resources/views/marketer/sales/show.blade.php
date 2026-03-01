@@ -465,10 +465,10 @@
         canvas.width = 576;
         
         // حساب الارتفاع الديناميكي بناءً على أسماء المنتجات
-        let estimatedHeight = 800;
+        let estimatedHeight = 700;
         data.items.forEach(item => {
-            const lines = wrapText(item.name, 240, '30px Arial');
-            estimatedHeight += Math.max(lines.length * 35, 50);
+            const lines = wrapText(item.name, 200, '20px Arial');
+            estimatedHeight += Math.max(lines.length * 25, 40);
         });
         canvas.height = estimatedHeight;
         
@@ -479,25 +479,91 @@
         ctx.fillStyle = '#000000';
         ctx.textAlign = 'center';
         
-        let y = 50;
-        ctx.font = 'bold 40px Arial';
+        let y = 40;
+        ctx.font = 'bold 32px Arial';
         ctx.fillText('شركة المتفوقون الأوائل', 288, y);
+        
+        y += 50;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(180, y, 216, 40);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 26px Arial';
+        ctx.fillText('فاتورة مبيعات', 288, y + 28);
         
         y += 60;
         ctx.fillStyle = '#000000';
-        ctx.fillRect(180, y, 216, 50);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 32px Arial';
-        ctx.fillText('فاتورة مبيعات', 288, y + 35);
-        
-        y += 80;
-        ctx.fillStyle = '#000000';
-        ctx.font = '26px Arial';
+        ctx.font = '20px Arial';
         ctx.fillText('رقم: ' + data.invoice_number, 288, y);
-        y += 35;
+        y += 28;
         ctx.fillText('تاريخ: ' + data.date, 288, y);
         
-        y += 50;
+        y += 40;
+        ctx.beginPath();
+        ctx.setLineDash([10, 5]);
+        ctx.moveTo(30, y);
+        ctx.lineTo(546, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        y += 35;
+        ctx.textAlign = 'right';
+        ctx.font = '22px Arial';
+        ctx.fillText('المتجر: ' + data.store, 520, y);
+        y += 28;
+        ctx.font = '20px Arial';
+        ctx.fillText('رقم: ' + data.store_phone, 520, y);
+        
+        y += 35;
+        ctx.font = '22px Arial';
+        ctx.fillText('المسوق: ' + data.marketer, 520, y);
+        y += 28;
+        ctx.font = '20px Arial';
+        ctx.fillText('رقم: ' + data.marketer_phone, 520, y);
+        
+        y += 40;
+        ctx.beginPath();
+        ctx.moveTo(30, y);
+        ctx.lineTo(546, y);
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.lineWidth = 1;
+        
+        y += 35;
+        ctx.font = 'bold 22px Arial';
+        ctx.fillText('المنتج', 480, y);
+        ctx.textAlign = 'center';
+        ctx.fillText('كمية', 320, y);
+        ctx.fillText('سعر', 200, y);
+        ctx.fillText('إجمالي', 80, y);
+        
+        y += 15;
+        ctx.beginPath();
+        ctx.moveTo(30, y);
+        ctx.lineTo(546, y);
+        ctx.stroke();
+        
+        ctx.font = '20px Arial';
+        data.items.forEach(item => {
+            const nameLines = wrapText(item.name, 200, '20px Arial');
+            const itemHeight = Math.max(nameLines.length * 25, 40);
+            const startY = y + (itemHeight / 2) + 8;
+            
+            // طباعة اسم المنتج على عدة أسطر
+            ctx.textAlign = 'right';
+            nameLines.forEach((line, index) => {
+                ctx.fillText(line, 520, y + 30 + (index * 25));
+            });
+            
+            // طباعة الكمية والسعر والإجمالي في المنتصف
+            ctx.textAlign = 'center';
+            ctx.fillText(item.quantity, 320, startY);
+            ctx.fillText(item.price, 200, startY);
+            ctx.fillText(item.total, 80, startY);
+            
+            y += itemHeight;
+        });
+        
+        y += 25;
         ctx.beginPath();
         ctx.setLineDash([10, 5]);
         ctx.moveTo(30, y);
@@ -506,77 +572,17 @@
         ctx.setLineDash([]);
         
         y += 40;
-        ctx.textAlign = 'right';
-        ctx.font = '28px Arial';
-        ctx.fillText('المتجر:', 520, y);
         ctx.font = 'bold 28px Arial';
-        ctx.fillText(data.store, 320, y);
-        
-        y += 50;
-        ctx.beginPath();
-        ctx.moveTo(30, y);
-        ctx.lineTo(546, y);
-        ctx.lineWidth = 4;
-        ctx.stroke();
-        ctx.lineWidth = 1;
-        
-        y += 50;
-        ctx.font = 'bold 28px Arial';
-        ctx.fillText('المنتج', 520, y);
-        ctx.textAlign = 'center';
-        ctx.fillText('كمية', 288, y);
-        ctx.textAlign = 'left';
-        ctx.fillText('السعر', 56, y);
-        
-        y += 20;
-        ctx.beginPath();
-        ctx.moveTo(30, y);
-        ctx.lineTo(546, y);
-        ctx.stroke();
-        
-        ctx.font = '30px Arial';
-        data.items.forEach(item => {
-            const nameLines = wrapText(item.name, 240, '30px Arial');
-            const itemHeight = Math.max(nameLines.length * 35, 50);
-            const startY = y + (itemHeight / 2) + 10;
-            
-            // طباعة اسم المنتج على عدة أسطر
-            ctx.textAlign = 'right';
-            nameLines.forEach((line, index) => {
-                ctx.fillText(line, 520, y + 40 + (index * 35));
-            });
-            
-            // طباعة الكمية والسعر في المنتصف
-            ctx.textAlign = 'center';
-            ctx.fillText(item.quantity, 288, startY);
-            ctx.textAlign = 'left';
-            ctx.fillText(item.total, 56, startY);
-            
-            y += itemHeight;
-        });
-        
-        y += 30;
-        ctx.beginPath();
-        ctx.setLineDash([10, 5]);
-        ctx.moveTo(30, y);
-        ctx.lineTo(546, y);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        
-        y += 50;
-        ctx.font = 'bold 32px Arial';
         ctx.textAlign = 'right';
-        ctx.fillText('المجموع:', 520, y);
-        ctx.font = 'bold 42px Arial';
+        ctx.fillText('المجموع:', 480, y);
+        ctx.font = 'bold 36px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText(data.total + ' د.ل', 56, y);
+        ctx.fillText(data.total + ' د.ل', 80, y);
         
-        y += 60;
-        ctx.font = '26px Arial';
+        y += 50;
+        ctx.font = '20px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('شكراً لتعاملكم معنا', 288, y);
-        y += 35;
-        ctx.fillText(data.store, 288, y);
         
         return canvas;
     }
@@ -611,7 +617,6 @@
         lines.forEach(line => {
             const metrics = ctx.measureText(line);
             if (metrics.width > maxWidth) {
-                // تقسيم السطر الطويل
                 let remaining = line;
                 while (remaining.length > 0) {
                     let chars = remaining.length;

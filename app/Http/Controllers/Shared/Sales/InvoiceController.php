@@ -153,12 +153,18 @@ class InvoiceController extends Controller
             'invoice_number' => $sale->invoice_number,
             'date' => $sale->created_at->format('Y-m-d'),
             'store' => $sale->store->name,
+            'store_phone' => $sale->store->phone ?? '---',
             'marketer' => $sale->marketer->full_name,
-            'items' => $sale->items->map(fn($item) => [
-                'name' => $item->product->name,
-                'quantity' => $item->quantity + $item->free_quantity,
-                'total' => $formatNumber(($item->quantity + $item->free_quantity) * $item->unit_price)
-            ]),
+            'marketer_phone' => $sale->marketer->phone ?? '---',
+            'items' => $sale->items->map(function($item) use ($formatNumber) {
+                $totalQty = $item->quantity + $item->free_quantity;
+                return [
+                    'name' => $item->product->name,
+                    'quantity' => $totalQty,
+                    'price' => $formatNumber($item->unit_price),
+                    'total' => $formatNumber($totalQty * $item->unit_price)
+                ];
+            }),
             'product_discount' => $sale->product_discount,
             'invoice_discount' => $sale->invoice_discount_amount,
             'total' => $formatNumber($sale->total_amount)
