@@ -88,6 +88,7 @@ Route::middleware(['web', 'auth', 'role:marketer'])->group(function () {
             Route::get('/{salesReturn}', [\App\Http\Controllers\Marketer\SalesReturnController::class, 'show'])->name('show');
             Route::patch('/{salesReturn}/cancel', [\App\Http\Controllers\Marketer\SalesReturnController::class, 'cancel'])->name('cancel');
             Route::get('/{salesReturn}/pdf', [\App\Http\Controllers\Shared\SalesReturn\InvoiceController::class, 'generateSalesReturnInvoicePdf'])->name('pdf');
+            Route::get('/{salesReturn}/return-data', [\App\Http\Controllers\Shared\SalesReturn\InvoiceController::class, 'getReturnData'])->name('return-data');
         });
 
         Route::prefix('main-stock')->name('main-stock.')->group(function () {

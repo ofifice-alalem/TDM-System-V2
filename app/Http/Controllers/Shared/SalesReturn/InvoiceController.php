@@ -114,4 +114,30 @@ class InvoiceController extends Controller
         
         return $pdf->download('sales-return-' . $salesReturn->return_number . '.pdf');
     }
+
+    public function getReturnData(SalesReturn $salesReturn)
+    {
+        $salesReturn->load(['store', 'marketer', 'salesInvoice', 'items.product']);
+        
+        $formatNumber = fn($num) => $num == floor($num) ? number_format($num, 0) : number_format($num, 2);
+        
+        return response()->json([
+            'return_number' => $salesReturn->return_number,
+            'invoice_number' => $salesReturn->salesInvoice->invoice_number,
+            'date' => $salesReturn->created_at->format('Y-m-d'),
+            'store' => $salesReturn->store->name,
+            'store_phone' => $salesReturn->store->phone ?? '---',
+            'marketer' => $salesReturn->marketer->full_name,
+            'marketer_phone' => $salesReturn->marketer->phone ?? '---',
+            'items' => $salesReturn->items->map(function($item) use ($formatNumber) {
+                return [
+                    'name' => $item->product->name,
+                    'quantity' => (int)$item->quantity,
+                    'price' => $formatNumber($item->unit_price),
+                    'total' => $formatNumber($item->quantity * $item->unit_price)
+                ];
+            }),
+            'total' => $formatNumber($salesReturn->total_amount)
+        ]);
+    }
 }
