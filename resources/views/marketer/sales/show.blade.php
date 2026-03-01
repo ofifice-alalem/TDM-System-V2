@@ -543,7 +543,7 @@
         ctx.stroke();
         
         ctx.font = '20px Arial';
-        data.items.forEach(item => {
+        data.items.forEach((item, index) => {
             const nameLines = wrapText(item.name, 200, '20px Arial');
             const itemHeight = Math.max(nameLines.length * 25, 40);
             const startY = y + (itemHeight / 2) + 8;
@@ -561,6 +561,18 @@
             ctx.fillText(item.total, 80, startY);
             
             y += itemHeight;
+            
+            // خط فاصل بين المنتجات
+            if (index < data.items.length - 1) {
+                y += 8;
+                ctx.beginPath();
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 1;
+                ctx.moveTo(30, y);
+                ctx.lineTo(546, y);
+                ctx.stroke();
+                y += 8;
+            }
         });
         
         y += 25;
