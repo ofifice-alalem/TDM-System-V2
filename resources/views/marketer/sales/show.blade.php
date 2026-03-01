@@ -467,8 +467,8 @@
         // حساب الارتفاع الديناميكي بناءً على أسماء المنتجات
         let estimatedHeight = 700;
         data.items.forEach(item => {
-            const lines = wrapText(item.name, 200, '20px Arial');
-            estimatedHeight += Math.max(lines.length * 25, 40);
+            const lines = wrapText(item.name, 280, '24px Arial');
+            estimatedHeight += Math.max(lines.length * 28, 40);
         });
         canvas.height = estimatedHeight;
         
@@ -530,11 +530,11 @@
         
         y += 35;
         ctx.font = 'bold 22px Arial';
-        ctx.fillText('المنتج', 480, y);
+        ctx.fillText('المنتج', 450, y);
         ctx.textAlign = 'center';
-        ctx.fillText('كمية', 320, y);
-        ctx.fillText('سعر', 200, y);
-        ctx.fillText('إجمالي', 80, y);
+        ctx.fillText('كمية', 260, y);
+        ctx.fillText('سعر', 160, y);
+        ctx.fillText('إجمالي', 60, y);
         
         y += 15;
         ctx.beginPath();
@@ -542,23 +542,25 @@
         ctx.lineTo(546, y);
         ctx.stroke();
         
-        ctx.font = '20px Arial';
+        ctx.font = '24px Arial';
         data.items.forEach((item, index) => {
-            const nameLines = wrapText(item.name, 200, '20px Arial');
-            const itemHeight = Math.max(nameLines.length * 25, 40);
-            const startY = y + (itemHeight / 2) + 8;
+            const nameLines = wrapText(item.name, 280, '24px Arial');
+            const itemHeight = Math.max(nameLines.length * 28, 40);
+            const startY = y + (itemHeight / 2) + 10;
             
             // طباعة اسم المنتج على عدة أسطر
             ctx.textAlign = 'right';
             nameLines.forEach((line, index) => {
-                ctx.fillText(line, 520, y + 30 + (index * 25));
+                ctx.fillText(line, 546, y + 32 + (index * 28));
             });
             
             // طباعة الكمية والسعر والإجمالي في المنتصف
+            ctx.font = '20px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText(item.quantity, 320, startY);
-            ctx.fillText(item.price, 200, startY);
-            ctx.fillText(item.total, 80, startY);
+            ctx.fillText(item.quantity, 260, startY);
+            ctx.fillText(item.price, 160, startY);
+            ctx.fillText(item.total, 60, startY);
+            ctx.font = '24px Arial';
             
             y += itemHeight;
             
