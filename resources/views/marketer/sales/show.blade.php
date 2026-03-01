@@ -451,6 +451,7 @@
         try {
             if (!navigator.bluetooth) {
                 alert('❌ متصفحك لا يدعم البلوتوث');
+                statusText.remove();
                 return;
             }
 
@@ -471,6 +472,22 @@
             statusText.innerText = '⚡ بناء الفاتورة...';
             const canvas = await buildInvoiceCanvas(data);
             const rasterData = canvasToRaster(canvas);
+
+            // محاولة إعادة الاتصال إذا كان الجهاز موجود لكن غير متصل
+            if (bluetoothDevice && !bluetoothDevice.gatt.connected) {
+                try {
+                    statusText.innerText = '🔄 إعادة الاتصال...';
+                    await bluetoothDevice.gatt.disconnect();
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const server = await bluetoothDevice.gatt.connect();
+                    const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                    bluetoothCharacteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+                } catch (reconnectError) {
+                    console.log('Failed to reconnect, will request new device');
+                    bluetoothDevice = null;
+                    bluetoothCharacteristic = null;
+                }
+            }
 
             if (!bluetoothDevice || !bluetoothDevice.gatt.connected) {
                 statusText.innerText = '📡 اختر الطابعة...';
