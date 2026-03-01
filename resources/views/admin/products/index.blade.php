@@ -26,8 +26,8 @@
                     <tr>
                         <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المنتج</th>
                         <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400">الباركود</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400">السعر</th>
                         <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400">سعر الجملة</th>
+                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400">سعر جملة الجملة</th>
                         <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400">إجراءات</th>
                     </tr>
                 </thead>
