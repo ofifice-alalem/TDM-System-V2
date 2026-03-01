@@ -362,9 +362,34 @@
 </div>
 
 @push('scripts')
+<style>
+@font-face {
+    font-family: 'Cairo';
+    src: url('{{ asset('fonts/Cairo-Bold.ttf') }}') format('truetype');
+    font-weight: bold;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Cairo';
+    src: url('{{ asset('fonts/Cairo-Regular.ttf') }}') format('truetype');
+    font-weight: normal;
+    font-display: swap;
+}
+</style>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
+        
+        // تحميل خط Cairo مسبقاً
+        const cairoRegular = new FontFace('Cairo', 'url({{ asset('fonts/Cairo-Regular.ttf') }})');
+        const cairoBold = new FontFace('Cairo', 'url({{ asset('fonts/Cairo-Bold.ttf') }})', { weight: 'bold' });
+        
+        Promise.all([cairoRegular.load(), cairoBold.load()]).then(fonts => {
+            fonts.forEach(font => document.fonts.add(font));
+            console.log('Cairo font loaded successfully');
+        }).catch(err => {
+            console.error('Failed to load Cairo font:', err);
+        });
     });
 
     let bluetoothDevice = null;
@@ -377,6 +402,16 @@
         document.body.appendChild(statusText);
 
         try {
+            // انتظار تحميل الخطوط
+            try {
+                await Promise.race([
+                    document.fonts.ready,
+                    new Promise((_, reject) => setTimeout(() => reject('timeout'), 3000))
+                ]);
+            } catch (e) {
+                console.log('Cairo font not loaded, using fallback');
+            }
+            
             statusText.innerText = '📡 جاري تحميل بيانات الفاتورة...';
             const response = await fetch('{{ route('marketer.sales.invoice-data', $invoice) }}');
             const data = await response.json();
@@ -417,6 +452,16 @@
             if (!navigator.bluetooth) {
                 alert('❌ متصفحك لا يدعم البلوتوث');
                 return;
+            }
+
+            // انتظار تحميل الخطوط
+            try {
+                await Promise.race([
+                    document.fonts.ready,
+                    new Promise((_, reject) => setTimeout(() => reject('timeout'), 3000))
+                ]);
+            } catch (e) {
+                console.log('Cairo font not loaded, using fallback');
             }
 
             statusText.innerText = '📡 جاري تحميل بيانات الفاتورة...';
@@ -468,8 +513,15 @@
         let estimatedHeight = 700;
         data.items.forEach(item => {
             const lines = wrapText(item.name, 280, '24px Arial');
-            estimatedHeight += Math.max(lines.length * 28, 40);
+            estimatedHeight += Math.max(lines.length * 28, 40) + 16;
         });
+        
+        // إضافة مساحة لجدول الملخص والمجموع النهائي
+        let summaryRows = 2;
+        if (parseFloat(data.product_discount) > 0) summaryRows++;
+        if (parseFloat(data.invoice_discount) > 0) summaryRows++;
+        estimatedHeight += (summaryRows * 35) + 200;
+        
         canvas.height = estimatedHeight;
         
         const ctx = canvas.getContext('2d');
@@ -480,19 +532,19 @@
         ctx.textAlign = 'center';
         
         let y = 40;
-        ctx.font = 'bold 32px Arial';
+        ctx.font = 'bold 32px Cairo, Arial';
         ctx.fillText('شركة المتفوقون الأوائل', 288, y);
         
         y += 50;
         ctx.fillStyle = '#000000';
         ctx.fillRect(180, y, 216, 40);
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 26px Arial';
+        ctx.font = 'bold 26px Cairo, Arial';
         ctx.fillText('فاتورة مبيعات', 288, y + 28);
         
         y += 60;
         ctx.fillStyle = '#000000';
-        ctx.font = '20px Arial';
+        ctx.font = '20px Cairo, Arial';
         ctx.fillText('رقم: ' + data.invoice_number, 288, y);
         y += 28;
         ctx.fillText('تاريخ: ' + data.date, 288, y);
@@ -507,17 +559,17 @@
         
         y += 35;
         ctx.textAlign = 'right';
-        ctx.font = '22px Arial';
+        ctx.font = '22px Cairo, Arial';
         ctx.fillText('المتجر: ' + data.store, 520, y);
         y += 28;
-        ctx.font = '20px Arial';
+        ctx.font = '20px Cairo, Arial';
         ctx.fillText('رقم: ' + data.store_phone, 520, y);
         
         y += 35;
-        ctx.font = '22px Arial';
+        ctx.font = '22px Cairo, Arial';
         ctx.fillText('المسوق: ' + data.marketer, 520, y);
         y += 28;
-        ctx.font = '20px Arial';
+        ctx.font = '20px Cairo, Arial';
         ctx.fillText('رقم: ' + data.marketer_phone, 520, y);
         
         y += 40;
@@ -529,7 +581,7 @@
         ctx.lineWidth = 1;
         
         y += 35;
-        ctx.font = 'bold 22px Arial';
+        ctx.font = 'bold 22px Cairo, Arial';
         ctx.fillText('المنتج', 450, y);
         ctx.textAlign = 'center';
         ctx.fillText('كمية', 260, y);
@@ -542,25 +594,25 @@
         ctx.lineTo(546, y);
         ctx.stroke();
         
-        ctx.font = '24px Arial';
+        ctx.font = '24px Cairo, Arial';
         data.items.forEach((item, index) => {
-            const nameLines = wrapText(item.name, 280, '24px Arial');
+            const nameLines = wrapText(item.name, 280, '24px Cairo, Arial');
             const itemHeight = Math.max(nameLines.length * 28, 40);
             const startY = y + (itemHeight / 2) + 10;
             
-            // طباعة اسم المنتج على عدة أسطر
+            // طباعة اسم المنتج على عدة أسطر (بدون غامق)
             ctx.textAlign = 'right';
             nameLines.forEach((line, index) => {
                 ctx.fillText(line, 546, y + 32 + (index * 28));
             });
             
             // طباعة الكمية والسعر والإجمالي في المنتصف
-            ctx.font = '20px Arial';
+            ctx.font = '20px Cairo, Arial';
             ctx.textAlign = 'center';
             ctx.fillText(item.quantity, 260, startY);
             ctx.fillText(item.price, 160, startY);
             ctx.fillText(item.total, 60, startY);
-            ctx.font = '24px Arial';
+            ctx.font = '24px Cairo, Arial';
             
             y += itemHeight;
             
@@ -586,39 +638,47 @@
         ctx.setLineDash([]);
         
         y += 35;
-        ctx.font = '20px Arial';
-        ctx.textAlign = 'right';
+        ctx.font = '20px Cairo, Arial';
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#000000';
         
-        // عدد البضاعة
-        ctx.fillText('عدد البضاعة:', 480, y);
-        ctx.textAlign = 'left';
-        ctx.fillText(data.total_items, 80, y);
+        const summaryData = [
+            ['عدد البضاعة', data.total_items],
+            ['المجموع الفرعي', data.subtotal]
+        ];
         
-        y += 30;
-        ctx.textAlign = 'right';
-        ctx.fillText('المجموع الفرعي:', 480, y);
-        ctx.textAlign = 'left';
-        ctx.fillText(data.subtotal + ' د.ل', 80, y);
-        
-        // خصم المنتجات
         if (parseFloat(data.product_discount) > 0) {
-            y += 30;
-            ctx.textAlign = 'right';
-            ctx.fillText('خصم المنتجات (هدايا):', 480, y);
-            ctx.textAlign = 'left';
-            ctx.fillText('- ' + data.product_discount + ' د.ل', 80, y);
+            summaryData.push(['خصم المنتجات (هدايا)', '- ' + data.product_discount]);
         }
         
-        // خصم الفاتورة
         if (parseFloat(data.invoice_discount) > 0) {
-            y += 30;
-            ctx.textAlign = 'right';
-            ctx.fillText('خصم الفاتورة:', 480, y);
-            ctx.textAlign = 'left';
-            ctx.fillText('- ' + data.invoice_discount + ' د.ل', 80, y);
+            summaryData.push(['خصم الفاتورة', '- ' + data.invoice_discount]);
         }
         
-        y += 40;
+        const rowHeight = 35;
+        const startY = y;
+        
+        // رسم الجدول
+        summaryData.forEach((row, index) => {
+            const currentY = startY + (index * rowHeight);
+            
+            // رسم الحدود
+            ctx.strokeRect(30, currentY, 516, rowHeight);
+            ctx.beginPath();
+            ctx.moveTo(288, currentY);
+            ctx.lineTo(288, currentY + rowHeight);
+            ctx.stroke();
+            
+            // النصوص
+            ctx.textAlign = 'right';
+            ctx.fillText(row[0], 530, currentY + 23);
+            ctx.textAlign = 'center';
+            // إضافة دينار للصف الثاني وما بعده
+            const value = index === 0 ? row[1] : '‏' + row[1] + ' دينار';
+            ctx.fillText(value, 169, currentY + 23);
+        });
+        
+        y = startY + (summaryData.length * rowHeight) + 40;
         ctx.beginPath();
         ctx.moveTo(30, y);
         ctx.lineTo(546, y);
@@ -627,15 +687,15 @@
         ctx.lineWidth = 1;
         
         y += 35;
-        ctx.font = 'bold 24px Arial';
+        ctx.font = 'bold 24px Cairo, Arial';
         ctx.textAlign = 'right';
-        ctx.fillText('المجموع النهائي:', 480, y);
-        ctx.font = 'bold 32px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText(data.total + ' د.ل', 80, y);
+        ctx.fillText('المجموع النهائي', 480, y);
+        ctx.font = 'bold 32px Cairo, Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('‏' + data.total + ' دينار', 169, y);
         
         y += 50;
-        ctx.font = '20px Arial';
+        ctx.font = '20px Cairo, Arial';
         ctx.textAlign = 'center';
         ctx.fillText('شكراً لتعاملكم معنا', 288, y);
         
