@@ -165,8 +165,10 @@ class InvoiceController extends Controller
                     'total' => $formatNumber($totalQty * $item->unit_price)
                 ];
             }),
-            'product_discount' => $sale->product_discount,
-            'invoice_discount' => $sale->invoice_discount_amount,
+            'total_items' => $sale->items->sum(fn($item) => $item->quantity + $item->free_quantity),
+            'subtotal' => $formatNumber($sale->subtotal),
+            'product_discount' => $formatNumber($sale->product_discount),
+            'invoice_discount' => $formatNumber($sale->invoice_discount_amount),
             'total' => $formatNumber($sale->total_amount)
         ]);
     }

@@ -585,11 +585,52 @@
         ctx.stroke();
         ctx.setLineDash([]);
         
-        y += 40;
-        ctx.font = 'bold 28px Arial';
+        y += 35;
+        ctx.font = '20px Arial';
         ctx.textAlign = 'right';
-        ctx.fillText('المجموع:', 480, y);
-        ctx.font = 'bold 36px Arial';
+        
+        // عدد البضاعة
+        ctx.fillText('عدد البضاعة:', 480, y);
+        ctx.textAlign = 'left';
+        ctx.fillText(data.total_items, 80, y);
+        
+        y += 30;
+        ctx.textAlign = 'right';
+        ctx.fillText('المجموع الفرعي:', 480, y);
+        ctx.textAlign = 'left';
+        ctx.fillText(data.subtotal + ' د.ل', 80, y);
+        
+        // خصم المنتجات
+        if (parseFloat(data.product_discount) > 0) {
+            y += 30;
+            ctx.textAlign = 'right';
+            ctx.fillText('خصم المنتجات (هدايا):', 480, y);
+            ctx.textAlign = 'left';
+            ctx.fillText('- ' + data.product_discount + ' د.ل', 80, y);
+        }
+        
+        // خصم الفاتورة
+        if (parseFloat(data.invoice_discount) > 0) {
+            y += 30;
+            ctx.textAlign = 'right';
+            ctx.fillText('خصم الفاتورة:', 480, y);
+            ctx.textAlign = 'left';
+            ctx.fillText('- ' + data.invoice_discount + ' د.ل', 80, y);
+        }
+        
+        y += 40;
+        ctx.beginPath();
+        ctx.moveTo(30, y);
+        ctx.lineTo(546, y);
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.lineWidth = 1;
+        
+        y += 35;
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'right';
+        ctx.fillText('المجموع النهائي:', 480, y);
+        ctx.font = 'bold 32px Arial';
         ctx.textAlign = 'left';
         ctx.fillText(data.total + ' د.ل', 80, y);
         
