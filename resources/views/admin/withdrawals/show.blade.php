@@ -32,12 +32,17 @@
             
             <div class="lg:col-span-8 space-y-6 animate-slide-up">
                 
-                <div class="bg-white dark:bg-dark-card rounded-[2rem] p-6 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
-                    <div class="flex items-center gap-3 mb-6">
-                        <span class="bg-amber-50 dark:bg-amber-900/20 p-2.5 rounded-xl text-amber-600 dark:text-amber-400 shadow-sm border border-amber-100 dark:border-amber-600/30">
-                            <i data-lucide="user" class="w-5 h-5"></i>
-                        </span>
-                        <h2 class="font-bold text-xl text-gray-900 dark:text-white">معلومات المسوق</h2>
+                <div class="bg-white dark:bg-dark-card rounded-[2rem] p-4 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="font-bold text-xl text-gray-900 dark:text-white flex items-center gap-3">
+                                <span class="bg-amber-50 dark:bg-amber-900/20 p-2.5 rounded-xl text-amber-600 dark:text-amber-400 shadow-sm border border-amber-100 dark:border-amber-600/30">
+                                    <i data-lucide="user" class="w-5 h-5"></i>
+                                </span>
+                                معلومات المسوق
+                            </h2>
+                            <p class="text-sm text-gray-500 dark:text-dark-muted mt-2 mr-14 font-medium">بيانات المسوق</p>
+                        </div>
                     </div>
                     <div class="bg-gray-50 dark:bg-dark-bg rounded-xl p-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

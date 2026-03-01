@@ -41,20 +41,37 @@
                                 <span class="bg-primary-50 dark:bg-primary-900/20 p-2.5 rounded-xl text-primary-600 dark:text-primary-400 shadow-sm border border-primary-100 dark:border-primary-600/30">
                                     <i data-lucide="store" class="w-5 h-5"></i>
                                 </span>
-                                معلومات المتجر
+                                معلومات الفاتورة
                             </h2>
-                            <p class="text-sm text-gray-500 dark:text-dark-muted mt-2 mr-14 font-medium">بيانات المتجر المشتري</p>
+                            <p class="text-sm text-gray-500 dark:text-dark-muted mt-2 mr-14 font-medium">بيانات المسوق والمتجر</p>
                         </div>
                     </div>
-                    <div class="bg-gray-50/50 dark:bg-dark-bg/60 rounded-2xl p-6 border border-gray-100 dark:border-dark-border">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <p class="text-xs text-gray-400 dark:text-dark-muted mb-2 font-bold uppercase tracking-wider">اسم المتجر</p>
-                                <p class="font-black text-gray-900 dark:text-white text-lg">{{ $invoice->store->name }}</p>
+                    <div class="bg-gray-50 dark:bg-dark-bg rounded-xl p-6 space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-gray-200 dark:border-dark-border">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="store" class="w-5 h-5 text-gray-400 dark:text-gray-500"></i>
+                                <div class="flex-1">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">اسم المتجر</p>
+                                    <p class="font-bold text-gray-900 dark:text-white">{{ $invoice->store->name }}</p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-400 dark:text-dark-muted mb-2 font-bold uppercase tracking-wider">الرقم</p>
-                                <p class="font-black text-gray-900 dark:text-white text-lg">{{ $invoice->store->phone ?? '---' }}</p>
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="phone" class="w-5 h-5 text-gray-400 dark:text-gray-500"></i>
+                                <div class="flex-1">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">رقم الهاتف</p>
+                                    @if($invoice->store->phone)
+                                        <a href="tel:{{ $invoice->store->phone }}" class="font-bold text-primary-600 dark:text-primary-400 hover:underline">{{ $invoice->store->phone }}</a>
+                                    @else
+                                        <p class="font-bold text-gray-900 dark:text-white">---</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="user" class="w-5 h-5 text-gray-400 dark:text-gray-500"></i>
+                            <div class="flex-1">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">المسوق</p>
+                                <p class="font-bold text-gray-900 dark:text-white">{{ $invoice->marketer->full_name }}</p>
                             </div>
                         </div>
                     </div>
