@@ -512,7 +512,7 @@
         // حساب الارتفاع الديناميكي بناءً على أسماء المنتجات
         let estimatedHeight = 700;
         data.items.forEach(item => {
-            const lines = wrapText(item.name, 280, '24px Arial');
+            const lines = wrapText(item.name, 300, '24px Arial');
             estimatedHeight += Math.max(lines.length * 28, 40) + 16;
         });
         
@@ -582,51 +582,52 @@
         
         y += 35;
         ctx.font = 'bold 22px Cairo, Arial';
-        ctx.fillText('المنتج', 450, y);
+        ctx.textAlign = 'right';
+        ctx.fillText('المنتج', 490, y);
         ctx.textAlign = 'center';
-        ctx.fillText('كمية', 260, y);
-        ctx.fillText('سعر', 160, y);
+        ctx.fillText('كمية', 205, y);
+        ctx.fillText('سعر', 135, y);
         ctx.fillText('إجمالي', 60, y);
         
         y += 15;
         ctx.beginPath();
-        ctx.moveTo(30, y);
-        ctx.lineTo(546, y);
+        ctx.moveTo(20, y);
+        ctx.lineTo(556, y);
         ctx.stroke();
         
         ctx.font = '24px Cairo, Arial';
         data.items.forEach((item, index) => {
-            const nameLines = wrapText(item.name, 280, '24px Cairo, Arial');
-            const itemHeight = Math.max(nameLines.length * 28, 40);
-            const startY = y + (itemHeight / 2) + 10;
+            const nameLines = wrapText(item.name, 300, '24px Cairo, Arial');
+            const itemHeight = Math.max(nameLines.length * 28, 40) + 18;
+            const startY = y + (itemHeight / 2) + 5;
+            
+            // رسم حدود الصف
+            ctx.strokeRect(20, y, 536, itemHeight);
+            // خطوط عمودية
+            ctx.beginPath();
+            ctx.moveTo(240, y);
+            ctx.lineTo(240, y + itemHeight);
+            ctx.moveTo(170, y);
+            ctx.lineTo(170, y + itemHeight);
+            ctx.moveTo(100, y);
+            ctx.lineTo(100, y + itemHeight);
+            ctx.stroke();
             
             // طباعة اسم المنتج على عدة أسطر (بدون غامق)
             ctx.textAlign = 'right';
-            nameLines.forEach((line, index) => {
-                ctx.fillText(line, 546, y + 32 + (index * 28));
+            nameLines.forEach((line, idx) => {
+                ctx.fillText(line, 550, y + 32 + (idx * 28));
             });
             
             // طباعة الكمية والسعر والإجمالي في المنتصف
             ctx.font = '20px Cairo, Arial';
             ctx.textAlign = 'center';
-            ctx.fillText(item.quantity, 260, startY);
-            ctx.fillText(item.price, 160, startY);
+            ctx.fillText(item.quantity, 205, startY);
+            ctx.fillText(item.price, 135, startY);
             ctx.fillText(item.total, 60, startY);
             ctx.font = '24px Cairo, Arial';
             
             y += itemHeight;
-            
-            // خط فاصل بين المنتجات
-            if (index < data.items.length - 1) {
-                y += 8;
-                ctx.beginPath();
-                ctx.strokeStyle = '#000000';
-                ctx.lineWidth = 1;
-                ctx.moveTo(30, y);
-                ctx.lineTo(546, y);
-                ctx.stroke();
-                y += 8;
-            }
         });
         
         y += 25;
