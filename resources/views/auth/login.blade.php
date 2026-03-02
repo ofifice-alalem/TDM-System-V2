@@ -6,7 +6,7 @@
 
     <x-auth-session-status class="mb-4 text-center" :status="session('status')" />
 
-    <form method="POST" action="{{ route('login') }}" class="space-y-6">
+    <form method="POST" action="{{ route('login') }}" class="space-y-6" id="loginForm">
         @csrf
 
         <!-- Username -->
@@ -43,4 +43,24 @@
             </button>
         </div>
     </form>
+    
+    <script>
+        // تحديث CSRF token عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('{{ route('login') }}', {
+                method: 'HEAD',
+                credentials: 'same-origin'
+            }).then(() => {
+                // تحديث الصفحة لتحديث الـ token إذا كانت منتهية
+                const form = document.getElementById('loginForm');
+                const csrfToken = document.querySelector('meta[name="csrf-token"]');
+                if (csrfToken) {
+                    const tokenInput = form.querySelector('input[name="_token"]');
+                    if (tokenInput) {
+                        tokenInput.value = csrfToken.content;
+                    }
+                }
+            });
+        });
+    </script>
 </x-guest-layout>

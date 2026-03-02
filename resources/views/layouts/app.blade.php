@@ -540,6 +540,21 @@
             document.body.classList.remove('overflow-hidden');
         });
     </script>
+    
+    <script>
+        // مراقبة انتهاء الجلسة وإعادة تحميل الصفحة عند الحاجة
+        setInterval(function() {
+            fetch('/dashboard', {
+                method: 'HEAD',
+                credentials: 'same-origin'
+            }).catch(() => {
+                // إذا فشل الطلب، قد تكون الجلسة منتهية
+                if (window.location.pathname !== '/login') {
+                    window.location.reload();
+                }
+            });
+        }, 300000); // كل 5 دقائق
+    </script>
     @stack('scripts')
 </body>
 </html>
