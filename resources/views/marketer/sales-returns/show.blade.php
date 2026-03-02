@@ -531,7 +531,7 @@
         const canvas = document.createElement('canvas');
         canvas.width = 576;
         
-        let estimatedHeight = 700;
+        let estimatedHeight = 950;
         data.items.forEach(item => {
             const lines = wrapText(item.name, 300, '24px Arial');
             estimatedHeight += Math.max(lines.length * 28, 40) + 16;
@@ -547,6 +547,39 @@
         ctx.textAlign = 'center';
         
         let y = 40;
+        
+        // إضافة الشعار
+        try {
+            const logo = new Image();
+            await new Promise((resolve, reject) => {
+                logo.onload = resolve;
+                logo.onerror = reject;
+                logo.src = '{{ asset('images/company_black_white.png') }}';
+                setTimeout(reject, 2000);
+            });
+            const logoWidth = 200;
+            const logoHeight = (logo.height / logo.width) * logoWidth;
+            
+            // تحويل الصورة للأبيض والأسود
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = logoWidth;
+            tempCanvas.height = logoHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(logo, 0, 0, logoWidth, logoHeight);
+            const imageData = tempCtx.getImageData(0, 0, logoWidth, logoHeight);
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+                data[i] = data[i + 1] = data[i + 2] = gray;
+            }
+            tempCtx.putImageData(imageData, 0, 0);
+            
+            ctx.drawImage(tempCanvas, (canvas.width - logoWidth) / 2, y, logoWidth, logoHeight);
+            y += logoHeight + 20;
+        } catch (e) {
+            console.log('Logo not loaded, skipping');
+        }
+        
         ctx.font = 'bold 32px Cairo, Arial';
         ctx.fillText('شركة المتفوقون الأوائل', 288, y);
         
@@ -671,6 +704,13 @@
         ctx.font = '20px Cairo, Arial';
         ctx.textAlign = 'center';
         ctx.fillText('شكراً لتعاملكم معنا', 288, y);
+        
+        y += 30;
+        ctx.font = '16px Cairo, Arial';
+        ctx.fillStyle = '#666666';
+        const now = new Date();
+        const printDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        ctx.fillText('تاريخ الطباعة: ' + printDate, 288, y);
         
         return canvas;
     }
