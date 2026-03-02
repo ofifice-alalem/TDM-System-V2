@@ -207,10 +207,36 @@
                     </div>
 
                     <div class="mt-8 pt-6 border-t border-gray-200 dark:border-dark-border z-10 relative space-y-3">
-                        <a href="{{ route('marketer.payments.pdf', $payment) }}" target="_blank" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group">
-                            <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
-                            طباعة PDF
-                        </a>
+                        <div x-data="{ showPrintOptions: false }" class="relative">
+                            <button 
+                                @click="showPrintOptions = !showPrintOptions"
+                                class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group">
+                                <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                طباعة PDF
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="showPrintOptions ? 'rotate-180' : ''"></i>
+                            </button>
+
+                            <div 
+                                x-show="showPrintOptions"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 -translate-y-2"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                class="mt-3 space-y-2"
+                                style="display: none;">
+                                <a href="{{ route('marketer.payments.pdf', $payment) }}" target="_blank" class="w-full bg-white dark:bg-dark-card border-2 border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-bg py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group">
+                                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                                    A4 - النظام القديم
+                                </a>
+                                <button onclick="printThermal()" type="button" class="w-full bg-white dark:bg-dark-card border-2 border-emerald-200 dark:border-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group">
+                                    <i data-lucide="receipt" class="w-5 h-5"></i>
+                                    80mm - X-Printer
+                                </button>
+                                <button onclick="previewThermal()" type="button" class="w-full bg-white dark:bg-dark-card border-2 border-blue-200 dark:border-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group">
+                                    <i data-lucide="eye" class="w-5 h-5"></i>
+                                    معاينة الإيصال
+                                </button>
+                            </div>
+                        </div>
 
                         @if($payment->status === 'pending')
                             <div x-data="{ showCancel: false }" class="mt-4">
@@ -343,10 +369,365 @@
 </div>
 
 @push('scripts')
+<style>
+@font-face {
+    font-family: 'Cairo';
+    src: url('{{ asset('fonts/Cairo-Bold.ttf') }}') format('truetype');
+    font-weight: bold;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Cairo';
+    src: url('{{ asset('fonts/Cairo-Regular.ttf') }}') format('truetype');
+    font-weight: normal;
+    font-display: swap;
+}
+</style>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
+        
+        const cairoRegular = new FontFace('Cairo', 'url({{ asset('fonts/Cairo-Regular.ttf') }})');
+        const cairoBold = new FontFace('Cairo', 'url({{ asset('fonts/Cairo-Bold.ttf') }})', { weight: 'bold' });
+        
+        Promise.all([cairoRegular.load(), cairoBold.load()]).then(fonts => {
+            fonts.forEach(font => document.fonts.add(font));
+        }).catch(err => console.error('Failed to load Cairo font:', err));
     });
+
+    let bluetoothDevice = null;
+    let bluetoothCharacteristic = null;
+
+    async function previewThermal() {
+        const statusText = document.createElement('div');
+        statusText.style.cssText = 'position:fixed;top:20px;right:20px;background:#667eea;color:white;padding:15px 25px;border-radius:10px;z-index:9999;font-weight:bold;box-shadow:0 4px 20px rgba(0,0,0,0.3)';
+        statusText.innerText = '⏳ جاري التحضير...';
+        document.body.appendChild(statusText);
+
+        try {
+            try {
+                await Promise.race([
+                    document.fonts.ready,
+                    new Promise((_, reject) => setTimeout(() => reject('timeout'), 3000))
+                ]);
+            } catch (e) {}
+            
+            statusText.innerText = '📡 جاري تحميل بيانات الإيصال...';
+            const response = await fetch('{{ route('marketer.payments.payment-data', $payment) }}');
+            const data = await response.json();
+
+            statusText.innerText = '⚡ بناء الإيصال...';
+            const canvas = await buildReceiptCanvas(data);
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+            modal.innerHTML = `
+                <div style="background:white;border-radius:20px;padding:20px;max-width:90%;max-height:90%;overflow:auto;position:relative">
+                    <button onclick="this.closest('div').parentElement.remove()" style="position:absolute;top:10px;left:10px;background:#ef4444;color:white;border:none;border-radius:10px;padding:10px 20px;font-weight:bold;cursor:pointer;z-index:1">✕ إغلاق</button>
+                    <div style="text-align:center">
+                        <h2 style="margin-bottom:20px;color:#1f2937;font-size:24px;font-weight:bold">معاينة الإيصال</h2>
+                        <img src="${canvas.toDataURL()}" style="max-width:100%;border:2px solid #e5e7eb;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.1)">
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            statusText.remove();
+
+        } catch (error) {
+            console.error(error);
+            alert('❌ فشلت المعاينة: ' + error.message);
+            statusText.remove();
+        }
+    }
+
+    async function printThermal() {
+        const statusText = document.createElement('div');
+        statusText.style.cssText = 'position:fixed;top:20px;right:20px;background:#667eea;color:white;padding:15px 25px;border-radius:10px;z-index:9999;font-weight:bold;box-shadow:0 4px 20px rgba(0,0,0,0.3)';
+        statusText.innerText = '⏳ جاري التحضير...';
+        document.body.appendChild(statusText);
+
+        try {
+            if (!navigator.bluetooth) {
+                alert('❌ متصفحك لا يدعم البلوتوث');
+                statusText.remove();
+                return;
+            }
+
+            try {
+                await Promise.race([
+                    document.fonts.ready,
+                    new Promise((_, reject) => setTimeout(() => reject('timeout'), 3000))
+                ]);
+            } catch (e) {}
+
+            statusText.innerText = '📡 جاري تحميل بيانات الإيصال...';
+            const response = await fetch('{{ route('marketer.payments.payment-data', $payment) }}');
+            const data = await response.json();
+
+            statusText.innerText = '⚡ بناء الإيصال...';
+            const canvas = await buildReceiptCanvas(data);
+            const rasterData = canvasToRaster(canvas);
+
+            if (bluetoothDevice && !bluetoothDevice.gatt.connected) {
+                try {
+                    statusText.innerText = '🔄 إعادة الاتصال...';
+                    await bluetoothDevice.gatt.disconnect();
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const server = await bluetoothDevice.gatt.connect();
+                    const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                    bluetoothCharacteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+                } catch (reconnectError) {
+                    bluetoothDevice = null;
+                    bluetoothCharacteristic = null;
+                }
+            }
+
+            if (!bluetoothDevice || !bluetoothDevice.gatt.connected) {
+                statusText.innerText = '📡 اختر الطابعة...';
+                bluetoothDevice = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }],
+                    optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
+                });
+
+                bluetoothDevice.addEventListener('gattserverdisconnected', () => {
+                    bluetoothDevice = null;
+                    bluetoothCharacteristic = null;
+                });
+
+                statusText.innerText = '🔌 جاري الاتصال...';
+                const server = await bluetoothDevice.gatt.connect();
+                const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                bluetoothCharacteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+            }
+
+            statusText.innerText = '🖨️ جاري الطباعة...';
+            await sendInChunks(bluetoothCharacteristic, rasterData);
+
+            statusText.innerText = '✅ تمت الطباعة بنجاح!';
+            setTimeout(() => statusText.remove(), 2000);
+
+        } catch (error) {
+            console.error(error);
+            if (error.name !== 'NotFoundError') {
+                alert('❌ فشلت العملية: ' + error.message);
+            }
+            statusText.remove();
+        }
+    }
+
+    async function buildReceiptCanvas(data) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 576;
+        
+        let estimatedHeight = 700;
+        if (data.notes) {
+            const noteLines = wrapText(data.notes, 500, '18px Arial');
+            estimatedHeight += noteLines.length * 25 + 60;
+        }
+        canvas.height = estimatedHeight;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#000000';
+        ctx.textAlign = 'center';
+        
+        let y = 40;
+        ctx.font = 'bold 32px Cairo, Arial';
+        ctx.fillText('شركة المتفوقون الأوائل', 288, y);
+        
+        y += 50;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(180, y, 216, 40);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 26px Cairo, Arial';
+        ctx.fillText('إيصال قبض', 288, y + 28);
+        
+        y += 60;
+        ctx.fillStyle = '#000000';
+        ctx.font = '20px Cairo, Arial';
+        ctx.fillText('رقم: ' + data.payment_number, 288, y);
+        y += 28;
+        ctx.fillText('تاريخ: ' + data.date, 288, y);
+        
+        y += 40;
+        ctx.beginPath();
+        ctx.setLineDash([10, 5]);
+        ctx.moveTo(30, y);
+        ctx.lineTo(546, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        y += 35;
+        ctx.textAlign = 'right';
+        ctx.font = '22px Cairo, Arial';
+        ctx.fillText('المتجر: ' + data.store, 520, y);
+        y += 28;
+        ctx.font = '20px Cairo, Arial';
+        ctx.fillText('رقم: ' + data.store_phone, 520, y);
+        
+        y += 35;
+        ctx.font = '22px Cairo, Arial';
+        ctx.fillText('المسوق: ' + data.marketer, 520, y);
+        y += 28;
+        ctx.font = '20px Cairo, Arial';
+        ctx.fillText('رقم: ' + data.marketer_phone, 520, y);
+        
+        y += 40;
+        ctx.beginPath();
+        ctx.moveTo(30, y);
+        ctx.lineTo(546, y);
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.lineWidth = 1;
+        
+        y += 50;
+        const boxY = y;
+        const boxHeight = 80;
+        
+        ctx.fillStyle = '#f0f0f0';
+        ctx.fillRect(40, boxY, 496, boxHeight);
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(40, boxY, 496, boxHeight);
+        
+        ctx.fillStyle = '#000000';
+        ctx.font = '20px Cairo, Arial';
+        ctx.textAlign = 'right';
+        ctx.fillText('المبلغ المسدد:', 510, boxY + 30);
+        
+        ctx.font = 'bold 36px Cairo, Arial';
+        ctx.textAlign = 'center';
+        ctx.direction = 'rtl';
+        ctx.fillText(data.amount + ' دينار', 288, boxY + 55);
+        
+        y = boxY + boxHeight + 35;
+        
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(40, y, 496, 45);
+        ctx.beginPath();
+        ctx.moveTo(288, y);
+        ctx.lineTo(288, y + 45);
+        ctx.stroke();
+        
+        ctx.font = '20px Cairo, Arial';
+        ctx.textAlign = 'right';
+        ctx.fillText('طريقة الدفع', 520, y + 28);
+        ctx.font = 'bold 22px Cairo, Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(data.payment_method, 169, y + 28);
+        
+        y += 45;
+        
+        if (data.notes) {
+            y += 30;
+            ctx.beginPath();
+            ctx.setLineDash([10, 5]);
+            ctx.moveTo(30, y);
+            ctx.lineTo(546, y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            y += 35;
+            ctx.font = 'bold 22px Cairo, Arial';
+            ctx.textAlign = 'right';
+            ctx.fillText('ملاحظات:', 520, y);
+            y += 30;
+            ctx.font = '18px Cairo, Arial';
+            const noteLines = wrapText(data.notes, 500, '18px Cairo, Arial');
+            noteLines.forEach(line => {
+                ctx.fillText(line, 520, y);
+                y += 25;
+            });
+        }
+        
+        y += 50;
+        ctx.beginPath();
+        ctx.setLineDash([10, 5]);
+        ctx.moveTo(30, y);
+        ctx.lineTo(546, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        y += 35;
+        ctx.font = '20px Cairo, Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('شكراً لتعاملكم معنا', 288, y);
+        
+        return canvas;
+    }
+
+    function wrapText(text, maxWidth, font) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.font = font;
+        
+        const words = text.split(' ');
+        const lines = [];
+        let currentLine = '';
+        
+        words.forEach(word => {
+            const testLine = currentLine ? currentLine + ' ' + word : word;
+            const metrics = ctx.measureText(testLine);
+            
+            if (metrics.width > maxWidth && currentLine) {
+                lines.push(currentLine);
+                currentLine = word;
+            } else {
+                currentLine = testLine;
+            }
+        });
+        
+        if (currentLine) lines.push(currentLine);
+        return lines;
+    }
+
+    function canvasToRaster(canvas) {
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const imageData = ctx.getImageData(0, 0, width, height).data;
+        const widthBytes = Math.ceil(width / 8);
+        const raster = [];
+
+        raster.push(0x1B, 0x40);
+        raster.push(0x1D, 0x76, 0x30, 0x00);
+        raster.push(widthBytes & 0xFF, (widthBytes >> 8) & 0xFF);
+        raster.push(height & 0xFF, (height >> 8) & 0xFF);
+
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < widthBytes; x++) {
+                let byte = 0;
+                for (let bit = 0; bit < 8; bit++) {
+                    const xPos = x * 8 + bit;
+                    if (xPos < width) {
+                        const idx = (y * width + xPos) * 4;
+                        const br = imageData[idx] * 0.299 + imageData[idx + 1] * 0.587 + imageData[idx + 2] * 0.114;
+                        if (imageData[idx + 3] > 128 && br < 185) byte |= (0x80 >> bit);
+                    }
+                }
+                raster.push(byte);
+            }
+        }
+
+        raster.push(0x1B, 0x4A, 0x20, 0x1B, 0x64, 0x05, 0x1D, 0x56, 0x00);
+        return new Uint8Array(raster);
+    }
+
+    async function sendInChunks(characteristic, data) {
+        const CHUNK_SIZE = 180;
+        for (let i = 0; i < data.length; i += CHUNK_SIZE) {
+            const chunk = data.slice(i, i + CHUNK_SIZE);
+            if (characteristic.writeValueWithoutResponse) {
+                await characteristic.writeValueWithoutResponse(chunk);
+            } else {
+                await characteristic.writeValue(chunk);
+            }
+            await new Promise(r => setTimeout(r, 2));
+        }
+    }
 </script>
 @endpush
 @endsection
