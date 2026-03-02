@@ -1,0 +1,434 @@
+===========================================
+      النوافذ المنبثقة - Modals System
+===========================================
+
+## 📦 المكتبة المستخدمة
+**Alpine.js** - للتفاعلية والتحكم بالنوافذ
+
+## 🎯 أنواع النوافذ المنبثقة
+
+### 1️⃣ نافذة التأكيد (Confirmation Modal)
+
+```html
+<!-- Modal Container -->
+<div x-data="{ showModal: false }">
+    <!-- Trigger Button -->
+    <button @click="showModal = true" 
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+        فتح النافذة
+    </button>
+    
+    <!-- Overlay -->
+    <div x-show="showModal" 
+         x-cloak
+         class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 transition-opacity"
+         @click="showModal = false"></div>
+    
+    <!-- Modal -->
+    <div x-show="showModal" 
+         x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform scale-90"
+         x-transition:enter-end="opacity-100 transform scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 transform scale-100"
+         x-transition:leave-end="opacity-0 transform scale-90"
+         class="fixed inset-0 z-50 overflow-y-auto">
+        
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+                 @click.away="showModal = false">
+                
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-gray-900">تأكيد العملية</h3>
+                    <button @click="showModal = false" 
+                            class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Body -->
+                <div class="mb-6">
+                    <p class="text-gray-700">هل أنت متأكد من تنفيذ هذه العملية؟</p>
+                </div>
+                
+                <!-- Footer -->
+                <div class="flex items-center justify-end gap-3">
+                    <button @click="showModal = false" 
+                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg">
+                        إلغاء
+                    </button>
+                    <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                        تأكيد
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+### 2️⃣ نافذة الموافقة (Approve Modal)
+
+```html
+<div x-data="{ showApproveModal: false }">
+    <!-- Trigger -->
+    <button @click="showApproveModal = true" 
+            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        موافقة
+    </button>
+    
+    <!-- Overlay -->
+    <div x-show="showApproveModal" x-cloak
+         class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40"
+         @click="showApproveModal = false"></div>
+    
+    <!-- Modal -->
+    <div x-show="showApproveModal" x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform scale-90"
+         x-transition:enter-end="opacity-100 transform scale-100"
+         class="fixed inset-0 z-50 overflow-y-auto">
+        
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+                
+                <!-- Icon -->
+                <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-green-100 rounded-full">
+                    <svg class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                
+                <!-- Header -->
+                <h3 class="text-xl font-semibold text-gray-900 text-center mb-2">
+                    الموافقة على الطلب
+                </h3>
+                
+                <!-- Body -->
+                <div class="mb-6">
+                    <p class="text-gray-600 text-center mb-4">
+                        سيتم حجز البضاعة من المخزن الرئيسي وإضافتها للمخزون المحجوز
+                    </p>
+                    
+                    <!-- Stock Info -->
+                    <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">المنتج:</span>
+                            <span class="font-medium text-gray-900">منتج تجريبي</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">الكمية المطلوبة:</span>
+                            <span class="font-medium text-gray-900">100</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">المخزون المتاح:</span>
+                            <span class="font-medium text-green-600">500</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="flex items-center justify-end gap-3">
+                    <button @click="showApproveModal = false" 
+                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg">
+                        إلغاء
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                        تأكيد الموافقة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+### 3️⃣ نافذة الرفض (Reject Modal)
+
+```html
+<div x-data="{ showRejectModal: false }">
+    <!-- Trigger -->
+    <button @click="showRejectModal = true" 
+            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        رفض
+    </button>
+    
+    <!-- Overlay -->
+    <div x-show="showRejectModal" x-cloak
+         class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40"
+         @click="showRejectModal = false"></div>
+    
+    <!-- Modal -->
+    <div x-show="showRejectModal" x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform scale-90"
+         x-transition:enter-end="opacity-100 transform scale-100"
+         class="fixed inset-0 z-50 overflow-y-auto">
+        
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <form method="POST" action="/reject" class="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+                @csrf
+                
+                <!-- Icon -->
+                <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
+                    <svg class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                
+                <!-- Header -->
+                <h3 class="text-xl font-semibold text-gray-900 text-center mb-2">
+                    رفض الطلب
+                </h3>
+                
+                <!-- Body -->
+                <div class="mb-6">
+                    <p class="text-gray-600 text-center mb-4">
+                        يرجى توضيح سبب الرفض
+                    </p>
+                    
+                    <!-- Reason Field -->
+                    <div>
+                        <label for="reject_reason" class="block text-sm font-medium text-gray-700 mb-2">
+                            سبب الرفض <span class="text-red-500">*</span>
+                        </label>
+                        <textarea id="reject_reason" 
+                                  name="notes" 
+                                  rows="4"
+                                  required
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                  placeholder="أدخل سبب الرفض..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="flex items-center justify-end gap-3">
+                    <button type="button"
+                            @click="showRejectModal = false" 
+                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg">
+                        إلغاء
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">
+                        تأكيد الرفض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+```
+
+### 4️⃣ نافذة التوثيق (Document Modal)
+
+```html
+<div x-data="{ showDocumentModal: false }">
+    <!-- Trigger -->
+    <button @click="showDocumentModal = true" 
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0118 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.25m-12 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-13.5 0v-7.5A2.25 2.25 0 019.75 9h4.5c1.243 0 2.25 1.007 2.25 2.25v7.5m-6.75 0h6.75" />
+        </svg>
+        توثيق
+    </button>
+    
+    <!-- Overlay -->
+    <div x-show="showDocumentModal" x-cloak
+         class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40"
+         @click="showDocumentModal = false"></div>
+    
+    <!-- Modal -->
+    <div x-show="showDocumentModal" x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform scale-90"
+         x-transition:enter-end="opacity-100 transform scale-100"
+         class="fixed inset-0 z-50 overflow-y-auto">
+        
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <form method="POST" action="/document" enctype="multipart/form-data" 
+                  class="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+                @csrf
+                
+                <!-- Icon -->
+                <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-blue-100 rounded-full">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0118 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.25m-12 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-13.5 0v-7.5A2.25 2.25 0 019.75 9h4.5c1.243 0 2.25 1.007 2.25 2.25v7.5m-6.75 0h6.75" />
+                    </svg>
+                </div>
+                
+                <!-- Header -->
+                <h3 class="text-xl font-semibold text-gray-900 text-center mb-2">
+                    توثيق الطلب
+                </h3>
+                
+                <!-- Body -->
+                <div class="mb-6">
+                    <p class="text-gray-600 text-center mb-4">
+                        سيتم نقل البضاعة من المخزون المحجوز إلى المخزون الفعلي
+                    </p>
+                    
+                    <!-- File Upload -->
+                    <div>
+                        <label for="stamped_image" class="block text-sm font-medium text-gray-700 mb-2">
+                            صورة الفاتورة الموقعة <span class="text-red-500">*</span>
+                        </label>
+                        <input type="file" 
+                               id="stamped_image" 
+                               name="stamped_image"
+                               accept="image/*,.pdf"
+                               required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="mt-1 text-xs text-gray-500">
+                            الحد الأقصى: 5MB - الصيغ المدعومة: JPG, PNG, PDF
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="flex items-center justify-end gap-3">
+                    <button type="button"
+                            @click="showDocumentModal = false" 
+                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg">
+                        إلغاء
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                        تأكيد التوثيق
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+```
+
+### 5️⃣ نافذة الإلغاء (Cancel Modal)
+
+```html
+<div x-data="{ showCancelModal: false }">
+    <!-- Trigger -->
+    <button @click="showCancelModal = true" 
+            class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+        </svg>
+        إلغاء
+    </button>
+    
+    <!-- Overlay -->
+    <div x-show="showCancelModal" x-cloak
+         class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40"
+         @click="showCancelModal = false"></div>
+    
+    <!-- Modal -->
+    <div x-show="showCancelModal" x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform scale-90"
+         x-transition:enter-end="opacity-100 transform scale-100"
+         class="fixed inset-0 z-50 overflow-y-auto">
+        
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <form method="POST" action="/cancel" class="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+                @csrf
+                
+                <!-- Icon -->
+                <div class="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-gray-100 rounded-full">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                    </svg>
+                </div>
+                
+                <!-- Header -->
+                <h3 class="text-xl font-semibold text-gray-900 text-center mb-2">
+                    إلغاء الطلب
+                </h3>
+                
+                <!-- Body -->
+                <div class="mb-6">
+                    <!-- Warning -->
+                    <div class="flex items-start gap-3 bg-orange-50 border-r-4 border-orange-500 p-4 rounded mb-4">
+                        <svg class="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                        </svg>
+                        <p class="text-sm text-orange-700">
+                            سيتم إرجاع البضاعة المحجوزة للمخزن الرئيسي
+                        </p>
+                    </div>
+                    
+                    <!-- Reason Field -->
+                    <div>
+                        <label for="cancel_reason" class="block text-sm font-medium text-gray-700 mb-2">
+                            سبب الإلغاء <span class="text-red-500">*</span>
+                        </label>
+                        <textarea id="cancel_reason" 
+                                  name="notes" 
+                                  rows="4"
+                                  required
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                                  placeholder="أدخل سبب الإلغاء..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="flex items-center justify-end gap-3">
+                    <button type="button"
+                            @click="showCancelModal = false" 
+                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg">
+                        رجوع
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg">
+                        تأكيد الإلغاء
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+```
+
+## 💡 ملاحظات الاستخدام
+
+### Alpine.js Setup
+```html
+<!-- في head -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<!-- أو عبر NPM -->
+<script>
+import Alpine from 'alpinejs'
+window.Alpine = Alpine
+Alpine.start()
+</script>
+```
+
+### x-cloak CSS
+```css
+[x-cloak] { 
+    display: none !important; 
+}
+```
+
+### الألوان حسب النوع
+- موافقة: `bg-green-600` / `text-green-600`
+- رفض: `bg-red-600` / `text-red-600`
+- توثيق: `bg-blue-600` / `text-blue-600`
+- إلغاء: `bg-gray-600` / `text-gray-600`
+- تحذير: `bg-orange-500` / `text-orange-500`
+
+### الأحجام
+- Small Modal: `max-w-md` (448px)
+- Medium Modal: `max-w-lg` (512px)
+- Large Modal: `max-w-2xl` (672px)
+- Extra Large: `max-w-4xl` (896px)
