@@ -1,0 +1,420 @@
+===========================================
+      المكونات المشتركة - Components
+===========================================
+
+## 📦 المكونات الأساسية
+
+### 1️⃣ الأزرار (Buttons)
+
+#### زر أساسي (Primary Button)
+```html
+<button type="button" 
+        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg 
+               transition-colors duration-200 flex items-center gap-2">
+    <svg class="w-5 h-5"><!-- icon --></svg>
+    <span>النص</span>
+</button>
+```
+
+#### زر ثانوي (Secondary Button)
+```html
+<button type="button" 
+        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg 
+               transition-colors duration-200">
+    النص
+</button>
+```
+
+#### زر خطر (Danger Button)
+```html
+<button type="button" 
+        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg 
+               transition-colors duration-200">
+    حذف
+</button>
+```
+
+#### زر صغير (Small Button)
+```html
+<button type="button" 
+        class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded">
+    عرض
+</button>
+```
+
+### 2️⃣ البطاقات (Cards)
+
+#### بطاقة أساسية
+```html
+<div class="bg-white rounded-lg shadow-md p-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">العنوان</h3>
+    <div class="space-y-3">
+        <!-- المحتوى -->
+    </div>
+</div>
+```
+
+#### بطاقة إحصائية
+```html
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <p class="text-sm text-gray-600">العنوان</p>
+            <p class="text-2xl font-bold text-gray-900">1,234</p>
+        </div>
+        <div class="p-3 bg-blue-100 rounded-full">
+            <svg class="w-8 h-8 text-blue-600"><!-- icon --></svg>
+        </div>
+    </div>
+</div>
+```
+
+### 3️⃣ الجداول (Tables)
+
+#### جدول أساسي
+```html
+<div class="overflow-x-auto bg-white rounded-lg shadow">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    العمود
+                </th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    البيانات
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+```
+
+#### جدول مع إجراءات
+```html
+<table class="min-w-full">
+    <thead class="bg-gray-50">
+        <tr>
+            <th class="px-6 py-3 text-right">#</th>
+            <th class="px-6 py-3 text-right">الاسم</th>
+            <th class="px-6 py-3 text-center">الإجراءات</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4">1</td>
+            <td class="px-6 py-4">البيانات</td>
+            <td class="px-6 py-4">
+                <div class="flex items-center justify-center gap-2">
+                    <button class="p-2 text-blue-600 hover:bg-blue-50 rounded">
+                        <svg class="w-5 h-5"><!-- edit icon --></svg>
+                    </button>
+                    <button class="p-2 text-red-600 hover:bg-red-50 rounded">
+                        <svg class="w-5 h-5"><!-- delete icon --></svg>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+```
+
+### 4️⃣ النماذج (Forms)
+
+#### حقل إدخال (Input Field)
+```html
+<div class="mb-4">
+    <label for="field" class="block text-sm font-medium text-gray-700 mb-2">
+        العنوان <span class="text-red-500">*</span>
+    </label>
+    <input type="text" 
+           id="field" 
+           name="field"
+           class="w-full px-4 py-2 border border-gray-300 rounded-lg 
+                  focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+           placeholder="أدخل النص"
+           required>
+    @error('field')
+        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+    @enderror
+</div>
+```
+
+#### قائمة منسدلة (Select)
+```html
+<div class="mb-4">
+    <label for="select" class="block text-sm font-medium text-gray-700 mb-2">
+        الاختيار
+    </label>
+    <select id="select" 
+            name="select"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg 
+                   focus:ring-2 focus:ring-blue-500">
+        <option value="">اختر...</option>
+        <option value="1">الخيار 1</option>
+        <option value="2">الخيار 2</option>
+    </select>
+</div>
+```
+
+#### منطقة نص (Textarea)
+```html
+<div class="mb-4">
+    <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
+        الملاحظات
+    </label>
+    <textarea id="notes" 
+              name="notes" 
+              rows="4"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg 
+                     focus:ring-2 focus:ring-blue-500"
+              placeholder="أدخل الملاحظات"></textarea>
+</div>
+```
+
+#### مربع اختيار (Checkbox)
+```html
+<div class="flex items-center gap-2">
+    <input type="checkbox" 
+           id="check" 
+           name="check"
+           class="w-4 h-4 text-blue-600 border-gray-300 rounded 
+                  focus:ring-blue-500">
+    <label for="check" class="text-sm text-gray-700">
+        الموافقة على الشروط
+    </label>
+</div>
+```
+
+### 5️⃣ النوافذ المنبثقة (Modals)
+
+#### Modal أساسي
+```html
+<!-- Overlay -->
+<div x-show="showModal" 
+     x-cloak
+     class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40"
+     @click="showModal = false"></div>
+
+<!-- Modal -->
+<div x-show="showModal" 
+     x-cloak
+     class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6"
+             @click.away="showModal = false">
+            
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">العنوان</h3>
+                <button @click="showModal = false" 
+                        class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6"><!-- x icon --></svg>
+                </button>
+            </div>
+            
+            <!-- Body -->
+            <div class="mb-6">
+                <!-- المحتوى -->
+            </div>
+            
+            <!-- Footer -->
+            <div class="flex items-center justify-end gap-3">
+                <button @click="showModal = false" 
+                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg">
+                    إلغاء
+                </button>
+                <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                    حفظ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+### 6️⃣ الشارات (Badges)
+
+#### Badge للحالة
+```html
+<!-- معلق -->
+<span class="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium 
+             bg-orange-100 text-orange-800 rounded-full">
+    <svg class="w-4 h-4"><!-- icon --></svg>
+    معلق
+</span>
+
+<!-- موافق -->
+<span class="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium 
+             bg-blue-100 text-blue-800 rounded-full">
+    <svg class="w-4 h-4"><!-- icon --></svg>
+    موافق
+</span>
+
+<!-- موثق -->
+<span class="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium 
+             bg-green-100 text-green-800 rounded-full">
+    <svg class="w-4 h-4"><!-- icon --></svg>
+    موثق
+</span>
+```
+
+#### Badge للعدد
+```html
+<span class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold 
+             bg-red-500 text-white rounded-full">
+    5
+</span>
+```
+
+### 7️⃣ التنبيهات (Alerts)
+
+#### تنبيه نجاح
+```html
+<div class="flex items-center gap-3 bg-green-50 border-r-4 border-green-500 p-4 rounded">
+    <svg class="w-6 h-6 text-green-500 flex-shrink-0"><!-- check icon --></svg>
+    <div>
+        <p class="font-medium text-green-800">نجاح</p>
+        <p class="text-sm text-green-700">تمت العملية بنجاح</p>
+    </div>
+</div>
+```
+
+#### تنبيه خطأ
+```html
+<div class="flex items-center gap-3 bg-red-50 border-r-4 border-red-500 p-4 rounded">
+    <svg class="w-6 h-6 text-red-500 flex-shrink-0"><!-- x icon --></svg>
+    <div>
+        <p class="font-medium text-red-800">خطأ</p>
+        <p class="text-sm text-red-700">حدث خطأ أثناء العملية</p>
+    </div>
+</div>
+```
+
+### 8️⃣ التحميل (Loading)
+
+#### Spinner
+```html
+<div class="flex items-center justify-center">
+    <svg class="animate-spin h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+</div>
+```
+
+#### Skeleton Loader
+```html
+<div class="animate-pulse">
+    <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+</div>
+```
+
+### 9️⃣ الترقيم (Pagination)
+
+```html
+<div class="flex items-center justify-between mt-6">
+    <div class="text-sm text-gray-700">
+        عرض <span class="font-medium">1</span> إلى <span class="font-medium">10</span> 
+        من <span class="font-medium">100</span> نتيجة
+    </div>
+    
+    <div class="flex items-center gap-2">
+        <button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">
+            السابق
+        </button>
+        <button class="px-3 py-1 bg-blue-600 text-white rounded">1</button>
+        <button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">2</button>
+        <button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">3</button>
+        <button class="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">
+            التالي
+        </button>
+    </div>
+</div>
+```
+
+### 🔟 القوائم المنسدلة (Dropdowns)
+
+```html
+<div x-data="{ open: false }" class="relative">
+    <button @click="open = !open" 
+            class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+        <span>الخيارات</span>
+        <svg class="w-4 h-4" :class="{ 'rotate-180': open }"><!-- chevron --></svg>
+    </button>
+    
+    <div x-show="open" 
+         @click.away="open = false"
+         x-cloak
+         class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            الخيار 1
+        </a>
+        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            الخيار 2
+        </a>
+    </div>
+</div>
+```
+
+### 1️⃣1️⃣ التبويبات (Tabs)
+
+```html
+<div x-data="{ activeTab: 'tab1' }">
+    <!-- Tab Headers -->
+    <div class="flex border-b border-gray-200">
+        <button @click="activeTab = 'tab1'" 
+                :class="activeTab === 'tab1' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
+                class="px-4 py-2 border-b-2 font-medium">
+            التبويب 1
+        </button>
+        <button @click="activeTab = 'tab2'" 
+                :class="activeTab === 'tab2' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
+                class="px-4 py-2 border-b-2 font-medium">
+            التبويب 2
+        </button>
+    </div>
+    
+    <!-- Tab Content -->
+    <div class="mt-4">
+        <div x-show="activeTab === 'tab1'">محتوى التبويب 1</div>
+        <div x-show="activeTab === 'tab2'">محتوى التبويب 2</div>
+    </div>
+</div>
+```
+
+### 1️⃣2️⃣ البحث والتصفية (Search & Filter)
+
+```html
+<div class="flex items-center gap-4 mb-6">
+    <!-- بحث -->
+    <div class="flex-1">
+        <div class="relative">
+            <input type="text" 
+                   placeholder="بحث..."
+                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg">
+            <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400">
+                <!-- search icon -->
+            </svg>
+        </div>
+    </div>
+    
+    <!-- تصفية -->
+    <button class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+        <svg class="w-5 h-5"><!-- filter icon --></svg>
+        <span>تصفية</span>
+    </button>
+</div>
+```
+
+## 💡 ملاحظات الاستخدام
+
+1. **Alpine.js**: استخدم `x-data`, `x-show`, `x-cloak` للتفاعلية
+2. **RTL**: جميع المكونات تدعم الاتجاه من اليمين لليسار
+3. **Responsive**: استخدم `sm:`, `md:`, `lg:` للتصميم المتجاوب
+4. **Transitions**: أضف `transition-colors duration-200` للتحولات السلسة
+5. **Accessibility**: استخدم `aria-*` attributes للوصولية

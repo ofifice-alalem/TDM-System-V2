@@ -1,0 +1,226 @@
+===========================================
+        نظام الأيقونات - Icons System
+===========================================
+
+## 📦 المكتبة المستخدمة
+**Heroicons** - مكتبة أيقونات مفتوحة المصدر من Tailwind Labs
+
+### التثبيت:
+```bash
+npm install @heroicons/vue
+```
+
+### الاستخدام:
+```html
+<!-- Blade Component -->
+<x-heroicon-o-plus class="w-5 h-5" />
+
+<!-- أو مباشرة SVG -->
+<svg class="w-5 h-5" fill="none" stroke="currentColor">...</svg>
+```
+
+## 🎯 الأيقونات حسب الاستخدام
+
+### 1️⃣ أيقونات الإجراءات (Action Icons)
+
+┌──────────────────────────────────────────────────────────────┐
+│ الإجراء          │ الأيقونة        │ Heroicon Name         │
+├──────────────────────────────────────────────────────────────┤
+│ إضافة            │ ➕              │ plus                  │
+│ تعديل            │ ✏️              │ pencil                │
+│ حذف              │ 🗑️              │ trash                 │
+│ عرض              │ 👁️              │ eye                   │
+│ طباعة            │ 🖨️              │ printer               │
+│ تحميل            │ ⬇️              │ arrow-down-tray       │
+│ تصدير Excel      │ 📊              │ document-arrow-down   │
+│ بحث              │ 🔍              │ magnifying-glass      │
+│ تصفية            │ 🔽              │ funnel                │
+│ تحديث            │ 🔄              │ arrow-path            │
+│ حفظ              │ 💾              │ check                 │
+│ إلغاء            │ ❌              │ x-mark                │
+│ رجوع             │ ⬅️              │ arrow-right           │
+└──────────────────────────────────────────────────────────────┘
+
+### الاستخدام في الأزرار:
+```html
+<!-- زر إضافة -->
+<button class="flex items-center gap-2">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+    إضافة جديد
+</button>
+
+<!-- زر تعديل -->
+<button class="flex items-center gap-2">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
+    </svg>
+    تعديل
+</button>
+```
+
+### 2️⃣ أيقونات الحالات (Status Icons)
+
+┌──────────────────────────────────────────────────────────────┐
+│ الحالة           │ الأيقونة        │ Heroicon Name         │
+├──────────────────────────────────────────────────────────────┤
+│ معلق             │ ⏳              │ clock                 │
+│ موافق            │ ✅              │ check-circle          │
+│ موثق             │ 📋              │ clipboard-document-check│
+│ ملغي             │ 🚫              │ no-symbol             │
+│ مرفوض            │ ❌              │ x-circle              │
+│ قيد المعالجة     │ ⚙️              │ cog                   │
+└──────────────────────────────────────────────────────────────┘
+
+### الاستخدام في الـ Badges:
+```html
+<!-- Badge معلق -->
+<span class="inline-flex items-center gap-1 px-3 py-1 bg-orange-500 text-white rounded-full">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    معلق
+</span>
+```
+
+### 3️⃣ أيقونات التنقل (Navigation Icons)
+
+┌──────────────────────────────────────────────────────────────┐
+│ القسم            │ الأيقونة        │ Heroicon Name         │
+├──────────────────────────────────────────────────────────────┤
+│ لوحة التحكم      │ 📊              │ chart-bar             │
+│ الطلبات          │ 📦              │ shopping-bag          │
+│ المخزون          │ 📦              │ cube                  │
+│ المبيعات         │ 💰              │ currency-dollar       │
+│ العملاء          │ 👥              │ users                 │
+│ التقارير         │ 📈              │ chart-pie             │
+│ الإعدادات        │ ⚙️              │ cog-6-tooth           │
+│ الإشعارات        │ 🔔              │ bell                  │
+│ الملف الشخصي     │ 👤              │ user                  │
+│ تسجيل الخروج     │ 🚪              │ arrow-right-on-rectangle│
+└──────────────────────────────────────────────────────────────┘
+
+### 4️⃣ أيقونات البيانات (Data Icons)
+
+┌──────────────────────────────────────────────────────────────┐
+│ البيان           │ الأيقونة        │ Heroicon Name         │
+├──────────────────────────────────────────────────────────────┤
+│ تاريخ            │ 📅              │ calendar              │
+│ وقت              │ ⏰              │ clock                 │
+│ مبلغ مالي        │ 💵              │ banknotes             │
+│ كمية             │ 🔢              │ hashtag               │
+│ نسبة مئوية       │ %               │ percent-badge         │
+│ ملاحظات          │ 📝              │ document-text         │
+│ مرفقات           │ 📎              │ paper-clip            │
+│ صورة             │ 🖼️              │ photo                 │
+└──────────────────────────────────────────────────────────────┘
+
+### 5️⃣ أيقونات التنبيهات (Alert Icons)
+
+┌──────────────────────────────────────────────────────────────┐
+│ النوع            │ الأيقونة        │ Heroicon Name         │
+├──────────────────────────────────────────────────────────────┤
+│ نجاح             │ ✅              │ check-circle          │
+│ خطأ              │ ❌              │ x-circle              │
+│ تحذير            │ ⚠️              │ exclamation-triangle  │
+│ معلومة           │ ℹ️              │ information-circle    │
+└──────────────────────────────────────────────────────────────┘
+
+### الاستخدام في التنبيهات:
+```html
+<!-- تنبيه نجاح -->
+<div class="flex items-center gap-3 bg-green-50 border-r-4 border-green-500 p-4">
+    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    <p class="text-green-700">تمت العملية بنجاح</p>
+</div>
+```
+
+### 6️⃣ أيقونات الجداول (Table Icons)
+
+┌──────────────────────────────────────────────────────────────┐
+│ الاستخدام        │ الأيقونة        │ Heroicon Name         │
+├──────────────────────────────────────────────────────────────┤
+│ ترتيب تصاعدي     │ ⬆️              │ chevron-up            │
+│ ترتيب تنازلي     │ ⬇️              │ chevron-down          │
+│ توسيع صف         │ ➕              │ chevron-down          │
+│ طي صف            │ ➖              │ chevron-up            │
+│ تحديد الكل       │ ☑️              │ check                 │
+└──────────────────────────────────────────────────────────────┘
+
+## 📏 أحجام الأيقونات (Icon Sizes)
+
+```css
+/* صغير جداً */
+w-3 h-3    /* 12px - للاستخدام داخل النصوص */
+
+/* صغير */
+w-4 h-4    /* 16px - للأزرار الصغيرة */
+
+/* متوسط (الافتراضي) */
+w-5 h-5    /* 20px - للأزرار العادية */
+
+/* كبير */
+w-6 h-6    /* 24px - للعناوين والأيقونات البارزة */
+
+/* كبير جداً */
+w-8 h-8    /* 32px - للأيقونات الرئيسية */
+
+/* ضخم */
+w-12 h-12  /* 48px - للصفحات الفارغة والأخطاء */
+```
+
+## 🎨 ألوان الأيقونات (Icon Colors)
+
+```html
+<!-- لون النص الحالي -->
+<svg class="w-5 h-5 text-gray-600">...</svg>
+
+<!-- ألوان حسب الحالة -->
+<svg class="w-5 h-5 text-green-500">...</svg>  <!-- نجاح -->
+<svg class="w-5 h-5 text-red-500">...</svg>    <!-- خطأ -->
+<svg class="w-5 h-5 text-blue-500">...</svg>   <!-- معلومة -->
+<svg class="w-5 h-5 text-orange-500">...</svg> <!-- تحذير -->
+
+<!-- أيقونة بيضاء على خلفية ملونة -->
+<svg class="w-5 h-5 text-white">...</svg>
+```
+
+## 💡 أفضل الممارسات
+
+1. **الاتساق**: استخدم نفس الأيقونة لنفس الإجراء في كل المشروع
+2. **الحجم**: استخدم w-5 h-5 كحجم افتراضي للأزرار
+3. **اللون**: استخدم text-current ليرث لون النص المحيط
+4. **RTL**: الأيقونات تعمل تلقائياً مع RTL (ما عدا الأسهم تحتاج عكس)
+5. **Accessibility**: أضف aria-hidden="true" للأيقونات الزخرفية
+
+## 🔄 أيقونات RTL (الأسهم)
+
+```html
+<!-- في RTL، عكس اتجاه الأسهم -->
+<!-- رجوع = سهم يمين (في RTL) -->
+<svg class="w-5 h-5 transform rotate-180">
+    <path d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+</svg>
+
+<!-- تقدم = سهم يسار (في RTL) -->
+<svg class="w-5 h-5">
+    <path d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+</svg>
+```
+
+## 📦 مكون Blade للأيقونات
+
+```php
+// resources/views/components/icon.blade.php
+@props(['name', 'size' => '5'])
+
+<svg class="w-{{ $size }} h-{{ $size }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" {{ $attributes }}>
+    @include("components.icons.{$name}")
+</svg>
+
+// الاستخدام:
+<x-icon name="plus" size="5" class="text-white" />
+```

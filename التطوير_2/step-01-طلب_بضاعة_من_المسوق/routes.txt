@@ -1,0 +1,478 @@
+================================================================================
+                    المسارات والـControllers - طلب بضاعة من المسوق
+                              (البنية المشتركة المثالية)
+================================================================================
+
+📋 نظرة عامة:
+--------------
+هذا الملف يوثق البنية المثالية للمسارات والـControllers باستخدام نهج مشترك
+لتقليل التكرار مع الحفاظ على الأمان والوضوح.
+
+✅ فلسفة التصميم:
+- Controller واحد مشترك
+- Policies للتحكم بالصلاحيات
+- Middleware للمصادقة فقط
+- Views مشتركة
+
+================================================================================
+                        🛣️ المسارات (Routes)
+================================================================================
+
+📁 الملف: routes/web.php
+🔒 Middleware: ['auth']
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ المسارات المشتركة                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Route::middleware('auth')->group(function () {
+    
+    // Resource Routes
+    Route::resource('requests', RequestController::class)
+        ->except(['edit', 'update', 'destroy']);
+    
+    // Custom Actions
+    Route::post('requests/{request}/approve', [RequestController::class, 'approve'])
+        ->name('requests.approve')
+        ->can('approve', 'request');
+    
+    Route::post('requests/{request}/reject', [RequestController::class, 'reject'])
+        ->name('requests.reject')
+        ->can('reject', 'request');
+    
+    Route::post('requests/{request}/document', [RequestController::class, 'document'])
+        ->name('requests.document')
+        ->can('document', 'request');
+    
+    Route::post('requests/{request}/cancel', [RequestController::class, 'cancel'])
+        ->name('requests.cancel')
+        ->can('cancel', 'request');
+    
+    // Additional Routes
+    Route::get('requests/{request}/pdf', [RequestController::class, 'pdf'])
+        ->name('requests.pdf');
+    
+    Route::get('requests/{request}/documentation', [RequestController::class, 'viewDocumentation'])
+        ->name('requests.documentation');
+});
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ جدول المسارات                                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+GET     /requests
+        الاسم: requests.index
+        الصلاحية: @can('viewAny', MarketerRequest::class)
+        الغرض: عرض قائمة الطلبات (حسب الدور)
+
+GET     /requests/create
+        الاسم: requests.create
+        الصلاحية: @can('create', MarketerRequest::class)
+        الغرض: عرض صفحة إنشاء طلب (للمسوق فقط)
+
+POST    /requests
+        الاسم: requests.store
+        الصلاحية: @can('create', MarketerRequest::class)
+        الغرض: حفظ طلب جديد
+
+GET     /requests/{request}
+        الاسم: requests.show
+        الصلاحية: @can('view', $request)
+        الغرض: عرض تفاصيل طلب معين
+
+POST    /requests/{request}/approve
+        الاسم: requests.approve
+        الصلاحية: @can('approve', $request)
+        الغرض: الموافقة على طلب (لأمين المخزن)
+
+POST    /requests/{request}/reject
+        الاسم: requests.reject
+        الصلاحية: @can('reject', $request)
+        الغرض: رفض طلب (لأمين المخزن)
+
+POST    /requests/{request}/document
+        الاسم: requests.document
+        الصلاحية: @can('document', $request)
+        الغرض: توثيق طلب (لأمين المخزن)
+
+POST    /requests/{request}/cancel
+        الاسم: requests.cancel
+        الصلاحية: @can('cancel', $request)
+        الغرض: إلغاء طلب (للمسوق)
+
+GET     /requests/{request}/pdf
+        الاسم: requests.pdf
+        الصلاحية: @can('view', $request)
+        الغرض: طباعة PDF
+
+GET     /requests/{request}/documentation
+        الاسم: requests.documentation
+        الصلاحية: @can('view', $request)
+        الغرض: عرض صورة الفاتورة الموقعة
+
+
+================================================================================
+                        🎮 Controller
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ RequestController (مشترك)                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Controllers/RequestController.php
+🎯 المسؤولية: إدارة جميع عمليات الطلبات لجميع الأدوار
+
+📋 الـMethods:
+
+1️⃣ index(Request $request)
+   - الغرض: عرض قائمة الطلبات حسب صلاحيات المستخدم
+   - الصلاحية: $this->authorize('viewAny', MarketerRequest::class)
+   - المعاملات:
+     • status (optional): الفلترة حسب الحالة
+     • marketer_id (optional): الفلترة حسب المسوق (لأمين المخزن)
+     • invoice_number (optional): البحث برقم الفاتورة
+     • from_date, to_date (optional): الفلترة حسب التاريخ
+   
+   - المنطق:
+     ```php
+     $query = MarketerRequest::with('items.product', 'marketer');
+     
+     // الفرق الوحيد بين الأدوار
+     if (auth()->user()->isMarketer()) {
+         $query->where('marketer_id', auth()->id());
+     }
+     
+     // باقي الفلاتر مشتركة
+     $this->applyFilters($query, $request);
+     
+     // البيانات الإضافية
+     $marketers = auth()->user()->isWarehouse() 
+         ? User::where('role_id', 3)->where('is_active', true)->get() 
+         : null;
+     
+     return view('shared.requests.index', [
+         'requests' => $query->paginate(20),
+         'marketers' => $marketers
+     ]);
+     ```
+   
+   - الـView: shared/requests/index.blade.php
+
+2️⃣ create()
+   - الغرض: عرض صفحة إنشاء طلب جديد
+   - الصلاحية: $this->authorize('create', MarketerRequest::class)
+   - البيانات المرسلة:
+     • products: المنتجات النشطة مع المخزون
+     ```php
+     $products = Product::where('is_active', true)
+         ->leftJoin('main_stock', 'products.id', '=', 'main_stock.product_id')
+         ->select('products.*', 'main_stock.quantity as stock')
+         ->get();
+     ```
+   - الـView: marketer/requests/create.blade.php
+
+3️⃣ store(Request $request)
+   - الغرض: حفظ طلب جديد
+   - الصلاحية: $this->authorize('create', MarketerRequest::class)
+   - الـValidation:
+     • items: required|array|min:1
+     • items.*.product_id: required|exists:products,id
+     • items.*.quantity: required|integer|min:1
+     • notes: nullable|string
+   - الـService: RequestService::createRequest()
+   - الإرجاع: redirect()->route('requests.show', $request)
+
+4️⃣ show(MarketerRequest $request)
+   - الغرض: عرض تفاصيل طلب معين
+   - الصلاحية: $this->authorize('view', $request)
+   - الـEager Loading: items.product, marketer, approver, rejecter, documenter
+   - البيانات الإضافية:
+     ```php
+     $stockAvailability = auth()->user()->isWarehouse() && $request->status === 'pending'
+         ? $this->checkStockAvailability($request)
+         : null;
+     ```
+   - الـView: shared/requests/show.blade.php
+
+5️⃣ approve(MarketerRequest $request)
+   - الغرض: الموافقة على طلب معلق
+   - الصلاحية: $this->authorize('approve', $request)
+   - الـService: RequestService::approveRequest($request->id, auth()->id())
+   - الإرجاع: redirect()->back()->with('success', 'تمت الموافقة على الطلب بنجاح')
+
+6️⃣ reject(Request $request, MarketerRequest $marketerRequest)
+   - الغرض: رفض طلب
+   - الصلاحية: $this->authorize('reject', $marketerRequest)
+   - الـValidation:
+     • notes: required|string
+   - الـService: RequestService::rejectRequest($marketerRequest->id, auth()->id(), $request->notes)
+   - الإرجاع: redirect()->back()->with('success', 'تم رفض الطلب بنجاح')
+
+7️⃣ document(Request $request, MarketerRequest $marketerRequest)
+   - الغرض: توثيق طلب موافق عليه
+   - الصلاحية: $this->authorize('document', $marketerRequest)
+   - الـValidation:
+     • stamped_image: required|image|mimes:jpg,jpeg,png,pdf|max:5120
+   - رفع الملف:
+     ```php
+     $path = $request->file('stamped_image')
+         ->store('marketer_requests', 'public');
+     ```
+   - الـService: RequestService::documentRequest($marketerRequest->id, auth()->id(), $path)
+   - الإرجاع: redirect()->back()->with('success', 'تم توثيق الطلب بنجاح')
+
+8️⃣ cancel(Request $request, MarketerRequest $marketerRequest)
+   - الغرض: إلغاء طلب
+   - الصلاحية: $this->authorize('cancel', $marketerRequest)
+   - الـValidation:
+     • notes: required|string
+   - الـService: RequestService::cancelRequest($marketerRequest->id, auth()->id(), $request->notes)
+   - الإرجاع: redirect()->route('requests.index')->with('success', 'تم إلغاء الطلب بنجاح')
+
+9️⃣ pdf(MarketerRequest $request)
+   - الغرض: طباعة PDF للطلب
+   - الصلاحية: $this->authorize('view', $request)
+   - الـService: InvoiceService::generateRequestPdf($request)
+   - الإرجاع: PDF file
+
+🔟 viewDocumentation(MarketerRequest $request)
+   - الغرض: عرض صورة الفاتورة الموقعة
+   - الصلاحية: $this->authorize('view', $request)
+   - التحقق:
+     • status === 'documented'
+     • stamped_image exists
+   - الإرجاع: response()->file(storage_path('app/public/' . $request->stamped_image))
+
+1️⃣1️⃣ applyFilters($query, $request) - private
+   - الغرض: تطبيق الفلاتر المشتركة
+   - المنطق:
+     ```php
+     if ($request->filled('invoice_number')) {
+         $query->where('invoice_number', 'like', '%' . $request->invoice_number . '%');
+     }
+     
+     if ($request->filled('status')) {
+         $query->where('status', $request->status);
+     }
+     
+     if ($request->filled('marketer_id') && auth()->user()->isWarehouse()) {
+         $query->where('marketer_id', $request->marketer_id);
+     }
+     
+     if ($request->filled('from_date')) {
+         $query->whereDate('created_at', '>=', $request->from_date);
+     }
+     
+     if ($request->filled('to_date')) {
+         $query->whereDate('created_at', '<=', $request->to_date);
+     }
+     
+     // الترتيب
+     if (in_array($request->status ?? 'pending', ['pending', 'approved'])) {
+         $query->oldest('updated_at');
+     } else {
+         $query->latest('updated_at');
+     }
+     ```
+
+
+================================================================================
+                        ⚙️ Service
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ RequestService (مشترك)                                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Services/RequestService.php
+🎯 المسؤولية: منطق الأعمال لجميع عمليات الطلبات
+
+📋 الـMethods:
+
+1️⃣ createRequest($marketerId, array $items, $notes = null)
+   - الغرض: إنشاء طلب جديد
+   - الخطوات:
+     1. إنشاء سجل في marketer_requests
+     2. إنشاء سجلات في marketer_request_items
+     3. إرسال إشعار لجميع أمناء المخزن
+   - الإرجاع: MarketerRequest
+   - الـTransaction: DB::transaction()
+
+2️⃣ approveRequest($requestId, $keeperId)
+   - الغرض: الموافقة على طلب معلق
+   - التحقق: status === 'pending'
+   - الخطوات:
+     1. checkStockAvailability()
+     2. reserveStock()
+     3. تحديث marketer_requests
+     4. إرسال إشعار للمسوق
+   - الإرجاع: MarketerRequest
+   - الـTransaction: DB::transaction()
+
+3️⃣ rejectRequest($requestId, $keeperId, $notes)
+   - الغرض: رفض طلب
+   - التحقق: status in ['pending', 'approved']
+   - الخطوات:
+     1. إذا approved: returnStockFromReserved()
+     2. تحديث marketer_requests
+     3. إرسال إشعار للمسوق
+   - الإرجاع: MarketerRequest
+   - الـTransaction: DB::transaction()
+
+4️⃣ documentRequest($requestId, $keeperId, $stampedImage)
+   - الغرض: توثيق طلب موافق عليه
+   - التحقق: status === 'approved'
+   - الخطوات:
+     1. moveStockToActual()
+     2. تحديث marketer_requests
+     3. إنشاء warehouse_stock_log
+     4. إرسال إشعار للمسوق
+   - الإرجاع: MarketerRequest
+   - الـTransaction: DB::transaction()
+
+5️⃣ cancelRequest($requestId, $marketerId, $notes)
+   - الغرض: إلغاء طلب
+   - التحقق: 
+     • marketer_id === $marketerId
+     • status in ['pending', 'approved']
+   - الخطوات:
+     1. إذا approved: returnStockFromReserved()
+     2. تحديث marketer_requests
+   - الإرجاع: MarketerRequest
+   - الـTransaction: DB::transaction()
+
+6️⃣ checkStockAvailability($request) - private
+   - الغرض: فحص توفر المخزون
+   - الاستثناءات: Exception إذا غير متوفر
+
+7️⃣ reserveStock($request) - private
+   - الغرض: حجز المخزون
+   - الخطوات:
+     • decrement main_stock
+     • increment marketer_reserved_stock
+
+8️⃣ moveStockToActual($request) - private
+   - الغرض: نقل من محجوز إلى فعلي
+   - الخطوات:
+     • decrement marketer_reserved_stock
+     • increment marketer_actual_stock
+
+9️⃣ returnStockFromReserved($request) - private
+   - الغرض: إرجاع من محجوز إلى رئيسي
+   - الخطوات:
+     • increment main_stock
+     • decrement marketer_reserved_stock
+
+
+================================================================================
+                        🔐 Policy
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ MarketerRequestPolicy                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Policies/MarketerRequestPolicy.php
+🎯 المسؤولية: التحكم بالصلاحيات لجميع الأدوار
+
+📋 الـMethods:
+
+viewAny(User $user): bool
+   - الجميع يمكنهم رؤية القائمة
+   - return true;
+
+viewAll(User $user): bool
+   - أمين المخزن فقط يرى جميع الطلبات
+   - return $user->role_id === 2;
+
+view(User $user, MarketerRequest $request): bool
+   - المسوق يرى طلباته فقط
+   - أمين المخزن يرى الكل
+   - return $user->role_id === 2 || $user->id === $request->marketer_id;
+
+create(User $user): bool
+   - المسوق فقط ينشئ طلبات
+   - return $user->role_id === 3;
+
+approve(User $user, MarketerRequest $request): bool
+   - أمين المخزن فقط + الحالة pending
+   - return $user->role_id === 2 && $request->status === 'pending';
+
+reject(User $user, MarketerRequest $request): bool
+   - أمين المخزن فقط + الحالة pending أو approved
+   - return $user->role_id === 2 
+       && in_array($request->status, ['pending', 'approved']);
+
+document(User $user, MarketerRequest $request): bool
+   - أمين المخزن فقط + الحالة approved
+   - return $user->role_id === 2 && $request->status === 'approved';
+
+cancel(User $user, MarketerRequest $request): bool
+   - المسوق صاحب الطلب فقط + الحالة pending أو approved
+   - return $user->id === $request->marketer_id 
+       && in_array($request->status, ['pending', 'approved']);
+
+
+================================================================================
+                        📦 Models
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ MarketerRequest                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Models/MarketerRequest.php
+
+📋 الـRelationships:
+- marketer(): belongsTo(User::class, 'marketer_id')
+- items(): hasMany(MarketerRequestItem::class, 'request_id')
+- approver(): belongsTo(User::class, 'approved_by')
+- rejecter(): belongsTo(User::class, 'rejected_by')
+- documenter(): belongsTo(User::class, 'documented_by')
+
+📋 الـCasts:
+- approved_at: datetime
+- rejected_at: datetime
+- documented_at: datetime
+
+📋 الـFillable:
+- invoice_number, marketer_id, status, notes
+- approved_by, approved_at
+- rejected_by, rejected_at
+- documented_by, documented_at, stamped_image
+
+
+================================================================================
+                        📝 Validation Rules
+================================================================================
+
+إنشاء طلب (store):
+- items: required|array|min:1
+- items.*.product_id: required|exists:products,id
+- items.*.quantity: required|integer|min:1
+- notes: nullable|string
+
+رفض/إلغاء (reject/cancel):
+- notes: required|string
+
+توثيق (document):
+- stamped_image: required|image|mimes:jpg,jpeg,png,pdf|max:5120
+
+
+================================================================================
+                        ✅ مزايا البنية المشتركة
+================================================================================
+
+1. ✅ Controller واحد بدلاً من اثنين
+2. ✅ لا تكرار في الكود (DRY)
+3. ✅ Policies واضحة ومركزية
+4. ✅ صيانة أسهل
+5. ✅ Views مشتركة
+6. ✅ Routes أقل وأوضح
+7. ✅ سهولة إضافة أدوار جديدة
+
+
+================================================================================
+انتهى التوثيق
+================================================================================

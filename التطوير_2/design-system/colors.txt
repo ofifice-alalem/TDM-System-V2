@@ -1,0 +1,174 @@
+===========================================
+         نظام الألوان - Color System
+===========================================
+
+## 🎨 الألوان الأساسية (Primary Colors)
+
+### حالات الطلبات/العمليات (Status Colors)
+┌─────────────────────────────────────────────────────────────┐
+│ الحالة          │ اللون      │ Tailwind Class │ Hex Code  │
+├─────────────────────────────────────────────────────────────┤
+│ معلق (Pending)  │ برتقالي    │ orange-500     │ #F97316   │
+│ موافق (Approved)│ أزرق       │ blue-500       │ #3B82F6   │
+│ موثق (Documented)│ أخضر      │ green-500      │ #22C55E   │
+│ ملغي (Cancelled)│ رمادي      │ gray-500       │ #6B7280   │
+│ مرفوض (Rejected)│ أحمر       │ red-500        │ #EF4444   │
+└─────────────────────────────────────────────────────────────┘
+
+### الاستخدام في الكود:
+```html
+<!-- Badge للحالة -->
+<span class="px-3 py-1 rounded-full text-white bg-orange-500">معلق</span>
+<span class="px-3 py-1 rounded-full text-white bg-blue-500">موافق</span>
+<span class="px-3 py-1 rounded-full text-white bg-green-500">موثق</span>
+<span class="px-3 py-1 rounded-full text-white bg-gray-500">ملغي</span>
+<span class="px-3 py-1 rounded-full text-white bg-red-500">مرفوض</span>
+```
+
+## 🔘 ألوان الأزرار (Button Colors)
+
+### أزرار الإجراءات (Action Buttons)
+┌─────────────────────────────────────────────────────────────┐
+│ الإجراء         │ اللون      │ Tailwind Class │ الاستخدام │
+├─────────────────────────────────────────────────────────────┤
+│ إضافة/إنشاء     │ أخضر       │ bg-green-600   │ Create    │
+│ تعديل           │ أزرق       │ bg-blue-600    │ Edit      │
+│ حذف             │ أحمر       │ bg-red-600     │ Delete    │
+│ عرض             │ رمادي      │ bg-gray-600    │ View      │
+│ موافقة          │ أخضر       │ bg-green-600   │ Approve   │
+│ رفض             │ أحمر       │ bg-red-600     │ Reject    │
+│ إلغاء           │ رمادي      │ bg-gray-600    │ Cancel    │
+│ طباعة           │ بنفسجي     │ bg-purple-600  │ Print     │
+│ تصدير Excel     │ أخضر داكن  │ bg-emerald-600 │ Export    │
+└─────────────────────────────────────────────────────────────┘
+
+### الاستخدام في الكود:
+```html
+<!-- زر أساسي -->
+<button class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+    إضافة جديد
+</button>
+
+<!-- زر ثانوي -->
+<button class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg">
+    إلغاء
+</button>
+```
+
+## 📊 ألوان الجداول (Table Colors)
+
+### رأس الجدول (Table Header)
+```html
+<thead class="bg-gray-50 border-b-2 border-gray-200">
+    <tr class="text-gray-700">
+        <!-- ... -->
+    </tr>
+</thead>
+```
+
+### صفوف الجدول (Table Rows)
+```html
+<!-- صف عادي -->
+<tr class="hover:bg-gray-50 border-b border-gray-200">
+
+<!-- صف محدد -->
+<tr class="bg-blue-50 border-b border-blue-200">
+
+<!-- صف خطأ -->
+<tr class="bg-red-50 border-b border-red-200">
+```
+
+## 🔔 ألوان الإشعارات (Notification Colors)
+
+┌─────────────────────────────────────────────────────────────┐
+│ النوع          │ اللون      │ Background     │ Border     │
+├─────────────────────────────────────────────────────────────┤
+│ نجاح (Success) │ أخضر       │ bg-green-50    │ green-200  │
+│ خطأ (Error)    │ أحمر       │ bg-red-50      │ red-200    │
+│ تحذير (Warning)│ برتقالي    │ bg-orange-50   │ orange-200 │
+│ معلومة (Info)  │ أزرق       │ bg-blue-50     │ blue-200   │
+└─────────────────────────────────────────────────────────────┘
+
+```html
+<!-- إشعار نجاح -->
+<div class="bg-green-50 border-r-4 border-green-500 p-4">
+    <p class="text-green-700">تمت العملية بنجاح</p>
+</div>
+```
+
+## 🎯 ألوان الخلفيات (Background Colors)
+
+```css
+/* خلفية الصفحة الرئيسية */
+bg-gray-100
+
+/* خلفية البطاقات */
+bg-white
+
+/* خلفية القوائم الجانبية */
+bg-gray-800
+
+/* خلفية الـ Modal */
+bg-white (المحتوى)
+bg-gray-900/50 (الخلفية الشفافة)
+```
+
+## 📝 ألوان النصوص (Text Colors)
+
+```css
+/* نص أساسي */
+text-gray-900
+
+/* نص ثانوي */
+text-gray-600
+
+/* نص خفيف */
+text-gray-400
+
+/* نص على خلفية داكنة */
+text-white
+
+/* نص الروابط */
+text-blue-600 hover:text-blue-800
+```
+
+## 🔲 ألوان الحدود (Border Colors)
+
+```css
+/* حد عادي */
+border-gray-200
+
+/* حد داكن */
+border-gray-300
+
+/* حد ملون حسب الحالة */
+border-green-500  /* نجاح */
+border-red-500    /* خطأ */
+border-blue-500   /* معلومة */
+```
+
+## 💡 ملاحظات الاستخدام
+
+1. **الاتساق**: استخدم نفس اللون لنفس الحالة في كل المشروع
+2. **التباين**: تأكد من وضوح النص على الخلفية (WCAG AA)
+3. **الوضع الداكن**: جميع الألوان تدعم Dark Mode
+4. **RTL**: الألوان تعمل بشكل صحيح مع الاتجاه من اليمين لليسار
+
+## 🎨 Tailwind Config
+
+```javascript
+// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        primary: '#3B82F6',    // أزرق
+        success: '#22C55E',    // أخضر
+        warning: '#F97316',    // برتقالي
+        danger: '#EF4444',     // أحمر
+        info: '#3B82F6',       // أزرق
+      }
+    }
+  }
+}
+```
