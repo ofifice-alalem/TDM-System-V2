@@ -172,14 +172,9 @@ GET     /requests/{request}/documentation
      ```
    - الـView: marketer/requests/create.blade.php
 
-3️⃣ store(Request $request)
+3️⃣ store(StoreRequestRequest $request)
    - الغرض: حفظ طلب جديد
-   - الصلاحية: $this->authorize('create', MarketerRequest::class)
-   - الـValidation:
-     • items: required|array|min:1
-     • items.*.product_id: required|exists:products,id
-     • items.*.quantity: required|integer|min:1
-     • notes: nullable|string
+   - الـForm Request: StoreRequestRequest (يحتوي على validation + authorization)
    - الـService: RequestService::createRequest()
    - الإرجاع: redirect()->route('requests.show', $request)
 
@@ -201,19 +196,15 @@ GET     /requests/{request}/documentation
    - الـService: RequestService::approveRequest($request->id, auth()->id())
    - الإرجاع: redirect()->back()->with('success', 'تمت الموافقة على الطلب بنجاح')
 
-6️⃣ reject(Request $request, MarketerRequest $marketerRequest)
+6️⃣ reject(RejectRequestRequest $request, MarketerRequest $marketerRequest)
    - الغرض: رفض طلب
-   - الصلاحية: $this->authorize('reject', $marketerRequest)
-   - الـValidation:
-     • notes: required|string
+   - الـForm Request: RejectRequestRequest
    - الـService: RequestService::rejectRequest($marketerRequest->id, auth()->id(), $request->notes)
    - الإرجاع: redirect()->back()->with('success', 'تم رفض الطلب بنجاح')
 
-7️⃣ document(Request $request, MarketerRequest $marketerRequest)
+7️⃣ document(DocumentRequestRequest $request, MarketerRequest $marketerRequest)
    - الغرض: توثيق طلب موافق عليه
-   - الصلاحية: $this->authorize('document', $marketerRequest)
-   - الـValidation:
-     • stamped_image: required|image|mimes:jpg,jpeg,png,pdf|max:5120
+   - الـForm Request: DocumentRequestRequest
    - رفع الملف:
      ```php
      $path = $request->file('stamped_image')
@@ -222,11 +213,9 @@ GET     /requests/{request}/documentation
    - الـService: RequestService::documentRequest($marketerRequest->id, auth()->id(), $path)
    - الإرجاع: redirect()->back()->with('success', 'تم توثيق الطلب بنجاح')
 
-8️⃣ cancel(Request $request, MarketerRequest $marketerRequest)
+8️⃣ cancel(CancelRequestRequest $request, MarketerRequest $marketerRequest)
    - الغرض: إلغاء طلب
-   - الصلاحية: $this->authorize('cancel', $marketerRequest)
-   - الـValidation:
-     • notes: required|string
+   - الـForm Request: CancelRequestRequest
    - الـService: RequestService::cancelRequest($marketerRequest->id, auth()->id(), $request->notes)
    - الإرجاع: redirect()->route('requests.index')->with('success', 'تم إلغاء الطلب بنجاح')
 
@@ -397,21 +386,239 @@ create(User $user): bool
 
 approve(User $user, MarketerRequest $request): bool
    - أمين المخزن فقط + الحالة pending
-   - return $user->role_id === 2 && $request->status === 'pending';
+   - return $user->role_id === 2 && $request->status === RequestStatus::PENDING;
 
 reject(User $user, MarketerRequest $request): bool
    - أمين المخزن فقط + الحالة pending أو approved
    - return $user->role_id === 2 
-       && in_array($request->status, ['pending', 'approved']);
+       && in_array($request->status, [RequestStatus::PENDING, RequestStatus::APPROVED]);
 
 document(User $user, MarketerRequest $request): bool
    - أمين المخزن فقط + الحالة approved
-   - return $user->role_id === 2 && $request->status === 'approved';
+   - return $user->role_id === 2 && $request->status === RequestStatus::APPROVED;
 
 cancel(User $user, MarketerRequest $request): bool
    - المسوق صاحب الطلب فقط + الحالة pending أو approved
    - return $user->id === $request->marketer_id 
-       && in_array($request->status, ['pending', 'approved']);
+       && in_array($request->status, [RequestStatus::PENDING, RequestStatus::APPROVED]);
+
+
+================================================================================
+                        📦 Models & Enums
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ RequestStatus Enum                                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Enums/RequestStatus.php
+
+```php
+enum RequestStatus: string
+{
+    case PENDING = 'pending';
+    case APPROVED = 'approved';
+    case REJECTED = 'rejected';
+    case CANCELLED = 'cancelled';
+    case DOCUMENTED = 'documented';
+    
+    public function label(): string
+    {
+        return match($this) {
+            self::PENDING => 'معلق',
+            self::APPROVED => 'موافق عليه',
+            self::REJECTED => 'مرفوض',
+            self::CANCELLED => 'ملغي',
+            self::DOCUMENTED => 'موثق',
+        };
+    }
+    
+    public function color(): string
+    {
+        return match($this) {
+            self::PENDING => 'orange',
+            self::APPROVED => 'blue',
+            self::REJECTED => 'red',
+            self::CANCELLED => 'gray',
+            self::DOCUMENTED => 'green',
+        };
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ MarketerRequest Model                                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Models/MarketerRequest.php
+
+📋 الـCasts:
+```php
+protected $casts = [
+    'status' => RequestStatus::class,
+    'approved_at' => 'datetime',
+    'rejected_at' => 'datetime',
+    'documented_at' => 'datetime',
+];
+```
+
+📋 الـFillable:
+- invoice_number, marketer_id, notes
+- approved_by, approved_at
+- rejected_by, rejected_at
+- documented_by, documented_at, stamped_image
+
+⚠️ ملاحظة: status يتم تعيينه باستخدام RequestStatus Enum
+
+📋 الاستخدام:
+```php
+// إنشاء
+$request->status = RequestStatus::PENDING;
+
+// مقارنة
+if ($request->status === RequestStatus::APPROVED) { ... }
+
+// عرض التسمية
+{{ $request->status->label() }}
+
+// عرض اللون
+<span class="badge-{{ $request->status->color() }}">
+    {{ $request->status->label() }}
+</span>
+```
+
+
+================================================================================
+                        📝 Form Requests
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1️⃣ StoreRequestRequest                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/StoreRequestRequest.php
+
+```php
+class StoreRequestRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('create', MarketerRequest::class);
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'notes' => 'nullable|string|max:1000',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'items.required' => 'يجب اختيار منتج واحد على الأقل',
+        ];
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2️⃣ RejectRequestRequest                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/RejectRequestRequest.php
+
+```php
+class RejectRequestRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('reject', $this->route('request'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'notes' => 'required|string|max:1000',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'notes.required' => 'يجب كتابة سبب الرفض',
+        ];
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3️⃣ DocumentRequestRequest                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/DocumentRequestRequest.php
+
+```php
+class DocumentRequestRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('document', $this->route('request'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'stamped_image' => 'required|image|mimes:jpg,jpeg,png,pdf|max:5120',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'stamped_image.required' => 'يجب رفع صورة الفاتورة الموقعة',
+            'stamped_image.max' => 'حجم الملف يجب ألا يتجاوز 5MB',
+        ];
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 4️⃣ CancelRequestRequest                                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/CancelRequestRequest.php
+
+```php
+class CancelRequestRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('cancel', $this->route('request'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'notes' => 'required|string|max:1000',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'notes.required' => 'يجب كتابة سبب الإلغاء',
+        ];
+    }
+}
+```
 
 
 ================================================================================
@@ -432,15 +639,22 @@ cancel(User $user, MarketerRequest $request): bool
 - documenter(): belongsTo(User::class, 'documented_by')
 
 📋 الـCasts:
-- approved_at: datetime
-- rejected_at: datetime
-- documented_at: datetime
+```php
+protected $casts = [
+    'status' => RequestStatus::class,
+    'approved_at' => 'datetime',
+    'rejected_at' => 'datetime',
+    'documented_at' => 'datetime',
+];
+```
 
 📋 الـFillable:
-- invoice_number, marketer_id, status, notes
+- invoice_number, marketer_id, notes
 - approved_by, approved_at
 - rejected_by, rejected_at
 - documented_by, documented_at, stamped_image
+
+⚠️ ملاحظة: status يتم تعيينه باستخدام RequestStatus Enum
 
 
 ================================================================================
