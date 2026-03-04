@@ -78,3 +78,11 @@ Stack trace:
 Stack trace:
 #0 {main}
   thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/logging.php on line 21
+[04-Mar-2026 09:52:28 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/app.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/app.php on line 16
+[04-Mar-2026 09:53:25 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/services.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/services.php on line 18

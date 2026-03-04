@@ -16,6 +16,9 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
         Route::post('/', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('store');
         Route::get('/{user}/edit', [\App\Http\Controllers\Admin\UserController::class, 'edit'])->name('edit');
         Route::patch('/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('update');
+        Route::delete('/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/restore', [\App\Http\Controllers\Admin\UserController::class, 'restore'])->name('restore');
+        Route::delete('/{id}/force', [\App\Http\Controllers\Admin\UserController::class, 'forceDestroy'])->name('force-destroy');
         Route::get('/{user}/details', [\App\Http\Controllers\Admin\MarketerDetailsController::class, 'show'])->name('details');
     });
     
