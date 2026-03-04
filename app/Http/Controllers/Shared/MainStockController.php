@@ -10,13 +10,6 @@ use Illuminate\Support\Facades\Auth;
 
 class MainStockController extends Controller
 {
-    public function __construct()
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(2);
-        }
-    }
-
     public function index(Request $request)
     {
         $query = Product::with('mainStock')

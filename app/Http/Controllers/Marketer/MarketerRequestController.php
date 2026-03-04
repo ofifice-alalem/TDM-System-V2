@@ -16,11 +16,7 @@ class MarketerRequestController extends Controller
         private MarketerRequestService $service,
         private InvoiceController $invoiceController
     ) {
-        // Temporary: Auto-login as marketer (ID=3)
-        if (!Auth::check()) {
-            Auth::loginUsingId(3);
-        }
-    }
+        // Temporary: Auto-login as marketer (ID=3)}
 
     public function index(Request $request)
     {

@@ -9,12 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class InvoiceDiscountController extends Controller
 {
-    public function __construct()
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(1); // Admin
-        }
-    }
 
     public function index(Request $request)
     {

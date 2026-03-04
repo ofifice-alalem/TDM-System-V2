@@ -12,11 +12,7 @@ use Illuminate\Support\Facades\DB;
 class WarehouseSalesController extends Controller
 {
     public function __construct(private WarehouseSalesService $service)
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(2);
-        }
-    }
+    {}
 
     public function index(Request $request)
     {

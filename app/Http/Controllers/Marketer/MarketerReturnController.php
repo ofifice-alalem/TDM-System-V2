@@ -16,11 +16,7 @@ class MarketerReturnController extends Controller
         private MarketerReturnService $service,
         private InvoiceController $invoiceController
     )
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(3);
-        }
-    }
+    {}
 
     public function index(Request $request)
     {

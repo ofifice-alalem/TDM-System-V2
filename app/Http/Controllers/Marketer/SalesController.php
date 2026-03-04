@@ -14,11 +14,7 @@ use Illuminate\Support\Facades\DB;
 class SalesController extends Controller
 {
     public function __construct(private SalesService $service)
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(3);
-        }
-    }
+    {}
 
     public function index(Request $request)
     {

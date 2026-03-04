@@ -12,11 +12,7 @@ use Illuminate\Support\Facades\Storage;
 class WarehousePaymentController extends Controller
 {
     public function __construct(private WarehousePaymentService $service)
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(2);
-        }
-    }
+    {}
 
     public function index(Request $request)
     {

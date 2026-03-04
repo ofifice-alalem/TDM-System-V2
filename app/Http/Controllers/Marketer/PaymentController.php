@@ -13,11 +13,7 @@ use Illuminate\Support\Facades\Auth;
 class PaymentController extends Controller
 {
     public function __construct(private PaymentService $service)
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(3);
-        }
-    }
+    {}
 
     public function index(Request $request)
     {

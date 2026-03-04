@@ -15,11 +15,7 @@ class WarehouseReturnController extends Controller
         private WarehouseReturnService $service,
         private InvoiceController $invoiceController
     )
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(2);
-        }
-    }
+    {}
 
     public function index(Request $request)
     {

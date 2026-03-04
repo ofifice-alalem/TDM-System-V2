@@ -11,11 +11,7 @@ use Illuminate\Support\Facades\Auth;
 class WithdrawalController extends Controller
 {
     public function __construct(private WithdrawalService $service)
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(3);
-        }
-    }
+    {}
 
     public function index(Request $request)
     {

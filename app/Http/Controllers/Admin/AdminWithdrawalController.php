@@ -13,9 +13,6 @@ class AdminWithdrawalController extends Controller
 {
     public function __construct(private AdminWithdrawalService $service)
     {
-        if (!Auth::check()) {
-            Auth::loginUsingId(1);
-        }
     }
 
     public function index(Request $request)
