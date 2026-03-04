@@ -43,24 +43,4 @@
             </button>
         </div>
     </form>
-    
-    <script>
-        // تحديث CSRF token عند تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', function() {
-            fetch('{{ route('login') }}', {
-                method: 'HEAD',
-                credentials: 'same-origin'
-            }).then(() => {
-                // تحديث الصفحة لتحديث الـ token إذا كانت منتهية
-                const form = document.getElementById('loginForm');
-                const csrfToken = document.querySelector('meta[name="csrf-token"]');
-                if (csrfToken) {
-                    const tokenInput = form.querySelector('input[name="_token"]');
-                    if (tokenInput) {
-                        tokenInput.value = csrfToken.content;
-                    }
-                }
-            });
-        });
-    </script>
 </x-guest-layout>

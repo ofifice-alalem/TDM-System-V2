@@ -542,18 +542,19 @@
     </script>
     
     <script>
-        // مراقبة انتهاء الجلسة وإعادة تحميل الصفحة عند الحاجة
-        setInterval(function() {
-            fetch('/dashboard', {
-                method: 'HEAD',
-                credentials: 'same-origin'
-            }).catch(() => {
-                // إذا فشل الطلب، قد تكون الجلسة منتهية
-                if (window.location.pathname !== '/login') {
-                    window.location.reload();
-                }
-            });
-        }, 300000); // كل 5 دقائق
+        // Prevent 419 error after session expiry
+        if (performance.navigation.type === 2 || document.referrer.includes('/login')) {
+            // Page loaded from back/forward or after login - reload to get fresh CSRF
+            if (sessionStorage.getItem('needsReload') === 'true') {
+                sessionStorage.removeItem('needsReload');
+                window.location.reload(true);
+            }
+        }
+        
+        // Mark for reload on next visit if coming from login
+        if (window.location.pathname !== '/login' && document.referrer.includes('/login')) {
+            sessionStorage.setItem('needsReload', 'true');
+        }
     </script>
     @stack('scripts')
 </body>
