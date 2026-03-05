@@ -27,9 +27,9 @@
             </h1>
         </div>
 
-        {{-- Search Bar --}}
-        <div class="animate-fade-in">
-            <form method="GET" action="{{ request()->routeIs('marketer.*') ? route('marketer.stores.index') : (request()->routeIs('warehouse.*') ? route('warehouse.stores.index') : route('admin.stores.index')) }}" class="max-w-2xl mr-auto">
+        {{-- Search Bar & View Toggle --}}
+        <div class="animate-fade-in flex items-center gap-4">
+            <form method="GET" action="{{ request()->routeIs('marketer.*') ? route('marketer.stores.index') : (request()->routeIs('warehouse.*') ? route('warehouse.stores.index') : route('admin.stores.index')) }}" class="flex-1 max-w-2xl">
                 <div class="relative">
                     <input 
                         type="text" 
@@ -43,6 +43,14 @@
                     </button>
                 </div>
             </form>
+            <div class="flex gap-2">
+                <button onclick="setView('table')" id="tableViewBtn" class="w-12 h-12 bg-primary-600 text-white rounded-xl flex items-center justify-center hover:bg-primary-700 transition-all">
+                    <i data-lucide="table" class="w-5 h-5"></i>
+                </button>
+                <button onclick="setView('grid')" id="gridViewBtn" class="w-12 h-12 bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-gray-400 rounded-xl flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+                    <i data-lucide="grid" class="w-5 h-5"></i>
+                </button>
+            </div>
         </div>
 
         {{-- Stats Summary --}}
@@ -82,8 +90,77 @@
             </div>
         </div>
 
-        {{-- Stores Grid --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-up">
+        {{-- Stores Table View --}}
+        <div id="tableView" class="bg-white dark:bg-dark-card rounded-3xl shadow-lg border border-gray-200 dark:border-dark-border overflow-hidden animate-slide-up">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-dark-bg border-b border-gray-200 dark:border-dark-border">
+                        <tr>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">#</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">اسم المتجر</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">المالك</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الموقع</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الدين</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الحالة</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
+                        @forelse($stores as $index => $store)
+                        <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
+                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white font-bold">{{ $index + 1 }}</td>
+                            <td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">{{ $store->name }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $store->owner_name }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $store->location ?? '-' }}</td>
+                            <td class="px-6 py-4">
+                                <span class="text-sm font-bold {{ $store->total_debt > 0 ? 'text-red-600 dark:text-red-400' : ($store->total_debt < 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white') }}">
+                                    {{ number_format(abs($store->total_debt), 2) }} دينار
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($store->is_active)
+                                <span class="px-3 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-bold border border-emerald-100 dark:border-emerald-500/30 inline-flex items-center gap-1">
+                                    <i data-lucide="check-circle" class="w-3 h-3"></i>
+                                    نشط
+                                </span>
+                                @else
+                                <span class="px-3 py-1 bg-gray-50 dark:bg-gray-500/10 text-gray-600 dark:text-gray-400 rounded-full text-xs font-bold border border-gray-100 dark:border-gray-500/30 inline-flex items-center gap-1">
+                                    <i data-lucide="x-circle" class="w-3 h-3"></i>
+                                    غير نشط
+                                </span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center justify-center gap-2">
+                                    <a href="{{ request()->routeIs('marketer.*') ? route('marketer.stores.show', $store) : (request()->routeIs('warehouse.*') ? route('warehouse.stores.show', $store) : route('admin.stores.show', $store)) }}" class="w-9 h-9 bg-primary-100 dark:bg-primary-500/10 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400 hover:bg-primary-200 dark:hover:bg-primary-500/20 transition-all">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </a>
+                                    @if(request()->routeIs('admin.*') || request()->routeIs('warehouse.*'))
+                                    <a href="{{ request()->routeIs('admin.*') ? route('admin.stores.edit', $store) : route('warehouse.stores.edit', $store) }}" class="w-9 h-9 bg-amber-100 dark:bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-600 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-500/20 transition-all">
+                                        <i data-lucide="edit" class="w-4 h-4"></i>
+                                    </a>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="7" class="px-6 py-16 text-center">
+                                <div class="w-24 h-24 bg-gray-100 dark:bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i data-lucide="store" class="w-12 h-12 text-gray-400 dark:text-gray-600"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">لا توجد متاجر</h3>
+                                <p class="text-gray-500 dark:text-dark-muted">لم يتم إضافة أي متاجر بعد</p>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- Stores Grid View --}}
+        <div id="gridView" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-up hidden">
             @forelse($stores as $store)
                 <div class="bg-white dark:bg-dark-card rounded-3xl p-6 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
                     
@@ -185,7 +262,35 @@
 
 @push('scripts')
 <script>
+    function setView(view) {
+        const tableView = document.getElementById('tableView');
+        const gridView = document.getElementById('gridView');
+        const tableBtn = document.getElementById('tableViewBtn');
+        const gridBtn = document.getElementById('gridViewBtn');
+        
+        if (view === 'table') {
+            tableView.classList.remove('hidden');
+            gridView.classList.add('hidden');
+            tableBtn.classList.add('bg-primary-600', 'text-white');
+            tableBtn.classList.remove('bg-gray-100', 'dark:bg-dark-bg', 'text-gray-600', 'dark:text-gray-400');
+            gridBtn.classList.remove('bg-primary-600', 'text-white');
+            gridBtn.classList.add('bg-gray-100', 'dark:bg-dark-bg', 'text-gray-600', 'dark:text-gray-400');
+            localStorage.setItem('storesView', 'table');
+        } else {
+            tableView.classList.add('hidden');
+            gridView.classList.remove('hidden');
+            gridBtn.classList.add('bg-primary-600', 'text-white');
+            gridBtn.classList.remove('bg-gray-100', 'dark:bg-dark-bg', 'text-gray-600', 'dark:text-gray-400');
+            tableBtn.classList.remove('bg-primary-600', 'text-white');
+            tableBtn.classList.add('bg-gray-100', 'dark:bg-dark-bg', 'text-gray-600', 'dark:text-gray-400');
+            localStorage.setItem('storesView', 'grid');
+        }
+        lucide.createIcons();
+    }
+    
     document.addEventListener('DOMContentLoaded', function() {
+        const savedView = localStorage.getItem('storesView') || 'table';
+        setView(savedView);
         lucide.createIcons();
     });
 </script>
