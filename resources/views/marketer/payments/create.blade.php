@@ -34,14 +34,11 @@
                         
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">المتجر</label>
-                            <select name="store_id" id="store-select" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all" required>
-                                <option value="">اختر المتجر</option>
-                                @foreach($stores as $store)
-                                    <option value="{{ $store->id }}" data-debt="{{ $store->debt }}">
-                                        {{ $store->name }} - الدين: {{ number_format($store->debt, 2) }} د.ل
-                                    </option>
-                                @endforeach
-                            </select>
+                            <div class="relative">
+                                <input type="text" id="store-search" autocomplete="off" placeholder="ابحث عن المتجر..." class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all" required>
+                                <input type="hidden" name="store_id" id="store-id" required>
+                                <div id="store-dropdown" class="hidden absolute z-50 w-full mt-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-60 overflow-y-auto"></div>
+                            </div>
                             <div id="debt-display" class="hidden mt-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-3">
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm font-bold text-amber-700 dark:text-amber-400">الدين الحالي:</span>
@@ -112,25 +109,78 @@
 
 @push('scripts')
 <script>
+const stores = [
+    @foreach($stores as $store)
+        { id: {{ $store->id }}, name: '{{ $store->name }}', owner: '{{ $store->owner_name }}', debt: {{ $store->debt }} },
+    @endforeach
+];
+
 document.addEventListener('DOMContentLoaded', function() {
     lucide.createIcons();
     
-    const storeSelect = document.getElementById('store-select');
+    const searchInput = document.getElementById('store-search');
+    const storeIdInput = document.getElementById('store-id');
+    const dropdown = document.getElementById('store-dropdown');
     const debtDisplay = document.getElementById('debt-display');
     const debtAmount = document.getElementById('debt-amount');
     const amountInput = document.getElementById('amount-input');
     
-    storeSelect.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        const debt = parseFloat(selectedOption.dataset.debt || 0);
+    searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        storeIdInput.value = '';
+        debtDisplay.classList.add('hidden');
         
-        if (this.value && debt > 0) {
-            debtDisplay.classList.remove('hidden');
-            debtAmount.textContent = debt.toFixed(2) + ' د.ل';
-            amountInput.max = debt;
-        } else {
-            debtDisplay.classList.add('hidden');
-            amountInput.max = '';
+        if (query.length === 0) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+        
+        const filtered = stores.filter(store => 
+            store.name.toLowerCase().includes(query) || 
+            store.owner.toLowerCase().includes(query)
+        );
+        
+        if (filtered.length === 0) {
+            dropdown.innerHTML = '<div class="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">لا توجد نتائج</div>';
+            dropdown.classList.remove('hidden');
+            return;
+        }
+        
+        dropdown.innerHTML = filtered.map(store => `
+            <div class="store-option px-4 py-3 hover:bg-gray-100 dark:hover:bg-dark-bg cursor-pointer border-b border-gray-100 dark:border-dark-border last:border-0" data-id="${store.id}" data-name="${store.name} - ${store.owner}" data-debt="${store.debt}">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-gray-900 dark:text-white text-sm">${store.name}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">${store.owner}</div>
+                    </div>
+                    <div class="text-amber-600 dark:text-amber-400 font-bold text-sm">${store.debt.toFixed(2)} د.ل</div>
+                </div>
+            </div>
+        `).join('');
+        dropdown.classList.remove('hidden');
+        
+        document.querySelectorAll('.store-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const debt = parseFloat(this.dataset.debt);
+                storeIdInput.value = this.dataset.id;
+                searchInput.value = this.dataset.name;
+                dropdown.classList.add('hidden');
+                
+                if (debt > 0) {
+                    debtDisplay.classList.remove('hidden');
+                    debtAmount.textContent = debt.toFixed(2) + ' د.ل';
+                    amountInput.max = debt;
+                } else {
+                    debtDisplay.classList.add('hidden');
+                    amountInput.max = '';
+                }
+            });
+        });
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
         }
     });
     
