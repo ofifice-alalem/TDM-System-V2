@@ -59,18 +59,18 @@ class StoreController extends Controller
     {
         $search = $request->get('search');
         
-        $stores = Store::query()
+        $query = Store::query()
             ->when($search, function($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
                       ->orWhere('owner_name', 'like', "%{$search}%")
                       ->orWhere('location', 'like', "%{$search}%");
             })
-            ->withCount('salesInvoices')
-            ->get()
-            ->map(function($store) {
-                $store->total_debt = $this->calculateDebt($store->id);
-                return $store;
-            });
+            ->withCount('salesInvoices');
+        
+        $stores = $query->paginate(50)->through(function($store) {
+            $store->total_debt = $this->calculateDebt($store->id);
+            return $store;
+        });
 
         $totalDebt = SalesInvoice::where('status', 'approved')->sum('total_amount');
         $totalReturns = SalesReturn::where('status', 'approved')->sum('total_amount');

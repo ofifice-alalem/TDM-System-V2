@@ -157,6 +157,11 @@
                     </tbody>
                 </table>
             </div>
+            @if($stores->hasPages())
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-dark-border">
+                {{ $stores->links() }}
+            </div>
+            @endif
         </div>
 
         {{-- Stores Grid View --}}
@@ -256,6 +261,12 @@
                 </div>
             @endforelse
         </div>
+
+        @if($stores->hasPages())
+        <div class="flex justify-center mt-6">
+            {{ $stores->links() }}
+        </div>
+        @endif
 
     </div>
 </div>

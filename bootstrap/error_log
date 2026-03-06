@@ -6,3 +6,7 @@ Stack trace:
 Stack trace:
 #0 {main}
   thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/bootstrap/app.php on line 7
+[05-Mar-2026 22:35:05 UTC] PHP Fatal error:  Uncaught Error: Class "Illuminate\Foundation\Application" not found in /home/motafwi1/etc/tdm.motafwiqon.com.ly/bootstrap/app.php:7
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/bootstrap/app.php on line 7
