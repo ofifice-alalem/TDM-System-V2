@@ -26,6 +26,8 @@ class Store extends Model
 
     public function getTotalDebtAttribute()
     {
-        return $this->debtLedger()->sum('amount');
+        return $this->debtLedger()
+            ->latest('id')
+            ->value('balance_after') ?? 0;
     }
 }

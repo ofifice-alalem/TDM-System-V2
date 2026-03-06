@@ -7,6 +7,7 @@ use App\Models\Store;
 use App\Models\SalesInvoice;
 use App\Models\SalesReturn;
 use App\Models\StorePayment;
+use App\Models\StoreDebtLedger;
 use Illuminate\Http\Request;
 
 class StoreController extends Controller
@@ -72,10 +73,14 @@ class StoreController extends Controller
             return $store;
         });
 
-        $totalDebt = SalesInvoice::where('status', 'approved')->sum('total_amount');
-        $totalReturns = SalesReturn::where('status', 'approved')->sum('total_amount');
-        $totalPayments = StorePayment::where('status', 'approved')->sum('amount');
-        $totalRemaining = $totalDebt - $totalReturns - $totalPayments;
+        $totalRemaining = StoreDebtLedger::whereIn('id', function($query) {
+            $query->selectRaw('MAX(id)')
+                ->from('store_debt_ledger')
+                ->groupBy('store_id');
+        })->sum('balance_after');
+
+        $totalDebt = StoreDebtLedger::where('entry_type', 'sale')->sum('amount');
+        $totalPayments = abs(StoreDebtLedger::whereIn('entry_type', ['payment', 'return'])->sum('amount'));
 
         return view('shared.stores.index', compact('stores', 'search', 'totalDebt', 'totalPayments', 'totalRemaining'));
     }
@@ -163,18 +168,8 @@ class StoreController extends Controller
 
     private function calculateDebt($storeId)
     {
-        $sales = SalesInvoice::where('store_id', $storeId)
-            ->where('status', 'approved')
-            ->sum('total_amount');
-        
-        $returns = SalesReturn::where('store_id', $storeId)
-            ->where('status', 'approved')
-            ->sum('total_amount');
-        
-        $payments = StorePayment::where('store_id', $storeId)
-            ->where('status', 'approved')
-            ->sum('amount');
-        
-        return $sales - $returns - $payments;
+        return StoreDebtLedger::where('store_id', $storeId)
+            ->latest('id')
+            ->value('balance_after') ?? 0;
     }
 }

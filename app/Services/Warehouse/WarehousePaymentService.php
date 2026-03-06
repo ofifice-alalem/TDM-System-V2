@@ -24,11 +24,16 @@ class WarehousePaymentService
                 'confirmed_at' => now(),
             ]);
 
+            $lastBalance = StoreDebtLedger::where('store_id', $payment->store_id)
+                ->latest('id')
+                ->value('balance_after') ?? 0;
+
             StoreDebtLedger::create([
                 'store_id' => $payment->store_id,
                 'entry_type' => 'payment',
                 'payment_id' => $payment->id,
                 'amount' => -$payment->amount,
+                'balance_after' => $lastBalance - $payment->amount,
             ]);
 
             $commissionRate = $payment->marketer->commission_rate ?? 0;

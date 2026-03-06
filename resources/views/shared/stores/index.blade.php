@@ -72,7 +72,7 @@
                         <i data-lucide="check-circle" class="w-7 h-7"></i>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-bold uppercase tracking-wider">إجمالي المدفوع</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 font-bold uppercase tracking-wider">إجمالي المدفوع والمرتجع</p>
                         <p class="text-2xl font-black text-gray-900 dark:text-white">{{ number_format($totalPayments, 2) }} <span class="text-sm text-gray-500">دينار</span></p>
                     </div>
                 </div>

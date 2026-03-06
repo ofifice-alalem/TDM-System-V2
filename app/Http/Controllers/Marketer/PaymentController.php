@@ -63,7 +63,9 @@ class PaymentController extends Controller
         $stores = Store::where('is_active', true)
             ->get()
             ->map(function($store) {
-                $store->debt = StoreDebtLedger::where('store_id', $store->id)->sum('amount');
+                $store->debt = StoreDebtLedger::where('store_id', $store->id)
+                    ->latest('id')
+                    ->value('balance_after') ?? 0;
                 return $store;
             })
             ->filter(fn($store) => $store->debt > 0);
@@ -129,7 +131,9 @@ class PaymentController extends Controller
 
     public function getStoreDebt($storeId)
     {
-        $debt = StoreDebtLedger::where('store_id', $storeId)->sum('amount');
+        $debt = StoreDebtLedger::where('store_id', $storeId)
+            ->latest('id')
+            ->value('balance_after') ?? 0;
         return response()->json(['debt' => max(0, $debt)]);
     }
 }

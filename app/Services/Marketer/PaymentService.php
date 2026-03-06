@@ -45,7 +45,9 @@ class PaymentService
 
     private function getStoreDebt($storeId)
     {
-        return StoreDebtLedger::where('store_id', $storeId)->sum('amount');
+        return StoreDebtLedger::where('store_id', $storeId)
+            ->latest('id')
+            ->value('balance_after') ?? 0;
     }
 
     private function generatePaymentNumber()

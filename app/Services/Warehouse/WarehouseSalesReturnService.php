@@ -35,11 +35,16 @@ class WarehouseSalesReturnService
             StoreReturnPendingStock::where('return_id', $return->id)->delete();
 
             // Record debt reduction
+            $lastBalance = StoreDebtLedger::where('store_id', $return->store_id)
+                ->latest('id')
+                ->value('balance_after') ?? 0;
+            
             StoreDebtLedger::create([
                 'store_id' => $return->store_id,
                 'entry_type' => 'return',
                 'return_id' => $return->id,
                 'amount' => -$return->total_amount,
+                'balance_after' => $lastBalance - $return->total_amount,
             ]);
 
             $return->update([
