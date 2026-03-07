@@ -152,15 +152,15 @@ class StoreController extends Controller
         $debt = $this->calculateDebt($store->id);
         
         $stats = [
-            'total_sales' => SalesInvoice::where('store_id', $store->id)
-                ->where('status', 'approved')
-                ->sum('total_amount'),
-            'total_returns' => SalesReturn::where('store_id', $store->id)
-                ->where('status', 'approved')
-                ->sum('total_amount'),
-            'total_payments' => StorePayment::where('store_id', $store->id)
-                ->where('status', 'approved')
+            'total_sales' => StoreDebtLedger::where('store_id', $store->id)
+                ->where('entry_type', 'sale')
                 ->sum('amount'),
+            'total_returns' => abs(StoreDebtLedger::where('store_id', $store->id)
+                ->where('entry_type', 'return')
+                ->sum('amount')),
+            'total_payments' => abs(StoreDebtLedger::where('store_id', $store->id)
+                ->where('entry_type', 'payment')
+                ->sum('amount')),
         ];
 
         return view('shared.stores.show', compact('store', 'debt', 'transactions', 'stats'));
