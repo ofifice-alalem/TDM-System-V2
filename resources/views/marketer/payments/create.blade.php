@@ -27,7 +27,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2">
-                <form action="{{ route('marketer.payments.store') }}" method="POST">
+                <form action="{{ route('marketer.payments.store') }}" method="POST" id="payment-form">
                     @csrf
                     
                     <div class="bg-white dark:bg-dark-card rounded-[2rem] p-6 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up space-y-6">
@@ -46,8 +46,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <input type="hidden" name="keeper_id" value="2">
 
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">المبلغ المسدد</label>
@@ -111,19 +109,36 @@
 <script>
 const stores = [
     @foreach($stores as $store)
-        { id: {{ $store->id }}, name: '{{ $store->name }}', owner: '{{ $store->owner_name }}', debt: {{ $store->debt }} },
+        { id: {{ $store->id }}, name: '{{ addslashes($store->name) }}', owner: '{{ addslashes($store->owner_name) }}', debt: {{ $store->debt }} },
     @endforeach
 ];
 
 document.addEventListener('DOMContentLoaded', function() {
     lucide.createIcons();
     
+    const form = document.getElementById('payment-form');
     const searchInput = document.getElementById('store-search');
     const storeIdInput = document.getElementById('store-id');
     const dropdown = document.getElementById('store-dropdown');
     const debtDisplay = document.getElementById('debt-display');
     const debtAmount = document.getElementById('debt-amount');
     const amountInput = document.getElementById('amount-input');
+    
+    // Prevent form submission if store not selected
+    form.addEventListener('submit', function(e) {
+        if (!storeIdInput.value) {
+            e.preventDefault();
+            alert('الرجاء اختيار المتجر');
+            return false;
+        }
+        
+        const paymentMethod = form.querySelector('input[name="payment_method"]:checked');
+        if (!paymentMethod) {
+            e.preventDefault();
+            alert('الرجاء اختيار طريقة الدفع');
+            return false;
+        }
+    });
     
     searchInput.addEventListener('input', function() {
         const query = this.value.toLowerCase();

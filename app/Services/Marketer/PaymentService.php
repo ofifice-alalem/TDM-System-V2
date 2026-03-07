@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\DB;
 
 class PaymentService
 {
-    public function createPayment($marketerId, $storeId, $keeperId, $amount, $paymentMethod, $notes = null)
+    public function createPayment($marketerId, $storeId, $amount, $paymentMethod, $notes = null)
     {
-        return DB::transaction(function () use ($marketerId, $storeId, $keeperId, $amount, $paymentMethod, $notes) {
+        return DB::transaction(function () use ($marketerId, $storeId, $amount, $paymentMethod, $notes) {
             $currentDebt = $this->getStoreDebt($storeId);
             
             if ($amount > $currentDebt) {
@@ -21,7 +21,7 @@ class PaymentService
                 'payment_number' => $this->generatePaymentNumber(),
                 'store_id' => $storeId,
                 'marketer_id' => $marketerId,
-                'keeper_id' => $keeperId,
+                'keeper_id' => null,
                 'amount' => $amount,
                 'payment_method' => $paymentMethod,
                 'status' => 'pending',

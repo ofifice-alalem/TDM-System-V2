@@ -77,7 +77,6 @@ class PaymentController extends Controller
     {
         $validated = $request->validate([
             'store_id' => 'required|exists:stores,id',
-            'keeper_id' => 'required|exists:users,id',
             'amount' => 'required|numeric|min:0.01',
             'payment_method' => 'required|in:cash,transfer,certified_check',
             'notes' => 'nullable|string|max:500',
@@ -87,7 +86,6 @@ class PaymentController extends Controller
             $payment = $this->service->createPayment(
                 auth()->id(),
                 $validated['store_id'],
-                $validated['keeper_id'],
                 $validated['amount'],
                 $validated['payment_method'],
                 $validated['notes'] ?? null

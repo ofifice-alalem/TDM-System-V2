@@ -15,8 +15,7 @@ class MarketerRequestController extends Controller
     public function __construct(
         private MarketerRequestService $service,
         private InvoiceController $invoiceController
-    ) {
-        // Temporary: Auto-login as marketer (ID=3)}
+    ) {}
 
     public function index(Request $request)
     {
