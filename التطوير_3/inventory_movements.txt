@@ -1,0 +1,271 @@
+================================================================================
+                    جدول: inventory_movements (جديد)
+                    نظام التتبع الشامل لحركات المخزون
+================================================================================
+
+📋 نظرة عامة:
+--------------
+جدول مركزي يسجل كل حركة مخزون في النظام بالكامل.
+✅ يتتبع المصدر والوجهة لكل حركة
+✅ يربط كل حركة بالعملية المرجعية (فاتورة، طلب، إرجاع، إلخ)
+✅ يوفر سجل تدقيق كامل لكل المخزون
+
+================================================================================
+                            🗂️ هيكل الجدول
+================================================================================
+
+الحقل              النوع        العلاقة           القيمة الافتراضية    الوصف
+──────────────────────────────────────────────────────────────────────────────────────
+id                 BIGINT       PK               AUTO_INCREMENT        المعرف الفريد
+product_id         BIGINT       FK → products    —                     المنتج المنقول
+from_type          ENUM         —                —                     نوع المصدر
+from_id            BIGINT       —                NULL                  معرف المصدر
+to_type            ENUM         —                —                     نوع الوجهة
+to_id              BIGINT       —                NULL                  معرف الوجهة
+quantity           INT          —                —                     الكمية المنقولة
+reference_type     ENUM         —                —                     نوع العملية
+reference_id       BIGINT       —                —                     معرف العملية
+created_at         TIMESTAMP    —                CURRENT_TIMESTAMP     وقت الحركة
+
+================================================================================
+                            📊 القيم المسموحة
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ from_type / to_type                                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+ENUM('main_stock', 'marketer_reserved', 'marketer_actual', 'store_pending', 'store_actual', 'customer', 'external')
+
+- main_stock: المخزن الرئيسي
+- marketer_reserved: المخزون المحجوز للمسوق
+- marketer_actual: المخزون الفعلي للمسوق
+- store_pending: المخزون المعلق للمتجر
+- store_actual: المخزون الفعلي للمتجر
+- customer: العميل (للمبيعات المباشرة)
+- external: خارجي (فواتير المصنع، إتلاف، إلخ)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ reference_type                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+ENUM('factory_invoice', 'marketer_request', 'marketer_return', 'sales_invoice', 'sales_return', 'store_payment', 'customer_invoice', 'customer_return', 'adjustment')
+
+- factory_invoice: فاتورة مصنع (إضافة للمخزن الرئيسي)
+- marketer_request: طلب مسوق
+- marketer_return: إرجاع من مسوق
+- sales_invoice: فاتورة بيع لمتجر
+- sales_return: إرجاع من متجر
+- store_payment: دفعة متجر (لا تؤثر على المخزون، للتوثيق فقط)
+- customer_invoice: فاتورة عميل مباشر
+- customer_return: إرجاع من عميل
+- adjustment: تعديل يدوي (جرد، إتلاف، إلخ)
+
+================================================================================
+                        🔄 أمثلة على الحركات
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1️⃣ فاتورة مصنع (إضافة مخزون رئيسي)                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+from_type: 'external'
+from_id: NULL
+to_type: 'main_stock'
+to_id: NULL
+quantity: 1000
+reference_type: 'factory_invoice'
+reference_id: 123
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2️⃣ موافقة على طلب مسوق (حجز من المخزن الرئيسي)                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+from_type: 'main_stock'
+from_id: NULL
+to_type: 'marketer_reserved'
+to_id: 5 (marketer_id)
+quantity: 100
+reference_type: 'marketer_request'
+reference_id: 456
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3️⃣ توثيق طلب مسوق (من محجوز إلى فعلي)                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+from_type: 'marketer_reserved'
+from_id: 5 (marketer_id)
+to_type: 'marketer_actual'
+to_id: 5 (marketer_id)
+quantity: 100
+reference_type: 'marketer_request'
+reference_id: 456
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 4️⃣ إنشاء فاتورة بيع لمتجر (من مسوق إلى معلق)                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+from_type: 'marketer_actual'
+from_id: 5 (marketer_id)
+to_type: 'store_pending'
+to_id: 10 (store_id)
+quantity: 50
+reference_type: 'sales_invoice'
+reference_id: 789
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 5️⃣ توثيق فاتورة بيع (من معلق إلى فعلي)                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+from_type: 'store_pending'
+from_id: 10 (store_id)
+to_type: 'store_actual'
+to_id: 10 (store_id)
+quantity: 50
+reference_type: 'sales_invoice'
+reference_id: 789
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 6️⃣ إرجاع من متجر (من فعلي إلى مسوق)                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+from_type: 'store_actual'
+from_id: 10 (store_id)
+to_type: 'marketer_actual'
+to_id: 5 (marketer_id)
+quantity: 10
+reference_type: 'sales_return'
+reference_id: 999
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 7️⃣ بيع مباشر لعميل                                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+from_type: 'main_stock'
+from_id: NULL
+to_type: 'customer'
+to_id: 25 (customer_id)
+quantity: 20
+reference_type: 'customer_invoice'
+reference_id: 111
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 8️⃣ إرجاع من مسوق إلى المخزن الرئيسي                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+from_type: 'marketer_actual'
+from_id: 5 (marketer_id)
+to_type: 'main_stock'
+to_id: NULL
+quantity: 30
+reference_type: 'marketer_return'
+reference_id: 222
+
+================================================================================
+                            🔍 استعلامات مفيدة
+================================================================================
+
+-- 1️⃣ تتبع حركة منتج معين
+SELECT * FROM inventory_movements 
+WHERE product_id = 10 
+ORDER BY created_at DESC;
+
+-- 2️⃣ كل حركات مسوق معين
+SELECT * FROM inventory_movements 
+WHERE (from_type = 'marketer_actual' AND from_id = 5)
+   OR (to_type = 'marketer_actual' AND to_id = 5)
+ORDER BY created_at DESC;
+
+-- 3️⃣ كل حركات متجر معين
+SELECT * FROM inventory_movements 
+WHERE (from_type IN ('store_pending', 'store_actual') AND from_id = 10)
+   OR (to_type IN ('store_pending', 'store_actual') AND to_id = 10)
+ORDER BY created_at DESC;
+
+-- 4️⃣ حركات المخزن الرئيسي
+SELECT * FROM inventory_movements 
+WHERE from_type = 'main_stock' OR to_type = 'main_stock'
+ORDER BY created_at DESC;
+
+-- 5️⃣ إحصائيات حركة منتج
+SELECT 
+    product_id,
+    reference_type,
+    SUM(quantity) as total_quantity,
+    COUNT(*) as movement_count
+FROM inventory_movements
+WHERE product_id = 10
+GROUP BY product_id, reference_type;
+
+-- 6️⃣ آخر 100 حركة في النظام
+SELECT 
+    im.*,
+    p.name as product_name
+FROM inventory_movements im
+JOIN products p ON im.product_id = p.id
+ORDER BY im.created_at DESC
+LIMIT 100;
+
+================================================================================
+                            📌 ملاحظات مهمة
+================================================================================
+
+⚠️ قواعد العمل:
+   1. ✅ يتم إدراج سجل جديد عند كل حركة مخزون
+   2. ✅ لا يتم تعديل أو حذف السجلات (للتدقيق)
+   3. ✅ الجدول للقراءة والإدراج فقط (Append-only)
+   4. ✅ يجب تسجيل الحركة قبل أو بعد تحديث جداول المخزون مباشرة
+   5. ✅ استخدم Transaction لضمان التزامن
+
+🔐 الفوائد:
+   - ✅ تدقيق كامل لكل حركة مخزون
+   - ✅ تتبع تاريخي شامل
+   - ✅ سهولة اكتشاف الأخطاء
+   - ✅ تقارير دقيقة
+   - ✅ إمكانية إعادة بناء المخزون من السجل
+
+📊 الأداء:
+   - ✅ أضف INDEX على product_id
+   - ✅ أضف INDEX على (reference_type, reference_id)
+   - ✅ أضف INDEX على created_at
+   - ✅ استخدم Partitioning حسب التاريخ للجداول الكبيرة
+
+🎯 الاستخدام:
+   - يتم الإدراج تلقائياً من الكود عند كل عملية مخزون
+   - لا يتم التعديل اليدوي على هذا الجدول
+   - استخدمه للتقارير والتدقيق فقط
+
+================================================================================
+                            SQL للإنشاء
+================================================================================
+
+CREATE TABLE inventory_movements (
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    product_id BIGINT UNSIGNED NOT NULL,
+    from_type ENUM('main_stock', 'marketer_reserved', 'marketer_actual', 'store_pending', 'store_actual', 'customer', 'external') NOT NULL,
+    from_id BIGINT UNSIGNED NULL,
+    to_type ENUM('main_stock', 'marketer_reserved', 'marketer_actual', 'store_pending', 'store_actual', 'customer', 'external') NOT NULL,
+    to_id BIGINT UNSIGNED NULL,
+    quantity INT NOT NULL,
+    reference_type ENUM('factory_invoice', 'marketer_request', 'marketer_return', 'sales_invoice', 'sales_return', 'store_payment', 'customer_invoice', 'customer_return', 'adjustment') NOT NULL,
+    reference_id BIGINT UNSIGNED NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT,
+    
+    INDEX idx_product (product_id),
+    INDEX idx_reference (reference_type, reference_id),
+    INDEX idx_created (created_at),
+    INDEX idx_from (from_type, from_id),
+    INDEX idx_to (to_type, to_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+================================================================================
