@@ -1029,11 +1029,6 @@ D. عملية: بيع بضاعة للمتجر
     يشير إلى: stores.id
     القيمة الافتراضية: —
 
-  • entry_type
-    النوع: enum('sale','return','payment','opening_balance')
-    المفتاح: INDEX
-    القيمة الافتراضية: —
-
   • reference_type
     النوع: enum('sales_invoice','sales_return','store_payment','opening_balance')
     المفتاح: INDEX
@@ -1061,6 +1056,7 @@ D. عملية: بيع بضاعة للمتجر
     القيمة الافتراضية: CURRENT_TIMESTAMP
 
 ملاحظة: ✅ تم استبدال (sales_invoice_id, return_id, payment_id) بـ (reference_type, reference_id)
+ملاحظة: ✅ تم حذف entry_type (مكرر مع reference_type)
 ملاحظة: ✅ تم إضافة balance_after لتتبع الرصيد بعد كل حركة
 ملاحظة: ✅ تم إضافة opening_balance لدعم الأرصدة الافتتاحية
 
@@ -1114,10 +1110,6 @@ E. عملية: إيصال القبض (تسديد دين المتجر)
 
   • receipt_image
     النوع: varchar(255)
-    القيمة الافتراضية: NULL
-
-  • confirmed_at
-    النوع: timestamp
     القيمة الافتراضية: NULL
 
   • notes
@@ -1178,11 +1170,68 @@ E. عملية: إيصال القبض (تسديد دين المتجر)
     القيمة الافتراضية: CURRENT_TIMESTAMP
 
 ========================================
+27. جدول: marketer_commission_ledger (جديد في V3)
+========================================
+
+وظيفته:
+تتبع رصيد عمولات المسوق بشكل تفصيلي (إضافة عمولة / سحب / رصيد افتتاحي).
+يسجل balance_after بعد كل حركة لسهولة حساب الرصيد الحالي.
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • marketer_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • reference_type
+    النوع: enum('commission','withdrawal','opening_balance')
+    المفتاح: INDEX
+    القيمة الافتراضية: —
+
+  • reference_id
+    النوع: bigint unsigned
+    القيمة الافتراضية: NULL
+    ملاحظة: marketer_commissions.id أو marketer_withdrawal_requests.id
+
+  • amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • balance_after
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • notes
+    النوع: text
+    القيمة الافتراضية: NULL
+
+  • created_at
+    النوع: timestamp
+    المفتاح: INDEX
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+ملاحظة: ✅ commission = إضافة عمولة (موجب)
+ملاحظة: ✅ withdrawal = سحب عمولة (سالب)
+ملاحظة: ✅ opening_balance = رصيد افتتاحي
+
+المنطق:
+1. عند دفع متجر → تسجيل عمولة في marketer_commissions
+2. تسجيل العمولة في marketer_commission_ledger (reference_type='commission')
+3. عند سحب المسوق → تسجيل في marketer_commission_ledger (reference_type='withdrawal')
+4. balance_after = الرصيد المتبقي بعد كل عملية
+
+========================================
 F. عملية: سحب أرباح (عمولات) المسوق
 ========================================
 
 ========================================
-27. جدول: marketer_withdrawal_requests
+28. جدول: marketer_withdrawal_requests
 ========================================
 
   • id
@@ -1204,27 +1253,14 @@ F. عملية: سحب أرباح (عمولات) المسوق
     النوع: enum('pending','approved','rejected','cancelled')
     القيمة الافتراضية: 'pending'
 
-  • approved_by
+  • keeper_id
     النوع: bigint unsigned
     المفتاح: FOREIGN KEY
     يشير إلى: users.id
     القيمة الافتراضية: NULL
+    ملاحظة: يسجل من قام بالموافقة أو الرفض (حسب status)
 
-  • approved_at
-    النوع: timestamp
-    القيمة الافتراضية: NULL
-
-  • rejected_by
-    النوع: bigint unsigned
-    المفتاح: FOREIGN KEY
-    يشير إلى: users.id
-    القيمة الافتراضية: NULL
-
-  • rejected_at
-    النوع: timestamp
-    القيمة الافتراضية: NULL
-
-  • signed_receipt_image
+  • stamped_image
     النوع: varchar(255)
     القيمة الافتراضية: NULL
 
@@ -1245,7 +1281,7 @@ G. عملية: إرجاع بضاعة من المتجر إلى المسوق
 ========================================
 
 ========================================
-28. جدول: sales_returns
+29. جدول: sales_returns
 ========================================
 
   • id
@@ -1289,13 +1325,10 @@ G. عملية: إرجاع بضاعة من المتجر إلى المسوق
     المفتاح: FOREIGN KEY
     يشير إلى: users.id
     القيمة الافتراضية: NULL
+    ملاحظة: يسجل من قام بالموافقة أو الرفض (حسب status)
 
   • stamped_image
     النوع: varchar(255)
-    القيمة الافتراضية: NULL
-
-  • confirmed_at
-    النوع: timestamp
     القيمة الافتراضية: NULL
 
   • notes
@@ -1311,7 +1344,7 @@ G. عملية: إرجاع بضاعة من المتجر إلى المسوق
     القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 
 ========================================
-29. جدول: sales_return_items
+30. جدول: sales_return_items
 ========================================
 
   • id
@@ -1346,7 +1379,7 @@ G. عملية: إرجاع بضاعة من المتجر إلى المسوق
     القيمة الافتراضية: —
 
 ========================================
-30. جدول: store_return_pending_stock
+31. جدول: store_return_pending_stock
 ========================================
 
   • id
@@ -1385,7 +1418,7 @@ H. نظام العملاء (المبيعات المباشرة)
 ========================================
 
 ========================================
-31. جدول: customer_invoices
+32. جدول: customer_invoices
 ========================================
 
   • id
@@ -1426,11 +1459,6 @@ H. نظام العملاء (المبيعات المباشرة)
     النوع: decimal(12,2)
     القيمة الافتراضية: —
 
-  • payment_type
-    النوع: enum('cash','credit','partial')
-    المفتاح: INDEX
-    القيمة الافتراضية: —
-
   • status
     النوع: enum('completed','cancelled')
     المفتاح: INDEX
@@ -1450,7 +1478,7 @@ H. نظام العملاء (المبيعات المباشرة)
     القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 
 ========================================
-32. جدول: customer_invoice_items
+33. جدول: customer_invoice_items
 ========================================
 
   • id
@@ -1491,7 +1519,7 @@ H. نظام العملاء (المبيعات المباشرة)
     القيمة الافتراضية: CURRENT_TIMESTAMP
 
 ========================================
-33. جدول: customer_payments
+34. جدول: customer_payments
 ========================================
 
   • id
@@ -1546,7 +1574,7 @@ H. نظام العملاء (المبيعات المباشرة)
     القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 
 ========================================
-34. جدول: customer_returns
+35. جدول: customer_returns
 ========================================
 
   • id
@@ -1605,7 +1633,7 @@ H. نظام العملاء (المبيعات المباشرة)
     القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 
 ========================================
-35. جدول: customer_return_items
+36. جدول: customer_return_items
 ========================================
 
   • id
@@ -1653,7 +1681,7 @@ H. نظام العملاء (المبيعات المباشرة)
     القيمة الافتراضية: CURRENT_TIMESTAMP
 
 ========================================
-36. جدول: customer_debt_ledger (محدث في V3)
+37. جدول: customer_debt_ledger (محدث في V3)
 ========================================
 
   • id
@@ -1668,11 +1696,6 @@ H. نظام العملاء (المبيعات المباشرة)
     يشير إلى: customers.id
     القيمة الافتراضية: —
     ملاحظة: RESTRICT ON DELETE, CASCADE ON UPDATE
-
-  • entry_type
-    النوع: enum('sale','return','payment','opening_balance')
-    المفتاح: INDEX
-    القيمة الافتراضية: —
 
   • reference_type
     النوع: enum('customer_invoice','customer_return','customer_payment','opening_balance')
@@ -1705,6 +1728,7 @@ H. نظام العملاء (المبيعات المباشرة)
     القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 
 ملاحظة: ✅ تم استبدال (invoice_id, return_id, payment_id) بـ (reference_type, reference_id)
+ملاحظة: ✅ تم حذف entry_type (مكرر مع reference_type)
 ملاحظة: ✅ تم إضافة balance_after لتتبع الرصيد بعد كل حركة
 ملاحظة: ✅ تم إضافة opening_balance لدعم الأرصدة الافتتاحية
 
@@ -1713,12 +1737,12 @@ I. جداول التتبع والأرشفة (جديدة في V3)
 ========================================
 
 ========================================
-37. جدول: inventory_movements (جديد في V3)
+38. جدول: inventory_movements (جديد في V3)
 ========================================
 
 وظيفته:
 تتبع شامل لكل حركات المخزون في النظام من أي مصدر إلى أي وجهة.
-يسجل كل عملية نقل منتج بين المخزن الرئيسي والمسوقين والمتاجر.
+يسجل كل عملية نقل منتج بين المخزن الرئيسي والمسوقين والمتاجر والعملاء.
 
   • id
     النوع: bigint unsigned
@@ -1733,7 +1757,7 @@ I. جداول التتبع والأرشفة (جديدة في V3)
     القيمة الافتراضية: —
 
   • from_type
-    النوع: enum('external','main_stock','marketer','store')
+    النوع: enum('external','main_stock','marketer','store','customer')
     المفتاح: INDEX
     القيمة الافتراضية: —
     ملاحظة: external = من خارج النظام (فواتير افتتاحية)
@@ -1741,10 +1765,10 @@ I. جداول التتبع والأرشفة (جديدة في V3)
   • from_id
     النوع: bigint unsigned
     القيمة الافتراضية: NULL
-    ملاحظة: marketer_id أو store_id (NULL للمخزن الرئيسي أو external)
+    ملاحظة: marketer_id أو store_id أو customer_id (NULL للمخزن الرئيسي أو external)
 
   • to_type
-    النوع: enum('main_stock','marketer','store','external')
+    النوع: enum('main_stock','marketer','store','customer','external')
     المفتاح: INDEX
     القيمة الافتراضية: —
     ملاحظة: external = خارج النظام (تلف، هدايا، إلخ)
@@ -1752,14 +1776,14 @@ I. جداول التتبع والأرشفة (جديدة في V3)
   • to_id
     النوع: bigint unsigned
     القيمة الافتراضية: NULL
-    ملاحظة: marketer_id أو store_id (NULL للمخزن الرئيسي أو external)
+    ملاحظة: marketer_id أو store_id أو customer_id (NULL للمخزن الرئيسي أو external)
 
   • quantity
     النوع: int
     القيمة الافتراضية: —
 
   • reference_type
-    النوع: enum('opening_balance','factory_invoice','marketer_request','marketer_return','sales_invoice','sales_return')
+    النوع: enum('opening_balance','factory_invoice','marketer_request','marketer_return','sales_invoice','sales_return','customer_invoice','customer_return')
     المفتاح: INDEX
     القيمة الافتراضية: —
 
@@ -1773,7 +1797,7 @@ I. جداول التتبع والأرشفة (جديدة في V3)
     القيمة الافتراضية: CURRENT_TIMESTAMP
 
 ========================================
-38. جدول: inventory_snapshots (جديد في V3)
+39. جدول: inventory_snapshots (جديد في V3)
 ========================================
 
 وظيفته:
@@ -1824,7 +1848,7 @@ J. جداول النظام (Laravel Framework)
 ========================================
 
 ========================================
-39. جدول: cache
+40. جدول: cache
 ========================================
 
   • key
@@ -1841,7 +1865,7 @@ J. جداول النظام (Laravel Framework)
     القيمة الافتراضية: —
 
 ========================================
-40. جدول: cache_locks
+41. جدول: cache_locks
 ========================================
 
   • key
@@ -1858,7 +1882,7 @@ J. جداول النظام (Laravel Framework)
     القيمة الافتراضية: —
 
 ========================================
-41. جدول: jobs
+42. جدول: jobs
 ========================================
 
   • id
@@ -1892,7 +1916,7 @@ J. جداول النظام (Laravel Framework)
     القيمة الافتراضية: —
 
 ========================================
-42. جدول: job_batches
+43. جدول: job_batches
 ========================================
 
   • id
@@ -1937,7 +1961,7 @@ J. جداول النظام (Laravel Framework)
     القيمة الافتراضية: NULL
 
 ========================================
-43. جدول: failed_jobs
+44. جدول: failed_jobs
 ========================================
 
   • id
@@ -1974,13 +1998,13 @@ J. جداول النظام (Laravel Framework)
 ملخص إحصائي
 ========================================
 
-إجمالي الجداول: 43 جدول
+إجمالي الجداول: 44 جدول
 
 التصنيف حسب الوظيفة:
 - جداول أساسية: 8 جداول (roles, users, marketers, products, main_stock, stores, customers, notifications)
 - نظام المصنع: 2 جدول (factory_invoices, factory_invoice_items)
 - نظام المسوقين: 7 جداول (marketer_requests, marketer_request_items, marketer_reserved_stock, marketer_actual_stock, marketer_return_requests, marketer_return_items, warehouse_stock_logs)
-- نظام المتاجر: 11 جدول (sales_invoices, sales_invoice_items, store_pending_stock, store_actual_stock, store_debt_ledger, store_payments, marketer_commissions, marketer_withdrawal_requests, sales_returns, sales_return_items, store_return_pending_stock)
+- نظام المتاجر: 12 جدول (sales_invoices, sales_invoice_items, store_pending_stock, store_actual_stock, store_debt_ledger, store_payments, marketer_commissions, marketer_commission_ledger, marketer_withdrawal_requests, sales_returns, sales_return_items, store_return_pending_stock)
 - نظام العملاء: 6 جداول (customer_invoices, customer_invoice_items, customer_payments, customer_returns, customer_return_items, customer_debt_ledger)
 - نظام الخصومات: 2 جدول (product_promotions, invoice_discount_tiers)
 - التتبع والأرشفة: 2 جدول (inventory_movements, inventory_snapshots)
@@ -1995,11 +2019,11 @@ J. جداول النظام (Laravel Framework)
    - حذف commission_rate من جدول users
    - تجنب NULL values في 75% من السجلات
 
-✅ 2. تحسين جداول الديون:
+✅ 2. تحسين جداول الديون والعمولات:
    - استبدال (invoice_id, return_id, payment_id) بـ (reference_type, reference_id)
    - إضافة balance_after لتتبع الرصيد بعد كل حركة
    - دعم الأرصدة الافتتاحية (opening_balance)
-   - تطبيق على store_debt_ledger و customer_debt_ledger
+   - تطبيق على store_debt_ledger و customer_debt_ledger و marketer_commission_ledger
 
 ✅ 3. التتبع الشامل للمخزون:
    - إضافة جدول inventory_movements
