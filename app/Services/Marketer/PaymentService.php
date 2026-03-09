@@ -21,7 +21,6 @@ class PaymentService
                 'payment_number' => $this->generatePaymentNumber(),
                 'store_id' => $storeId,
                 'marketer_id' => $marketerId,
-                'keeper_id' => null,
                 'amount' => $amount,
                 'payment_method' => $paymentMethod,
                 'status' => 'pending',
