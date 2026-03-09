@@ -158,7 +158,12 @@ class BackupController extends Controller
         // استعادة الملفات
         $storagePath = $extractPath . '/storage';
         if (is_dir($storagePath)) {
-            $this->copyDirectory($storagePath, storage_path('app/public'));
+            // مسح الملفات القديمة أولاً
+            $publicPath = storage_path('app/public');
+            if (is_dir($publicPath)) {
+                $this->deleteDirectory($publicPath);
+            }
+            $this->copyDirectory($storagePath, $publicPath);
         }
         
         // تنظيف
