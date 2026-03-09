@@ -67,6 +67,9 @@ class StoreController extends Controller
         
         $query = Store::query()
             ->with('marketer')
+            ->when(auth()->user()->isMarketer(), function($query) {
+                $query->where('marketer_id', auth()->id());
+            })
             ->when($search, function($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
                       ->orWhere('owner_name', 'like', "%{$search}%")
@@ -74,19 +77,33 @@ class StoreController extends Controller
             })
             ->withCount('salesInvoices');
         
-        $stores = $query->paginate(50)->through(function($store) {
+        $stores = $query->get()->map(function($store) {
             $store->total_debt = $this->calculateDebt($store->id);
             return $store;
-        });
+        })->sortByDesc('total_debt');
 
-        $totalRemaining = StoreDebtLedger::whereIn('id', function($query) {
+        $stores = new \Illuminate\Pagination\LengthAwarePaginator(
+            $stores->forPage($request->get('page', 1), 50),
+            $stores->count(),
+            50,
+            $request->get('page', 1),
+            ['path' => $request->url(), 'pageName' => 'page']
+        );
+
+        // Filter debt calculations for marketer
+        $debtQuery = StoreDebtLedger::query()
+            ->when(auth()->user()->isMarketer(), function($query) {
+                $query->whereIn('store_id', Store::where('marketer_id', auth()->id())->pluck('id'));
+            });
+
+        $totalRemaining = (clone $debtQuery)->whereIn('id', function($query) {
             $query->selectRaw('MAX(id)')
                 ->from('store_debt_ledger')
                 ->groupBy('store_id');
         })->sum('balance_after');
 
-        $totalDebt = StoreDebtLedger::where('entry_type', 'sale')->sum('amount');
-        $totalPayments = abs(StoreDebtLedger::whereIn('entry_type', ['payment', 'return'])->sum('amount'));
+        $totalDebt = (clone $debtQuery)->where('entry_type', 'sale')->sum('amount');
+        $totalPayments = abs((clone $debtQuery)->whereIn('entry_type', ['payment', 'return'])->sum('amount'));
 
         return view('shared.stores.index', compact('stores', 'search', 'totalDebt', 'totalPayments', 'totalRemaining'));
     }
