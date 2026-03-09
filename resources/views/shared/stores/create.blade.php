@@ -101,6 +101,26 @@
                         @enderror
                     </div>
 
+                    {{-- Marketer --}}
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                            <i data-lucide="user-check" class="w-4 h-4 inline-block ml-1"></i>
+                            المسوق المخصص
+                        </label>
+                        <select name="marketer_id"
+                            class="w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border-2 border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 dark:focus:border-primary-500 focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all">
+                            <option value="">-- اختر المسوق --</option>
+                            @foreach($marketers as $marketer)
+                                <option value="{{ $marketer->id }}" {{ old('marketer_id') == $marketer->id ? 'selected' : '' }}>
+                                    {{ $marketer->full_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('marketer_id')
+                            <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                 </div>
 
                 {{-- Actions --}}

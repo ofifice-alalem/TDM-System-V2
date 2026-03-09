@@ -8,13 +8,15 @@ use App\Models\SalesInvoice;
 use App\Models\SalesReturn;
 use App\Models\StorePayment;
 use App\Models\StoreDebtLedger;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class StoreController extends Controller
 {
     public function create()
     {
-        return view('shared.stores.create');
+        $marketers = User::where('role_id', 3)->where('is_active', true)->get();
+        return view('shared.stores.create', compact('marketers'));
     }
 
     public function store(Request $request)
@@ -25,6 +27,7 @@ class StoreController extends Controller
             'phone' => 'nullable|string|max:20',
             'location' => 'nullable|string|max:200',
             'address' => 'nullable|string',
+            'marketer_id' => 'nullable|exists:users,id',
         ]);
 
         Store::create($validated);
@@ -35,7 +38,8 @@ class StoreController extends Controller
 
     public function edit(Store $store)
     {
-        return view('shared.stores.edit', compact('store'));
+        $marketers = User::where('role_id', 3)->where('is_active', true)->get();
+        return view('shared.stores.edit', compact('store', 'marketers'));
     }
 
     public function update(Request $request, Store $store)
@@ -46,6 +50,7 @@ class StoreController extends Controller
             'phone' => 'nullable|string|max:20',
             'location' => 'nullable|string|max:200',
             'address' => 'nullable|string',
+            'marketer_id' => 'nullable|exists:users,id',
         ]);
 
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
@@ -61,6 +66,7 @@ class StoreController extends Controller
         $search = $request->get('search');
         
         $query = Store::query()
+            ->with('marketer')
             ->when($search, function($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
                       ->orWhere('owner_name', 'like', "%{$search}%")
