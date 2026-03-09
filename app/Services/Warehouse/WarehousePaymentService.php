@@ -34,6 +34,7 @@ class WarehousePaymentService
                 'payment_id' => $payment->id,
                 'amount' => -$payment->amount,
                 'balance_after' => $lastBalance - $payment->amount,
+                'marketer_id' => $payment->marketer_id,
             ]);
 
             $commissionRate = $payment->marketer->commission_rate ?? 0;

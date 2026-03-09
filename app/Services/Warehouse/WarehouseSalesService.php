@@ -39,6 +39,7 @@ class WarehouseSalesService
                 'sales_invoice_id' => $invoice->id,
                 'amount' => $invoice->total_amount,
                 'balance_after' => $lastBalance + $invoice->total_amount,
+                'marketer_id' => $invoice->marketer_id,
                 'created_at' => now(),
             ]);
 

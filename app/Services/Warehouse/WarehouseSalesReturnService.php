@@ -45,6 +45,7 @@ class WarehouseSalesReturnService
                 'return_id' => $return->id,
                 'amount' => -$return->total_amount,
                 'balance_after' => $lastBalance - $return->total_amount,
+                'marketer_id' => $return->marketer_id,
             ]);
 
             $return->update([
