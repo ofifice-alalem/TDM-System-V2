@@ -103,7 +103,7 @@
             submitBtn.disabled = true;
 
             try {
-                const response = await fetch(`/sales/returns/search-invoices?q=${encodeURIComponent(query)}`);
+                const response = await fetch(`{{ route('sales.returns.search.invoices') }}?q=${encodeURIComponent(query)}`);
                 const data = await response.json();
                 
                 if (data.invoices.length === 0) {
@@ -148,7 +148,7 @@
             customerIdInput.value = selectedOption.dataset.customerId;
 
             try {
-                const response = await fetch(`/sales/returns/invoice/${invoiceId}/items`);
+                const response = await fetch(`{{ url('sales/returns/invoice') }}/${invoiceId}/items`);
                 const data = await response.json();
                 invoiceItems = data.items;
                 
