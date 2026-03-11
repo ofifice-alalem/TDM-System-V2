@@ -37,6 +37,44 @@
             </h1>
         </div>
 
+        {{-- Financial Summary --}}
+        <div class="animate-fade-in">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-500/10 dark:to-blue-600/10 rounded-2xl p-6 border border-blue-200 dark:border-blue-500/30">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+                            <i data-lucide="trending-up" class="w-6 h-6"></i>
+                        </div>
+                        <span class="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-500/20 px-2 py-1 rounded-lg">إجمالي الديون</span>
+                    </div>
+                    <div class="text-3xl font-black text-blue-600 dark:text-blue-400 mb-1">{{ number_format($totalDebts, 2) }}</div>
+                    <div class="text-sm text-blue-500 dark:text-blue-300">دينار</div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-500/10 dark:to-emerald-600/10 rounded-2xl p-6 border border-emerald-200 dark:border-emerald-500/30">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-white">
+                            <i data-lucide="trending-down" class="w-6 h-6"></i>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-1 rounded-lg">إجمالي المدفوع والمرتجع</span>
+                    </div>
+                    <div class="text-3xl font-black text-emerald-600 dark:text-emerald-400 mb-1">{{ number_format(abs($totalPaymentsAndReturns), 2) }}</div>
+                    <div class="text-sm text-emerald-500 dark:text-emerald-300">دينار</div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-500/10 dark:to-amber-600/10 rounded-2xl p-6 border border-amber-200 dark:border-amber-500/30">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-amber-600 rounded-xl flex items-center justify-center text-white">
+                            <i data-lucide="wallet" class="w-6 h-6"></i>
+                        </div>
+                        <span class="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/20 px-2 py-1 rounded-lg">إجمالي المتبقي</span>
+                    </div>
+                    <div class="text-3xl font-black text-amber-600 dark:text-amber-400 mb-1">{{ number_format($totalRemaining, 2) }}</div>
+                    <div class="text-sm text-amber-500 dark:text-amber-300">دينار</div>
+                </div>
+            </div>
+        </div>
+
         {{-- Filters --}}
         <div class="animate-fade-in">
             <form method="GET" class="bg-white dark:bg-dark-card rounded-2xl p-4 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
@@ -62,6 +100,21 @@
                     </div>
                 </div>
             </form>
+        </div>
+
+        {{-- Customers Count --}}
+        <div class="animate-fade-in mb-6">
+            <div class="flex items-center justify-between bg-white dark:bg-dark-card rounded-xl p-4 shadow-sm border border-gray-200 dark:border-dark-border">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-primary-100 dark:bg-primary-600/20 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                    </div>
+                    <span class="text-lg font-bold text-gray-900 dark:text-white">{{ $totalCustomers }} عميل</span>
+                </div>
+                <span class="text-sm text-gray-500 dark:text-gray-400">
+                    عرض {{ $customers->count() }} من {{ $customers->total() }}
+                </span>
+            </div>
         </div>
 
         {{-- Customers Grid --}}

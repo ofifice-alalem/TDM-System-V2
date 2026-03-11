@@ -40,7 +40,13 @@ class CustomerController extends Controller
 
         $customers = $query->paginate(20)->withQueryString();
 
-        return view('sales.customers.index', compact('customers'));
+        // حساب الإحصائيات المالية
+        $totalCustomers = Customer::count();
+        $totalDebts = \App\Models\CustomerDebtLedger::where('entry_type', 'sale')->sum('amount');
+        $totalPaymentsAndReturns = \App\Models\CustomerDebtLedger::whereIn('entry_type', ['payment', 'return'])->sum('amount');
+        $totalRemaining = $totalDebts - abs($totalPaymentsAndReturns);
+
+        return view('sales.customers.index', compact('customers', 'totalCustomers', 'totalDebts', 'totalPaymentsAndReturns', 'totalRemaining'));
     }
 
     public function create()
