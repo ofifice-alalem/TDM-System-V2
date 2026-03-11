@@ -64,11 +64,15 @@ class StoreController extends Controller
     public function index(Request $request)
     {
         $search = $request->get('search');
+        $marketerId = $request->get('marketer_id');
         
         $query = Store::query()
             ->with('marketer')
             ->when(auth()->user()->isMarketer(), function($query) {
                 $query->where('marketer_id', auth()->id());
+            })
+            ->when($marketerId && !auth()->user()->isMarketer(), function($query) use ($marketerId) {
+                $query->where('marketer_id', $marketerId);
             })
             ->when($search, function($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
@@ -90,10 +94,13 @@ class StoreController extends Controller
             ['path' => $request->url(), 'pageName' => 'page']
         );
 
-        // Filter debt calculations for marketer
+        // Filter debt calculations for marketer or selected marketer
         $debtQuery = StoreDebtLedger::query()
             ->when(auth()->user()->isMarketer(), function($query) {
                 $query->whereIn('store_id', Store::where('marketer_id', auth()->id())->pluck('id'));
+            })
+            ->when($marketerId && !auth()->user()->isMarketer(), function($query) use ($marketerId) {
+                $query->whereIn('store_id', Store::where('marketer_id', $marketerId)->pluck('id'));
             });
 
         $totalRemaining = (clone $debtQuery)->whereIn('id', function($query) {

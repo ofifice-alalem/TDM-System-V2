@@ -43,6 +43,21 @@
                     </button>
                 </div>
             </form>
+            @if(!request()->routeIs('marketer.*'))
+            <form method="GET" action="{{ request()->routeIs('warehouse.*') ? route('warehouse.stores.index') : route('admin.stores.index') }}" class="flex gap-2">
+                <select name="marketer_id" class="px-4 py-3 bg-white dark:bg-dark-card border-2 border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 dark:focus:border-primary-500 transition-all">
+                    <option value="">جميع المسوقين</option>
+                    @foreach(\App\Models\User::where('role_id', 3)->where('is_active', true)->get() as $marketer)
+                        <option value="{{ $marketer->id }}" {{ request('marketer_id') == $marketer->id ? 'selected' : '' }}>
+                            {{ $marketer->full_name }}
+                        </option>
+                    @endforeach
+                </select>
+                <button type="submit" class="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all">
+                    فلترة
+                </button>
+            </form>
+            @endif
             <div class="flex gap-2">
                 <button onclick="setView('table')" id="tableViewBtn" class="w-12 h-12 bg-primary-600 text-white rounded-xl flex items-center justify-center hover:bg-primary-700 transition-all">
                     <i data-lucide="table" class="w-5 h-5"></i>
