@@ -74,7 +74,11 @@ class CustomerInvoiceController extends Controller
                 ];
             });
 
-        return view('sales.invoices.create', compact('products'));
+        $customers = Customer::where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'phone']);
+
+        return view('sales.invoices.create', compact('products', 'customers'));
     }
 
     public function searchCustomers(Request $request)

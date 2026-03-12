@@ -40,15 +40,11 @@
                         
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">العميل *</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="customer-search" placeholder="ابحث بالاسم أو رقم الهاتف..." class="flex-1 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                                <button type="button" onclick="searchCustomers()" class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all flex items-center gap-2">
-                                    <i data-lucide="search" class="w-4 h-4"></i>
-                                    بحث
-                                </button>
+                            <div class="relative">
+                                <input type="text" id="customer-search" autocomplete="off" placeholder="ابحث عن العميل..." class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all">
+                                <input type="hidden" name="customer_id" id="customer-id" required>
+                                <div id="customer-dropdown" class="hidden absolute z-[9999] w-full mt-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-60 overflow-y-auto"></div>
                             </div>
-                            <input type="hidden" name="customer_id" id="customer_id" required>
-                            <div id="customer-results" class="mt-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-lg max-h-60 overflow-y-auto" style="display: none;"></div>
                             <button type="button" onclick="openAddCustomerModal()" class="mt-3 text-sm text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1">
                                 <i data-lucide="plus" class="w-4 h-4"></i>
                                 إضافة عميل جديد
@@ -65,6 +61,25 @@
                             </button>
                         </div>
 
+                        {{-- Headers --}}
+                        <div class="grid grid-cols-12 gap-3 mb-4 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                            <div class="col-span-5">
+                                <span class="text-sm font-bold text-gray-700 dark:text-gray-300">المنتج</span>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="text-sm font-bold text-gray-700 dark:text-gray-300 text-center">السعر</span>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="text-sm font-bold text-gray-700 dark:text-gray-300 text-center">عدد القطع</span>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="text-sm font-bold text-gray-700 dark:text-gray-300 text-center">الإجمالي</span>
+                            </div>
+                            <div class="col-span-1">
+                                <span class="text-sm font-bold text-gray-700 dark:text-gray-300 text-center">حذف</span>
+                            </div>
+                        </div>
+
                         <div id="products-container" class="space-y-3">
                             {{-- Product rows will be added here --}}
                         </div>
@@ -77,6 +92,10 @@
                         <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-6">تفاصيل الفاتورة</h2>
                         
                         <div class="mb-6 bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-bold text-gray-700 dark:text-gray-300">عدد القطع:</span>
+                                <span id="total-items-display" class="text-lg font-bold text-blue-600 dark:text-blue-400">0</span>
+                            </div>
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-sm font-bold text-gray-700 dark:text-gray-300">المجموع الفرعي:</span>
                                 <span id="subtotal-display" class="text-lg font-bold text-gray-900 dark:text-white">0 دينار</span>
@@ -181,25 +200,33 @@
     function addProductRow() {
         const container = document.getElementById('products-container');
         const row = document.createElement('div');
-        row.className = 'flex gap-3 items-start bg-gray-50 dark:bg-dark-bg p-4 rounded-xl border border-gray-200 dark:border-dark-border';
+        row.className = 'grid grid-cols-12 gap-3 items-center bg-gray-50 dark:bg-dark-bg p-4 rounded-xl border border-gray-200 dark:border-dark-border';
         row.id = `product-row-${rowIndex}`;
         
         const availableProducts = products.filter(p => !selectedProducts.has(p.id));
         
         row.innerHTML = `
-            <div class="flex-1">
+            <div class="col-span-5">
                 <select name="items[${rowIndex}][product_id]" required onchange="handleProductSelect(${rowIndex}, this.value)" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                     <option value="">اختر المنتج</option>
-                    ${availableProducts.map(p => `<option value="${p.id}" data-price="${p.price}" data-stock="${p.stock}">${p.name} - ${p.price} دينار (متوفر: ${p.stock})</option>`).join('')}
+                    ${availableProducts.map(p => `<option value="${p.id}" data-price="${p.price}" data-stock="${p.stock}">${p.name} (متوفر: ${p.stock})</option>`).join('')}
                 </select>
             </div>
-            <div class="w-32">
-                <input type="number" name="items[${rowIndex}][quantity]" min="1" max="0" required placeholder="الكمية" oninput="validateQuantity(${rowIndex}); calculateTotal();" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                <p class="text-xs text-red-500 mt-1" id="qty-error-${rowIndex}" style="display: none;">تجاوز المتوفر!</p>
+            <div class="col-span-2">
+                <input type="text" id="price-${rowIndex}" readonly class="w-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white text-center font-bold" value="0.00">
             </div>
-            <button type="button" onclick="removeProductRow(${rowIndex})" class="w-10 h-10 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center justify-center">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-            </button>
+            <div class="col-span-2">
+                <input type="number" name="items[${rowIndex}][quantity]" min="1" max="0" required placeholder="0" oninput="validateQuantity(${rowIndex}); calculateRowTotal(${rowIndex}); calculateTotal();" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-center">
+                <p class="text-xs text-red-500 mt-1 text-center" id="qty-error-${rowIndex}" style="display: none;">تجاوز المتوفر!</p>
+            </div>
+            <div class="col-span-2">
+                <input type="text" id="total-${rowIndex}" readonly class="w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-2.5 text-sm text-blue-700 dark:text-blue-400 text-center font-bold" value="0.00">
+            </div>
+            <div class="col-span-1">
+                <button type="button" onclick="removeProductRow(${rowIndex})" class="w-10 h-10 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center justify-center">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </div>
         `;
         
         row.dataset.selectedProduct = '';
@@ -228,11 +255,19 @@
             
             row.dataset.price = price;
             const qtyInput = row.querySelector('input[type="number"]');
+            const priceDisplay = document.getElementById(`price-${index}`);
+            
             qtyInput.max = stock;
             qtyInput.value = '';
+            priceDisplay.value = parseFloat(price).toFixed(2);
+        } else {
+            row.dataset.price = '0';
+            const priceDisplay = document.getElementById(`price-${index}`);
+            if (priceDisplay) priceDisplay.value = '0.00';
         }
         
         updateAllDropdowns();
+        calculateRowTotal(index);
         calculateTotal();
     }
 
@@ -251,8 +286,22 @@
         }
     }
 
+    function calculateRowTotal(index) {
+        const row = document.getElementById(`product-row-${index}`);
+        const qtyInput = row.querySelector('input[type="number"]');
+        const totalDisplay = document.getElementById(`total-${index}`);
+        const price = parseFloat(row.dataset.price) || 0;
+        const quantity = parseInt(qtyInput.value) || 0;
+        
+        const total = quantity * price;
+        if (totalDisplay) {
+            totalDisplay.value = total.toFixed(2);
+        }
+    }
+
     function calculateTotal() {
         subtotal = 0;
+        let totalQuantity = 0;
         const container = document.getElementById('products-container');
         const rows = container.querySelectorAll('[id^="product-row-"]');
         
@@ -260,11 +309,13 @@
             const qty = parseFloat(row.querySelector('input[type="number"]').value) || 0;
             const price = parseFloat(row.dataset.price) || 0;
             subtotal += qty * price;
+            totalQuantity += qty;
         });
         
         const discount = parseFloat(document.getElementById('discount_amount').value) || 0;
         const total = subtotal - discount;
         
+        document.getElementById('total-items-display').textContent = totalQuantity;
         document.getElementById('subtotal-display').textContent = subtotal.toFixed(0) + ' دينار';
         document.getElementById('discount-display').textContent = discount.toFixed(0) + ' دينار';
         document.getElementById('total-display').textContent = total.toFixed(0) + ' دينار';
@@ -305,7 +356,7 @@
             
             const options = `
                 <option value="">اختر المنتج</option>
-                ${availableProducts.map(p => `<option value="${p.id}" data-price="${p.price}" data-stock="${p.stock}" ${p.id == currentValue ? 'selected' : ''}>${p.name} - ${p.price} دينار (متوفر: ${p.stock})</option>`).join('')}
+                ${availableProducts.map(p => `<option value="${p.id}" data-price="${p.price}" data-stock="${p.stock}" ${p.id == currentValue ? 'selected' : ''}>${p.name} (متوفر: ${p.stock})</option>`).join('')}
             `;
             
             select.innerHTML = options;
@@ -328,52 +379,62 @@
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
         addProductRow();
+        initCustomerSearch();
     });
 
-    // Customer search
-    const searchInput = document.getElementById('customer-search');
-    const resultsDiv = document.getElementById('customer-results');
-    const customerIdInput = document.getElementById('customer_id');
-
-    async function searchCustomers() {
-        const query = searchInput.value.trim();
-        if (query.length < 1) {
-            resultsDiv.style.display = 'none';
-            return;
-        }
-
-        try {
-            const response = await fetch(`{{ route('sales.invoices.search.customers') }}?query=${encodeURIComponent(query)}`);
-            const customers = await response.json();
-
-            if (customers.length > 0) {
-                resultsDiv.innerHTML = customers.map(c => `
-                    <div onclick="selectCustomer(${c.id}, '${c.name}', '${c.phone}')" class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-dark-border last:border-0">
-                        <p class="font-bold text-gray-900 dark:text-white">${c.name}</p>
-                        <p class="text-sm text-gray-500 dark:text-dark-muted">${c.phone}</p>
-                    </div>
-                `).join('');
-                resultsDiv.style.display = 'block';
-            } else {
-                resultsDiv.innerHTML = '<div class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">لا توجد نتائج</div>';
-                resultsDiv.style.display = 'block';
+    // Customer search - similar to store search
+    const customers = {!! json_encode($customers) !!};
+    
+    function initCustomerSearch() {
+        const searchInput = document.getElementById('customer-search');
+        const customerIdInput = document.getElementById('customer-id');
+        const dropdown = document.getElementById('customer-dropdown');
+        const submitBtn = document.getElementById('submit-btn');
+        
+        if (!searchInput) return;
+        
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            customerIdInput.value = '';
+            
+            if (query.length === 0) {
+                dropdown.classList.add('hidden');
+                return;
             }
-        } catch (error) {
-            console.error('خطأ في البحث:', error);
-        }
-    }
-
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            searchCustomers();
-        }
-    });
-
-    function selectCustomer(id, name, phone) {
-        customerIdInput.value = id;
-        searchInput.value = `${name} - ${phone}`;
-        resultsDiv.style.display = 'none';
+            
+            const filtered = customers.filter(customer => 
+                customer.name.toLowerCase().includes(query) || 
+                customer.phone.toLowerCase().includes(query)
+            );
+            
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">لا توجد نتائج</div>';
+                dropdown.classList.remove('hidden');
+                return;
+            }
+            
+            dropdown.innerHTML = filtered.map(customer => `
+                <div class="customer-option px-4 py-3 hover:bg-gray-100 dark:hover:bg-dark-bg cursor-pointer border-b border-gray-100 dark:border-dark-border last:border-0" data-id="${customer.id}" data-name="${customer.name} - ${customer.phone}">
+                    <div class="font-bold text-gray-900 dark:text-white text-sm">${customer.name}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">${customer.phone}</div>
+                </div>
+            `).join('');
+            dropdown.classList.remove('hidden');
+            
+            document.querySelectorAll('.customer-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    customerIdInput.value = this.dataset.id;
+                    searchInput.value = this.dataset.name;
+                    dropdown.classList.add('hidden');
+                });
+            });
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!searchInput.closest('.relative').contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
     }
 
     // Add customer modal
@@ -409,7 +470,16 @@
 
             const data = await response.json();
             if (data.success) {
-                selectCustomer(data.customer.id, data.customer.name, data.customer.phone);
+                // Add to customers array
+                customers.push({
+                    id: data.customer.id,
+                    name: data.customer.name,
+                    phone: data.customer.phone
+                });
+                
+                // Select the new customer
+                document.getElementById('customer-id').value = data.customer.id;
+                document.getElementById('customer-search').value = `${data.customer.name} - ${data.customer.phone}`;
                 closeAddCustomerModal();
             }
         } catch (error) {
