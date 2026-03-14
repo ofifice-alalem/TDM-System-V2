@@ -374,6 +374,7 @@
                             </div>
                         </div>
                         @else
+                        @php
                             $statusConfig = match($item->status) {
                                 'completed' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'مكتمل'],
                                 'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'ملغي'],
