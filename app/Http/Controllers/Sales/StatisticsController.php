@@ -40,8 +40,9 @@ class StatisticsController extends Controller
                 $q->where('status', '!=', 'cancelled');
             }]),
             'payments' => CustomerPayment::with('customer', 'salesUser'),
-            'returns' => CustomerReturn::with('customer', 'salesUser'),
-            default => null
+            'returns'  => CustomerReturn::with('customer', 'salesUser'),
+            'summary'  => CustomerInvoice::with(['customer', 'salesUser']),
+            default    => null
         };
 
         if (!$query) return null;
@@ -58,6 +59,50 @@ class StatisticsController extends Controller
 
         $query->whereDate('created_at', '>=', $request->from_date)
               ->whereDate('created_at', '<=', $request->to_date);
+
+        // للملخص المالي نعيد بيانات مجمّعة حسب العميل
+        if ($request->operation === 'summary') {
+            $allItems = $query->where('status', 'completed')->get();
+
+            $customerIds = $allItems->pluck('customer_id')->unique();
+
+            $payments = CustomerPayment::with('customer')
+                ->whereIn('customer_id', $customerIds)
+                ->where('status', 'completed')
+                ->whereDate('created_at', '>=', $request->from_date)
+                ->whereDate('created_at', '<=', $request->to_date)
+                ->get();
+
+            $returns = CustomerReturn::with('customer')
+                ->whereIn('customer_id', $customerIds)
+                ->where('status', 'completed')
+                ->whereDate('created_at', '>=', $request->from_date)
+                ->whereDate('created_at', '<=', $request->to_date)
+                ->get();
+
+            $summaryData = $customerIds->map(function($cid) use ($allItems, $payments, $returns) {
+                $customer       = $allItems->firstWhere('customer_id', $cid)?->customer;
+                $totalInvoices  = $allItems->where('customer_id', $cid)->sum('total_amount');
+                $totalPayments  = $payments->where('customer_id', $cid)->sum('amount');
+                $totalReturns   = $returns->where('customer_id', $cid)->sum('total_amount');
+                return (object)[
+                    'customer'       => $customer,
+                    'total_invoices' => $totalInvoices,
+                    'total_payments' => $totalPayments,
+                    'total_returns'  => $totalReturns,
+                    'total_debt'     => $totalInvoices - $totalPayments - $totalReturns,
+                ];
+            })->sortByDesc('total_debt')->values();
+
+            $grandTotal = $summaryData->sum('total_invoices');
+
+            return [
+                'operation'          => 'summary',
+                'data'               => $summaryData,
+                'total'              => $grandTotal,
+                'paymentMethodTotals'=> null,
+            ];
+        }
 
         $data = $forExport ? $query->latest()->get() : $query->latest()->paginate(50);
         
@@ -132,14 +177,9 @@ class StatisticsController extends Controller
         $operationName = match($request->operation) {
             'invoices' => 'الفواتير',
             'payments' => 'المدفوعات',
-            'returns' => 'المرتجعات',
-            default => ''
-        };
-        
-        $statusName = match($request->status) {
-            'completed' => 'مكتمل',
-            'cancelled' => 'ملغي',
-            default => 'الكل'
+            'returns'  => 'المرتجعات',
+            'summary'  => 'الملخص المالي',
+            default    => ''
         };
         
         $row = 1;
@@ -156,11 +196,18 @@ class StatisticsController extends Controller
             ['العملية', $operationName],
             ['من تاريخ', $request->from_date],
             ['إلى تاريخ', $request->to_date],
-            ['الحالة', $statusName],
         ]);
         
-        if (!$request->filled('status')) {
-            $infoData[] = ['ملاحظة', 'يتم احتساب العمليات المكتملة فقط'];
+        if ($results['operation'] !== 'summary') {
+            $statusName = match($request->status ?? '') {
+                'completed' => 'مكتمل',
+                'cancelled' => 'ملغي',
+                default     => 'الكل'
+            };
+            $infoData[] = ['الحالة', $statusName];
+            if (!$request->filled('status')) {
+                $infoData[] = ['ملاحظة', 'يتم احتساب العمليات المكتملة فقط'];
+            }
         }
         
         $infoData[] = ['الإجمالي', number_format($results['total'], 2) . ' دينار'];
@@ -203,11 +250,13 @@ class StatisticsController extends Controller
             ? ['الرقم', 'العميل', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ', 'المرتجعات']
             : ($results['operation'] == 'payments' 
                 ? ['الرقم', 'العميل', 'الموظف', 'التاريخ', 'الحالة', 'طريقة الدفع', 'المبلغ']
-                : ['الرقم', 'العميل', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ']);
+                : ($results['operation'] == 'summary'
+                    ? ['العميل', 'إجمالي الفواتير', 'إجمالي المدفوعات', 'إجمالي المرتجعات', 'الدين الحالي']
+                    : ['الرقم', 'العميل', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ']));
         
         $sheet->fromArray($headers, null, 'A' . $row);
         
-        $lastCol = $results['operation'] == 'invoices' ? 'G' : ($results['operation'] == 'payments' ? 'G' : 'F');
+        $lastCol = $results['operation'] == 'invoices' ? 'G' : ($results['operation'] == 'payments' ? 'G' : ($results['operation'] == 'summary' ? 'E' : 'F'));
         $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
@@ -217,6 +266,27 @@ class StatisticsController extends Controller
         $row++;
         
         foreach ($results['data'] as $item) {
+            if ($results['operation'] == 'summary') {
+                $rowData = [
+                    $item->customer->name ?? '',
+                    number_format($item->total_invoices, 2),
+                    number_format($item->total_payments, 2),
+                    number_format($item->total_returns, 2),
+                    number_format($item->total_debt, 2),
+                ];
+                $sheet->fromArray($rowData, null, 'A' . $row);
+                $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                ]);
+                $debtColor = $item->total_debt > 0 ? 'FFCDD2' : ($item->total_debt < 0 ? 'C8E6C9' : 'F5F5F5');
+                $sheet->getStyle('E' . $row)->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $debtColor]],
+                    'font' => ['bold' => true],
+                ]);
+                $row++;
+                continue;
+            }
+
             $number = match($results['operation']) {
                 'invoices' => $item->invoice_number,
                 'payments' => $item->payment_number,
@@ -332,11 +402,24 @@ class StatisticsController extends Controller
             ]);
         }
         
-        foreach (range('A', $results['operation'] == 'invoices' ? 'F' : 'E') as $col) {
+        $lastAutoCol = match($results['operation']) {
+            'invoices' => 'G',
+            'payments' => 'G',
+            'summary'  => 'E',
+            default    => 'F',
+        };
+        foreach (range('A', $lastAutoCol) as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        $filename = date('y_m_d') . '_' . $customerLabel . '_' . $operationName . '.xlsx';
+        $filenameOp = match($results['operation']) {
+            'invoices' => 'invoices',
+            'payments' => 'payments',
+            'returns'  => 'returns',
+            'summary'  => 'summary',
+            default    => 'export',
+        };
+        $filename = date('y_m_d') . '_' . $filenameOp . '.xlsx';
         
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');

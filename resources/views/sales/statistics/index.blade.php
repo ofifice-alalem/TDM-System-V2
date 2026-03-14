@@ -118,6 +118,7 @@
                             <option value="invoices" {{ request('operation') == 'invoices' ? 'selected' : '' }}>الفواتير</option>
                             <option value="payments" {{ request('operation') == 'payments' ? 'selected' : '' }}>المدفوعات</option>
                             <option value="returns" {{ request('operation') == 'returns' ? 'selected' : '' }}>المرتجعات</option>
+                            <option value="summary" {{ request('operation') == 'summary' ? 'selected' : '' }}>الملخص المالي</option>
                         </select>
                     </div>
 
@@ -206,8 +207,10 @@
                                     @if($results['operation'] == 'invoices') رقم الفاتورة
                                     @elseif($results['operation'] == 'payments') رقم الإيصال
                                     @elseif($results['operation'] == 'returns') رقم الإرجاع
+                                    @elseif($results['operation'] == 'summary') العميل
                                     @endif
                                 </th>
+                                @if($results['operation'] != 'summary')
                                 <th class="px-6 py-4 text-right text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">العميل</th>
                                 <th class="px-6 py-4 text-right text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">الموظف</th>
                                 <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">التاريخ</th>
@@ -219,10 +222,40 @@
                                 @if($results['operation'] == 'invoices')
                                 <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">المرتجعات</th>
                                 @endif
+                                @else
+                                <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">إجمالي الفواتير</th>
+                                <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">إجمالي المدفوعات</th>
+                                <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">إجمالي المرتجعات</th>
+                                <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">الدين</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-dark-border">
                             @forelse($results['data'] as $index => $item)
+                                @if($results['operation'] == 'summary')
+                                <tr class="hover:bg-purple-50/30 dark:hover:bg-purple-900/10 transition-all duration-200 {{ $index % 2 === 0 ? 'bg-white dark:bg-dark-card' : 'bg-gray-50/50 dark:bg-dark-bg/50' }}">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center shrink-0">
+                                                <i data-lucide="user" class="w-4 h-4 text-purple-600 dark:text-purple-400"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-bold text-gray-900 dark:text-white">{{ $item->customer->name ?? '-' }}</p>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $item->customer->phone ?? '' }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-center"><span class="inline-flex items-center justify-center min-w-[70px] px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg text-sm font-black">{{ number_format($item->total_invoices, 0) }}</span></td>
+                                    <td class="px-6 py-4 text-center"><span class="inline-flex items-center justify-center min-w-[70px] px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-sm font-black">{{ number_format($item->total_payments, 0) }}</span></td>
+                                    <td class="px-6 py-4 text-center"><span class="inline-flex items-center justify-center min-w-[70px] px-3 py-1.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-lg text-sm font-black">{{ number_format($item->total_returns, 0) }}</span></td>
+                                    <td class="px-6 py-4 text-center">
+                                        <span class="inline-flex items-center justify-center min-w-[70px] px-3 py-1.5 rounded-lg text-sm font-black
+                                            {{ $item->total_debt > 0 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : ($item->total_debt < 0 ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400') }}">
+                                            {{ number_format($item->total_debt, 0) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @else
                                 @php
                                     $statusConfig = match($item->status) {
                                         'completed' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'مكتمل'],
@@ -271,6 +304,7 @@
                                     </td>
                                     @endif
                                 </tr>
+                                @endif
                             @empty
                                 <tr>
                                     <td colspan="{{ $results['operation'] == 'invoices' ? '7' : ($results['operation'] == 'payments' ? '7' : '6') }}" class="px-6 py-12 text-center">
@@ -288,7 +322,37 @@
                 {{-- Mobile Cards --}}
                 <div class="md:hidden divide-y divide-gray-200 dark:divide-dark-border">
                     @forelse($results['data'] as $item)
-                        @php
+                        @if($results['operation'] == 'summary')
+                        <div class="p-4 hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center shrink-0">
+                                    <i data-lucide="user" class="w-5 h-5 text-purple-600 dark:text-purple-400"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-gray-900 dark:text-white">{{ $item->customer->name ?? '-' }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $item->customer->phone ?? '' }}</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 text-center">
+                                    <p class="text-xs text-blue-600 dark:text-blue-400 font-bold mb-1">الفواتير</p>
+                                    <p class="text-base font-black text-blue-700 dark:text-blue-300">{{ number_format($item->total_invoices, 0) }}</p>
+                                </div>
+                                <div class="bg-green-50 dark:bg-green-500/10 rounded-xl p-3 text-center">
+                                    <p class="text-xs text-green-600 dark:text-green-400 font-bold mb-1">المدفوعات</p>
+                                    <p class="text-base font-black text-green-700 dark:text-green-300">{{ number_format($item->total_payments, 0) }}</p>
+                                </div>
+                                <div class="bg-orange-50 dark:bg-orange-500/10 rounded-xl p-3 text-center">
+                                    <p class="text-xs text-orange-600 dark:text-orange-400 font-bold mb-1">المرتجعات</p>
+                                    <p class="text-base font-black text-orange-700 dark:text-orange-300">{{ number_format($item->total_returns, 0) }}</p>
+                                </div>
+                                <div class="rounded-xl p-3 text-center {{ $item->total_debt > 0 ? 'bg-red-50 dark:bg-red-500/10' : ($item->total_debt < 0 ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-gray-50 dark:bg-gray-500/10') }}">
+                                    <p class="text-xs font-bold mb-1 {{ $item->total_debt > 0 ? 'text-red-600 dark:text-red-400' : ($item->total_debt < 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-600 dark:text-gray-400') }}">الدين</p>
+                                    <p class="text-base font-black {{ $item->total_debt > 0 ? 'text-red-700 dark:text-red-300' : ($item->total_debt < 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-700 dark:text-gray-300') }}">{{ number_format($item->total_debt, 0) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        @else
                             $statusConfig = match($item->status) {
                                 'completed' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'مكتمل'],
                                 'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'ملغي'],
@@ -326,6 +390,7 @@
                                 </p>
                             </div>
                         </div>
+                        @endif
                     @empty
                         <div class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center">
@@ -336,7 +401,7 @@
                     @endforelse
                 </div>
 
-                @if($results['data']->hasPages())
+                @if(method_exists($results['data'], 'hasPages') && $results['data']->hasPages())
                     <div class="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-dark-border">
                         {{ $results['data']->appends(request()->query())->links() }}
                     </div>
