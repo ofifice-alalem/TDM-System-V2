@@ -44,7 +44,7 @@
                         <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">اسم العميل</label>
                         <div class="flex gap-2"
                             x-data="{
-                                search: '{{ request('customer_id') == 'all' ? 'الكل' : ($customers->firstWhere('id', request('customer_id'))?->name ?? '') }}',
+                                search: '{{ request('customer_id') == 'all' ? 'الكل' : ($customers->firstWhere('id', request('customer_id'))?->name ?? request('customer_name', '')) }}',
                                 selectedId: '{{ request('customer_id') ?? '' }}',
                                 open: false,
                                 customers: {{ Js::from($customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name])) }},

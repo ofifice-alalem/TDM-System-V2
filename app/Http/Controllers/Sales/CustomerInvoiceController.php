@@ -55,7 +55,19 @@ class CustomerInvoiceController extends Controller
             $query->where('status', $request->status);
         }
 
-        $invoices = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+        $sort = $request->input('sort', 'date_desc');
+        $query->orderBy(
+            match($sort) {
+                'amount_asc', 'amount_desc' => 'total_amount',
+                default => 'created_at',
+            },
+            match($sort) {
+                'amount_asc', 'date_asc' => 'asc',
+                default => 'desc',
+            }
+        );
+
+        $invoices = $query->paginate(20)->withQueryString();
 
         return view('sales.invoices.index', compact('invoices'));
     }
