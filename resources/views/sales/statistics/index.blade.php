@@ -42,13 +42,73 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">اسم العميل</label>
-                        <select name="customer_id" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">اختر العميل...</option>
-                            <option value="all" {{ request('customer_id') == 'all' ? 'selected' : '' }}>الكل</option>
-                            @foreach($customers as $customer)
-                                <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->name }}</option>
-                            @endforeach
-                        </select>
+                        <div class="flex gap-2"
+                            x-data="{
+                                search: '{{ request('customer_id') == 'all' ? 'الكل' : ($customers->firstWhere('id', request('customer_id'))?->name ?? '') }}',
+                                selectedId: '{{ request('customer_id') ?? '' }}',
+                                open: false,
+                                customers: {{ Js::from($customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name])) }},
+                                filtered: [],
+                                init() { this.filtered = this.customers; },
+                                filter() {
+                                    this.selectedId = '';
+                                    const q = this.search.toLowerCase();
+                                    this.filtered = q ? this.customers.filter(c => c.name.toLowerCase().includes(q)) : this.customers;
+                                    this.open = true;
+                                },
+                                select(id, name) {
+                                    this.selectedId = id;
+                                    this.search = name;
+                                    this.open = false;
+                                },
+                                selectAll() {
+                                    this.selectedId = 'all';
+                                    this.search = 'الكل';
+                                    this.open = false;
+                                }
+                            }"
+                            @click.outside="open = false"
+                        >
+                            <div class="relative flex-1">
+                                <input
+                                    type="text"
+                                    x-model="search"
+                                    @focus="open = true"
+                                    @input="filter()"
+                                    placeholder="ابحث عن عميل..."
+                                    autocomplete="off"
+                                    class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 pr-10"
+                                >
+                                <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute top-1/2 -translate-y-1/2 right-3 pointer-events-none"></i>
+                                <input type="hidden" name="customer_id" x-model="selectedId">
+                                <input type="hidden" name="customer_name" :value="selectedId ? '' : search">
+                                <div
+                                    x-show="open"
+                                    x-transition
+                                    class="absolute z-50 w-full mt-1 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl overflow-hidden"
+                                    style="max-height: 220px; overflow-y: auto;"
+                                >
+                                    <div
+                                        @click="selectAll()"
+                                        class="px-4 py-2.5 text-sm font-bold text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 cursor-pointer border-b border-gray-100 dark:border-dark-border"
+                                    >الكل</div>
+                                    <template x-for="c in filtered" :key="c.id">
+                                        <div
+                                            @click="select(c.id, c.name)"
+                                            class="px-4 py-2.5 text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer"
+                                            x-text="c.name"
+                                        ></div>
+                                    </template>
+                                    <div x-show="filtered.length === 0" class="px-4 py-3 text-sm text-gray-400 dark:text-gray-500 text-center">لا توجد نتائج</div>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                @click="selectAll()"
+                                :class="selectedId === 'all' ? 'bg-primary-600 text-white border-primary-600' : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-gray-300 border-gray-200 dark:border-dark-border hover:bg-gray-200 dark:hover:bg-gray-700'"
+                                class="px-4 py-2.5 rounded-xl font-bold text-sm transition-all border shrink-0"
+                            >الكل</button>
+                        </div>
                     </div>
 
                     <div>
@@ -351,6 +411,8 @@
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
     });
+
+
 </script>
 @endpush
 @endsection

@@ -21,7 +21,8 @@ class StatisticsController extends Controller
         $customers = Customer::where('is_active', true)->get();
         $results = null;
 
-        if ($request->filled(['customer_id', 'operation', 'from_date', 'to_date'])) {
+        if ($request->filled(['operation', 'from_date', 'to_date']) &&
+            ($request->filled('customer_id') || $request->filled('customer_name'))) {
             $results = $this->getStatistics($request, $request->has('export'));
             
             if ($results && $request->has('export')) {
@@ -45,8 +46,10 @@ class StatisticsController extends Controller
 
         if (!$query) return null;
 
-        if ($request->customer_id && $request->customer_id !== 'all') {
+        if ($request->filled('customer_id') && $request->customer_id !== 'all') {
             $query->where('customer_id', $request->customer_id);
+        } elseif ($request->filled('customer_name') && $request->customer_id !== 'all') {
+            $query->whereHas('customer', fn($q) => $q->where('name', 'like', '%' . $request->customer_name . '%'));
         }
 
         if ($request->filled('status')) {
@@ -65,8 +68,10 @@ class StatisticsController extends Controller
             default => null
         };
         
-        if ($request->customer_id && $request->customer_id !== 'all') {
+        if ($request->filled('customer_id') && $request->customer_id !== 'all') {
             $totalQuery->where('customer_id', $request->customer_id);
+        } elseif ($request->filled('customer_name') && $request->customer_id !== 'all') {
+            $totalQuery->whereHas('customer', fn($q) => $q->where('name', 'like', '%' . $request->customer_name . '%'));
         }
         
         $totalQuery->where('status', $request->filled('status') ? $request->status : 'completed')
@@ -87,8 +92,10 @@ class StatisticsController extends Controller
                 ->whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date);
             
-            if ($request->customer_id && $request->customer_id !== 'all') {
+            if ($request->filled('customer_id') && $request->customer_id !== 'all') {
                 $pmQuery->where('customer_id', $request->customer_id);
+            } elseif ($request->filled('customer_name') && $request->customer_id !== 'all') {
+                $pmQuery->whereHas('customer', fn($q) => $q->where('name', 'like', '%' . $request->customer_name . '%'));
             }
             
             $paymentMethodTotals = [
@@ -112,7 +119,15 @@ class StatisticsController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setRightToLeft(true);
         
-        $customer = $request->customer_id === 'all' ? null : Customer::find($request->customer_id);
+        $customer = ($request->customer_id && $request->customer_id !== 'all') 
+            ? Customer::find($request->customer_id) 
+            : null;
+
+        $customerLabel = $customer 
+            ? $customer->name 
+            : ($request->filled('customer_name') && $request->customer_id !== 'all' 
+                ? $request->customer_name . ' (بحث)'
+                : 'الكل');
         
         $operationName = match($request->operation) {
             'invoices' => 'الفواتير',
@@ -130,7 +145,7 @@ class StatisticsController extends Controller
         $row = 1;
         
         $infoData = [
-            ['اسم العميل', $customer ? $customer->name : 'الكل'],
+            ['اسم العميل', $customerLabel],
         ];
         
         if ($customer) {
@@ -321,7 +336,7 @@ class StatisticsController extends Controller
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        $filename = date('y_m_d') . '_' . ($customer ? $customer->name : 'الكل') . '_' . $operationName . '.xlsx';
+        $filename = date('y_m_d') . '_' . $customerLabel . '_' . $operationName . '.xlsx';
         
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
