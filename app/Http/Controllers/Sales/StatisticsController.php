@@ -768,6 +768,31 @@ class StatisticsController extends Controller
             'font' => ['bold' => true, 'size' => 12],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
         ]);
+        $sumInvoices = $customers->sum('total_invoices');
+        $sumPayments = $customers->sum('total_payments');
+        $sumReturns  = $customers->sum('total_returns');
+        $sumDebt     = $customers->sum('total_debt');
+
+        $summaryData = [
+            ['إجمالي الفواتير', number_format($sumInvoices, 2) . ' دينار'],
+            ['إجمالي المدفوعات', number_format($sumPayments, 2) . ' دينار'],
+            ['إجمالي المرتجعات', number_format($sumReturns, 2) . ' دينار'],
+            ['إجمالي الدين', number_format($sumDebt, 2) . ' دينار'],
+        ];
+
+        $summaryColors = ['E3F2FD', 'E8F5E9', 'FFF3E0', $sumDebt > 0 ? 'FFCDD2' : ($sumDebt < 0 ? 'C8E6C9' : 'F5F5F5')];
+
+        foreach ($summaryData as $i => $summary) {
+            $sheet->setCellValue('A' . $row, $summary[0]);
+            $sheet->setCellValue('B' . $row, $summary[1]);
+            $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $summaryColors[$i]]],
+                'font' => ['bold' => true, 'size' => 12],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
+            $row++;
+        }
+
         $row += 2;
 
         $sheet->fromArray(['العميل', 'إجمالي الفواتير', 'إجمالي المدفوعات', 'إجمالي المرتجعات', 'الدين الحالي'], null, 'A' . $row);
