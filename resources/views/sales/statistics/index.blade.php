@@ -168,17 +168,38 @@
                     <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                         <div>
                             <h2 class="text-xl font-black text-gray-900 dark:text-white">النتائج</h2>
-                            @if(!request('status'))
+                            @if(!request('status') && $results['operation'] != 'summary')
                             <div class="flex items-center gap-2 mt-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-500/30 rounded-lg">
                                 <i data-lucide="info" class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0"></i>
                                 <p class="text-xs font-bold text-blue-700 dark:text-blue-400">يتم احتساب العمليات المكتملة فقط</p>
                             </div>
                             @endif
                         </div>
+                        @if($results['operation'] == 'summary')
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full mt-2 sm:mt-0">
+                            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-500/30 rounded-xl p-3">
+                                <p class="text-xs text-blue-700 dark:text-blue-400 font-bold mb-1">إجمالي الفواتير</p>
+                                <p class="text-base font-black text-blue-600 dark:text-blue-400">{{ number_format($results['total'], 2) }} <span class="text-xs font-normal">د</span></p>
+                            </div>
+                            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-500/30 rounded-xl p-3">
+                                <p class="text-xs text-green-700 dark:text-green-400 font-bold mb-1">إجمالي المدفوعات</p>
+                                <p class="text-base font-black text-green-600 dark:text-green-400">{{ number_format($results['grand_payments'], 2) }} <span class="text-xs font-normal">د</span></p>
+                            </div>
+                            <div class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-500/30 rounded-xl p-3">
+                                <p class="text-xs text-orange-700 dark:text-orange-400 font-bold mb-1">إجمالي المرتجعات</p>
+                                <p class="text-base font-black text-orange-600 dark:text-orange-400">{{ number_format($results['grand_returns'], 2) }} <span class="text-xs font-normal">د</span></p>
+                            </div>
+                            <div class="{{ $results['grand_debt'] > 0 ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-500/30' : ($results['grand_debt'] < 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-500/30' : 'bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border') }} border rounded-xl p-3">
+                                <p class="text-xs font-bold mb-1 {{ $results['grand_debt'] > 0 ? 'text-red-700 dark:text-red-400' : ($results['grand_debt'] < 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-600 dark:text-gray-400') }}">الدين</p>
+                                <p class="text-base font-black {{ $results['grand_debt'] > 0 ? 'text-red-600 dark:text-red-400' : ($results['grand_debt'] < 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-700 dark:text-gray-300') }}">{{ number_format($results['grand_debt'], 2) }} <span class="text-xs font-normal">د</span></p>
+                            </div>
+                        </div>
+                        @else
                         <div class="bg-gray-50 dark:bg-dark-bg rounded-xl p-3 sm:text-left">
                             <p class="text-xs text-gray-500 dark:text-gray-400">الإجمالي</p>
                             <p class="text-xl sm:text-2xl font-black text-primary-600 dark:text-primary-400">{{ number_format($results['total'], 2) }} دينار</p>
                         </div>
+                        @endif
                     </div>
                     @if($results['operation'] == 'payments' && $results['paymentMethodTotals'])
                     <div class="mt-4 grid grid-cols-3 gap-2 sm:gap-3">

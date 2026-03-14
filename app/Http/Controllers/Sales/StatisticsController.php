@@ -94,12 +94,13 @@ class StatisticsController extends Controller
                 ];
             })->sortByDesc('total_debt')->values();
 
-            $grandTotal = $summaryData->sum('total_invoices');
-
             return [
                 'operation'          => 'summary',
                 'data'               => $summaryData,
-                'total'              => $grandTotal,
+                'total'              => $summaryData->sum('total_invoices'),
+                'grand_payments'     => $summaryData->sum('total_payments'),
+                'grand_returns'      => $summaryData->sum('total_returns'),
+                'grand_debt'         => $summaryData->sum('total_debt'),
                 'paymentMethodTotals'=> null,
             ];
         }
@@ -210,7 +211,9 @@ class StatisticsController extends Controller
             }
         }
         
-        $infoData[] = ['الإجمالي', number_format($results['total'], 2) . ' دينار'];
+        if ($results['operation'] !== 'summary') {
+            $infoData[] = ['الإجمالي', number_format($results['total'], 2) . ' دينار'];
+        }
         
         foreach ($infoData as $info) {
             $sheet->setCellValue('A' . $row, $info[0]);
@@ -245,6 +248,29 @@ class StatisticsController extends Controller
         }
         
         $row++;
+
+        if ($results['operation'] == 'summary') {
+            $grandDebtColor = $results['grand_debt'] > 0 ? 'FFCDD2' : ($results['grand_debt'] < 0 ? 'C8E6C9' : 'F5F5F5');
+            $sheet->fromArray(['إجمالي الفواتير', 'إجمالي المدفوعات', 'إجمالي المرتجعات', 'الدين'], null, 'A' . $row);
+            $sheet->getStyle('A' . $row . ':D' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E8EAF6']],
+                'font' => ['bold' => true, 'size' => 11],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            ]);
+            $row++;
+            $sheet->fromArray([number_format($results['total'], 2), number_format($results['grand_payments'], 2), number_format($results['grand_returns'], 2), number_format($results['grand_debt'], 2)], null, 'A' . $row);
+            $sheet->getStyle('A' . $row . ':D' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F3F4FF']],
+                'font' => ['bold' => true, 'size' => 12],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            ]);
+            $sheet->getStyle('D' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $grandDebtColor]],
+            ]);
+            $row += 2;
+        }
         
         $headers = $results['operation'] == 'invoices' 
             ? ['الرقم', 'العميل', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ', 'المرتجعات']
@@ -366,7 +392,7 @@ class StatisticsController extends Controller
             ]);
             $row++;
         }
-        
+
         if ($results['operation'] == 'payments' && $results['paymentMethodTotals']) {
             $row++;
             $sheet->setCellValue('A' . $row, 'ملاحظات:');
