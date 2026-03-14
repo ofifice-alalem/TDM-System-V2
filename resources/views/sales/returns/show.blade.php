@@ -8,14 +8,14 @@
     <div class="max-w-6xl mx-auto px-4">
         
         {{-- Header --}}
-        <div class="animate-fade-in-down mb-8">
+        <div class="animate-fade-in-down mb-6">
             <a href="{{ route('sales.returns.index') }}" class="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 mb-4 transition-colors">
                 <i data-lucide="arrow-right" class="w-5 h-5"></i>
                 <span class="font-bold">العودة للمرتجعات</span>
             </a>
-            <div class="flex items-center justify-between">
+            <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                    <div class="flex items-center gap-3 mb-2">
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
                         <span class="bg-orange-100 dark:bg-orange-600/20 text-orange-600 dark:text-orange-400 px-3 py-1 rounded-lg text-xs font-bold border border-orange-100 dark:border-orange-600/30">
                             مرتجع #{{ $return->return_number }}
                         </span>
@@ -25,10 +25,10 @@
                         <span class="px-3 py-1 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-full text-xs font-bold">ملغي</span>
                         @endif
                     </div>
-                    <h1 class="text-4xl font-black text-gray-900 dark:text-white">تفاصيل المرتجع</h1>
+                    <h1 class="text-2xl sm:text-4xl font-black text-gray-900 dark:text-white">تفاصيل المرتجع</h1>
                 </div>
-                <button onclick="window.location.href='{{ route('sales.returns.pdf', $return) }}'" class="px-6 py-3 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all flex items-center gap-2">
-                    <i data-lucide="printer" class="w-5 h-5"></i>
+                <button onclick="window.location.href='{{ route('sales.returns.pdf', $return) }}'" class="px-4 py-2.5 sm:px-6 sm:py-3 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all flex items-center gap-2 text-sm sm:text-base">
+                    <i data-lucide="printer" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                     طباعة
                 </button>
             </div>
@@ -38,25 +38,25 @@
         <div class="bg-white dark:bg-dark-card rounded-3xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border overflow-hidden animate-slide-up">
             
             {{-- Header Section --}}
-            <div class="bg-white dark:bg-dark-card p-8 border-b border-gray-200 dark:border-dark-border">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-orange-100 dark:bg-orange-500/10 rounded-xl flex items-center justify-center">
-                            <i data-lucide="package-x" class="w-7 h-7 text-orange-600 dark:text-orange-400"></i>
+            <div class="bg-white dark:bg-dark-card p-5 sm:p-8 border-b border-gray-200 dark:border-dark-border">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 sm:gap-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 dark:bg-orange-500/10 rounded-xl flex items-center justify-center shrink-0">
+                            <i data-lucide="package-x" class="w-5 h-5 sm:w-7 sm:h-7 text-orange-600 dark:text-orange-400"></i>
                         </div>
                         <div>
-                            <div class="flex items-center gap-3">
+                            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                                 <div>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">مرتجع</p>
-                                    <h2 class="text-2xl font-black text-gray-900 dark:text-white">#{{ $return->return_number }}</h2>
+                                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">مرتجع</p>
+                                    <h2 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">#{{ $return->return_number }}</h2>
                                 </div>
                                 @if($return->status === 'completed')
-                                <span class="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-bold border border-emerald-200 dark:border-emerald-500/30 flex items-center gap-1.5">
+                                <span class="px-2.5 py-1 sm:px-3 sm:py-1.5 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-bold border border-emerald-200 dark:border-emerald-500/30 flex items-center gap-1.5">
                                     <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
                                     مكتمل
                                 </span>
                                 @else
-                                <span class="px-3 py-1.5 bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 rounded-lg text-xs font-bold border border-red-200 dark:border-red-500/30 flex items-center gap-1.5">
+                                <span class="px-2.5 py-1 sm:px-3 sm:py-1.5 bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 rounded-lg text-xs font-bold border border-red-200 dark:border-red-500/30 flex items-center gap-1.5">
                                     <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
                                     ملغي
                                 </span>
@@ -65,32 +65,32 @@
                         </div>
                     </div>
                     <div class="text-left">
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">إجمالي المرتجع</p>
-                        <p class="text-3xl font-black text-gray-900 dark:text-white">{{ number_format($return->total_amount, 0) }} دينار</p>
+                        <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1">إجمالي المرتجع</p>
+                        <p class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">{{ number_format($return->total_amount, 0) }} دينار</p>
                     </div>
                 </div>
             </div>
 
             @if($return->status === 'cancelled')
-            <div class="bg-red-50 dark:bg-red-500/10 border-t-4 border-red-500 dark:border-red-600 p-6">
-                <div class="flex items-center justify-between">
+            <div class="bg-red-50 dark:bg-red-500/10 border-t-4 border-red-500 dark:border-red-600 p-4 sm:p-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
-                        <div class="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
-                            <i data-lucide="x-octagon" class="w-7 h-7 text-red-600 dark:text-red-400"></i>
+                        <div class="w-10 h-10 sm:w-14 sm:h-14 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center shrink-0">
+                            <i data-lucide="x-octagon" class="w-5 h-5 sm:w-7 sm:h-7 text-red-600 dark:text-red-400"></i>
                         </div>
-                        <h3 class="text-xl font-black text-red-900 dark:text-red-300">تم إلغاء المرتجع</h3>
+                        <h3 class="text-base sm:text-xl font-black text-red-900 dark:text-red-300">تم إلغاء المرتجع</h3>
                     </div>
-                    <div class="flex items-center gap-6">
-                        <div class="flex items-center gap-2 text-red-700 dark:text-red-400">
-                            <i data-lucide="calendar" class="w-5 h-5"></i>
+                    <div class="flex flex-wrap items-center gap-3 sm:gap-6">
+                        <div class="flex items-center gap-2 text-red-700 dark:text-red-400 text-sm">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
                             <span class="font-bold">بتاريخ:</span>
-                            <span class="text-base">{{ $return->updated_at->format('Y-m-d') }}</span>
+                            <span>{{ $return->updated_at->format('Y-m-d') }}</span>
                         </div>
-                        <div class="w-px h-6 bg-red-300 dark:bg-red-700"></div>
-                        <div class="flex items-center gap-2 text-red-700 dark:text-red-400">
-                            <i data-lucide="clock" class="w-5 h-5"></i>
+                        <div class="hidden sm:block w-px h-6 bg-red-300 dark:bg-red-700"></div>
+                        <div class="flex items-center gap-2 text-red-700 dark:text-red-400 text-sm">
+                            <i data-lucide="clock" class="w-4 h-4"></i>
                             <span class="font-bold">الساعة:</span>
-                            <span class="text-base">{{ $return->updated_at->format('H:i') }}</span>
+                            <span>{{ $return->updated_at->format('H:i') }}</span>
                         </div>
                     </div>
                 </div>
@@ -104,7 +104,7 @@
             @endif
 
             {{-- Details Section --}}
-            <div class="p-8">
+            <div class="p-4 sm:p-8">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="bg-gray-50 dark:bg-dark-bg rounded-2xl p-5">
                         <div class="flex items-center gap-3 mb-3">
@@ -145,38 +145,98 @@
                 </div>
 
                 {{-- Products Table --}}
-                <div class="mb-6">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 bg-primary-50 dark:bg-primary-500/10 rounded-xl flex items-center justify-center">
-                            <i data-lucide="package" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i>
+                <div class="bg-white dark:bg-dark-card rounded-2xl sm:rounded-3xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border overflow-hidden mb-4 sm:mb-6">
+                    <div class="p-4 sm:p-6 border-b border-gray-200 dark:border-dark-border">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-orange-50 dark:bg-orange-500/10 rounded-xl flex items-center justify-center">
+                                <i data-lucide="package" class="w-5 h-5 text-orange-600 dark:text-orange-400"></i>
+                            </div>
+                            <h3 class="text-xl font-black text-gray-900 dark:text-white">منتجات المرتجع</h3>
                         </div>
-                        <h3 class="text-xl font-black text-gray-900 dark:text-white">منتجات المرتجع</h3>
                     </div>
-                    <div class="bg-gray-50 dark:bg-dark-bg rounded-2xl overflow-hidden">
+
+                    {{-- Desktop Table --}}
+                    <div class="hidden md:block overflow-x-auto">
                         <table class="w-full">
-                            <thead class="bg-gray-100 dark:bg-dark-card">
+                            <thead class="bg-gradient-to-l from-gray-50 to-gray-100 dark:from-dark-bg dark:to-gray-800/50">
                                 <tr>
-                                    <th class="px-4 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المنتج</th>
-                                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 dark:text-gray-400">الكمية</th>
-                                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 dark:text-gray-400">سعر الوحدة</th>
-                                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 dark:text-gray-400">الإجمالي</th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">المنتج</th>
+                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">الكمية</th>
+                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">سعر الوحدة</th>
+                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">الإجمالي</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
-                                @foreach($return->items as $item)
-                                <tr>
-                                    <td class="px-4 py-3 text-gray-900 dark:text-white font-bold">{{ $item->product->name }}</td>
-                                    <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400">{{ $item->quantity }}</td>
-                                    <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400">{{ number_format($item->unit_price, 0) }} دينار</td>
-                                    <td class="px-4 py-3 text-center font-bold text-gray-900 dark:text-white">{{ number_format($item->total_price, 0) }} دينار</td>
+                            <tbody class="divide-y divide-gray-100 dark:divide-dark-border">
+                                @foreach($return->items as $index => $item)
+                                <tr class="hover:bg-orange-50/30 dark:hover:bg-orange-900/10 transition-all duration-200 {{ $index % 2 === 0 ? 'bg-white dark:bg-dark-card' : 'bg-gray-50/50 dark:bg-dark-bg/50' }}">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 bg-orange-100 dark:bg-orange-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                <i data-lucide="box" class="w-4 h-4 text-orange-600 dark:text-orange-400"></i>
+                                            </div>
+                                            <span class="font-bold text-gray-900 dark:text-white">{{ $item->product->name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <span class="inline-flex items-center justify-center min-w-[60px] px-3 py-1.5 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 rounded-lg font-black text-base">
+                                            {{ $item->quantity }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <span class="text-gray-700 dark:text-gray-300 font-semibold">{{ number_format($item->unit_price, 0) }}</span>
+                                        <span class="text-xs text-gray-500 dark:text-gray-400 mr-1">دينار</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <span class="font-black text-lg text-gray-900 dark:text-white">{{ number_format($item->total_price, 0) }}</span>
+                                        <span class="text-sm text-gray-500 dark:text-gray-400 mr-1">دينار</span>
+                                    </td>
                                 </tr>
                                 @endforeach
-                                <tr class="bg-orange-50 dark:bg-orange-500/10 border-t-2 border-orange-200 dark:border-orange-500/30">
-                                    <td colspan="3" class="px-4 py-4 text-right font-black text-gray-900 dark:text-white">الإجمالي:</td>
-                                    <td class="px-4 py-4 text-center font-black text-orange-600 dark:text-orange-400 text-lg">{{ number_format($return->total_amount, 0) }} دينار</td>
-                                </tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    {{-- Mobile Cards --}}
+                    <div class="md:hidden divide-y divide-gray-200 dark:divide-dark-border">
+                        @foreach($return->items as $index => $item)
+                        <div class="p-4 hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
+                            <div class="flex items-start gap-3 mb-3">
+                                <div class="w-10 h-10 bg-orange-100 dark:bg-orange-500/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="box" class="w-5 h-5 text-orange-600 dark:text-orange-400"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-gray-900 dark:text-white mb-1">{{ $item->product->name }}</h4>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">المنتج #{{ $index + 1 }}</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-3 text-center">
+                                    <p class="text-xs text-blue-600 dark:text-blue-400 font-bold mb-1">الكمية</p>
+                                    <p class="text-lg font-black text-blue-700 dark:text-blue-300">{{ $item->quantity }}</p>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-dark-bg rounded-xl p-3 text-center">
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 font-bold mb-1">السعر</p>
+                                    <p class="text-sm font-bold text-gray-900 dark:text-white">{{ number_format($item->unit_price, 0) }}</p>
+                                </div>
+                                <div class="bg-orange-50 dark:bg-orange-500/10 rounded-xl p-3 text-center">
+                                    <p class="text-xs text-orange-600 dark:text-orange-400 font-bold mb-1">الإجمالي</p>
+                                    <p class="text-sm font-black text-orange-700 dark:text-orange-300">{{ number_format($item->total_price, 0) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+
+                    <div class="p-4 sm:p-6 bg-gradient-to-l from-gray-50 to-gray-100 dark:from-dark-bg dark:to-gray-800/50 border-t-2 border-gray-200 dark:border-dark-border">
+                        <div class="max-w-md mr-auto">
+                            <div class="flex justify-between items-center pt-1">
+                                <span class="text-lg font-black text-gray-900 dark:text-white">إجمالي المرتجع:</span>
+                                <div class="bg-orange-600 dark:bg-orange-500 text-white px-4 py-2 rounded-xl shadow-lg">
+                                    <span class="font-black text-xl">{{ number_format($return->total_amount, 0) }}</span>
+                                    <span class="text-sm mr-1">دينار</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -192,15 +252,15 @@
 
                 @if($return->status === 'completed')
                     <div class="bg-red-50 dark:bg-red-500/10 rounded-2xl p-5 border border-red-200 dark:border-red-500/30 mt-6">
-                        <div class="flex items-center justify-between mb-4">
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                             <div class="flex items-center gap-3">
-                                <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600 dark:text-red-400"></i>
+                                <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600 dark:text-red-400 shrink-0"></i>
                                 <div>
                                     <h3 class="text-sm font-bold text-red-900 dark:text-red-300">إلغاء المرتجع</h3>
                                     <p class="text-xs text-red-700 dark:text-red-400 mt-0.5">سيتم خصم الكميات من المخزون وإرجاع الدين</p>
                                 </div>
                             </div>
-                            <button type="button" onclick="document.getElementById('cancelForm').classList.toggle('hidden')" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-red-500/30">
+                            <button type="button" onclick="document.getElementById('cancelForm').classList.toggle('hidden')" class="w-full sm:w-auto px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-500/30">
                                 <i data-lucide="x-circle" class="w-4 h-4"></i>
                                 إلغاء المرتجع
                             </button>

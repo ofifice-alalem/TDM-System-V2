@@ -1,203 +1,114 @@
-# Project Structure
+# TDM System V2 - Project Structure
 
-## Directory Organization
+## Directory Layout
 
-### Core Application (`app/`)
 ```
-app/
-├── Console/Commands/          # Artisan custom commands
-├── Http/
-│   ├── Controllers/          # Request handlers organized by role
-│   │   ├── Admin/           # Admin-specific controllers
-│   │   ├── Warehouse/       # Warehouse operations
-│   │   ├── Marketer/        # Marketer workflows
-│   │   ├── Sales/           # Sales representative functions
-│   │   └── Shared/          # Cross-role controllers (Statistics, Notifications)
-│   ├── Middleware/          # Request filtering and authentication
-│   └── Requests/            # Form validation classes
-├── Models/                   # Eloquent ORM models (35+ models)
-├── Services/                 # Business logic layer
-│   ├── Admin/               # Admin service classes
-│   ├── Warehouse/           # Warehouse service classes
-│   ├── Marketer/            # Marketer service classes
-│   ├── Sales/               # Sales service classes
-│   └── NotificationService.php
-├── Providers/               # Service providers
-└── View/Components/         # Blade components
-```
-
-### Database Layer (`database/`)
-```
-database/
-├── migrations/              # 40+ migration files defining schema
-├── seeders/                # Database seeders
-│   ├── DatabaseSeeder.php
-│   └── LargeDataSeeder.php # Test data generation
-└── factories/              # Model factories for testing
-```
-
-### Frontend Resources (`resources/`)
-```
-resources/
-├── views/
-│   ├── admin/              # Admin panel views
-│   ├── warehouse/          # Warehouse interface
-│   ├── marketer/           # Marketer dashboard
-│   ├── sales/              # Sales representative views
-│   ├── shared/             # Shared views (statistics, notifications)
-│   ├── auth/               # Authentication pages
-│   ├── layouts/            # Layout templates
-│   └── components/         # Reusable Blade components
-├── css/                    # Stylesheets
-└── js/                     # JavaScript files
-```
-
-### Routing (`routes/`)
-```
-routes/
-├── web.php                 # Main routes and dashboard routing
-├── admin.php               # Admin-specific routes
-├── warehouse.php           # Warehouse routes
-├── marketer.php            # Marketer routes
-├── sales.php               # Sales routes
-├── auth.php                # Authentication routes
-└── api.php                 # API endpoints
-```
-
-### Configuration (`config/`)
-- Standard Laravel configuration files
-- Custom logging configuration for Arabic support
-- Database, cache, queue, and session configurations
-
-### Public Assets (`public/`)
-```
-public/
-├── fonts/                  # Cairo font family for Arabic
-├── images/                 # Company logo and assets
-└── storage/                # Symlink to storage/app/public
-```
-
-### Storage (`storage/`)
-```
-storage/
+tdm.motafwiqon.com.ly/
 ├── app/
-│   ├── backups/           # Database backup files
-│   ├── public/            # Publicly accessible files
-│   └── private/           # Private file storage
-├── fonts/                 # PDF font cache (Cairo fonts)
-├── framework/             # Framework cache and sessions
-└── logs/                  # Application logs
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Admin/        # Admin-only controllers
+│   │   │   ├── Auth/         # Laravel Breeze auth controllers
+│   │   │   ├── Marketer/     # Marketer role controllers
+│   │   │   ├── Sales/        # Sales role controllers
+│   │   │   ├── Shared/       # Shared controllers (PDF invoices, stats, stores)
+│   │   │   └── Warehouse/    # Warehouse role controllers
+│   │   ├── Middleware/       # Custom middleware (role-based access)
+│   │   └── Requests/         # Form request validation classes
+│   ├── Models/               # 35+ Eloquent models
+│   ├── Services/
+│   │   ├── Admin/            # AdminWithdrawalService
+│   │   ├── Marketer/         # Request, Return, Payment, Sales, Withdrawal services
+│   │   ├── Sales/            # CustomerInvoice, Payment, Return services
+│   │   ├── Warehouse/        # Stock, Request, Return, Sales services
+│   │   └── NotificationService.php
+│   ├── Jobs/                 # Queue jobs
+│   ├── View/Components/      # Blade components
+│   └── Providers/
+├── database/
+│   ├── migrations/           # 50+ migration files (dated 2026-02-xx to 2026-03-xx)
+│   ├── seeders/              # DatabaseSeeder + LargeDataSeeder
+│   └── database.sqlite       # SQLite database file
+├── resources/
+│   ├── views/
+│   │   ├── admin/            # Admin Blade views
+│   │   ├── auth/             # Login/register views
+│   │   ├── components/       # Reusable Blade components
+│   │   ├── layouts/          # App layout templates
+│   │   ├── marketer/         # Marketer Blade views
+│   │   ├── sales/            # Sales Blade views
+│   │   ├── shared/           # Shared views (invoices, receipts)
+│   │   └── warehouse/        # Warehouse Blade views
+│   ├── js/
+│   │   ├── app.js            # Alpine.js + Axios entry point
+│   │   └── bootstrap.js      # Axios config
+│   └── css/app.css           # Tailwind CSS entry
+├── routes/
+│   ├── web.php               # Root + dashboard redirect
+│   ├── admin.php             # Admin routes (prefix: /admin)
+│   ├── marketer.php          # Marketer routes (prefix: /marketer)
+│   ├── warehouse.php         # Warehouse routes (prefix: /warehouse)
+│   ├── sales.php             # Sales routes (prefix: /sales)
+│   └── auth.php              # Auth routes
+├── public/
+│   └── fonts/                # Cairo Arabic font files (Regular, Bold, ExtraBold)
+├── storage/
+│   ├── app/backups/          # Database backup files
+│   └── fonts/                # DomPDF cached font files
+├── التطوير_1/                # Development docs v1 (Arabic business flow specs)
+├── التطوير_2/                # Development docs v2 (backend/frontend/routes specs)
+└── التطوير_3/                # Development docs v3 (DB structure, inventory movements)
 ```
 
-## Core Components and Relationships
+## Core Models & Relationships
 
-### Model Relationships
+### Stock Flow Models
+- `MainStock` → warehouse-level stock per product
+- `MarketerReservedStock` → stock reserved for marketer (pending delivery)
+- `MarketerActualStock` → stock physically held by marketer
+- `StoreActualStock` / `StorePendingStock` → store-level stock tracking
+- `WarehouseStockLog` → audit log of all stock movements
 
-**User Model** (Central entity)
-- Belongs to Role (Admin, Warehouse, Marketer, Sales)
-- Has many MarketerRequests, SalesInvoices, CustomerInvoices
-- Has many MarketerCommissions, MarketerWithdrawalRequests
+### Transaction Models
+- `MarketerRequest` / `MarketerRequestItem` → marketer stock requests
+- `MarketerReturnRequest` / `MarketerReturnItem` → marketer returns
+- `SalesInvoice` / `SalesInvoiceItem` → marketer-to-store sales
+- `SalesReturn` / `SalesReturnItem` → store returns to marketer
+- `FactoryInvoice` / `FactoryInvoiceItem` → factory-to-warehouse stock intake
+- `CustomerInvoice` / `CustomerInvoiceItem` → direct customer sales
+- `CustomerReturn` / `CustomerReturnItem` → customer returns
 
-**Product Model**
-- Has many MainStock entries
-- Has many MarketerActualStock entries
-- Has many StoreActualStock entries
-- Has many ProductPromotions
-- Tracks store_price and customer_price
+### Financial Models
+- `StoreDebtLedger` → running balance of store debt
+- `CustomerDebtLedger` → running balance of customer debt
+- `StorePayment` → store debt payments
+- `CustomerPayment` → customer payments
+- `MarketerCommission` → commission earned per sale
+- `MarketerWithdrawalRequest` → commission withdrawal requests
 
-**Stock Flow Models**
-1. **MainStock** → Factory invoices add stock
-2. **MarketerReservedStock** → Created when request is approved
-3. **MarketerActualStock** → Created when products delivered
-4. **StorePendingStock** → Created when sales invoice generated
-5. **StoreActualStock** → Created when invoice approved
+### Reference Models
+- `User` (roles: Admin=1, Warehouse=2, Marketer=3, Sales=4)
+- `Role` → role definitions
+- `Product` → product catalog with pricing
+- `Store` → store registry (linked to marketer)
+- `InvoiceDiscountTier` → tiered discount rules
+- `ProductPromotion` → time-based product promotions
+- `Notification` → in-app notifications
 
-**Financial Models**
-- **StoreDebtLedger**: Tracks store balances (invoices increase, payments/returns decrease)
-- **CustomerDebtLedger**: Tracks customer balances
-- **MarketerCommission**: Calculated from approved sales invoices
-- **StorePayment/CustomerPayment**: Payment processing with approval workflow
+## Architectural Patterns
 
-**Request/Approval Models**
-- **MarketerRequest** → MarketerRequestItem (pending → approved → delivered)
-- **MarketerReturnRequest** → MarketerReturnItem (pending → approved)
-- **SalesInvoice** → SalesInvoiceItem (pending → approved/rejected)
-- **CustomerInvoice** → CustomerInvoiceItem (pending → approved/rejected)
+### Role-Based Routing
+Each role has its own route file with `middleware(['web', 'auth', 'role:ROLENAME'])` and a dedicated URL prefix:
+- `/admin/*` → Admin
+- `/warehouse/*` → Warehouse  
+- `/marketer/*` → Marketer
+- `/sales/*` → Sales
 
-### Architectural Patterns
+### Service Layer Pattern
+Business logic is extracted into `app/Services/{Role}/` service classes. Controllers are thin — they delegate to services and return views/redirects.
 
-**Service Layer Pattern**
-- Business logic extracted from controllers into service classes
-- Services handle complex operations (stock updates, debt calculations, commission processing)
-- Controllers remain thin, delegating to services
+### Shared Controllers
+PDF invoice generation and shared views live in `app/Http/Controllers/Shared/` to avoid duplication across roles.
 
-**Repository Pattern (Implicit)**
-- Models act as repositories with query scopes
-- Complex queries encapsulated in model methods
-- Relationships defined at model level
-
-**Role-Based Access Control**
-- Middleware enforces role-based routing
-- Dashboard routing uses match expression for role-based redirection
-- Each role has dedicated controller namespace
-
-**Transaction Management**
-- Database transactions wrap multi-step operations
-- Stock updates and financial records updated atomically
-- Rollback on failure ensures data consistency
-
-**Event-Driven Notifications**
-- NotificationService handles cross-role notifications
-- Notifications created for pending approvals and status changes
-- Real-time updates for user actions
-
-## Data Flow Architecture
-
-### Request-Approval-Delivery Flow
-```
-Marketer Request → Admin Approval → Warehouse Delivery
-     ↓                  ↓                  ↓
-  (pending)        (approved)         (delivered)
-     ↓                  ↓                  ↓
-  Reserved Stock   Reserved Stock    Actual Stock
-```
-
-### Sales-Debt-Payment Flow
-```
-Sales Invoice → Store Receives → Debt Created → Payment Made
-     ↓               ↓               ↓              ↓
-  Pending       Store Pending    Debt Ledger    Debt Reduced
-                    Stock         Entry          & Approved
-```
-
-### Commission Flow
-```
-Approved Invoice → Commission Calculated → Withdrawal Request → Admin Approval
-       ↓                    ↓                      ↓                  ↓
-   Store Sale         Commission Record      Pending Request      Balance Updated
-```
-
-## Technology Stack Integration
-
-**Backend**: Laravel 12 with PHP 8.2
-- Eloquent ORM for database operations
-- Blade templating for views
-- Queue system for background jobs
-- Cache system for performance
-
-**Frontend**: Tailwind CSS + Alpine.js
-- Utility-first CSS framework
-- Reactive components with Alpine.js
-- RTL support for Arabic interface
-
-**PDF Generation**: DomPDF with Arabic support
-- Cairo font family for proper Arabic rendering
-- Invoice and report generation
-
-**Excel Export**: PhpSpreadsheet
-- Data export functionality
-- Report generation in Excel format
-
-**Arabic Support**: ar-php library
-- Arabic text processing
-- Number to Arabic text conversion
+### Dashboard Routing
+`/dashboard` uses `match()` on `role_id` to redirect each user to their role-specific landing page.
