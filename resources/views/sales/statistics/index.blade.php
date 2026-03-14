@@ -341,7 +341,7 @@
                 </div>
 
                 {{-- Mobile Cards --}}
-                <div class="md:hidden divide-y divide-gray-200 dark:divide-dark-border">
+                <div class="md:hidden divide-y divide-gray-100 dark:divide-dark-border">
                     @forelse($results['data'] as $item)
                         @if($results['operation'] == 'summary')
                         <div class="p-4 hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
@@ -376,41 +376,117 @@
                         @else
                         @php
                             $statusConfig = match($item->status) {
-                                'completed' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'label' => 'مكتمل'],
-                                'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/30', 'text' => 'text-red-700 dark:text-red-400', 'label' => 'ملغي'],
-                                default => ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => $item->status]
+                                'completed' => [
+                                    'bg'        => 'bg-emerald-100 dark:bg-emerald-900/30',
+                                    'text'      => 'text-emerald-700 dark:text-emerald-400',
+                                    'icon'      => 'check-circle',
+                                    'iconColor' => 'text-emerald-500 dark:text-emerald-400',
+                                    'label'     => 'مكتمل',
+                                ],
+                                'cancelled' => [
+                                    'bg'        => 'bg-red-100 dark:bg-red-900/30',
+                                    'text'      => 'text-red-700 dark:text-red-400',
+                                    'icon'      => 'x-circle',
+                                    'iconColor' => 'text-red-500 dark:text-red-400',
+                                    'label'     => 'ملغي',
+                                ],
+                                default => [
+                                    'bg'        => 'bg-gray-100 dark:bg-gray-700/40',
+                                    'text'      => 'text-gray-700 dark:text-gray-300',
+                                    'icon'      => 'circle',
+                                    'iconColor' => 'text-gray-400',
+                                    'label'     => $item->status,
+                                ],
+                            };
+                            $opIcon = match($results['operation']) {
+                                'invoices' => 'file-text',
+                                'payments' => 'banknote',
+                                'returns'  => 'package-x',
+                                default    => 'file',
+                            };
+                            $opColor = match($results['operation']) {
+                                'invoices' => 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+                                'payments' => 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
+                                'returns'  => 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400',
+                                default    => 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
+                            };
+                            $amount = match($results['operation']) {
+                                'payments' => $item->amount,
+                                default    => $item->total_amount,
+                            };
+                            $refNumber = match($results['operation']) {
+                                'invoices' => $item->invoice_number,
+                                'payments' => $item->payment_number,
+                                'returns'  => $item->return_number,
+                                default    => '-',
                             };
                         @endphp
-                        <div class="p-4 hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
-                            <div class="flex items-start justify-between gap-3 mb-3">
-                                <div>
-                                    <p class="font-black text-gray-900 dark:text-white text-sm">
-                                        @if($results['operation'] == 'invoices') {{ $item->invoice_number }}
-                                        @elseif($results['operation'] == 'payments') {{ $item->payment_number }}
-                                        @elseif($results['operation'] == 'returns') {{ $item->return_number }}
-                                        @endif
-                                    </p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ $item->customer->name ?? '-' }}</p>
+                        <div class="p-4 hover:bg-gray-50 dark:hover:bg-dark-bg/60 transition-colors">
+                            {{-- Row 1: icon + ref number + status badge --}}
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 {{ $opColor }} rounded-xl flex items-center justify-center shrink-0">
+                                    <i data-lucide="{{ $opIcon }}" class="w-5 h-5"></i>
                                 </div>
-                                <span class="{{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} px-2.5 py-1 rounded-lg text-xs font-bold shrink-0">
-                                    {{ $statusConfig['label'] }}
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                                    <p>{{ $item->created_at->format('Y-m-d') }}</p>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-black text-gray-900 dark:text-white text-sm leading-tight">{{ $refNumber }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{{ $item->customer->name ?? '-' }}</p>
+                                </div>
+                                <div class="flex flex-col items-end gap-1 shrink-0">
+                                    <span class="inline-flex items-center gap-1 {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} px-2.5 py-1 rounded-lg text-xs font-bold">
+                                        <i data-lucide="{{ $statusConfig['icon'] }}" class="w-3 h-3"></i>
+                                        {{ $statusConfig['label'] }}
+                                    </span>
                                     @if($results['operation'] == 'payments')
-                                    <p>{{ $item->payment_method === 'cash' ? 'نقدي' : ($item->payment_method === 'transfer' ? 'تحويل' : 'شيك') }}</p>
+                                    @php
+                                        $methodConfig = match($item->payment_method) {
+                                            'cash'     => ['bg' => 'bg-green-100 dark:bg-green-900/30', 'text' => 'text-green-700 dark:text-green-400', 'icon' => 'banknote',     'label' => 'نقدي'],
+                                            'transfer' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30',  'text' => 'text-blue-700 dark:text-blue-400',  'icon' => 'arrow-right-left', 'label' => 'تحويل'],
+                                            'check'    => ['bg' => 'bg-amber-100 dark:bg-amber-900/30','text' => 'text-amber-700 dark:text-amber-400','icon' => 'file-check',      'label' => 'شيك'],
+                                            default    => ['bg' => 'bg-gray-100 dark:bg-gray-700/40',  'text' => 'text-gray-600 dark:text-gray-400',  'icon' => 'circle',          'label' => $item->payment_method],
+                                        };
+                                    @endphp
+                                    <span class="inline-flex items-center gap-1 {{ $methodConfig['bg'] }} {{ $methodConfig['text'] }} px-2.5 py-1 rounded-lg text-xs font-bold">
+                                        <i data-lucide="{{ $methodConfig['icon'] }}" class="w-3 h-3"></i>
+                                        {{ $methodConfig['label'] }}
+                                    </span>
                                     @endif
                                 </div>
-                                <p class="font-black text-gray-900 dark:text-white">
-                                    @if($results['operation'] == 'invoices') {{ number_format($item->total_amount, 0) }}
-                                    @elseif($results['operation'] == 'payments') {{ number_format($item->amount, 0) }}
-                                    @elseif($results['operation'] == 'returns') {{ number_format($item->total_amount, 0) }}
+                            </div>
+                            {{-- Row 2: meta info + amount --}}
+                            <div class="flex items-center justify-between gap-2 bg-gray-50 dark:bg-dark-bg/60 rounded-xl px-3 py-2.5">
+                                <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                                    <span class="flex items-center gap-1">
+                                        <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                        {{ $item->created_at->format('Y-m-d') }}
+                                    </span>
+                                    @if($results['operation'] == 'payments')
+                                    <span class="flex items-center gap-1">
+                                        <i data-lucide="credit-card" class="w-3.5 h-3.5"></i>
+                                        {{ $item->payment_method === 'cash' ? 'نقدي' : ($item->payment_method === 'transfer' ? 'تحويل' : 'شيك') }}
+                                    </span>
                                     @endif
-                                    <span class="text-xs text-gray-500 dark:text-gray-400 font-normal mr-1">دينار</span>
+                                    <span class="flex items-center gap-1">
+                                        <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                                        {{ $item->salesUser->full_name ?? '-' }}
+                                    </span>
+                                </div>
+                                <p class="font-black text-gray-900 dark:text-white text-sm shrink-0">
+                                    {{ number_format($amount, 0) }}
+                                    <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">د</span>
                                 </p>
                             </div>
+                            {{-- Row 3: returns (invoices only) --}}
+                            @if($results['operation'] == 'invoices' && $item->returns->count() > 0)
+                            <div class="mt-2 flex flex-wrap gap-1.5">
+                                <span class="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                                    <i data-lucide="corner-down-left" class="w-3 h-3"></i>
+                                    مرتجعات:
+                                </span>
+                                @foreach($item->returns as $return)
+                                    <span class="px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-lg text-xs font-bold">{{ $return->return_number }}</span>
+                                @endforeach
+                            </div>
+                            @endif
                         </div>
                         @endif
                     @empty
