@@ -37,16 +37,16 @@
             <div class="bg-white dark:bg-dark-card p-4 sm:p-8 border-b border-gray-200 dark:border-dark-border">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div class="flex items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-500/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-500/10 rounded-xl flex items-center justify-center flex-shrink-0 cursor-pointer hover:bg-green-200 dark:hover:bg-green-500/20 transition-colors" onclick="copyPaymentNumber('{{ $payment->payment_number }}')" title="نسخ رقم الإيصال">
                             <i data-lucide="banknote" class="w-5 h-5 sm:w-7 sm:h-7 text-green-600 dark:text-green-400"></i>
                         </div>
                         <div class="flex-1">
                             <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                                 <div>
                                     <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">إيصال قبض</p>
-                                    <div class="flex items-center gap-2 group">
+                                    <div class="flex items-center gap-2">
                                         <h2 class="text-lg sm:text-2xl font-black text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition-colors" onclick="copyPaymentNumber('{{ $payment->payment_number }}')" title="انقر للنسخ">#{{ $payment->payment_number }}</h2>
-                                        <button onclick="copyPaymentNumber('{{ $payment->payment_number }}')" class="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg" title="نسخ الرقم">
+                                        <button onclick="copyPaymentNumber('{{ $payment->payment_number }}')" class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="نسخ الرقم">
                                             <i data-lucide="copy" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
                                         </button>
                                     </div>
