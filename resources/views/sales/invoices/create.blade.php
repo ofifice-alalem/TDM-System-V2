@@ -4,24 +4,24 @@
 
 @section('content')
 
-<div class="min-h-screen py-8">
-    <div class="max-w-[1600px] mx-auto space-y-8 px-2">
+<div class="min-h-screen py-4 md:py-8">
+    <div class="max-w-[1600px] mx-auto space-y-4 md:space-y-8 px-2 md:px-4">
         
         {{-- Header --}}
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-down">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 animate-fade-in-down">
             <div class="lg:col-span-8">
                 <div class="flex items-center gap-3 mb-2">
                     <span class="bg-primary-100 dark:bg-primary-600/20 text-primary-600 dark:text-primary-400 px-3 py-1 rounded-lg text-xs font-bold border border-primary-100 dark:border-primary-600/30">
                         مبيعات مباشرة
                     </span>
                 </div>
-                <h1 class="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
+                <h1 class="text-2xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
                     فاتورة مبيعات جديدة
                 </h1>
             </div>
 
             <div class="lg:col-span-4 lg:translate-y-[30px]">
-                <a href="{{ route('sales.invoices.index') }}" class="px-8 py-4 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 w-full">
+                <a href="{{ route('sales.invoices.index') }}" class="px-6 md:px-8 py-3 md:py-4 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 w-full text-sm md:text-base">
                     <i data-lucide="arrow-right" class="w-5 h-5"></i>
                     عودة
                 </a>
@@ -32,11 +32,11 @@
         <form method="POST" action="{{ route('sales.invoices.store') }}" id="invoice-form">
             @csrf
             
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8">
                 {{-- Right: Products --}}
                 <div class="lg:col-span-8">
-                    <div class="bg-white dark:bg-dark-card rounded-[2rem] p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6">
-                        <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-6">معلومات العميل</h2>
+                    <div class="bg-white dark:bg-dark-card rounded-2xl md:rounded-[2rem] p-4 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border mb-4 md:mb-6">
+                        <h2 class="text-xl md:text-2xl font-black text-gray-900 dark:text-white mb-4 md:mb-6">معلومات العميل</h2>
                         
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">العميل *</label>
@@ -52,17 +52,17 @@
                         </div>
                     </div>
 
-                    <div class="bg-white dark:bg-dark-card rounded-[2rem] p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-2xl font-black text-gray-900 dark:text-white">المنتجات</h2>
-                            <button type="button" onclick="addProductRow()" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
+                    <div class="bg-white dark:bg-dark-card rounded-2xl md:rounded-[2rem] p-4 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 md:mb-6">
+                            <h2 class="text-xl md:text-2xl font-black text-gray-900 dark:text-white">المنتجات</h2>
+                            <button type="button" onclick="addProductRow()" class="w-full sm:w-auto px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all text-sm flex items-center justify-center gap-2">
                                 <i data-lucide="plus" class="w-4 h-4"></i>
                                 إضافة منتج
                             </button>
                         </div>
 
                         {{-- Headers --}}
-                        <div class="grid grid-cols-12 gap-3 mb-4 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                        <div class="hidden md:grid grid-cols-12 gap-3 mb-4 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-xl">
                             <div class="col-span-5">
                                 <span class="text-sm font-bold text-gray-700 dark:text-gray-300">المنتج</span>
                             </div>
@@ -88,8 +88,8 @@
 
                 {{-- Left: Summary & Actions --}}
                 <div class="lg:col-span-4">
-                    <div class="bg-white dark:bg-dark-card rounded-[2rem] p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border sticky top-8">
-                        <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-6">تفاصيل الفاتورة</h2>
+                    <div class="bg-white dark:bg-dark-card rounded-[2rem] p-6 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border lg:sticky lg:top-8">
+                        <h2 class="text-xl md:text-2xl font-black text-gray-900 dark:text-white mb-4 md:mb-6">تفاصيل الفاتورة</h2>
                         
                         <div class="mb-6 bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
                             <div class="flex items-center justify-between mb-2">
@@ -136,11 +136,11 @@
                         </div>
 
                         <div class="space-y-3">
-                            <button type="submit" id="submit-btn" class="w-full px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2">
+                            <button type="submit" id="submit-btn" class="w-full px-6 md:px-8 py-3 md:py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-200/50 dark:shadow-none flex items-center justify-center gap-2 text-sm md:text-base">
                                 <i data-lucide="save" class="w-5 h-5"></i>
                                 حفظ الفاتورة
                             </button>
-                            <a href="{{ route('sales.invoices.index') }}" class="w-full px-8 py-4 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                            <a href="{{ route('sales.invoices.index') }}" class="w-full px-6 md:px-8 py-3 md:py-4 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm md:text-base">
                                 <i data-lucide="x" class="w-5 h-5"></i>
                                 إلغاء
                             </a>
@@ -200,32 +200,39 @@
     function addProductRow() {
         const container = document.getElementById('products-container');
         const row = document.createElement('div');
-        row.className = 'grid grid-cols-12 gap-3 items-center bg-gray-50 dark:bg-dark-bg p-4 rounded-xl border border-gray-200 dark:border-dark-border';
+        row.className = 'bg-gray-50 dark:bg-dark-bg p-4 rounded-xl border border-gray-200 dark:border-dark-border';
         row.id = `product-row-${rowIndex}`;
         
         const availableProducts = products.filter(p => !selectedProducts.has(p.id));
         
         row.innerHTML = `
-            <div class="col-span-5">
-                <select name="items[${rowIndex}][product_id]" required onchange="handleProductSelect(${rowIndex}, this.value)" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                    <option value="">اختر المنتج</option>
-                    ${availableProducts.map(p => `<option value="${p.id}" data-price="${p.price}" data-stock="${p.stock}">${p.name} (متوفر: ${p.stock})</option>`).join('')}
-                </select>
-            </div>
-            <div class="col-span-2">
-                <input type="text" id="price-${rowIndex}" readonly class="w-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white text-center font-bold" value="0.00">
-            </div>
-            <div class="col-span-2">
-                <input type="number" name="items[${rowIndex}][quantity]" min="1" max="0" required placeholder="0" oninput="validateQuantity(${rowIndex}); calculateRowTotal(${rowIndex}); calculateTotal();" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-center">
-                <p class="text-xs text-red-500 mt-1 text-center" id="qty-error-${rowIndex}" style="display: none;">تجاوز المتوفر!</p>
-            </div>
-            <div class="col-span-2">
-                <input type="text" id="total-${rowIndex}" readonly class="w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-2.5 text-sm text-blue-700 dark:text-blue-400 text-center font-bold" value="0.00">
-            </div>
-            <div class="col-span-1">
-                <button type="button" onclick="removeProductRow(${rowIndex})" class="w-10 h-10 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center justify-center">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                </button>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                <div class="md:col-span-5">
+                    <label class="block md:hidden text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">المنتج</label>
+                    <select name="items[${rowIndex}][product_id]" required onchange="handleProductSelect(${rowIndex}, this.value)" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <option value="">اختر المنتج</option>
+                        ${availableProducts.map(p => `<option value="${p.id}" data-price="${p.price}" data-stock="${p.stock}">${p.name} (متوفر: ${p.stock})</option>`).join('')}
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block md:hidden text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">السعر</label>
+                    <input type="text" id="price-${rowIndex}" readonly class="w-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white text-center font-bold" value="0.00">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block md:hidden text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">عدد القطع</label>
+                    <input type="number" name="items[${rowIndex}][quantity]" min="1" max="0" required placeholder="0" oninput="validateQuantity(${rowIndex}); calculateRowTotal(${rowIndex}); calculateTotal();" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-center">
+                    <p class="text-xs text-red-500 mt-1 text-center" id="qty-error-${rowIndex}" style="display: none;">تجاوز المتوفر!</p>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block md:hidden text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">الإجمالي</label>
+                    <input type="text" id="total-${rowIndex}" readonly class="w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-2.5 text-sm text-blue-700 dark:text-blue-400 text-center font-bold" value="0.00">
+                </div>
+                <div class="md:col-span-1">
+                    <label class="block md:hidden text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">حذف</label>
+                    <button type="button" onclick="removeProductRow(${rowIndex})" class="w-full md:w-10 h-10 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center justify-center">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
             </div>
         `;
         
