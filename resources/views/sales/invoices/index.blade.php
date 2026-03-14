@@ -105,11 +105,11 @@
             @forelse($invoices as $invoice)
                 <div class="bg-gradient-to-br from-white to-gray-50 dark:from-dark-bg dark:to-dark-card rounded-2xl p-6 mb-4 border-2 border-gray-200 dark:border-dark-border hover:shadow-2xl hover:border-primary-300 dark:hover:border-primary-600/50 transition-all duration-300 group">
                     <div class="flex items-start gap-4 mb-5">
-                        <div class="w-14 h-14 bg-gradient-to-br from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-200 dark:shadow-primary-900/30 group-hover:scale-110 transition-transform">
+                        <div class="w-14 h-14 bg-gradient-to-br from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-200 dark:shadow-primary-900/30 group-hover:scale-110 transition-transform cursor-pointer" onclick="copyInvoiceNumber('{{ $invoice->invoice_number }}')" title="انقر للنسخ">
                             <i data-lucide="file-text" class="w-7 h-7 text-white"></i>
                         </div>
                         <div class="flex-1">
-                            <h3 class="text-xl font-black text-gray-900 dark:text-white mb-2">#{{ $invoice->invoice_number }}</h3>
+                            <h3 class="text-xl font-black text-gray-900 dark:text-white mb-2 cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition-colors" onclick="copyInvoiceNumber('{{ $invoice->invoice_number }}')" title="انقر للنسخ">#{{ $invoice->invoice_number }}</h3>
                             <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                 <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                                     <i data-lucide="user" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i>
@@ -119,23 +119,13 @@
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
                         <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-4 border border-blue-200 dark:border-blue-700/30 shadow-sm">
                             <div class="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400 mb-2 font-bold">
                                 <i data-lucide="banknote" class="w-3.5 h-3.5"></i>
                                 المبلغ
                             </div>
                             <p class="text-lg font-black text-blue-700 dark:text-blue-300">{{ number_format($invoice->total_amount, 0) }} د.ع</p>
-                        </div>
-                        <div class="bg-white dark:bg-dark-card rounded-xl p-4 border-2 border-gray-200 dark:border-dark-border shadow-sm">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2 font-bold">نوع الدفع</p>
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black shadow-sm
-                                {{ $invoice->payment_type === 'cash' ? 'bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-700/30' : '' }}
-                                {{ $invoice->payment_type === 'credit' ? 'bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/30 dark:to-red-800/30 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-700/30' : '' }}
-                                {{ $invoice->payment_type === 'partial' ? 'bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/30 dark:to-yellow-800/30 text-yellow-700 dark:text-yellow-400 border border-yellow-300 dark:border-yellow-700/30' : '' }}">
-                                <i data-lucide="{{ $invoice->payment_type === 'cash' ? 'wallet' : ($invoice->payment_type === 'credit' ? 'clock' : 'coins') }}" class="w-3.5 h-3.5"></i>
-                                {{ $invoice->payment_type === 'cash' ? 'نقدي' : ($invoice->payment_type === 'credit' ? 'آجل' : 'جزئي') }}
-                            </span>
                         </div>
                         <div class="bg-white dark:bg-dark-card rounded-xl p-4 border-2 border-gray-200 dark:border-dark-border shadow-sm">
                             <p class="text-xs text-gray-500 dark:text-gray-400 mb-2 font-bold">الحالة</p>
@@ -184,13 +174,13 @@
         {{-- Table View --}}
         <div id="tableView" class="bg-white dark:bg-dark-card rounded-2xl shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up hidden overflow-hidden">
             @if($invoices->count() > 0)
-            <table class="w-full">
+            <div class="overflow-x-auto">
+            <table class="w-full min-w-[800px]">
                 <thead class="bg-gray-50 dark:bg-dark-bg border-b border-gray-200 dark:border-dark-border">
                     <tr>
                         <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">رقم الفاتورة</th>
                         <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">العميل</th>
                         <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">المبلغ</th>
-                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">نوع الدفع</th>
                         <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">الحالة</th>
                         <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">التاريخ</th>
                         <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">الإجراءات</th>
@@ -201,22 +191,14 @@
                     <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-primary-100 dark:bg-primary-600/20 rounded-lg flex items-center justify-center">
+                                <div class="w-10 h-10 bg-primary-100 dark:bg-primary-600/20 rounded-lg flex items-center justify-center cursor-pointer hover:bg-primary-200 dark:hover:bg-primary-600/30 transition-colors" onclick="copyInvoiceNumber('{{ $invoice->invoice_number }}')" title="انقر للنسخ">
                                     <i data-lucide="file-text" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i>
                                 </div>
-                                <span class="font-bold text-gray-900 dark:text-white">#{{ $invoice->invoice_number }}</span>
+                                <span class="font-bold text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition-colors" onclick="copyInvoiceNumber('{{ $invoice->invoice_number }}')" title="انقر للنسخ">#{{ $invoice->invoice_number }}</span>
                             </div>
                         </td>
                         <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ $invoice->customer->name }}</td>
                         <td class="px-6 py-4 text-center font-bold text-gray-900 dark:text-white">{{ number_format($invoice->total_amount, 0) }} دينار</td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold 
-                                {{ $invoice->payment_type === 'cash' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : '' }}
-                                {{ $invoice->payment_type === 'credit' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : '' }}
-                                {{ $invoice->payment_type === 'partial' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : '' }}">
-                                {{ $invoice->payment_type === 'cash' ? 'نقدي' : ($invoice->payment_type === 'credit' ? 'آجل' : 'جزئي') }}
-                            </span>
-                        </td>
                         <td class="px-6 py-4 text-center">
                             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold {{ $invoice->status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' }}">
                                 <span class="w-1.5 h-1.5 rounded-full {{ $invoice->status === 'completed' ? 'bg-green-500' : 'bg-red-500' }}"></span>
@@ -235,6 +217,7 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
             @else
             <div class="text-center py-12">
                 <div class="w-20 h-20 bg-gray-100 dark:bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">
@@ -281,6 +264,27 @@
         
         localStorage.setItem('invoicesView', view);
         lucide.createIcons();
+    }
+    
+    function copyInvoiceNumber(invoiceNumber) {
+        navigator.clipboard.writeText(invoiceNumber).then(function() {
+            // إنشاء إشعار مؤقت
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2 animate-fade-in-down';
+            notification.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5"></i><span class="font-bold">تم نسخ رقم الفاتورة: ' + invoiceNumber + '</span>';
+            document.body.appendChild(notification);
+            lucide.createIcons();
+            
+            setTimeout(function() {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s';
+                setTimeout(function() {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 2000);
+        }).catch(function(err) {
+            console.error('فشل النسخ:', err);
+        });
     }
 </script>
 @endpush

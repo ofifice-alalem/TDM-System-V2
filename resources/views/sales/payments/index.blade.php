@@ -114,11 +114,11 @@
             @forelse($payments as $payment)
                 <div class="bg-gradient-to-br from-white to-gray-50 dark:from-dark-bg dark:to-dark-card rounded-2xl p-6 mb-4 border-2 border-gray-200 dark:border-dark-border hover:shadow-2xl hover:border-primary-300 dark:hover:border-primary-600/50 transition-all duration-300 group">
                     <div class="flex items-start gap-4 mb-5">
-                        <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 rounded-2xl flex items-center justify-center shadow-lg shadow-green-200 dark:shadow-green-900/30 group-hover:scale-110 transition-transform">
+                        <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 rounded-2xl flex items-center justify-center shadow-lg shadow-green-200 dark:shadow-green-900/30 group-hover:scale-110 transition-transform cursor-pointer" onclick="copyPaymentNumber('{{ $payment->payment_number }}')" title="انقر للنسخ">
                             <i data-lucide="banknote" class="w-7 h-7 text-white"></i>
                         </div>
                         <div class="flex-1">
-                            <h3 class="text-xl font-black text-gray-900 dark:text-white mb-2">#{{ $payment->payment_number }}</h3>
+                            <h3 class="text-xl font-black text-gray-900 dark:text-white mb-2 cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition-colors" onclick="copyPaymentNumber('{{ $payment->payment_number }}')" title="انقر للنسخ">#{{ $payment->payment_number }}</h3>
                             <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                 <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                                     <i data-lucide="user" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i>
@@ -210,10 +210,10 @@
                     <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-green-100 dark:bg-green-600/20 rounded-lg flex items-center justify-center">
+                                <div class="w-10 h-10 bg-green-100 dark:bg-green-600/20 rounded-lg flex items-center justify-center cursor-pointer hover:bg-green-200 dark:hover:bg-green-600/30 transition-colors" onclick="copyPaymentNumber('{{ $payment->payment_number }}')" title="انقر للنسخ">
                                     <i data-lucide="banknote" class="w-5 h-5 text-green-600 dark:text-green-400"></i>
                                 </div>
-                                <span class="font-bold text-gray-900 dark:text-white">#{{ $payment->payment_number }}</span>
+                                <span class="font-bold text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition-colors" onclick="copyPaymentNumber('{{ $payment->payment_number }}')" title="انقر للنسخ">#{{ $payment->payment_number }}</span>
                             </div>
                         </td>
                         <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ $payment->customer->name }}</td>
@@ -292,6 +292,27 @@
         
         localStorage.setItem('paymentsView', view);
         lucide.createIcons();
+    }
+    
+    function copyPaymentNumber(paymentNumber) {
+        navigator.clipboard.writeText(paymentNumber).then(function() {
+            // إنشاء إشعار مؤقت
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2 animate-fade-in-down';
+            notification.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5"></i><span class="font-bold">تم نسخ رقم الدفعة: ' + paymentNumber + '</span>';
+            document.body.appendChild(notification);
+            lucide.createIcons();
+            
+            setTimeout(function() {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s';
+                setTimeout(function() {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 2000);
+        }).catch(function(err) {
+            console.error('فشل النسخ:', err);
+        });
     }
 </script>
 @endpush

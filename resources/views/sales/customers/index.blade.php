@@ -9,67 +9,68 @@
         
         {{-- Header --}}
         <div class="animate-fade-in-down">
-            <div class="flex items-center justify-between mb-2">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">
                 <div class="flex items-center gap-3">
                     <span class="bg-primary-100 dark:bg-primary-600/20 text-primary-600 dark:text-primary-400 px-3 py-1 rounded-lg text-xs font-bold border border-primary-100 dark:border-primary-600/30">
                         إدارة العملاء
                     </span>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                     <div class="flex items-center gap-2 bg-white dark:bg-dark-card rounded-xl p-1 border border-gray-200 dark:border-dark-border">
-                        <button onclick="setView('grid')" id="gridBtn" class="px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2">
+                        <button onclick="setView('grid')" id="gridBtn" class="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg font-bold transition-all flex items-center justify-center gap-2 text-sm">
                             <i data-lucide="grid-3x3" class="w-4 h-4"></i>
-                            شبكة
+                            <span class="hidden sm:inline">شبكة</span>
                         </button>
-                        <button onclick="setView('list')" id="listBtn" class="px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2">
+                        <button onclick="setView('list')" id="listBtn" class="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg font-bold transition-all flex items-center justify-center gap-2 text-sm">
                             <i data-lucide="list" class="w-4 h-4"></i>
-                            قائمة
+                            <span class="hidden sm:inline">قائمة</span>
                         </button>
                     </div>
-                    <a href="{{ route('sales.customers.create') }}" class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                    <a href="{{ route('sales.customers.create') }}" class="px-4 sm:px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-sm sm:text-base">
                         <i data-lucide="plus" class="w-5 h-5"></i>
-                        إضافة عميل جديد
+                        <span class="hidden sm:inline">إضافة عميل جديد</span>
+                        <span class="sm:hidden">إضافة</span>
                     </a>
                 </div>
             </div>
-            <h1 class="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
                 العملاء
             </h1>
         </div>
 
         {{-- Financial Summary --}}
         <div class="animate-fade-in">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-500/10 dark:to-blue-600/10 rounded-2xl p-6 border border-blue-200 dark:border-blue-500/30">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white">
-                            <i data-lucide="trending-up" class="w-6 h-6"></i>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-500/10 dark:to-blue-600/10 rounded-2xl p-4 sm:p-6 border border-blue-200 dark:border-blue-500/30">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+                            <i data-lucide="trending-up" class="w-5 h-5 sm:w-6 sm:h-6"></i>
                         </div>
                         <span class="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-500/20 px-2 py-1 rounded-lg">إجمالي الديون</span>
                     </div>
-                    <div class="text-3xl font-black text-blue-600 dark:text-blue-400 mb-1">{{ number_format($totalDebts, 2) }}</div>
+                    <div class="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400 mb-1">{{ number_format($totalDebts, 2) }}</div>
                     <div class="text-sm text-blue-500 dark:text-blue-300">دينار</div>
                 </div>
                 
-                <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-500/10 dark:to-emerald-600/10 rounded-2xl p-6 border border-emerald-200 dark:border-emerald-500/30">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-white">
-                            <i data-lucide="trending-down" class="w-6 h-6"></i>
+                <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-500/10 dark:to-emerald-600/10 rounded-2xl p-4 sm:p-6 border border-emerald-200 dark:border-emerald-500/30">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-white">
+                            <i data-lucide="trending-down" class="w-5 h-5 sm:w-6 sm:h-6"></i>
                         </div>
                         <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-1 rounded-lg">إجمالي المدفوع والمرتجع</span>
                     </div>
-                    <div class="text-3xl font-black text-emerald-600 dark:text-emerald-400 mb-1">{{ number_format(abs($totalPaymentsAndReturns), 2) }}</div>
+                    <div class="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 mb-1">{{ number_format(abs($totalPaymentsAndReturns), 2) }}</div>
                     <div class="text-sm text-emerald-500 dark:text-emerald-300">دينار</div>
                 </div>
                 
-                <div class="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-500/10 dark:to-amber-600/10 rounded-2xl p-6 border border-amber-200 dark:border-amber-500/30">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-amber-600 rounded-xl flex items-center justify-center text-white">
-                            <i data-lucide="wallet" class="w-6 h-6"></i>
+                <div class="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-500/10 dark:to-amber-600/10 rounded-2xl p-4 sm:p-6 border border-amber-200 dark:border-amber-500/30">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-600 rounded-xl flex items-center justify-center text-white">
+                            <i data-lucide="wallet" class="w-5 h-5 sm:w-6 sm:h-6"></i>
                         </div>
                         <span class="text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/20 px-2 py-1 rounded-lg">إجمالي المتبقي</span>
                     </div>
-                    <div class="text-3xl font-black text-amber-600 dark:text-amber-400 mb-1">{{ number_format($totalRemaining, 2) }}</div>
+                    <div class="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400 mb-1">{{ number_format($totalRemaining, 2) }}</div>
                     <div class="text-sm text-amber-500 dark:text-amber-300">دينار</div>
                 </div>
             </div>
@@ -78,8 +79,8 @@
         {{-- Filters --}}
         <div class="animate-fade-in">
             <form method="GET" class="bg-white dark:bg-dark-card rounded-2xl p-4 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="sm:col-span-2 lg:col-span-1">
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="البحث بالاسم أو رقم الهاتف..." class="w-full px-4 py-2 bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 transition-all">
                     </div>
                     <div>
@@ -90,11 +91,11 @@
                         </select>
                     </div>
                     <div class="flex gap-2">
-                        <button type="submit" class="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all">
-                            <i data-lucide="search" class="w-4 h-4 inline"></i>
-                            بحث
+                        <button type="submit" class="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">بحث</span>
                         </button>
-                        <a href="{{ route('sales.customers.index') }}" class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all">
+                        <a href="{{ route('sales.customers.index') }}" class="px-4 py-2 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all flex items-center justify-center">
                             <i data-lucide="x" class="w-4 h-4"></i>
                         </a>
                     </div>
@@ -104,14 +105,14 @@
 
         {{-- Customers Count --}}
         <div class="animate-fade-in mb-6">
-            <div class="flex items-center justify-between bg-white dark:bg-dark-card rounded-xl p-4 shadow-sm border border-gray-200 dark:border-dark-border">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white dark:bg-dark-card rounded-xl p-4 shadow-sm border border-gray-200 dark:border-dark-border">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-primary-100 dark:bg-primary-600/20 rounded-lg flex items-center justify-center text-primary-600 dark:text-primary-400">
                         <i data-lucide="users" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-lg font-bold text-gray-900 dark:text-white">{{ $totalCustomers }} عميل</span>
+                    <span class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">{{ $totalCustomers }} عميل</span>
                 </div>
-                <span class="text-sm text-gray-500 dark:text-gray-400">
+                <span class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                     عرض {{ $customers->count() }} من {{ $customers->total() }}
                 </span>
             </div>
@@ -201,39 +202,42 @@
         {{-- Customers List --}}
         <div id="listView" class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up hidden overflow-hidden">
             @if($customers->count() > 0)
-            <table class="w-full">
+            <div class="overflow-x-auto">
+            <table class="w-full min-w-[800px]">
                 <thead class="bg-gray-50 dark:bg-dark-bg border-b border-gray-200 dark:border-dark-border">
                     <tr>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">العميل</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">رقم الهاتف</th>
-                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">عدد الفواتير</th>
-                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">الدين</th>
-                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">الحالة</th>
-                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">الإجراءات</th>
+                        <th class="px-3 sm:px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">العميل</th>
+                        <th class="px-3 sm:px-6 py-4 text-right text-xs font-bold text-gray-600 dark:text-gray-400 uppercase hidden sm:table-cell">رقم الهاتف</th>
+                        <th class="px-3 sm:px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase hidden md:table-cell">عدد الفواتير</th>
+                        <th class="px-3 sm:px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">الدين</th>
+                        <th class="px-3 sm:px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase hidden lg:table-cell">الحالة</th>
+                        <th class="px-3 sm:px-6 py-4 text-center text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
                     @foreach($customers as $customer)
                     <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400">
-                                    <i data-lucide="user" class="w-5 h-5"></i>
+                        <td class="px-3 sm:px-6 py-4">
+                            <div class="flex items-center gap-2 sm:gap-3">
+                                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400">
+                                    <i data-lucide="user" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                                 </div>
-                                <div>
-                                    <div class="font-bold text-gray-900 dark:text-white">{{ $customer->name }}</div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-bold text-gray-900 dark:text-white text-sm sm:text-base truncate">{{ $customer->name }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 sm:hidden">{{ $customer->phone }}</div>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ $customer->phone }}</td>
-                        <td class="px-6 py-4 text-center font-bold text-gray-900 dark:text-white">{{ $customer->invoices_count ?? 0 }}</td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold shadow-sm {{ ($customer->debt_ledger_sum_amount ?? 0) > 0 ? 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-500/10 dark:to-red-600/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/30' : (($customer->debt_ledger_sum_amount ?? 0) < 0 ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-500/10 dark:to-emerald-600/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30' : 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-500/10 dark:to-gray-600/10 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-500/30') }}">
-                                <i data-lucide="{{ ($customer->debt_ledger_sum_amount ?? 0) > 0 ? 'trending-up' : (($customer->debt_ledger_sum_amount ?? 0) < 0 ? 'trending-down' : 'minus') }}" class="w-4 h-4"></i>
-                                {{ number_format(abs($customer->debt_ledger_sum_amount ?? 0), 0) }} دينار
+                        <td class="px-3 sm:px-6 py-4 text-gray-600 dark:text-gray-400 hidden sm:table-cell">{{ $customer->phone }}</td>
+                        <td class="px-3 sm:px-6 py-4 text-center font-bold text-gray-900 dark:text-white hidden md:table-cell">{{ $customer->invoices_count ?? 0 }}</td>
+                        <td class="px-3 sm:px-6 py-4 text-center">
+                            <span class="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-1 sm:py-2 rounded-lg sm:rounded-xl font-bold shadow-sm text-xs sm:text-sm {{ ($customer->debt_ledger_sum_amount ?? 0) > 0 ? 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-500/10 dark:to-red-600/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/30' : (($customer->debt_ledger_sum_amount ?? 0) < 0 ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-500/10 dark:to-emerald-600/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30' : 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-500/10 dark:to-gray-600/10 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-500/30') }}">
+                                <i data-lucide="{{ ($customer->debt_ledger_sum_amount ?? 0) > 0 ? 'trending-up' : (($customer->debt_ledger_sum_amount ?? 0) < 0 ? 'trending-down' : 'minus') }}" class="w-3 h-3 sm:w-4 sm:h-4"></i>
+                                <span class="hidden sm:inline">{{ number_format(abs($customer->debt_ledger_sum_amount ?? 0), 0) }} دينار</span>
+                                <span class="sm:hidden">{{ number_format(abs($customer->debt_ledger_sum_amount ?? 0), 0) }}</span>
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-3 sm:px-6 py-4 text-center hidden lg:table-cell">
                             @if($customer->is_active)
                             <span class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-bold">
                                 <i data-lucide="check-circle" class="w-3 h-3"></i>
@@ -246,17 +250,17 @@
                             </span>
                             @endif
                         </td>
-                        <td class="px-6 py-4">
-                            <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('sales.customers.show', $customer) }}" class="w-9 h-9 bg-primary-600 hover:bg-primary-700 text-white rounded-lg flex items-center justify-center transition-all">
-                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                        <td class="px-3 sm:px-6 py-4">
+                            <div class="flex items-center justify-center gap-1 sm:gap-2">
+                                <a href="{{ route('sales.customers.show', $customer) }}" class="w-8 h-8 sm:w-9 sm:h-9 bg-primary-600 hover:bg-primary-700 text-white rounded-lg flex items-center justify-center transition-all">
+                                    <i data-lucide="eye" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                                 </a>
-                                <a href="{{ route('sales.customers.edit', $customer) }}" class="w-9 h-9 bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-200 rounded-lg flex items-center justify-center transition-all">
-                                    <i data-lucide="edit" class="w-4 h-4"></i>
+                                <a href="{{ route('sales.customers.edit', $customer) }}" class="w-8 h-8 sm:w-9 sm:h-9 bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-200 rounded-lg flex items-center justify-center transition-all">
+                                    <i data-lucide="edit" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                                 </a>
                                 @if($customer->phone)
-                                <a href="tel:{{ $customer->phone }}" class="w-9 h-9 bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-gray-400 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-all">
-                                    <i data-lucide="phone" class="w-4 h-4"></i>
+                                <a href="tel:{{ $customer->phone }}" class="w-8 h-8 sm:w-9 sm:h-9 bg-gray-100 dark:bg-dark-bg text-gray-600 dark:text-gray-400 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-all">
+                                    <i data-lucide="phone" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                                 </a>
                                 @endif
                             </div>
@@ -265,6 +269,7 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
             @else
             <div class="text-center py-16">
                 <div class="w-24 h-24 bg-gray-100 dark:bg-dark-bg rounded-full flex items-center justify-center mx-auto mb-4">

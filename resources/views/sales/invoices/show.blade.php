@@ -16,7 +16,7 @@
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                     <div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
-                        <span class="bg-primary-100 dark:bg-primary-600/20 text-primary-600 dark:text-primary-400 px-3 py-1 rounded-lg text-xs font-bold border border-primary-100 dark:border-primary-600/30">
+                        <span class="bg-primary-100 dark:bg-primary-600/20 text-primary-600 dark:text-primary-400 px-3 py-1 rounded-lg text-xs font-bold border border-primary-100 dark:border-primary-600/30 cursor-pointer hover:bg-primary-200 dark:hover:bg-primary-600/30 transition-colors" onclick="copyInvoiceNumber('{{ $invoice->invoice_number }}')" title="انقر للنسخ">
                             فاتورة #{{ $invoice->invoice_number }}
                         </span>
                         @if($invoice->status === 'completed')
@@ -41,14 +41,14 @@
             <div class="bg-white dark:bg-dark-card p-4 sm:p-6 lg:p-8 border-b border-gray-200 dark:border-dark-border">
                 <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                     <div class="flex items-center gap-3 sm:gap-4">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-primary-100 dark:bg-primary-500/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-primary-100 dark:bg-primary-500/10 rounded-xl flex items-center justify-center flex-shrink-0 cursor-pointer hover:bg-primary-200 dark:hover:bg-primary-500/20 transition-colors" onclick="copyInvoiceNumber('{{ $invoice->invoice_number }}')" title="انقر للنسخ">
                             <i data-lucide="file-text" class="w-6 h-6 sm:w-7 sm:h-7 text-primary-600 dark:text-primary-400"></i>
                         </div>
                         <div>
                             <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                                 <div>
                                     <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">فاتورة</p>
-                                    <h2 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">#{{ $invoice->invoice_number }}</h2>
+                                    <h2 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition-colors" onclick="copyInvoiceNumber('{{ $invoice->invoice_number }}')" title="انقر للنسخ">#{{ $invoice->invoice_number }}</h2>
                                 </div>
                                 @if($invoice->status === 'completed')
                                 <span class="px-2.5 sm:px-3 py-1 sm:py-1.5 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-bold border border-emerald-200 dark:border-emerald-500/30 flex items-center gap-1.5">
@@ -330,6 +330,27 @@
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
     });
+    
+    function copyInvoiceNumber(invoiceNumber) {
+        navigator.clipboard.writeText(invoiceNumber).then(function() {
+            // إنشاء إشعار مؤقت
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2 animate-fade-in-down';
+            notification.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5"></i><span class="font-bold">تم نسخ رقم الفاتورة: ' + invoiceNumber + '</span>';
+            document.body.appendChild(notification);
+            lucide.createIcons();
+            
+            setTimeout(function() {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s';
+                setTimeout(function() {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 2000);
+        }).catch(function(err) {
+            console.error('فشل النسخ:', err);
+        });
+    }
 </script>
 @endpush
 @endsection
