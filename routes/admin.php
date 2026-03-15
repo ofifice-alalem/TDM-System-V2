@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminWithdrawalController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Shared\MainStockController;
 use App\Http\Controllers\Admin\OldDebtController;
+use App\Http\Controllers\Admin\OldCustomerDebtController;
 
 Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     
@@ -92,6 +93,15 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
         Route::post('/', [OldDebtController::class, 'store'])->name('store');
         Route::patch('/{oldDebt}', [OldDebtController::class, 'update'])->name('update');
         Route::delete('/{oldDebt}', [OldDebtController::class, 'destroy'])->name('destroy');
+    });
+
+    // Old Customer Debts
+    Route::prefix('old-customer-debts')->name('old-customer-debts.')->group(function () {
+        Route::get('/', [OldCustomerDebtController::class, 'index'])->name('index');
+        Route::get('/create', [OldCustomerDebtController::class, 'create'])->name('create');
+        Route::post('/', [OldCustomerDebtController::class, 'store'])->name('store');
+        Route::patch('/{oldCustomerDebt}', [OldCustomerDebtController::class, 'update'])->name('update');
+        Route::delete('/{oldCustomerDebt}', [OldCustomerDebtController::class, 'destroy'])->name('destroy');
     });
 
     // Backups Management
