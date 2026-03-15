@@ -346,21 +346,31 @@
                     @endif
                 </a>
 
-                <a href="{{ route('admin.old-debts.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('admin.old-debts.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
-                    <i data-lucide="history" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('admin.old-debts.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
-                    <span>الديون السابقة</span>
-                    @if(request()->routeIs('admin.old-debts.*'))
-                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
-                    @endif
-                </a>
-
-                <a href="{{ route('admin.old-customer-debts.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('admin.old-customer-debts.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
-                    <i data-lucide="user-x" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('admin.old-customer-debts.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
-                    <span>ديون العملاء السابقة</span>
-                    @if(request()->routeIs('admin.old-customer-debts.*'))
-                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
-                    @endif
-                </a>
+                {{-- Old Debts Dropdown --}}
+                @php $oldDebtActive = request()->routeIs('admin.old-debts.*') || request()->routeIs('admin.old-customer-debts.*'); @endphp
+                <div x-data="{ open: {{ $oldDebtActive ? 'true' : 'false' }} }">
+                    <button @click="open = !open" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ $oldDebtActive ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                        <i data-lucide="history" class="w-[1.35rem] h-[1.35rem] transition-colors {{ $oldDebtActive ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                        <span>الديون السابقة</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 mr-auto transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <div x-show="open" x-cloak class="mt-1 mr-4 space-y-1 border-r-2 border-gray-100 dark:border-dark-border pr-2">
+                        <a href="{{ route('admin.old-debts.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.old-debts.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                            <i data-lucide="store" class="w-4 h-4"></i>
+                            <span>ديون المتاجر</span>
+                            @if(request()->routeIs('admin.old-debts.*'))
+                                <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                            @endif
+                        </a>
+                        <a href="{{ route('admin.old-customer-debts.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.old-customer-debts.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                            <span>ديون العملاء</span>
+                            @if(request()->routeIs('admin.old-customer-debts.*'))
+                                <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                            @endif
+                        </a>
+                    </div>
+                </div>
 
                 @if(Route::has('admin.promotions.index'))
                 <a href="{{ route('admin.promotions.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('admin.promotions.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
