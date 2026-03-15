@@ -114,6 +114,15 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
         Route::delete('/{filename}', [BackupController::class, 'delete'])->name('delete');
     });
 
+    // Customer Statistics
+    Route::prefix('customer-statistics')->name('customer-statistics.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'index'])->name('index');
+        Route::get('/quick-invoices', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'quickInvoices'])->name('quick-invoices');
+        Route::get('/quick-payments', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'quickPayments'])->name('quick-payments');
+        Route::get('/quick-returns', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'quickReturns'])->name('quick-returns');
+        Route::get('/quick-summary', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'quickSummary'])->name('quick-summary');
+    });
+
     // Statistics
     Route::prefix('statistics')->name('statistics.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Shared\StatisticsController::class, 'index'])->name('index');

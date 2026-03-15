@@ -16,6 +16,8 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class StatisticsController extends Controller
 {
+    protected function viewPrefix(): string { return 'sales.statistics'; }
+
     public function index(Request $request)
     {
         $customers = Customer::where('is_active', true)->get();
@@ -30,7 +32,7 @@ class StatisticsController extends Controller
             }
         }
 
-        return view('sales.statistics.index', compact('customers', 'results'));
+        return view($this->viewPrefix() . '.index', compact('customers', 'results'));
     }
 
     private function getStatistics($request, $forExport = false)
@@ -488,7 +490,7 @@ class StatisticsController extends Controller
             return $this->exportQuickInvoices($customers, $totalInvoices, $totalAmount);
         }
 
-        return view('sales.statistics.quick-invoices', compact('customers', 'totalInvoices', 'totalAmount', 'fromDate', 'toDate'));
+        return view($this->viewPrefix() . '.quick-invoices', compact('customers', 'totalInvoices', 'totalAmount', 'fromDate', 'toDate'));
     }
 
     public function quickPayments(Request $request)
@@ -538,7 +540,7 @@ class StatisticsController extends Controller
             return $this->exportQuickPayments($customers, $cashTotal, $transferTotal, $checkTotal, $totalAmount);
         }
 
-        return view('sales.statistics.quick-payments', compact('customers', 'cashTotal', 'transferTotal', 'checkTotal', 'totalAmount', 'fromDate', 'toDate'));
+        return view($this->viewPrefix() . '.quick-payments', compact('customers', 'cashTotal', 'transferTotal', 'checkTotal', 'totalAmount', 'fromDate', 'toDate'));
     }
 
     public function quickReturns(Request $request)
@@ -573,7 +575,7 @@ class StatisticsController extends Controller
             return $this->exportQuickReturns($customers, $totalReturns, $totalAmount);
         }
 
-        return view('sales.statistics.quick-returns', compact('customers', 'totalReturns', 'totalAmount', 'fromDate', 'toDate'));
+        return view($this->viewPrefix() . '.quick-returns', compact('customers', 'totalReturns', 'totalAmount', 'fromDate', 'toDate'));
     }
 
     public function quickSummary(Request $request)
@@ -615,7 +617,7 @@ class StatisticsController extends Controller
             return $this->exportQuickSummary($customers, $fromDate, $toDate);
         }
 
-        return view('sales.statistics.quick-summary', compact('customers', 'fromDate', 'toDate'));
+        return view($this->viewPrefix() . '.quick-summary', compact('customers', 'fromDate', 'toDate'));
     }
 
     private function exportQuickInvoices($customers, $totalInvoices, $totalAmount)
