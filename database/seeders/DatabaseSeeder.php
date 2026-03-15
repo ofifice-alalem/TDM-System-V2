@@ -17,6 +17,12 @@ class DatabaseSeeder extends Seeder
             ['id' => 3, 'name' => 'marketer', 'display_name' => 'مسوق', 'description' => 'البيع والتوزيع', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
         ]);
 
+        // System user (id=0) — used for old debt invoices
+        DB::statement('SET SESSION sql_mode="NO_AUTO_VALUE_ON_ZERO"');
+        DB::table('users')->insert([
+            ['id' => 0, 'username' => 'system', 'password_hash' => 'N/A', 'full_name' => 'النظام', 'role_id' => 3, 'is_active' => false, 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
         // Users
         DB::table('users')->insert([
             ['username' => 'admin', 'password_hash' => Hash::make('password'), 'full_name' => 'المدير العام', 'role_id' => 1, 'commission_rate' => null, 'phone' => '0500000000', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],

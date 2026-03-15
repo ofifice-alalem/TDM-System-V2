@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\ProductPromotionController;
 use App\Http\Controllers\Admin\AdminWithdrawalController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Shared\MainStockController;
+use App\Http\Controllers\Admin\OldDebtController;
 
 Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     
@@ -82,6 +83,15 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
         Route::post('/{factoryInvoice}/document', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'document'])->name('document');
         Route::post('/{factoryInvoice}/cancel', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'cancel'])->name('cancel');
         Route::get('/{factoryInvoice}/pdf', [\App\Http\Controllers\Admin\AdminFactoryInvoiceController::class, 'pdf'])->name('pdf');
+    });
+
+    // Old Debts
+    Route::prefix('old-debts')->name('old-debts.')->group(function () {
+        Route::get('/', [OldDebtController::class, 'index'])->name('index');
+        Route::get('/create', [OldDebtController::class, 'create'])->name('create');
+        Route::post('/', [OldDebtController::class, 'store'])->name('store');
+        Route::patch('/{oldDebt}', [OldDebtController::class, 'update'])->name('update');
+        Route::delete('/{oldDebt}', [OldDebtController::class, 'destroy'])->name('destroy');
     });
 
     // Backups Management
