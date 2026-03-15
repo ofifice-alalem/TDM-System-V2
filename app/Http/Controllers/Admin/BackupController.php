@@ -38,7 +38,7 @@ class BackupController extends Controller
         
         // Database backup
         if ($type === 'full' || $type === 'database') {
-            $sql = "SET FOREIGN_KEY_CHECKS=0;\n\n";
+            $sql = "SET FOREIGN_KEY_CHECKS=0;\nSET SESSION sql_mode='NO_AUTO_VALUE_ON_ZERO';\n\n";
             
             foreach (DB::select('SHOW TABLES') as $table) {
                 $tableName = array_values((array)$table)[0];
@@ -294,8 +294,9 @@ class BackupController extends Controller
     
     private function restoreLargeSQL($sqlFile)
     {
-        // Disable foreign key checks
+        // Disable foreign key checks + allow id=0
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        DB::statement('SET SESSION sql_mode="NO_AUTO_VALUE_ON_ZERO"');
         
         $handle = fopen($sqlFile, 'r');
         if (!$handle) {

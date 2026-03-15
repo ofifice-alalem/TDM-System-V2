@@ -47,16 +47,27 @@
                         </div>
                         <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 transition-transform"></i>
                     </summary>
-                    <form method="GET" action="{{ route('admin.old-customer-debts.index') }}" class="p-4 pt-2">
+                    <form method="GET" action="{{ route('admin.old-customer-debts.index') }}" class="p-4 pt-2" id="filter-form">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div>
+                            <div x-data="customerFilterSearch()">
                                 <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">العميل</label>
-                                <select name="customer_id" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm">
-                                    <option value="">الكل</option>
-                                    @foreach($customers as $customer)
-                                        <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>{{ $customer->name }}</option>
-                                    @endforeach
-                                </select>
+                                <input type="hidden" name="customer_id" x-model="selectedId">
+                                <div class="relative">
+                                    <input type="text" x-model="query" @input="search()" @focus="open = true" @click.outside="open = false"
+                                        placeholder="ابحث باسم أو هاتف..."
+                                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm">
+                                    <ul x-show="open && results.length" class="absolute z-30 w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-lg mt-1 max-h-48 overflow-y-auto">
+                                        <li @click="select(null, '')"
+                                            class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer">الكل</li>
+                                        <template x-for="c in results" :key="c.id">
+                                            <li @click="select(c.id, c.name)"
+                                                class="px-4 py-2 text-sm text-gray-900 dark:text-white hover:bg-primary-50 dark:hover:bg-primary-900/20 cursor-pointer">
+                                                <span x-text="c.name" class="font-bold"></span>
+                                                <span x-text="c.phone" class="text-gray-400 text-xs mr-2"></span>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">من تاريخ</label>
@@ -255,6 +266,26 @@
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
     });
+
+    const allCustomers = @json($customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'phone' => $c->phone]));
+    const selectedCustomerId = '{{ request('customer_id') }}';
+
+    function customerFilterSearch() {
+        const preselected = allCustomers.find(c => c.id == selectedCustomerId);
+        return {
+            query: preselected ? preselected.name : '',
+            selectedId: selectedCustomerId || '',
+            results: [],
+            open: false,
+            search() {
+                if (!this.query) { this.results = allCustomers.slice(0, 10); this.selectedId = ''; return; }
+                this.results = allCustomers.filter(c =>
+                    c.name.includes(this.query) || c.phone.includes(this.query)
+                ).slice(0, 10);
+            },
+            select(id, name) { this.selectedId = id || ''; this.query = name; this.open = false; },
+        };
+    }
 </script>
 @endpush
 @endsection
