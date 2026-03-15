@@ -44,7 +44,8 @@ class OldCustomerDebtService
     public function update(CustomerInvoice $invoice, $amount, $notes = null)
     {
         return DB::transaction(function () use ($invoice, $amount, $notes) {
-            $diff = $amount - $invoice->total_amount;
+            $oldAmount = $invoice->total_amount;
+            $diff      = $amount - $oldAmount;
 
             $invoice->update([
                 'subtotal'     => $amount,
@@ -52,12 +53,24 @@ class OldCustomerDebtService
                 'notes'        => $notes,
             ]);
 
-            $ledger = CustomerDebtLedger::where('invoice_id', $invoice->id)->first();
+            $ledger = CustomerDebtLedger::where('invoice_id', $invoice->id)->first()
+                ?? CustomerDebtLedger::where('customer_id', $invoice->customer_id)
+                    ->where('amount', $oldAmount)
+                    ->whereNull('invoice_id')
+                    ->first();
+
             if ($ledger) {
                 $ledger->update([
+                    'invoice_id'    => $invoice->id,
                     'amount'        => $amount,
                     'balance_after' => $ledger->balance_after + $diff,
                 ]);
+
+                // تعديل balance_after لكل السجلات اللاحقة لنفس العميل
+                DB::table('customer_debt_ledger')
+                    ->where('customer_id', $invoice->customer_id)
+                    ->where('id', '>', $ledger->id)
+                    ->update(['balance_after' => DB::raw("balance_after + {$diff}")]);
             }
 
             return $invoice;
