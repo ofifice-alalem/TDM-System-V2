@@ -152,7 +152,9 @@ class InvoiceController extends Controller
         return response()->json([
             'invoice_number' => $sale->invoice_number,
             'date' => $sale->created_at->format('Y-m-d'),
-            'store' => $sale->store->name,
+            'store' => $sale->store_id == 46 && $sale->notes
+                ? $sale->store->name . ' / ' . $sale->notes
+                : $sale->store->name,
             'store_phone' => $sale->store->phone ?? '---',
             'marketer' => $sale->marketer->full_name,
             'marketer_phone' => $sale->marketer->phone ?? '---',
