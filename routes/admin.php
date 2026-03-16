@@ -114,6 +114,9 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
         Route::delete('/{filename}', [BackupController::class, 'delete'])->name('delete');
     });
 
+    // Combined Summary
+    Route::get('combined-summary', [\App\Http\Controllers\Admin\CombinedSummaryController::class, 'index'])->name('combined-summary.index');
+
     // Customer Statistics
     Route::prefix('customer-statistics')->name('customer-statistics.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'index'])->name('index');

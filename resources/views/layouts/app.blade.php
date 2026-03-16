@@ -406,9 +406,9 @@
                 @endif
             </a>
 
-            <div x-data="{ open: {{ request()->routeIs('admin.statistics.*') || request()->routeIs('admin.customer-statistics.*') ? 'true' : 'false' }} }">
-                <button @click="open = !open" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('admin.statistics.*') || request()->routeIs('admin.customer-statistics.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
-                    <i data-lucide="bar-chart-3" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('admin.statistics.*') || request()->routeIs('admin.customer-statistics.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+            <div x-data="{ open: {{ request()->routeIs('admin.statistics.*') || request()->routeIs('admin.customer-statistics.*') || request()->routeIs('admin.combined-summary.*') ? 'true' : 'false' }} }">
+                <button @click="open = !open" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('admin.statistics.*') || request()->routeIs('admin.customer-statistics.*') || request()->routeIs('admin.combined-summary.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="bar-chart-3" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('admin.statistics.*') || request()->routeIs('admin.customer-statistics.*') || request()->routeIs('admin.combined-summary.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
                     <span>الإحصائيات</span>
                     <i data-lucide="chevron-down" class="w-4 h-4 mr-auto transition-transform" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -420,6 +420,10 @@
                     <a href="{{ route('admin.customer-statistics.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.customer-statistics.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                         <i data-lucide="users" class="w-4 h-4"></i>
                         <span>العملاء</span>
+                    </a>
+                    <a href="{{ route('admin.combined-summary.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.combined-summary.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                        <i data-lucide="layout-list" class="w-4 h-4"></i>
+                        <span>الملخص الشامل</span>
                     </a>
                 </div>
             </div>
