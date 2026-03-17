@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title') - TDM System</title>
     
     {{-- Include Premium Theme & Tailwind --}}
@@ -34,6 +35,10 @@
     </script>
 </head>
 <body class="bg-[#f1f5f9] dark:bg-[#0b1121] font-sans antialiased text-gray-900 dark:text-gray-100 transition-colors duration-300 overflow-x-hidden">
+
+    @php
+        $features = \App\Models\Feature::all()->keyBy('key')->map(fn($f) => $f->isCurrentlyEnabled());
+    @endphp
 
     {{-- SIDEBAR --}}
     <aside id="sidebar" class="fixed top-0 right-0 h-screen w-80 lg:w-72 bg-white dark:bg-[#151f32] border-l border-gray-100 dark:border-[#2a354c] z-50 flex flex-col transition-transform duration-300 translate-x-full lg:translate-x-0 shadow-sm dark:shadow-none">
@@ -369,17 +374,21 @@
                                 <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
                             @endif
                         </a>
-                        <a href="{{ route('admin.customer-merge.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.customer-merge.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                        <a href="{{ route('admin.customer-merge.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.customer-merge.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }} {{ ($features['admin.customer-merge'] ?? true) ? '' : 'opacity-40 pointer-events-none' }}">
                             <i data-lucide="git-merge" class="w-4 h-4"></i>
                             <span>دمج العملاء</span>
-                            @if(request()->routeIs('admin.customer-merge.*'))
+                            @if(!($features['admin.customer-merge'] ?? true))
+                                <i data-lucide="lock" class="w-3 h-3 mr-auto"></i>
+                            @elseif(request()->routeIs('admin.customer-merge.*'))
                                 <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
                             @endif
                         </a>
-                        <a href="{{ route('admin.store-merge.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.store-merge.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                        <a href="{{ route('admin.store-merge.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.store-merge.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }} {{ ($features['admin.store-merge'] ?? true) ? '' : 'opacity-40 pointer-events-none' }}">
                             <i data-lucide="git-merge" class="w-4 h-4"></i>
                             <span>دمج المتاجر</span>
-                            @if(request()->routeIs('admin.store-merge.*'))
+                            @if(!($features['admin.store-merge'] ?? true))
+                                <i data-lucide="lock" class="w-3 h-3 mr-auto"></i>
+                            @elseif(request()->routeIs('admin.store-merge.*'))
                                 <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
                             @endif
                         </a>
@@ -435,13 +444,15 @@
                         <i data-lucide="users" class="w-4 h-4"></i>
                         <span>العملاء</span>
                     </a>
-                    <a href="{{ route('admin.combined-summary.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.combined-summary.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <a href="{{ route('admin.combined-summary.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.combined-summary.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }} {{ ($features['admin.combined-summary'] ?? true) ? '' : 'opacity-40 pointer-events-none' }}">
                         <i data-lucide="layout-list" class="w-4 h-4"></i>
                         <span>الملخص الشامل</span>
+                        @if(!($features['admin.combined-summary'] ?? true))<i data-lucide="lock" class="w-3 h-3 mr-auto"></i>@endif
                     </a>
-                    <a href="{{ route('admin.products-pricing.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.products-pricing.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <a href="{{ route('admin.products-pricing.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.products-pricing.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }} {{ ($features['admin.products-pricing'] ?? true) ? '' : 'opacity-40 pointer-events-none' }}">
                         <i data-lucide="tag" class="w-4 h-4"></i>
                         <span>تسعير المنتجات</span>
+                        @if(!($features['admin.products-pricing'] ?? true))<i data-lucide="lock" class="w-3 h-3 mr-auto"></i>@endif
                     </a>
                 </div>
             </div>
@@ -552,6 +563,8 @@
     <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40 hidden transition-opacity" id="mobile-overlay"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>axios.defaults.headers.common['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]')?.content;</script>
     <script>
         // Theme Toggle Logic
         const themeToggleBtn = document.getElementById('theme-toggle');

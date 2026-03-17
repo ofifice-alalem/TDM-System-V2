@@ -17,11 +17,12 @@ class CheckRole
         $userRoleId = auth()->user()->role_id;
 
         $allowedRoleId = match($role) {
-            'marketer' => 3,
-            'warehouse' => 2,
-            'admin' => 1,
-            'sales' => 4,
-            default => null,
+            'marketer'    => 3,
+            'warehouse'   => 2,
+            'admin'       => 1,
+            'sales'       => 4,
+            'super_admin' => 5,
+            default       => null,
         };
 
         if ($userRoleId !== $allowedRoleId) {

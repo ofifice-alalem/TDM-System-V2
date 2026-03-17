@@ -115,18 +115,18 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
     });
 
     // Products Pricing
-    Route::get('products-pricing', [\App\Http\Controllers\Admin\ProductsPricingController::class, 'index'])->name('products-pricing.index');
+    Route::get('products-pricing', [\App\Http\Controllers\Admin\ProductsPricingController::class, 'index'])->name('products-pricing.index')->middleware('feature:admin.products-pricing');
 
     // Customer Merge
-    Route::get('customer-merge', [\App\Http\Controllers\Admin\CustomerMergeController::class, 'index'])->name('customer-merge.index');
-    Route::post('customer-merge', [\App\Http\Controllers\Admin\CustomerMergeController::class, 'store'])->name('customer-merge.store');
+    Route::get('customer-merge', [\App\Http\Controllers\Admin\CustomerMergeController::class, 'index'])->name('customer-merge.index')->middleware('feature:admin.customer-merge');
+    Route::post('customer-merge', [\App\Http\Controllers\Admin\CustomerMergeController::class, 'store'])->name('customer-merge.store')->middleware('feature:admin.customer-merge');
 
     // Store Merge
-    Route::get('store-merge', [\App\Http\Controllers\Admin\StoreMergeController::class, 'index'])->name('store-merge.index');
-    Route::post('store-merge', [\App\Http\Controllers\Admin\StoreMergeController::class, 'store'])->name('store-merge.store');
+    Route::get('store-merge', [\App\Http\Controllers\Admin\StoreMergeController::class, 'index'])->name('store-merge.index')->middleware('feature:admin.store-merge');
+    Route::post('store-merge', [\App\Http\Controllers\Admin\StoreMergeController::class, 'store'])->name('store-merge.store')->middleware('feature:admin.store-merge');
 
     // Combined Summary
-    Route::get('combined-summary', [\App\Http\Controllers\Admin\CombinedSummaryController::class, 'index'])->name('combined-summary.index');
+    Route::get('combined-summary', [\App\Http\Controllers\Admin\CombinedSummaryController::class, 'index'])->name('combined-summary.index')->middleware('feature:admin.combined-summary');
 
     // Customer Statistics
     Route::prefix('customer-statistics')->name('customer-statistics.')->group(function () {
