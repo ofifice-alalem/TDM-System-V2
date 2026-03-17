@@ -19,6 +19,9 @@ class UserController extends Controller
         $showDeleted = $request->get('show_deleted');
         
         $users = User::with('role')
+            ->where('id', '!=', 0)
+            ->whereNotIn('username', ['system', 'superadmin'])
+            ->whereNot('role_id', 5)
             ->when($showDeleted, function($query) {
                 $query->onlyTrashed();
             })
@@ -44,14 +47,14 @@ class UserController extends Controller
             }
         }
 
-        $roles = Role::where('is_active', true)->get();
+        $roles = Role::where('is_active', true)->where('id', '!=', 5)->get();
 
         return view('admin.users.index', compact('users', 'search', 'roles', 'roleFilter', 'showDeleted'));
     }
 
     public function create()
     {
-        $roles = Role::where('is_active', true)->get();
+        $roles = Role::where('is_active', true)->where('id', '!=', 5)->get();
         return view('admin.users.create', compact('roles'));
     }
 
@@ -77,7 +80,7 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $roles = Role::where('is_active', true)->get();
+        $roles = Role::where('is_active', true)->where('id', '!=', 5)->get();
         return view('admin.users.edit', compact('user', 'roles'));
     }
 
