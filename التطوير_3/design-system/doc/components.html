@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المكونات الكاملة - TDM Design System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <script>tailwind.config = {darkMode: 'class'}</script>
+    <script>
+        // Load dark mode before page renders
+        if (localStorage.theme === 'dark') {
+            document.documentElement.classList.add('dark')
+        }
+    </script>
+</head>
+<body class="font-cairo bg-gray-100 dark:bg-gray-900" x-data="{ darkMode: localStorage.theme === 'dark' }" :class="{ 'dark': darkMode }" x-init="$watch('darkMode', value => { localStorage.theme = value ? 'dark' : 'light'; document.documentElement.classList.toggle('dark', value) })">
+    
+    <nav class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">المكونات الكاملة</h1>
+            <button @click="darkMode = !darkMode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                <svg x-show="!darkMode" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
+                <svg x-show="darkMode" x-cloak class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>
+            </button>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-6 py-8 space-y-12">
+        
+        <!-- 1. Buttons -->
+        <section class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">1️⃣ الأزرار</h2>
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">أزرار أساسية</h3>
+                    <div class="flex flex-wrap gap-3">
+                        <button class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">زر أساسي</button>
+                        <button class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors">زر ثانوي</button>
+                        <button class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">زر خطر</button>
+                        <button class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded">زر صغير</button>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">أزرار الإجراءات</h3>
+                    <div class="flex flex-wrap gap-3">
+                        <button class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">إضافة</button>
+                        <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">تعديل</button>
+                        <button class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">حذف</button>
+                        <button class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg">عرض</button>
+                        <button class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg">طباعة</button>
+                        <button class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg">تصدير Excel</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Cards -->
+        <section class="space-y-6">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">2️⃣ البطاقات</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">بطاقة أساسية</h3>
+                    <p class="text-gray-700 dark:text-gray-300">محتوى البطاقة هنا</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">إجمالي الطلبات</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">1,234</p>
+                        </div>
+                        <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                            <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Tables -->
+        <section class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">3️⃣ الجداول</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">#</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">المنتج</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">الحالة</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">1</td>
+                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">منتج تجريبي</td>
+                            <td class="px-6 py-4"><span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full text-xs">موثق</span></td>
+                            <td class="px-6 py-4"><div class="flex justify-center gap-2"><button class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded">عرض</button><button class="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded">حذف</button></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 4. Forms -->
+        <section class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">4️⃣ النماذج</h2>
+            <div class="space-y-4 max-w-2xl">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">اسم المنتج <span class="text-red-500">*</span></label>
+                    <input type="text" class="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="أدخل اسم المنتج">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">الفئة</label>
+                    <select class="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg"><option>اختر الفئة</option><option>فئة 1</option></select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">الملاحظات</label>
+                    <textarea rows="3" class="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg" placeholder="أدخل الملاحظات"></textarea>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded">
+                    <label class="text-sm text-gray-700 dark:text-gray-300">الموافقة على الشروط</label>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Modals -->
+        <section class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">5️⃣ النوافذ المنبثقة</h2>
+            <button @click="showModal = true" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">فتح نافذة</button>
+            <div x-show="showModal" x-cloak class="fixed inset-0 bg-gray-900 dark:bg-black bg-opacity-50 z-40" @click="showModal = false"></div>
+            <div x-show="showModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+                    <div class="flex justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">نافذة تجريبية</h3>
+                        <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">×</button>
+                    </div>
+                    <p class="text-gray-700 dark:text-gray-300 mb-6">محتوى النافذة</p>
+                    <div class="flex justify-end gap-3">
+                        <button @click="showModal = false" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg">إلغاء</button>
+                        <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">حفظ</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. Badges -->
+        <section class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">6️⃣ الشارات</h2>
+            <div class="flex flex-wrap gap-3">
+                <span class="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded-full text-sm font-medium">معلق</span>
+                <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm font-medium">موافق</span>
+                <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full text-sm font-medium">موثق</span>
+                <span class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded-full text-sm font-medium">ملغي</span>
+                <span class="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-full text-sm font-medium">مرفوض</span>
+                <span class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold bg-red-500 text-white rounded-full">5</span>
+            </div>
+        </section>
+
+        <!-- 7. Alerts -->
+        <section class="space-y-4">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">7️⃣ التنبيهات</h2>
+            <div class="flex items-center gap-3 bg-green-50 dark:bg-green-900/20 border-r-4 border-green-500 p-4 rounded">
+                <svg class="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div><p class="font-medium text-green-800 dark:text-green-300">نجاح</p><p class="text-sm text-green-700 dark:text-green-400">تمت العملية بنجاح</p></div>
+            </div>
+            <div class="flex items-center gap-3 bg-red-50 dark:bg-red-900/20 border-r-4 border-red-500 p-4 rounded">
+                <svg class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div><p class="font-medium text-red-800 dark:text-red-300">خطأ</p><p class="text-sm text-red-700 dark:text-red-400">حدث خطأ أثناء العملية</p></div>
+            </div>
+        </section>
+
+        <!-- 8. Loading -->
+        <section class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">8️⃣ التحميل</h2>
+            <div class="flex gap-8">
+                <div class="flex items-center justify-center">
+                    <svg class="animate-spin h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                </div>
+                <div class="animate-pulse space-y-2">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 9. Pagination -->
+        <section class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">9️⃣ الترقيم</h2>
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-700 dark:text-gray-300">عرض <span class="font-medium">1</span> إلى <span class="font-medium">10</span> من <span class="font-medium">100</span> نتيجة</div>
+                <div class="flex gap-2">
+                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700">السابق</button>
+                    <button class="px-3 py-1 bg-blue-600 text-white rounded">1</button>
+                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700">2</button>
+                    <button class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700">التالي</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 10. Dropdowns -->
+        <section class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">🔟 القوائم المنسدلة</h2>
+            <div class="relative inline-block">
+                <button @click="open = !open" class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
+                    <span class="text-gray-900 dark:text-gray-100">الخيارات</span>
+                    <svg class="w-4 h-4" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                </button>
+                <div x-show="open" @click.away="open = false" x-cloak class="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10">
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">الخيار 1</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">الخيار 2</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 11. Tabs -->
+        <section class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">1️⃣1️⃣ التبويبات</h2>
+            <div class="flex border-b border-gray-200 dark:border-gray-700">
+                <button @click="activeTab = 'tab1'" :class="activeTab === 'tab1' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 dark:text-gray-400'" class="px-4 py-2 border-b-2 font-medium">التبويب 1</button>
+                <button @click="activeTab = 'tab2'" :class="activeTab === 'tab2' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 dark:text-gray-400'" class="px-4 py-2 border-b-2 font-medium">التبويب 2</button>
+            </div>
+            <div class="mt-4">
+                <div x-show="activeTab === 'tab1'" class="text-gray-700 dark:text-gray-300">محتوى التبويب 1</div>
+                <div x-show="activeTab === 'tab2'" x-cloak class="text-gray-700 dark:text-gray-300">محتوى التبويب 2</div>
+            </div>
+        </section>
+
+        <!-- 12. Search & Filter -->
+        <section class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">1️⃣2️⃣ البحث والتصفية</h2>
+            <div class="flex gap-4">
+                <div class="flex-1 relative">
+                    <input type="text" placeholder="بحث..." class="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg">
+                    <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                </div>
+                <button class="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" /></svg>
+                    <span class="text-gray-900 dark:text-gray-100">تصفية</span>
+                </button>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
