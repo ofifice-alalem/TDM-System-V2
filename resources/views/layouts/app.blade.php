@@ -369,6 +369,20 @@
                                 <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
                             @endif
                         </a>
+                        <a href="{{ route('admin.customer-merge.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.customer-merge.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                            <i data-lucide="git-merge" class="w-4 h-4"></i>
+                            <span>دمج العملاء</span>
+                            @if(request()->routeIs('admin.customer-merge.*'))
+                                <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                            @endif
+                        </a>
+                        <a href="{{ route('admin.store-merge.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.store-merge.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                            <i data-lucide="git-merge" class="w-4 h-4"></i>
+                            <span>دمج المتاجر</span>
+                            @if(request()->routeIs('admin.store-merge.*'))
+                                <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                            @endif
+                        </a>
                     </div>
                 </div>
 

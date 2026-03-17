@@ -114,6 +114,14 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
         Route::delete('/{filename}', [BackupController::class, 'delete'])->name('delete');
     });
 
+    // Customer Merge
+    Route::get('customer-merge', [\App\Http\Controllers\Admin\CustomerMergeController::class, 'index'])->name('customer-merge.index');
+    Route::post('customer-merge', [\App\Http\Controllers\Admin\CustomerMergeController::class, 'store'])->name('customer-merge.store');
+
+    // Store Merge
+    Route::get('store-merge', [\App\Http\Controllers\Admin\StoreMergeController::class, 'index'])->name('store-merge.index');
+    Route::post('store-merge', [\App\Http\Controllers\Admin\StoreMergeController::class, 'store'])->name('store-merge.store');
+
     // Combined Summary
     Route::get('combined-summary', [\App\Http\Controllers\Admin\CombinedSummaryController::class, 'index'])->name('combined-summary.index');
 
