@@ -199,13 +199,54 @@
     القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 
 ========================================
-6. جدول: stores
+6. جدول: companies
 ========================================
 
   • id
     النوع: bigint unsigned
     المفتاح: PRIMARY KEY
     القيمة الافتراضية: AUTO_INCREMENT
+
+  • name
+    النوع: varchar(255)
+    القيمة الافتراضية: —
+
+  • phone
+    النوع: varchar(20)
+    القيمة الافتراضية: NULL
+
+  • address
+    النوع: text
+    القيمة الافتراضية: NULL
+
+  • is_active
+    النوع: tinyint(1)
+    القيمة الافتراضية: 1
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+ملاحظة: تجميع الفروع (المتاجر) تحت شركة واحدة
+
+========================================
+7. جدول: stores
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • company_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: companies.id
+    القيمة الافتراضية: —
 
   • name
     النوع: varchar(100)
@@ -235,8 +276,14 @@
     النوع: timestamp
     القيمة الافتراضية: CURRENT_TIMESTAMP
 
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+ملاحظة: كل متجر يتبع لشركة، الشركة يمكن أن يكون لها فرع واحد أو عدة فروع
+
 ========================================
-7. جدول: customers
+8. جدول: customers
 ========================================
 
   • id
@@ -275,7 +322,7 @@
     القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 
 ========================================
-8. جدول: notifications
+9. جدول: notifications
 ========================================
 
   • id
@@ -322,7 +369,7 @@ A. عملية: فواتير المصنع (إضافة مخزون رئيسي)
 ========================================
 
 ========================================
-9. جدول: factory_invoices
+10. جدول: factory_invoices
 ========================================
 
   • id
@@ -386,7 +433,7 @@ A. عملية: فواتير المصنع (إضافة مخزون رئيسي)
     القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 
 ========================================
-10. جدول: factory_invoice_items
+11. جدول: factory_invoice_items
 ========================================
 
   • id

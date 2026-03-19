@@ -312,7 +312,7 @@ D. عملية: بيع بضاعة للمتجر
     القيمة الافتراضية: 0
 
 ========================================
-24. جدول: store_debt_ledger (محدث في V3)
+24. جدول: company_debt_ledger (جديد في V3 - بديل store_debt_ledger)
 ========================================
 
   • id
@@ -320,15 +320,22 @@ D. عملية: بيع بضاعة للمتجر
     المفتاح: PRIMARY KEY
     القيمة الافتراضية: AUTO_INCREMENT
 
-  • store_id
+  • company_id
     النوع: bigint unsigned
     المفتاح: FOREIGN KEY
     المفتاح: INDEX
-    يشير إلى: stores.id
+    يشير إلى: companies.id
     القيمة الافتراضية: —
 
+  • store_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: stores.id
+    القيمة الافتراضية: NULL
+    ملاحظة: NULL في حالة الدفع (لأن الدفع على مستوى الشركة)
+
   • reference_type
-    النوع: enum('sales_invoice','sales_return','store_payment','opening_balance')
+    النوع: enum('sales_invoice','sales_return','company_payment','opening_balance')
     المفتاح: INDEX
     القيمة الافتراضية: —
 
@@ -343,6 +350,7 @@ D. عملية: بيع بضاعة للمتجر
   • balance_after
     النوع: decimal(12,2)
     القيمة الافتراضية: —
+    ملاحظة: رصيد الشركة الإجمالي بعد كل حركة
 
   • notes
     النوع: text
@@ -353,7 +361,7 @@ D. عملية: بيع بضاعة للمتجر
     المفتاح: INDEX
     القيمة الافتراضية: CURRENT_TIMESTAMP
 
-ملاحظة: ✅ تم استبدال (sales_invoice_id, return_id, payment_id) بـ (reference_type, reference_id)
-ملاحظة: ✅ تم حذف entry_type (مكرر مع reference_type)
-ملاحظة: ✅ تم إضافة balance_after لتتبع الرصيد بعد كل حركة
-ملاحظة: ✅ تم إضافة opening_balance لدعم الأرصدة الافتتاحية
+ملاحظة: ✅ تتبع حركات الدين على مستوى الشركة
+ملاحظة: ✅ store_id يكون NULL عند الدفع، ويحتوي على رقم الفرع عند البيع/الإرجاع
+ملاحظة: ✅ balance_after يعكس رصيد الشركة الإجمالي (مجموع كل الفروع)
+ملاحظة: ✅ تم استبدال store_payment بـ company_payment في reference_type

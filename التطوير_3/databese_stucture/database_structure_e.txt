@@ -3,7 +3,7 @@ E. عملية: إيصال القبض (تسديد دين المتجر)
 ========================================
 
 ========================================
-25. جدول: store_payments
+25. جدول: company_payments
 ========================================
 
   • id
@@ -16,10 +16,10 @@ E. عملية: إيصال القبض (تسديد دين المتجر)
     المفتاح: UNIQUE
     القيمة الافتراضية: —
 
-  • store_id
+  • company_id
     النوع: bigint unsigned
     المفتاح: FOREIGN KEY
-    يشير إلى: stores.id
+    يشير إلى: companies.id
     القيمة الافتراضية: —
 
   • marketer_id
@@ -58,6 +58,13 @@ E. عملية: إيصال القبض (تسديد دين المتجر)
     النوع: timestamp
     القيمة الافتراضية: CURRENT_TIMESTAMP
 
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+ملاحظة: ✅ تم تغيير الاسم من store_payments إلى company_payments
+ملاحظة: ✅ الدفع يتم على مستوى الشركة وليس الفرع
+
 ========================================
 26. جدول: marketer_commissions
 ========================================
@@ -92,7 +99,7 @@ E. عملية: إيصال القبض (تسديد دين المتجر)
   • payment_id
     النوع: bigint unsigned
     المفتاح: FOREIGN KEY
-    يشير إلى: store_payments.id
+    يشير إلى: company_payments.id
     القيمة الافتراضية: —
 
   • commission_rate
