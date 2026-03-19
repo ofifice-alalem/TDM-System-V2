@@ -26,11 +26,8 @@ id                      BIGINT       PK               AUTO_INCREMENT        ال
 marketer_id             BIGINT       FK → users.id    —                     المسوق طالب السحب
 requested_amount        DECIMAL      —                —                     المبلغ المطلوب سحبه
 status                  ENUM         —                'pending'             pending / approved / rejected / cancelled
-approved_by             BIGINT       FK → users.id    NULL                  الإدارة التي وافقت
-approved_at             TIMESTAMP    —                NULL                  تاريخ الموافقة
-rejected_by             BIGINT       FK → users.id    NULL                  الإدارة التي رفضت
-rejected_at             TIMESTAMP    —                NULL                  تاريخ الرفض
-signed_receipt_image    VARCHAR      —                NULL                  صورة إيصال الاستلام الموقع
+keeper_id               BIGINT       FK → users.id    NULL                  من قام بالموافقة أو الرفض (حسب status)
+stamped_image           VARCHAR      —                NULL                  صورة إيصال الاستلام المختوم
 notes                   TEXT         —                NULL                  ملاحظات (سبب الرفض أو الإلغاء)
 created_at              TIMESTAMP    —                CURRENT_TIMESTAMP     تاريخ الإنشاء
 updated_at              TIMESTAMP    —                CURRENT_TIMESTAMP     تاريخ آخر تحديث
@@ -115,9 +112,9 @@ created_at              TIMESTAMP    —                CURRENT_TIMESTAMP     ت
    - تحديث السجل الموجود
    - الحقول المحدثة:
      • status = 'rejected'
-     • rejected_by (FK → users.id) - معرف الإدارة
-     • rejected_at (وقت الرفض)
+     • keeper_id (FK → users.id) - معرف الإدارة التي رفضت
      • notes (سبب الرفض)
+     • updated_at (وقت الرفض)
 
 📌 ملاحظة: لا يتأثر رصيد العمولات
 
@@ -127,7 +124,7 @@ created_at              TIMESTAMP    —                CURRENT_TIMESTAMP     ت
 └─────────────────────────────────────────────────────────────────────────────┘
 
 🔹 الفاعل: الإدارة (Admin)
-🔹 الشرط: يجب أن تكون الحالة 'pending' ورفع صورة إيصال الاستلام الموقع
+🔹 الشرط: يجب أن تكون الحالة 'pending' ورفع صورة إيصال الاستلام المختوم
 
 📊 الجداول المتأثرة:
 --------------------
@@ -136,9 +133,9 @@ created_at              TIMESTAMP    —                CURRENT_TIMESTAMP     ت
    - تحديث السجل الموجود
    - الحقول المحدثة:
      • status = 'approved'
-     • approved_by (FK → users.id) - معرف الإدارة
-     • approved_at (وقت الموافقة)
-     • signed_receipt_image (صورة إيصال الاستلام الموقع)
+     • keeper_id (FK → users.id) - معرف الإدارة التي وافقت
+     • stamped_image (صورة إيصال الاستلام المختوم)
+     • updated_at (وقت الموافقة)
 
 2️⃣ marketer_commission_ledger
    - إضافة سجل جديد
@@ -211,8 +208,9 @@ created_at              TIMESTAMP    —                CURRENT_TIMESTAMP     ت
     │                           │
     │ (عند الموافقة)           │
     │ status = approved         │ ← تحديث الحالة
-    │ + signed_receipt_image    │ ← رفع الإيصال
-    │ + approved_by/approved_at │ ← توثيق الموافقة
+    │ + stamped_image           │ ← رفع الإيصال المختوم
+    │ + keeper_id               │ ← توثيق من وافق
+    │ + updated_at              │ ← وقت الموافقة
     └──────────┬────────────────┘
                │
                │ (تسجيل السحب)
@@ -232,7 +230,7 @@ created_at              TIMESTAMP    —                CURRENT_TIMESTAMP     ت
 ⚠️ قواعد العمل:
    1. ✅ لا يمكن السحب بمبلغ أكبر من الرصيد المتاح
    2. ✅ الرصيد المتاح = مجموع العمولات - مجموع السحوبات السابقة
-   3. ✅ يجب رفع صورة إيصال الاستلام الموقع من المسوق عند الموافقة
+   3. ✅ يجب رفع صورة إيصال الاستلام المختوم من المسوق عند الموافقة
    4. ✅ السحب لا يتم إلا عند الموافقة (approved)
    5. ✅ يمكن للمسوق إلغاء الطلب في حالة pending فقط
    6. ✅ لا يمكن إلغاء طلب السحب بعد الموافقة عليه
@@ -268,10 +266,10 @@ created_at              TIMESTAMP    —                CURRENT_TIMESTAMP     ت
 📌 ملاحظة: V3 يستخدم balance_after من marketer_commission_ledger لأداء أفضل
 
 📝 إيصال الاستلام:
-   - يجب أن يكون موقع من المسوق
+   - يجب أن يكون مختوم من المسوق
    - يُثبت استلام المسوق للمبلغ
    - يُرفع من قبل الإدارة عند الموافقة
-   - يُحفظ في marketer_withdrawal_requests.signed_receipt_image
+   - يُحفظ في marketer_withdrawal_requests.stamped_image
 
 🔢 حساب الرصيد المتاح (V3):
    - الرصيد المتاح = آخر balance_after من marketer_commission_ledger
