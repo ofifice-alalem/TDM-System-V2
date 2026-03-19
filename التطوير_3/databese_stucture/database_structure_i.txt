@@ -63,6 +63,64 @@ I. جداول التتبع والأرشفة (جديدة في V3)
     القيمة الافتراضية: CURRENT_TIMESTAMP
 
 ========================================
+أمثلة على حركات المخزون (inventory_movements)
+========================================
+
+📦 مثال 1: طلب بضاعة من المسوق (marketer_request)
+
+🔹 عند الموافقة (approved) - حجز البضاعة:
+from_type: 'main_stock'
+from_id: NULL
+to_type: 'marketer'
+to_id: marketer_id
+quantity: الكمية المحجوزة
+reference_type: 'marketer_request'
+reference_id: request_id
+
+🔹 عند التوثيق (documented) - تسليم البضاعة:
+from_type: 'marketer'
+from_id: marketer_id (من المخزون المحجوز)
+to_type: 'marketer'
+to_id: marketer_id (إلى المخزون الفعلي)
+quantity: الكمية المستلمة
+reference_type: 'marketer_request'
+reference_id: request_id
+
+ملاحظة: في حالة طلب المسوق، يتم تسجيل حركتين:
+  1. من main_stock إلى marketer (محجوز) عند الموافقة
+  2. من marketer (محجوز) إلى marketer (فعلي) عند التوثيق
+
+📦 مثال 2: إرجاع بضاعة من المسوق (marketer_return)
+
+from_type: 'marketer'
+from_id: marketer_id
+to_type: 'main_stock'
+to_id: NULL
+quantity: الكمية المرجعة
+reference_type: 'marketer_return'
+reference_id: return_request_id
+
+📦 مثال 3: بيع بضاعة للمتجر (sales_invoice)
+
+from_type: 'marketer'
+from_id: marketer_id
+to_type: 'store'
+to_id: store_id
+quantity: الكمية المباعة
+reference_type: 'sales_invoice'
+reference_id: invoice_id
+
+📦 مثال 4: بيع مباشر للعميل (customer_invoice)
+
+from_type: 'main_stock'
+from_id: NULL
+to_type: 'customer'
+to_id: customer_id
+quantity: الكمية المباعة
+reference_type: 'customer_invoice'
+reference_id: invoice_id
+
+========================================
 39. جدول: inventory_snapshots (جديد في V3)
 ========================================
 

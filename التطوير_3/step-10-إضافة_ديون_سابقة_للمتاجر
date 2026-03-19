@@ -1,0 +1,80 @@
+# Step 10 — إضافة الديون السابقة للمتاجر
+
+## الهدف
+السماح للـ Admin بتسجيل ديون المتاجر المتراكمة من النظام القديم (قبل تشغيل النظام الحالي)،
+دون المرور بدورة الفاتورة الاعتيادية (مسوق → مستودع → متجر).
+
+---
+
+## المستخدم الوهمي (id = 0)
+يُنشأ مستخدم ثابت بـ `id = 0` يمثل "النظام / الإدارة"، ويُستخدم كـ `marketer_id`
+لجميع فواتير الديون السابقة. هذا يتيح مستقبلاً استعراض كل الديون السابقة بفلترة بسيطة:
+
+```sql
+SELECT * FROM store_debt_ledger WHERE marketer_id = 0;
+```
+
+---
+
+## تسلسل أرقام الفواتير
+```
+OLD-{YYYYMMDD}-{XXXXX}
+```
+مثال: `OLD-20260311-00001`
+
+الرقم التسلسلي يُحسب من عدد الفواتير التي تبدأ بـ `OLD-` فقط.
+
+---
+
+## الجداول المتأثرة
+
+| الجدول | العملية |
+|--------|---------|
+| `sales_invoices` | إنشاء سجل بـ `status = approved` مباشرة، `marketer_id = 0` |
+| `store_debt_ledger` | إضافة سجل دين بـ `entry_type = sale`، `marketer_id = 0` |
+
+> لا يوجد `sales_invoice_items` — الفاتورة بدون عناصر.
+> لا يمر على `marketer_actual_stock` أو `store_pending_stock`.
+
+---
+
+## سير العملية
+
+```
+Admin يختار المتجر + يدخل المبلغ + ملاحظة اختيارية
+        ↓
+إنشاء سجل في sales_invoices
+  - invoice_number = OLD-{YYYYMMDD}-{XXXXX}
+  - marketer_id    = 0
+  - store_id       = المتجر المختار
+  - subtotal       = المبلغ
+  - total_amount   = المبلغ
+  - status         = approved
+  - confirmed_at   = now()
+        ↓
+إضافة سجل في store_debt_ledger
+  - entry_type        = sale
+  - sales_invoice_id  = id الفاتورة المنشأة
+  - marketer_id       = 0
+  - amount            = المبلغ
+  - balance_after     = آخر رصيد + المبلغ
+```
+
+---
+
+## الواجهة (Admin فقط)
+- صفحة إنشاء: اختيار المتجر + إدخال المبلغ + ملاحظة
+- صفحة قائمة: عرض جميع فواتير `OLD-` مع فلترة بالمتجر والتاريخ
+- لا يوجد زر موافقة/رفض — الفاتورة موثقة فور إنشائها
+
+---
+
+## الملفات المتوقع إنشاؤها
+
+```
+app/Services/Admin/OldDebtService.php
+app/Http/Controllers/Admin/OldDebtController.php
+resources/views/admin/old-debts/index.blade.php
+resources/views/admin/old-debts/create.blade.php
+routes/admin.php  ← إضافة مسارات جديدة
+```

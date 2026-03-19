@@ -1,0 +1,696 @@
+================================================================================
+                    المسارات والـControllers - إدارة العروض الترويجية
+================================================================================
+
+📋 نظرة عامة:
+--------------
+هذا الملف يوثق المسارات والـControllers والـServices لإدارة العروض الترويجية.
+✅ الصلاحيات: الإدارة (Admin) فقط
+✅ Controller واحد للإدارة
+
+================================================================================
+                        🛣️ المسارات (Routes)
+================================================================================
+
+📁 الملف: routes/admin.php
+🔒 Middleware: ['auth', 'role:admin']
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ المسارات                                                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+    
+    // Resource Routes (بدون edit/update)
+    Route::resource('product-promotions', ProductPromotionController::class)
+        ->except(['edit', 'update']);
+    
+    // Custom Actions
+    Route::post('product-promotions/{promotion}/toggle', [ProductPromotionController::class, 'toggle'])
+        ->name('product-promotions.toggle');
+    
+    Route::get('product-promotions/statistics', [ProductPromotionController::class, 'statistics'])
+        ->name('product-promotions.statistics');
+});
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ جدول المسارات                                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+GET     /admin/product-promotions
+        الاسم: product-promotions.index
+        الصلاحية: @can('viewAny', ProductPromotion::class)
+        الغرض: عرض قائمة العروض الترويجية
+
+GET     /admin/product-promotions/create
+        الاسم: product-promotions.create
+        الصلاحية: @can('create', ProductPromotion::class)
+        الغرض: عرض صفحة إنشاء عرض جديد
+
+POST    /admin/product-promotions
+        الاسم: product-promotions.store
+        الصلاحية: @can('create', ProductPromotion::class)
+        الغرض: حفظ عرض جديد
+
+GET     /admin/product-promotions/{promotion}
+        الاسم: product-promotions.show
+        الصلاحية: @can('view', $promotion)
+        الغرض: عرض تفاصيل عرض معين
+
+DELETE  /admin/product-promotions/{promotion}
+        الاسم: product-promotions.destroy
+        الصلاحية: @can('delete', $promotion)
+        الغرض: حذف عرض (soft delete)
+
+POST    /admin/product-promotions/{promotion}/toggle
+        الاسم: product-promotions.toggle
+        الصلاحية: @can('update', $promotion)
+        الغرض: تفعيل/تعطيل عرض
+
+GET     /admin/product-promotions/statistics
+        الاسم: product-promotions.statistics
+        الصلاحية: @can('viewAny', ProductPromotion::class)
+        الغرض: عرض إحصائيات العروض
+
+
+================================================================================
+                        🎮 Controller
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ProductPromotionController                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Controllers/Admin/ProductPromotionController.php
+🎯 المسؤولية: إدارة العروض الترويجية للمنتجات
+
+📋 الـMethods:
+
+1️⃣ index(Request $request)
+   - الغرض: عرض قائمة العروض الترويجية
+   - الصلاحية: $this->authorize('viewAny', ProductPromotion::class)
+   - المعاملات:
+     • status (optional): all / active / inactive
+     • product_id (optional): فلتر حسب المنتج
+     • period (optional): current / upcoming / expired
+   
+   - المنطق:
+     ```php
+     $query = ProductPromotion::with(['product', 'creator'])
+         ->withCount('invoiceItems');
+     
+     // فلتر الحالة
+     if ($request->status === 'active') {
+         $query->where('is_active', true);
+     } elseif ($request->status === 'inactive') {
+         $query->where('is_active', false);
+     }
+     
+     // فلتر المنتج
+     if ($request->filled('product_id')) {
+         $query->where('product_id', $request->product_id);
+     }
+     
+     // فلتر الفترة
+     if ($request->period === 'current') {
+         $query->where('start_date', '<=', now())
+               ->where('end_date', '>=', now());
+     } elseif ($request->period === 'upcoming') {
+         $query->where('start_date', '>', now());
+     } elseif ($request->period === 'expired') {
+         $query->where('end_date', '<', now());
+     }
+     
+     // الترتيب
+     $query->orderBy('is_active', 'desc')
+           ->orderBy('end_date', 'asc');
+     
+     $promotions = $query->paginate(20);
+     
+     // المنتجات للفلتر
+     $products = Product::where('is_active', true)
+         ->orderBy('name')
+         ->get();
+     
+     return view('admin.product-promotions.index', compact('promotions', 'products'));
+     ```
+   
+   - الـView: admin/product-promotions/index.blade.php
+
+2️⃣ create()
+   - الغرض: عرض صفحة إنشاء عرض ترويجي جديد
+   - الصلاحية: $this->authorize('create', ProductPromotion::class)
+   - البيانات المرسلة:
+     ```php
+     $products = Product::where('is_active', true)
+         ->orderBy('name')
+         ->get();
+     
+     return view('admin.product-promotions.create', compact('products'));
+     ```
+   - الـView: admin/product-promotions/create.blade.php
+
+3️⃣ store(StoreProductPromotionRequest $request)
+   - الغرض: حفظ عرض ترويجي جديد
+   - الـForm Request: StoreProductPromotionRequest
+   - المنطق:
+     ```php
+     // التحقق من عدم وجود عرض متداخل
+     $existingPromotion = ProductPromotion::where('product_id', $request->product_id)
+         ->where('is_active', true)
+         ->where(function($query) use ($request) {
+             $query->whereBetween('start_date', [$request->start_date, $request->end_date])
+                   ->orWhereBetween('end_date', [$request->start_date, $request->end_date])
+                   ->orWhere(function($q) use ($request) {
+                       $q->where('start_date', '<=', $request->start_date)
+                         ->where('end_date', '>=', $request->end_date);
+                   });
+         })
+         ->first();
+     
+     if ($existingPromotion) {
+         return redirect()
+             ->back()
+             ->withInput()
+             ->with('error', 'يوجد عرض نشط لهذا المنتج في نفس الفترة');
+     }
+     
+     $data = $request->validated();
+     $data['created_by'] = auth()->id();
+     
+     $promotion = ProductPromotion::create($data);
+     
+     return redirect()
+         ->route('product-promotions.show', $promotion)
+         ->with('success', 'تم إنشاء العرض الترويجي بنجاح');
+     ```
+
+4️⃣ show(ProductPromotion $promotion)
+   - الغرض: عرض تفاصيل عرض ترويجي معين
+   - الصلاحية: $this->authorize('view', $promotion)
+   - الـEager Loading:
+     ```php
+     $promotion->load([
+         'product',
+         'creator',
+         'invoiceItems' => function($query) {
+             $query->with(['invoice.marketer', 'invoice.store'])
+                   ->latest()
+                   ->limit(10);
+         }
+     ]);
+     
+     // إحصائيات
+     $statistics = [
+         'total_invoices' => $promotion->invoiceItems()
+             ->distinct('invoice_id')
+             ->count(),
+         'total_free_quantity' => $promotion->invoiceItems()
+             ->sum('free_quantity'),
+         'total_free_value' => $promotion->invoiceItems()
+             ->sum(DB::raw('free_quantity * unit_price')),
+         'avg_purchased_quantity' => $promotion->invoiceItems()
+             ->avg('quantity'),
+         'last_used' => $promotion->invoiceItems()
+             ->latest()
+             ->first()?->created_at,
+     ];
+     
+     return view('admin.product-promotions.show', compact('promotion', 'statistics'));
+     ```
+
+5️⃣ toggle(ProductPromotion $promotion)
+   - الغرض: تفعيل/تعطيل عرض
+   - الصلاحية: $this->authorize('update', $promotion)
+   - المنطق:
+     ```php
+     // التحقق من عدم وجود تداخل عند التفعيل
+     if (!$promotion->is_active) {
+         $conflictingPromotion = ProductPromotion::where('product_id', $promotion->product_id)
+             ->where('is_active', true)
+             ->where('id', '!=', $promotion->id)
+             ->where(function($query) use ($promotion) {
+                 $query->whereBetween('start_date', [$promotion->start_date, $promotion->end_date])
+                       ->orWhereBetween('end_date', [$promotion->start_date, $promotion->end_date])
+                       ->orWhere(function($q) use ($promotion) {
+                           $q->where('start_date', '<=', $promotion->start_date)
+                             ->where('end_date', '>=', $promotion->end_date);
+                       });
+             })
+             ->first();
+         
+         if ($conflictingPromotion) {
+             return redirect()
+                 ->back()
+                 ->with('error', 'يوجد عرض نشط لهذا المنتج في نفس الفترة');
+         }
+     }
+     
+     $promotion->update([
+         'is_active' => !$promotion->is_active
+     ]);
+     
+     $message = $promotion->is_active 
+         ? 'تم تفعيل العرض بنجاح' 
+         : 'تم تعطيل العرض بنجاح';
+     
+     return redirect()
+         ->back()
+         ->with('success', $message);
+     ```
+
+6️⃣ destroy(ProductPromotion $promotion)
+   - الغرض: حذف عرض (soft delete)
+   - الصلاحية: $this->authorize('delete', $promotion)
+   - التحقق:
+     ```php
+     $usageCount = $promotion->invoiceItems()->count();
+     
+     if ($usageCount > 0) {
+         return redirect()
+             ->back()
+             ->with('error', 'لا يمكن حذف عرض مستخدم في فواتير');
+     }
+     
+     $promotion->update(['is_active' => false]);
+     
+     return redirect()
+         ->route('product-promotions.index')
+         ->with('success', 'تم حذف العرض بنجاح');
+     ```
+
+7️⃣ statistics()
+   - الغرض: عرض إحصائيات شاملة
+   - الصلاحية: $this->authorize('viewAny', ProductPromotion::class)
+   - المنطق:
+     ```php
+     $stats = [
+         'active_promotions' => ProductPromotion::where('is_active', true)->count(),
+         'inactive_promotions' => ProductPromotion::where('is_active', false)->count(),
+         'total_free_quantity_monthly' => SalesInvoiceItem::whereNotNull('promotion_id')
+             ->whereMonth('created_at', now()->month)
+             ->sum('free_quantity'),
+         'total_free_quantity_yearly' => SalesInvoiceItem::whereNotNull('promotion_id')
+             ->whereYear('created_at', now()->year)
+             ->sum('free_quantity'),
+         'total_free_value_yearly' => SalesInvoiceItem::whereNotNull('promotion_id')
+             ->whereYear('created_at', now()->year)
+             ->sum(DB::raw('free_quantity * unit_price')),
+     ];
+     
+     // أكثر العروض استخداماً
+     $topPromotions = ProductPromotion::withCount('invoiceItems')
+         ->with('product')
+         ->orderBy('invoice_items_count', 'desc')
+         ->limit(10)
+         ->get();
+     
+     // استخدام عبر الزمن (آخر 12 شهر)
+     $monthlyUsage = SalesInvoiceItem::selectRaw('
+             DATE_FORMAT(created_at, "%Y-%m") as month,
+             COUNT(DISTINCT invoice_id) as invoices_count,
+             SUM(free_quantity) as total_free_quantity,
+             SUM(free_quantity * unit_price) as total_free_value
+         ')
+         ->whereNotNull('promotion_id')
+         ->where('created_at', '>=', now()->subMonths(12))
+         ->groupBy('month')
+         ->orderBy('month')
+         ->get();
+     
+     // أكثر المنتجات استفادة
+     $topProducts = Product::select('products.*')
+         ->join('product_promotions', 'products.id', '=', 'product_promotions.product_id')
+         ->join('sales_invoice_items', 'product_promotions.id', '=', 'sales_invoice_items.promotion_id')
+         ->selectRaw('products.*, SUM(sales_invoice_items.free_quantity) as total_free')
+         ->groupBy('products.id')
+         ->orderBy('total_free', 'desc')
+         ->limit(10)
+         ->get();
+     
+     return view('admin.product-promotions.statistics', compact(
+         'stats', 'topPromotions', 'monthlyUsage', 'topProducts'
+     ));
+     ```
+
+
+================================================================================
+                        ⚙️ Service
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ProductPromotionService                                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Services/ProductPromotionService.php
+🎯 المسؤولية: منطق تطبيق العروض الترويجية على الفواتير
+
+📋 الـMethods:
+
+1️⃣ getActivePromotion($productId, $date = null)
+   - الغرض: البحث عن عرض ترويجي نشط للمنتج
+   - المعاملات:
+     • $productId: معرف المنتج
+     • $date: التاريخ (افتراضي: اليوم)
+   - المنطق:
+     ```php
+     public function getActivePromotion($productId, $date = null)
+     {
+         $date = $date ?? now();
+         
+         return ProductPromotion::where('product_id', $productId)
+             ->where('is_active', true)
+             ->where('start_date', '<=', $date)
+             ->where('end_date', '>=', $date)
+             ->first();
+     }
+     ```
+   - الإرجاع: ProductPromotion|null
+
+2️⃣ calculateFreeQuantity($promotion, $quantity)
+   - الغرض: حساب الكمية المجانية
+   - المعاملات:
+     • $promotion: العرض الترويجي
+     • $quantity: الكمية المشتراة
+   - المنطق:
+     ```php
+     public function calculateFreeQuantity($promotion, $quantity)
+     {
+         if (!$promotion || $quantity < $promotion->min_quantity) {
+             return 0;
+         }
+         
+         // حساب عدد المرات التي تنطبق فيها القاعدة
+         $times = intval($quantity / $promotion->min_quantity);
+         
+         return $times * $promotion->free_quantity;
+     }
+     ```
+   - الإرجاع: int
+
+3️⃣ applyPromotionToItem($productId, $quantity, $date = null)
+   - الغرض: تطبيق العرض على عنصر فاتورة (دمج الوظيفتين)
+   - المنطق:
+     ```php
+     public function applyPromotionToItem($productId, $quantity, $date = null)
+     {
+         $promotion = $this->getActivePromotion($productId, $date);
+         $freeQuantity = $this->calculateFreeQuantity($promotion, $quantity);
+         
+         return [
+             'promotion_id' => $promotion?->id,
+             'free_quantity' => $freeQuantity,
+         ];
+     }
+     ```
+   - الاستخدام في SalesInvoiceService:
+     ```php
+     // في createInvoice() لكل عنصر
+     $promotionService = new ProductPromotionService();
+     
+     foreach ($items as $item) {
+         $promotion = $promotionService->applyPromotionToItem(
+             $item['product_id'], 
+             $item['quantity']
+         );
+         
+         $invoiceItemData = [
+             // ... باقي البيانات
+             'promotion_id' => $promotion['promotion_id'],
+             'free_quantity' => $promotion['free_quantity'],
+         ];
+         
+         // إضافة الكمية المجانية للمخزون المرحلي
+         $totalQuantity = $item['quantity'] + $promotion['free_quantity'];
+     }
+     ```
+
+4️⃣ validatePromotionPeriod($productId, $startDate, $endDate, $excludeId = null)
+   - الغرض: التحقق من عدم وجود تداخل في فترات العروض
+   - المعاملات:
+     • $productId: معرف المنتج
+     • $startDate: تاريخ البداية
+     • $endDate: تاريخ النهاية
+     • $excludeId: معرف العرض المستثنى (للتحديث)
+   - المنطق:
+     ```php
+     public function validatePromotionPeriod($productId, $startDate, $endDate, $excludeId = null)
+     {
+         $query = ProductPromotion::where('product_id', $productId)
+             ->where('is_active', true);
+         
+         if ($excludeId) {
+             $query->where('id', '!=', $excludeId);
+         }
+         
+         $conflicting = $query->where(function($q) use ($startDate, $endDate) {
+             $q->whereBetween('start_date', [$startDate, $endDate])
+               ->orWhereBetween('end_date', [$startDate, $endDate])
+               ->orWhere(function($subQ) use ($startDate, $endDate) {
+                   $subQ->where('start_date', '<=', $startDate)
+                        ->where('end_date', '>=', $endDate);
+               });
+         })->first();
+         
+         return $conflicting === null;
+     }
+     ```
+   - الإرجاع: bool
+
+
+================================================================================
+                        🔐 Policy
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ProductPromotionPolicy                                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Policies/ProductPromotionPolicy.php
+
+```php
+class ProductPromotionPolicy
+{
+    public function viewAny(User $user): bool
+    {
+        return $user->role_id === 1; // Admin only
+    }
+    
+    public function view(User $user, ProductPromotion $promotion): bool
+    {
+        return $user->role_id === 1;
+    }
+    
+    public function create(User $user): bool
+    {
+        return $user->role_id === 1;
+    }
+    
+    public function update(User $user, ProductPromotion $promotion): bool
+    {
+        // تفعيل/تعطيل فقط
+        return $user->role_id === 1;
+    }
+    
+    public function delete(User $user, ProductPromotion $promotion): bool
+    {
+        // Admin + غير مستخدم
+        return $user->role_id === 1 && $promotion->invoice_items_count === 0;
+    }
+}
+```
+
+
+================================================================================
+                        📦 Models & Relations
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ProductPromotion Model                                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Models/ProductPromotion.php
+
+📋 الـCasts:
+```php
+protected $casts = [
+    'min_quantity' => 'integer',
+    'free_quantity' => 'integer',
+    'start_date' => 'date',
+    'end_date' => 'date',
+    'is_active' => 'boolean',
+];
+```
+
+📋 الـFillable:
+- product_id, min_quantity, free_quantity
+- start_date, end_date
+- is_active, created_by
+
+📋 الـRelationships:
+```php
+public function product()
+{
+    return $this->belongsTo(Product::class);
+}
+
+public function creator()
+{
+    return $this->belongsTo(User::class, 'created_by');
+}
+
+public function invoiceItems()
+{
+    return $this->hasMany(SalesInvoiceItem::class, 'promotion_id');
+}
+```
+
+📋 الـAccessors:
+```php
+public function getStatusAttribute(): string
+{
+    if (!$this->is_active) {
+        return 'معطل';
+    }
+    
+    if (now()->lt($this->start_date)) {
+        return 'قادم';
+    }
+    
+    if (now()->gt($this->end_date)) {
+        return 'منتهي';
+    }
+    
+    return 'نشط';
+}
+
+public function getStatusColorAttribute(): string
+{
+    return match($this->status) {
+        'نشط' => 'green',
+        'قادم' => 'blue',
+        'منتهي' => 'orange',
+        'معطل' => 'gray',
+    };
+}
+
+public function getRuleTextAttribute(): string
+{
+    return "اشتري {$this->min_quantity} واحصل على {$this->free_quantity} مجاناً";
+}
+```
+
+
+================================================================================
+                        📝 Form Requests
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ StoreProductPromotionRequest                                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/StoreProductPromotionRequest.php
+
+```php
+class StoreProductPromotionRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('create', ProductPromotion::class);
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'product_id' => 'required|exists:products,id',
+            'min_quantity' => 'required|integer|min:1',
+            'free_quantity' => 'required|integer|min:1',
+            'start_date' => 'required|date|after_or_equal:today',
+            'end_date' => 'required|date|after:start_date',
+            'is_active' => 'boolean',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'product_id.required' => 'يجب اختيار منتج',
+            'min_quantity.required' => 'يجب تحديد الحد الأدنى للكمية',
+            'free_quantity.required' => 'يجب تحديد الكمية المجانية',
+            'start_date.after_or_equal' => 'تاريخ البداية يجب أن يكون اليوم أو بعده',
+            'end_date.after' => 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية',
+        ];
+    }
+}
+```
+
+
+================================================================================
+                        📊 Database Queries
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ استعلامات مفيدة                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+1️⃣ العروض النشطة حالياً:
+```php
+ProductPromotion::where('is_active', true)
+    ->where('start_date', '<=', now())
+    ->where('end_date', '>=', now())
+    ->with('product')
+    ->get();
+```
+
+2️⃣ أكثر العروض استخداماً:
+```php
+ProductPromotion::withCount('invoiceItems')
+    ->with('product')
+    ->orderBy('invoice_items_count', 'desc')
+    ->limit(10)
+    ->get();
+```
+
+3️⃣ إجمالي الكمية المجانية لعرض معين:
+```php
+$promotion->invoiceItems()->sum('free_quantity');
+```
+
+4️⃣ الفواتير المستفيدة من عرض معين:
+```php
+SalesInvoiceItem::where('promotion_id', $promotionId)
+    ->with(['invoice.marketer', 'invoice.store', 'product'])
+    ->latest()
+    ->paginate(20);
+```
+
+5️⃣ العروض المتداخلة لمنتج معين:
+```php
+ProductPromotion::where('product_id', $productId)
+    ->where('is_active', true)
+    ->where(function($query) use ($startDate, $endDate) {
+        $query->whereBetween('start_date', [$startDate, $endDate])
+              ->orWhereBetween('end_date', [$startDate, $endDate]);
+    })
+    ->get();
+```
+
+
+================================================================================
+                        ✅ مزايا البنية
+================================================================================
+
+1. ✅ فصل واضح بين العرض والمنطق
+2. ✅ Service مستقل لتطبيق العروض
+3. ✅ Policy واضحة للصلاحيات
+4. ✅ منع التداخل في فترات العروض
+5. ✅ منع التعديل بعد الإنشاء
+6. ✅ Soft delete للحفاظ على التتبع
+7. ✅ إحصائيات شاملة
+8. ✅ حساب تلقائي للكمية المجانية
+
+
+================================================================================
+انتهى التوثيق
+================================================================================

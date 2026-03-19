@@ -1,0 +1,616 @@
+================================================================================
+                    المسارات والـControllers - إرجاع بضاعة من المتجر
+                              (البنية المشتركة المثالية)
+================================================================================
+
+📋 نظرة عامة:
+--------------
+هذا الملف يوثق البنية المثالية للمسارات والـControllers باستخدام نهج مشترك
+لتقليل التكرار مع الحفاظ على الأمان والوضوح.
+
+✅ فلسفة التصميم:
+- Controller واحد مشترك
+- Policies للتحكم بالصلاحيات
+- Middleware للمصادقة فقط
+- Views مشتركة
+
+================================================================================
+                        🛣️ المسارات (Routes)
+================================================================================
+
+📁 الملف: routes/web.php
+🔒 Middleware: ['auth']
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ المسارات المشتركة                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Route::middleware('auth')->group(function () {
+    
+    // Resource Routes
+    Route::resource('store-returns', StoreReturnController::class)
+        ->except(['edit', 'update', 'destroy']);
+    
+    // Custom Actions
+    Route::post('store-returns/{storeReturn}/approve', [StoreReturnController::class, 'approve'])
+        ->name('store-returns.approve')
+        ->can('approve', 'storeReturn');
+    
+    Route::post('store-returns/{storeReturn}/reject', [StoreReturnController::class, 'reject'])
+        ->name('store-returns.reject')
+        ->can('reject', 'storeReturn');
+    
+    Route::post('store-returns/{storeReturn}/cancel', [StoreReturnController::class, 'cancel'])
+        ->name('store-returns.cancel')
+        ->can('cancel', 'storeReturn');
+    
+    // Additional Routes
+    Route::get('store-returns/{storeReturn}/pdf', [StoreReturnController::class, 'pdf'])
+        ->name('store-returns.pdf');
+    
+    Route::get('store-returns/{storeReturn}/documentation', [StoreReturnController::class, 'viewDocumentation'])
+        ->name('store-returns.documentation');
+});
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ جدول المسارات                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+GET     /store-returns
+        الاسم: store-returns.index
+        الصلاحية: @can('viewAny', SalesReturn::class)
+        الغرض: عرض قائمة طلبات الإرجاع (حسب الدور)
+
+GET     /store-returns/create
+        الاسم: store-returns.create
+        الصلاحية: @can('create', SalesReturn::class)
+        الغرض: عرض صفحة إنشاء طلب إرجاع (للمسوق فقط)
+
+POST    /store-returns
+        الاسم: store-returns.store
+        الصلاحية: @can('create', SalesReturn::class)
+        الغرض: حفظ طلب إرجاع جديد
+
+GET     /store-returns/{storeReturn}
+        الاسم: store-returns.show
+        الصلاحية: @can('view', $storeReturn)
+        الغرض: عرض تفاصيل طلب إرجاع معين
+
+POST    /store-returns/{storeReturn}/approve
+        الاسم: store-returns.approve
+        الصلاحية: @can('approve', $storeReturn)
+        الغرض: توثيق طلب إرجاع (لأمين المخزن)
+
+POST    /store-returns/{storeReturn}/reject
+        الاسم: store-returns.reject
+        الصلاحية: @can('reject', $storeReturn)
+        الغرض: رفض طلب إرجاع (لأمين المخزن)
+
+POST    /store-returns/{storeReturn}/cancel
+        الاسم: store-returns.cancel
+        الصلاحية: @can('cancel', $storeReturn)
+        الغرض: إلغاء طلب إرجاع (للمسوق)
+
+GET     /store-returns/{storeReturn}/pdf
+        الاسم: store-returns.pdf
+        الصلاحية: @can('view', $storeReturn)
+        الغرض: طباعة PDF
+
+GET     /store-returns/{storeReturn}/documentation
+        الاسم: store-returns.documentation
+        الصلاحية: @can('view', $storeReturn)
+        الغرض: عرض صورة فاتورة الإرجاع المختومة
+
+
+================================================================================
+                        🎮 Controller
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ StoreReturnController (مشترك)                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Controllers/StoreReturnController.php
+🎯 المسؤولية: إدارة جميع عمليات طلبات الإرجاع من المتاجر لجميع الأدوار
+
+📋 الـMethods:
+
+1️⃣ index(Request $request)
+   - الغرض: عرض قائمة طلبات الإرجاع حسب صلاحيات المستخدم
+   - الصلاحية: $this->authorize('viewAny', SalesReturn::class)
+   - المعاملات:
+     • status (optional): الفلترة حسب الحالة
+     • marketer_id (optional): الفلترة حسب المسوق (لأمين المخزن)
+     • store_id (optional): الفلترة حسب المتجر
+     • return_number (optional): البحث برقم الإرجاع
+     • invoice_number (optional): البحث برقم الفاتورة الأصلية
+     • from_date, to_date (optional): الفلترة حسب التاريخ
+   
+   - المنطق:
+     ```php
+     $query = SalesReturn::with('items.product', 'marketer', 'store', 'salesInvoice');
+     
+     // الفرق الوحيد بين الأدوار
+     if (auth()->user()->isMarketer()) {
+         $query->where('marketer_id', auth()->id());
+     }
+     
+     // باقي الفلاتر مشتركة
+     $this->applyFilters($query, $request);
+     
+     // البيانات الإضافية
+     $marketers = auth()->user()->isWarehouse() 
+         ? User::where('role_id', 3)->where('is_active', true)->get() 
+         : null;
+     
+     $stores = Store::where('is_active', true)->get();
+     
+     return view('shared.store-returns.index', [
+         'returns' => $query->paginate(20),
+         'marketers' => $marketers,
+         'stores' => $stores
+     ]);
+     ```
+   
+   - الـView: shared/store-returns/index.blade.php
+
+2️⃣ create()
+   - الغرض: عرض صفحة إنشاء طلب إرجاع جديد
+   - الصلاحية: $this->authorize('create', SalesReturn::class)
+   - البيانات المرسلة:
+     • stores: المتاجر التي لها فواتير موثقة للمسوق
+     ```php
+     $stores = Store::whereHas('salesInvoices', function($q) {
+             $q->where('marketer_id', auth()->id())
+               ->where('status', 'approved');
+         })
+         ->where('is_active', true)
+         ->get();
+     ```
+   - الـView: marketer/store-returns/create.blade.php
+
+3️⃣ store(StoreReturnRequest $request)
+   - الغرض: حفظ طلب إرجاع جديد
+   - الـForm Request: StoreReturnRequest (يحتوي على validation + authorization)
+   - الـService: StoreReturnService::createReturn()
+   - الإرجاع: redirect()->route('store-returns.show', $return)
+
+4️⃣ show(SalesReturn $storeReturn)
+   - الغرض: عرض تفاصيل طلب إرجاع معين
+   - الصلاحية: $this->authorize('view', $storeReturn)
+   - الـEager Loading: items.product, marketer, store, salesInvoice, keeper
+   - الـView: shared/store-returns/show.blade.php
+
+5️⃣ approve(ApproveStoreReturnRequest $request, SalesReturn $storeReturn)
+   - الغرض: توثيق طلب إرجاع معلق
+   - الـForm Request: ApproveStoreReturnRequest
+   - رفع الملف:
+     ```php
+     $path = $request->file('stamped_image')
+         ->store('store_returns', 'public');
+     ```
+   - الـService: StoreReturnService::approveReturn($storeReturn->id, auth()->id(), $path)
+   - الإرجاع: redirect()->back()->with('success', 'تم توثيق طلب الإرجاع بنجاح')
+
+6️⃣ reject(RejectStoreReturnRequest $request, SalesReturn $storeReturn)
+   - الغرض: رفض طلب إرجاع
+   - الـForm Request: RejectStoreReturnRequest
+   - الـService: StoreReturnService::rejectReturn($storeReturn->id, $request->notes)
+   - الإرجاع: redirect()->back()->with('success', 'تم رفض طلب الإرجاع بنجاح')
+
+7️⃣ cancel(CancelStoreReturnRequest $request, SalesReturn $storeReturn)
+   - الغرض: إلغاء طلب إرجاع
+   - الـForm Request: CancelStoreReturnRequest
+   - الـService: StoreReturnService::cancelReturn($storeReturn->id, $request->notes)
+   - الإرجاع: redirect()->route('store-returns.index')->with('success', 'تم إلغاء طلب الإرجاع بنجاح')
+
+8️⃣ pdf(SalesReturn $storeReturn)
+   - الغرض: طباعة PDF لطلب الإرجاع
+   - الصلاحية: $this->authorize('view', $storeReturn)
+   - الـService: InvoiceService::generateStoreReturnPdf($storeReturn)
+   - الإرجاع: PDF file
+
+9️⃣ viewDocumentation(SalesReturn $storeReturn)
+   - الغرض: عرض صورة فاتورة الإرجاع المختومة
+   - الصلاحية: $this->authorize('view', $storeReturn)
+   - التحقق:
+     • status === 'approved'
+     • stamped_image exists
+   - الإرجاع: response()->file(storage_path('app/public/' . $storeReturn->stamped_image))
+
+🔟 applyFilters($query, $request) - private
+   - الغرض: تطبيق الفلاتر المشتركة
+   - المنطق:
+     ```php
+     if ($request->filled('return_number')) {
+         $query->where('return_number', 'like', '%' . $request->return_number . '%');
+     }
+     
+     if ($request->filled('invoice_number')) {
+         $query->whereHas('salesInvoice', function($q) use ($request) {
+             $q->where('invoice_number', 'like', '%' . $request->invoice_number . '%');
+         });
+     }
+     
+     if ($request->filled('status')) {
+         $query->where('status', $request->status);
+     }
+     
+     if ($request->filled('store_id')) {
+         $query->where('store_id', $request->store_id);
+     }
+     
+     if ($request->filled('marketer_id') && auth()->user()->isWarehouse()) {
+         $query->where('marketer_id', $request->marketer_id);
+     }
+     
+     if ($request->filled('from_date')) {
+         $query->whereDate('created_at', '>=', $request->from_date);
+     }
+     
+     if ($request->filled('to_date')) {
+         $query->whereDate('created_at', '<=', $request->to_date);
+     }
+     
+     // الترتيب
+     if ($request->status === 'pending') {
+         $query->oldest('updated_at');
+     } else {
+         $query->latest('updated_at');
+     }
+     ```
+
+
+================================================================================
+                        ⚙️ Service
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ StoreReturnService (مشترك)                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Services/StoreReturnService.php
+🎯 المسؤولية: منطق الأعمال لجميع عمليات طلبات الإرجاع من المتاجر
+
+📋 الـMethods:
+
+1️⃣ createReturn($marketerId, $salesInvoiceId, array $items)
+   - الغرض: إنشاء طلب إرجاع جديد
+   - التحقق: 
+     • الفاتورة الأصلية موثقة (approved)
+     • الكمية لا تتجاوز الكمية في الفاتورة الأصلية
+   - الخطوات:
+     1. إنشاء سجل في sales_returns
+     2. إنشاء سجلات في sales_return_items
+     3. خصم من store_actual_stock
+     4. إضافة إلى store_return_pending_stock
+     5. إرسال إشعار لجميع أمناء المخزن
+   - الإرجاع: SalesReturn
+   - الـTransaction: DB::transaction()
+
+2️⃣ approveReturn($returnId, $keeperId, $stampedImage)
+   - الغرض: توثيق طلب إرجاع معلق
+   - التحقق: status === 'pending'
+   - الخطوات:
+     1. moveStockToMarketer()
+     2. reduceStoreDebt()
+     3. تحديث sales_returns
+     4. إرسال إشعار للمسوق
+   - الإرجاع: SalesReturn
+   - الـTransaction: DB::transaction()
+
+3️⃣ rejectReturn($returnId, $notes)
+   - الغرض: رفض طلب إرجاع
+   - التحقق: status === 'pending'
+   - الخطوات:
+     1. returnStockToStore()
+     2. تحديث sales_returns
+     3. إرسال إشعار للمسوق
+   - الإرجاع: SalesReturn
+   - الـTransaction: DB::transaction()
+
+4️⃣ cancelReturn($returnId, $notes)
+   - الغرض: إلغاء طلب إرجاع
+   - التحقق: status === 'pending'
+   - الخطوات:
+     1. returnStockToStore()
+     2. تحديث sales_returns
+   - الإرجاع: SalesReturn
+   - الـTransaction: DB::transaction()
+
+5️⃣ moveStockToMarketer($return) - private
+   - الغرض: نقل من المخزون المرحلي إلى مخزون المسوق
+   - الخطوات:
+     • delete from store_return_pending_stock
+     • increment marketer_actual_stock
+
+6️⃣ returnStockToStore($return) - private
+   - الغرض: إرجاع من المخزون المرحلي إلى مخزون المتجر
+   - الخطوات:
+     • delete from store_return_pending_stock
+     • increment store_actual_stock
+
+7️⃣ reduceStoreDebt($return) - private
+   - الغرض: تقليل دين المتجر
+   - الخطوات:
+     • insert into store_debt_ledger
+     • entry_type = 'return'
+     • amount = سالب (total_amount)
+
+
+================================================================================
+                        🔐 Policy
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ SalesReturnPolicy                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Policies/SalesReturnPolicy.php
+🎯 المسؤولية: التحكم بالصلاحيات لجميع الأدوار
+
+📋 الـMethods:
+
+viewAny(User $user): bool
+   - الجميع يمكنهم رؤية القائمة
+   - return true;
+
+viewAll(User $user): bool
+   - أمين المخزن فقط يرى جميع طلبات الإرجاع
+   - return $user->role_id === 2;
+
+view(User $user, SalesReturn $return): bool
+   - المسوق يرى طلبات الإرجاع الخاصة به فقط
+   - أمين المخزن يرى الكل
+   - return $user->role_id === 2 || $user->id === $return->marketer_id;
+
+create(User $user): bool
+   - المسوق فقط ينشئ طلبات إرجاع
+   - return $user->role_id === 3;
+
+approve(User $user, SalesReturn $return): bool
+   - أمين المخزن فقط + الحالة pending
+   - return $user->role_id === 2 && $return->status === StoreReturnStatus::PENDING;
+
+reject(User $user, SalesReturn $return): bool
+   - أمين المخزن فقط + الحالة pending
+   - return $user->role_id === 2 && $return->status === StoreReturnStatus::PENDING;
+
+cancel(User $user, SalesReturn $return): bool
+   - المسوق صاحب الطلب فقط + الحالة pending
+   - return $user->id === $return->marketer_id 
+       && $return->status === StoreReturnStatus::PENDING;
+
+
+================================================================================
+                        📦 Models & Enums
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ StoreReturnStatus Enum                                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Enums/StoreReturnStatus.php
+
+```php
+enum StoreReturnStatus: string
+{
+    case PENDING = 'pending';
+    case APPROVED = 'approved';
+    case REJECTED = 'rejected';
+    case CANCELLED = 'cancelled';
+    
+    public function label(): string
+    {
+        return match($this) {
+            self::PENDING => 'معلق',
+            self::APPROVED => 'موثق',
+            self::REJECTED => 'مرفوض',
+            self::CANCELLED => 'ملغي',
+        };
+    }
+    
+    public function color(): string
+    {
+        return match($this) {
+            self::PENDING => 'orange',
+            self::APPROVED => 'green',
+            self::REJECTED => 'red',
+            self::CANCELLED => 'gray',
+        };
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ SalesReturn Model                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Models/SalesReturn.php
+
+📋 الـRelationships:
+- marketer(): belongsTo(User::class, 'marketer_id')
+- store(): belongsTo(Store::class, 'store_id')
+- salesInvoice(): belongsTo(SalesInvoice::class, 'sales_invoice_id')
+- items(): hasMany(SalesReturnItem::class, 'return_id')
+- keeper(): belongsTo(User::class, 'keeper_id')
+
+📋 الـCasts:
+```php
+protected $casts = [
+    'status' => StoreReturnStatus::class,
+    'confirmed_at' => 'datetime',
+    'total_amount' => 'decimal:2',
+];
+```
+
+📋 الـFillable:
+- return_number, sales_invoice_id, store_id, marketer_id, total_amount
+- keeper_id, stamped_image, confirmed_at, notes
+
+
+================================================================================
+                        📝 Form Requests
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1️⃣ StoreReturnRequest                                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/StoreReturnRequest.php
+
+```php
+class StoreReturnRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('create', SalesReturn::class);
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'sales_invoice_id' => 'required|exists:sales_invoices,id',
+            'items' => 'required|array|min:1',
+            'items.*.sales_invoice_item_id' => 'required|exists:sales_invoice_items,id',
+            'items.*.quantity' => 'required|integer|min:1',
+        ];
+    }
+    
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            // التحقق من أن الفاتورة موثقة
+            $invoice = SalesInvoice::find($this->sales_invoice_id);
+            if ($invoice && $invoice->status !== 'approved') {
+                $validator->errors()->add('sales_invoice_id', 'يجب أن تكون الفاتورة موثقة');
+            }
+            
+            // التحقق من الكميات
+            foreach ($this->items as $index => $item) {
+                $invoiceItem = SalesInvoiceItem::find($item['sales_invoice_item_id']);
+                if ($invoiceItem && $item['quantity'] > $invoiceItem->quantity) {
+                    $validator->errors()->add(
+                        "items.{$index}.quantity",
+                        'الكمية أكبر من الكمية في الفاتورة الأصلية'
+                    );
+                }
+            }
+        });
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2️⃣ ApproveStoreReturnRequest                                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/ApproveStoreReturnRequest.php
+
+```php
+class ApproveStoreReturnRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('approve', $this->route('storeReturn'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'stamped_image' => 'required|image|mimes:jpg,jpeg,png,pdf|max:5120',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'stamped_image.required' => 'يجب رفع صورة فاتورة الإرجاع المختومة',
+            'stamped_image.max' => 'حجم الملف يجب ألا يتجاوز 5MB',
+        ];
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3️⃣ RejectStoreReturnRequest                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/RejectStoreReturnRequest.php
+
+```php
+class RejectStoreReturnRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('reject', $this->route('storeReturn'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'notes' => 'required|string|max:1000',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'notes.required' => 'يجب كتابة سبب الرفض',
+        ];
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 4️⃣ CancelStoreReturnRequest                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/CancelStoreReturnRequest.php
+
+```php
+class CancelStoreReturnRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('cancel', $this->route('storeReturn'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'notes' => 'required|string|max:1000',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'notes.required' => 'يجب كتابة سبب الإلغاء',
+        ];
+    }
+}
+```
+
+
+================================================================================
+                        ✅ مزايا البنية المشتركة
+================================================================================
+
+1. ✅ Controller واحد بدلاً من اثنين
+2. ✅ لا تكرار في الكود (DRY)
+3. ✅ Policies واضحة ومركزية
+4. ✅ صيانة أسهل
+5. ✅ Views مشتركة
+6. ✅ Routes أقل وأوضح
+7. ✅ سهولة إضافة أدوار جديدة
+
+
+================================================================================
+انتهى التوثيق
+================================================================================
