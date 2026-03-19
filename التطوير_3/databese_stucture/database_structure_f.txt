@@ -1,0 +1,49 @@
+========================================
+F. عملية: سحب أرباح (عمولات) المسوق
+========================================
+
+========================================
+28. جدول: marketer_withdrawal_requests
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • marketer_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • requested_amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • status
+    النوع: enum('pending','approved','rejected','cancelled')
+    القيمة الافتراضية: 'pending'
+
+  • keeper_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: NULL
+    ملاحظة: يسجل من قام بالموافقة أو الرفض (حسب status)
+
+  • stamped_image
+    النوع: varchar(255)
+    القيمة الافتراضية: NULL
+
+  • notes
+    النوع: text
+    القيمة الافتراضية: NULL
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

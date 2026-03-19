@@ -1,0 +1,110 @@
+========================================
+I. جداول التتبع والأرشفة (جديدة في V3)
+========================================
+
+========================================
+38. جدول: inventory_movements (جديد في V3)
+========================================
+
+وظيفته:
+تتبع شامل لكل حركات المخزون في النظام من أي مصدر إلى أي وجهة.
+يسجل كل عملية نقل منتج بين المخزن الرئيسي والمسوقين والمتاجر والعملاء.
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • product_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: products.id
+    القيمة الافتراضية: —
+
+  • from_type
+    النوع: enum('external','main_stock','marketer','store','customer')
+    المفتاح: INDEX
+    القيمة الافتراضية: —
+    ملاحظة: external = من خارج النظام (فواتير افتتاحية)
+
+  • from_id
+    النوع: bigint unsigned
+    القيمة الافتراضية: NULL
+    ملاحظة: marketer_id أو store_id أو customer_id (NULL للمخزن الرئيسي أو external)
+
+  • to_type
+    النوع: enum('main_stock','marketer','store','customer','external')
+    المفتاح: INDEX
+    القيمة الافتراضية: —
+    ملاحظة: external = خارج النظام (تلف، هدايا، إلخ)
+
+  • to_id
+    النوع: bigint unsigned
+    القيمة الافتراضية: NULL
+    ملاحظة: marketer_id أو store_id أو customer_id (NULL للمخزن الرئيسي أو external)
+
+  • quantity
+    النوع: int
+    القيمة الافتراضية: —
+
+  • reference_type
+    النوع: enum('opening_balance','factory_invoice','marketer_request','marketer_return','sales_invoice','sales_return','customer_invoice','customer_return')
+    المفتاح: INDEX
+    القيمة الافتراضية: —
+
+  • reference_id
+    النوع: bigint unsigned
+    القيمة الافتراضية: NULL
+
+  • created_at
+    النوع: timestamp
+    المفتاح: INDEX
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+========================================
+39. جدول: inventory_snapshots (جديد في V3)
+========================================
+
+وظيفته:
+حفظ لقطة للمخزون في نهاية كل سنة مالية للتقارير والمقارنات.
+يستخدم للتدقيق ومقارنة النمو/النقص بين السنوات.
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • fiscal_year
+    النوع: int
+    المفتاح: INDEX
+    القيمة الافتراضية: —
+
+  • snapshot_date
+    النوع: date
+    القيمة الافتراضية: —
+
+  • stock_type
+    النوع: enum('main','marketer_actual','marketer_reserved','store_actual','store_pending')
+    المفتاح: INDEX
+    القيمة الافتراضية: —
+
+  • entity_id
+    النوع: bigint unsigned
+    القيمة الافتراضية: NULL
+    ملاحظة: marketer_id أو store_id (NULL للمخزن الرئيسي)
+
+  • product_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: products.id
+    القيمة الافتراضية: —
+
+  • quantity
+    النوع: int
+    القيمة الافتراضية: —
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP

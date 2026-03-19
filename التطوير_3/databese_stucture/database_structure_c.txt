@@ -1,0 +1,98 @@
+========================================
+C. عملية: إرجاع بضاعة من المسوق
+========================================
+
+========================================
+16. جدول: marketer_return_requests
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • invoice_number
+    النوع: varchar(50)
+    المفتاح: UNIQUE
+    القيمة الافتراضية: —
+
+  • marketer_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • status
+    النوع: enum('pending','approved','rejected','cancelled','documented')
+    القيمة الافتراضية: 'pending'
+
+  • notes
+    النوع: text
+    القيمة الافتراضية: NULL
+
+  • approved_by
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: NULL
+
+  • approved_at
+    النوع: timestamp
+    القيمة الافتراضية: NULL
+
+  • rejected_by
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: NULL
+
+  • rejected_at
+    النوع: timestamp
+    القيمة الافتراضية: NULL
+
+  • documented_by
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: NULL
+
+  • documented_at
+    النوع: timestamp
+    القيمة الافتراضية: NULL
+
+  • stamped_image
+    النوع: varchar(255)
+    القيمة الافتراضية: NULL
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+========================================
+17. جدول: marketer_return_items
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • return_request_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: marketer_return_requests.id
+    القيمة الافتراضية: —
+
+  • product_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: products.id
+    القيمة الافتراضية: —
+
+  • quantity
+    النوع: int
+    القيمة الافتراضية: —

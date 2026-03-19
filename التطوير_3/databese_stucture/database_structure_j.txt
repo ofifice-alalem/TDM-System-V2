@@ -1,0 +1,220 @@
+========================================
+J. جداول النظام (Laravel Framework)
+========================================
+
+========================================
+40. جدول: cache
+========================================
+
+  • key
+    النوع: varchar(255)
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: —
+
+  • value
+    النوع: mediumtext
+    القيمة الافتراضية: —
+
+  • expiration
+    النوع: int
+    القيمة الافتراضية: —
+
+========================================
+41. جدول: cache_locks
+========================================
+
+  • key
+    النوع: varchar(255)
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: —
+
+  • owner
+    النوع: varchar(255)
+    القيمة الافتراضية: —
+
+  • expiration
+    النوع: int
+    القيمة الافتراضية: —
+
+========================================
+42. جدول: jobs
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • queue
+    النوع: varchar(255)
+    المفتاح: INDEX
+    القيمة الافتراضية: —
+
+  • payload
+    النوع: longtext
+    القيمة الافتراضية: —
+
+  • attempts
+    النوع: tinyint unsigned
+    القيمة الافتراضية: —
+
+  • reserved_at
+    النوع: int unsigned
+    القيمة الافتراضية: NULL
+
+  • available_at
+    النوع: int unsigned
+    القيمة الافتراضية: —
+
+  • created_at
+    النوع: int unsigned
+    القيمة الافتراضية: —
+
+========================================
+43. جدول: job_batches
+========================================
+
+  • id
+    النوع: varchar(255)
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: —
+
+  • name
+    النوع: varchar(255)
+    القيمة الافتراضية: —
+
+  • total_jobs
+    النوع: int
+    القيمة الافتراضية: —
+
+  • pending_jobs
+    النوع: int
+    القيمة الافتراضية: —
+
+  • failed_jobs
+    النوع: int
+    القيمة الافتراضية: —
+
+  • failed_job_ids
+    النوع: longtext
+    القيمة الافتراضية: —
+
+  • options
+    النوع: mediumtext
+    القيمة الافتراضية: NULL
+
+  • cancelled_at
+    النوع: int
+    القيمة الافتراضية: NULL
+
+  • created_at
+    النوع: int
+    القيمة الافتراضية: —
+
+  • finished_at
+    النوع: int
+    القيمة الافتراضية: NULL
+
+========================================
+44. جدول: failed_jobs
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • uuid
+    النوع: varchar(255)
+    المفتاح: UNIQUE
+    القيمة الافتراضية: —
+
+  • connection
+    النوع: text
+    القيمة الافتراضية: —
+
+  • queue
+    النوع: text
+    القيمة الافتراضية: —
+
+  • payload
+    النوع: longtext
+    القيمة الافتراضية: —
+
+  • exception
+    النوع: longtext
+    القيمة الافتراضية: —
+
+  • failed_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+
+
+========================================
+ملخص إحصائي
+========================================
+
+إجمالي الجداول: 44 جدول
+
+التصنيف حسب الوظيفة:
+- جداول أساسية: 8 جداول (roles, users, marketers, products, main_stock, stores, customers, notifications)
+- نظام المصنع: 2 جدول (factory_invoices, factory_invoice_items)
+- نظام المسوقين: 7 جداول (marketer_requests, marketer_request_items, marketer_reserved_stock, marketer_actual_stock, marketer_return_requests, marketer_return_items, warehouse_stock_logs)
+- نظام المتاجر: 12 جدول (sales_invoices, sales_invoice_items, store_pending_stock, store_actual_stock, store_debt_ledger, store_payments, marketer_commissions, marketer_commission_ledger, marketer_withdrawal_requests, sales_returns, sales_return_items, store_return_pending_stock)
+- نظام العملاء: 6 جداول (customer_invoices, customer_invoice_items, customer_payments, customer_returns, customer_return_items, customer_debt_ledger)
+- نظام الخصومات: 2 جدول (product_promotions, invoice_discount_tiers)
+- التتبع والأرشفة: 2 جدول (inventory_movements, inventory_snapshots)
+- جداول Laravel: 5 جداول (cache, cache_locks, jobs, job_batches, failed_jobs)
+
+========================================
+التحسينات الرئيسية في V3
+========================================
+
+✅ 1. فصل بيانات المسوقين:
+   - إضافة جدول marketers منفصل
+   - حذف commission_rate من جدول users
+   - تجنب NULL values في 75% من السجلات
+
+✅ 2. تحسين جداول الديون والعمولات:
+   - استبدال (invoice_id, return_id, payment_id) بـ (reference_type, reference_id)
+   - إضافة balance_after لتتبع الرصيد بعد كل حركة
+   - دعم الأرصدة الافتتاحية (opening_balance)
+   - تطبيق على store_debt_ledger و customer_debt_ledger و marketer_commission_ledger
+
+✅ 3. التتبع الشامل للمخزون:
+   - إضافة جدول inventory_movements
+   - تسجيل كل حركة مخزون من أي مصدر لأي وجهة
+   - دعم الفواتير الافتتاحية
+
+✅ 4. لقطات المخزون السنوية:
+   - إضافة جدول inventory_snapshots
+   - حفظ صورة للمخزون في نهاية كل سنة
+   - تسهيل التقارير والمقارنات السنوية
+
+========================================
+نظام الأرشفة السنوية
+========================================
+
+استراتيجية الأرشفة:
+- السنة الحالية: تبقى في الجداول الأصلية
+- السنوات السابقة: تنقل إلى قواعد بيانات منفصلة
+
+مثال:
+tdm_2025 (أرشيف 2025)
+tdm_2026 (السنة الحالية)
+tdm_2027 (السنة القادمة)
+
+عملية التدوير السنوية:
+1. إلغاء الطلبات المعلقة وإرجاع المخزون المحجوز
+2. إنشاء فواتير افتتاحية:
+   - فاتورة مصنع افتتاحية للمخزن الرئيسي
+   - فواتير طلبات افتتاحية لمخزون المسوقين
+3. إنشاء حركات افتتاحية في جداول الديون
+4. التقاط snapshot للمخزون
+5. نقل بيانات السنة المنتهية إلى قاعدة بيانات الأرشيف
+
+========================================
+انتهى الاستعلام
+تم التوثيق بتاريخ: 2026-03-07
+========================================
