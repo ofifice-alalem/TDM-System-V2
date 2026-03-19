@@ -36,6 +36,26 @@ created_at              TIMESTAMP    —                CURRENT_TIMESTAMP     ت
 updated_at              TIMESTAMP    —                CURRENT_TIMESTAMP     تاريخ آخر تحديث
 
 
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ marketer_commission_ledger (جديد في V3)                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+وظيفته:
+تتبع رصيد عمولات المسوق بشكل تفصيلي (إضافة عمولة / سحب / رصيد افتتاحي).
+يسجل balance_after بعد كل حركة لسهولة حساب الرصيد الحالي.
+
+الحقل                   النوع        العلاقة           القيمة الافتراضية    الوصف
+────────────────────────────────────────────────────────────────────────────────────────
+id                      BIGINT       PK               AUTO_INCREMENT        المعرف الداخلي
+marketer_id             BIGINT       FK → users.id    —                     المسوق صاحب الرصيد
+reference_type          ENUM         —                —                     commission / withdrawal / opening_balance
+reference_id            BIGINT       —                NULL                  marketer_commissions.id أو marketer_withdrawal_requests.id
+amount                  DECIMAL      —                —                     المبلغ (موجب للعمولة، سالب للسحب)
+balance_after           DECIMAL      —                —                     الرصيد المتبقي بعد العملية
+notes                   TEXT         —                NULL                  ملاحظات إضافية
+created_at              TIMESTAMP    —                CURRENT_TIMESTAMP     تاريخ العملية
+
+
 ================================================================================
                         المراحل والجداول المتأثرة
 ================================================================================
@@ -120,7 +140,19 @@ updated_at              TIMESTAMP    —                CURRENT_TIMESTAMP     ت
      • approved_at (وقت الموافقة)
      • signed_receipt_image (صورة إيصال الاستلام الموقع)
 
-📌 ملاحظة: الآن فقط يتم صرف المبلغ وتوثيق العملية في نفس السجل
+2️⃣ marketer_commission_ledger
+   - إضافة سجل جديد
+   - الحقول المستخدمة:
+     • marketer_id (معرف المسوق)
+     • reference_type = 'withdrawal'
+     • reference_id (FK → marketer_withdrawal_requests.id)
+     • amount = -requested_amount (سالب)
+     • balance_after = الرصيد السابق - requested_amount
+     • created_at (وقت العملية)
+
+📌 ملاحظة: السحب يُسجل في جدولين:
+   - marketer_withdrawal_requests (تفاصيل الطلب والموافقة)
+   - marketer_commission_ledger (تأثير على الرصيد)
 
 
 ================================================================================
@@ -129,10 +161,11 @@ updated_at              TIMESTAMP    —                CURRENT_TIMESTAMP     ت
 
 ✅ جداول أساسية:
    1. marketer_withdrawal_requests (يحتوي على كامل دورة الحياة)
+   2. marketer_commission_ledger (تتبع الرصيد المتبقي) - V3
 
 ✅ جداول مرجعية (للقراءة فقط):
    - users (للمسوق والإدارة)
-   - marketer_commissions (لحساب الرصيد المتاح)
+   - marketer_commissions (مصدر العمولات)
 
 
 ================================================================================
@@ -160,8 +193,17 @@ updated_at              TIMESTAMP    —                CURRENT_TIMESTAMP     ت
     │ marketer_commissions │ ← العمولات المتراكمة للمسوق
     └──────────┬───────────┘
                │
+               │ (تُسجل في marketer_commission_ledger)
+               │ reference_type = 'commission'
+               │
+               ▼
+    ┌────────────────────────────┐
+    │ marketer_commission_ledger │ ← تتبع الرصيد الجاري
+    │ balance_after              │ ← الرصيد المتاح
+    └──────────┬─────────────────┘
+               │
                │ (حساب الرصيد المتاح)
-               │ الرصيد = مجموع العمولات - مجموع السحوبات المعتمدة
+               │ الرصيد = آخر balance_after
                │
                ▼
     ┌───────────────────────────┐
@@ -171,7 +213,16 @@ updated_at              TIMESTAMP    —                CURRENT_TIMESTAMP     ت
     │ status = approved         │ ← تحديث الحالة
     │ + signed_receipt_image    │ ← رفع الإيصال
     │ + approved_by/approved_at │ ← توثيق الموافقة
-    └───────────────────────────┘
+    └──────────┬────────────────┘
+               │
+               │ (تسجيل السحب)
+               ▼
+    ┌────────────────────────────┐
+    │ marketer_commission_ledger │ ← تسجيل السحب
+    │ reference_type='withdrawal'│
+    │ amount = -requested_amount │ ← سالب
+    │ balance_after = رصيد جديد  │ ← الرصيد بعد السحب
+    └────────────────────────────┘
 
 
 ================================================================================
@@ -197,7 +248,14 @@ updated_at              TIMESTAMP    —                CURRENT_TIMESTAMP     ت
    - رصيد العمولات المتاح
    - تاريخ السحوبات
 
-💰 حساب الرصيد المتاح:
+💰 حساب الرصيد المتاح (V3 - الطريقة الموصى بها):
+   SELECT balance_after AS available_balance
+   FROM marketer_commission_ledger
+   WHERE marketer_id = ?
+   ORDER BY created_at DESC
+   LIMIT 1
+
+💰 حساب الرصيد المتاح (الطريقة القديمة - للتحقق):
    SELECT 
      SUM(mc.commission_amount) - 
      COALESCE(SUM(mwr.requested_amount), 0) AS available_balance
@@ -207,27 +265,33 @@ updated_at              TIMESTAMP    —                CURRENT_TIMESTAMP     ت
      AND mwr.status = 'approved'
    WHERE mc.marketer_id = ?
 
+📌 ملاحظة: V3 يستخدم balance_after من marketer_commission_ledger لأداء أفضل
+
 📝 إيصال الاستلام:
    - يجب أن يكون موقع من المسوق
    - يُثبت استلام المسوق للمبلغ
    - يُرفع من قبل الإدارة عند الموافقة
    - يُحفظ في marketer_withdrawal_requests.signed_receipt_image
 
-🔢 حساب الرصيد المتاح:
-   - الرصيد المتاح = مجموع (marketer_commissions.commission_amount) - مجموع (marketer_withdrawal_requests.requested_amount WHERE status = 'approved')
+🔢 حساب الرصيد المتاح (V3):
+   - الرصيد المتاح = آخر balance_after من marketer_commission_ledger
    - يتم التحقق من الرصيد قبل الموافقة على طلب السحب
    - إذا كان المبلغ المطلوب > الرصيد المتاح، يتم رفض الطلب
+   - عند الموافقة: يُسجل السحب في marketer_commission_ledger بمبلغ سالب
 
 💵 مصادر العمولات:
-   - العمولات تأتي من تسديدات المتاجر (store_payments)
+   - العمولات تأتي من تسديدات الشركات (company_payments)
    - كل تسديد موثق يُضيف عمولة للمسوق في marketer_commissions
-   - العمولة = المبلغ المسدد × نسبة العمولة (users.commission_rate)
+   - العمولة = المبلغ المسدد × نسبة العمولة (marketers.commission_rate)
+   - تُسجل العمولة أيضاً في marketer_commission_ledger (reference_type='commission')
 
-🔄 دورة العمولات:
-   1. المتجر يسدد دين → تُسجل عمولة للمسوق في marketer_commissions
-   2. المسوق يطلب سحب → طلب pending في marketer_withdrawal_requests
-   3. الإدارة توافق → يتم الصرف وتوثيق السحب (status = 'approved')
-   4. الرصيد المتاح ينخفض بمقدار المبلغ المسحوب
+🔄 دورة العمولات (V3):
+   1. الشركة تسدد دين → تُسجل عمولة للمسوق في marketer_commissions
+   2. تُسجل العمولة في marketer_commission_ledger (reference_type='commission', amount موجب)
+   3. المسوق يطلب سحب → طلب pending في marketer_withdrawal_requests
+   4. الإدارة توافق → يتم الصرف وتوثيق السحب (status = 'approved')
+   5. تُسجل السحب في marketer_commission_ledger (reference_type='withdrawal', amount سالب)
+   6. balance_after يتم تحديثه تلقائياً = الرصيد السابق - المبلغ المسحوب
 
 🎯 أهداف النظام:
    - تحفيز المسوقين على تحصيل الديون
