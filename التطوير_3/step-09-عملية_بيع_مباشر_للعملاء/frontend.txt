@@ -459,28 +459,36 @@ function removeProductRow(button) {
 
 📁 جميع تفاصيل التصميم موثقة في: /التطوير_2/design-system/
 
-🎨 الألوان المستخدمة:
-- نقدي (cash): أخضر (#10B981)
-- آجل (credit): أحمر (#EF4444)
-- جزئي (partial): أزرق (#3B82F6)
-- مكتمل (completed): أخضر
-- ملغي (cancelled): رمادي
+🎨 الألوان:
+   راجع: /التطوير_2/design-system/colors.txt
+   - ألوان الحالات (completed, cancelled)
+   - ألوان الأزرار والإجراءات
+   - ألوان الجداول والإشعارات
 
 🔲 الأيقونات:
-- customer: 👤
-- invoice: 🧾
-- payment: 💰
-- return: ↩️
-- cash: 💵
-- credit: 📋
-- partial: ⚖️
+   راجع: /التطوير_2/design-system/icons.txt
+   - أيقونات الإجراءات (عرض، إلغاء، طباعة)
+   - أيقونات الحالات
+   - أيقونات التنقل والبيانات
 
 📦 المكونات:
-- Customer Cards
-- Invoice Tables
-- Payment Forms
-- Return Forms
-- Balance Displays
+   راجع: /التطوير_2/design-system/components.txt
+   - الأزرار (Primary, Secondary, Danger)
+   - البطاقات والجداول
+   - النماذج والـ Modals
+   - الشارات والتنبيهات
+
+🔤 الخطوط:
+   راجع: /التطوير_2/design-system/typography.txt
+   - خط Cairo للعربية
+   - أحجام وأوزان الخطوط
+   - ألوان النصوص
+
+📐 التخطيطات:
+   راجع: /التطوير_2/design-system/layouts.txt
+   - Navbar و Sidebar
+   - تخطيطات الصفحات (قائمة، نموذج، عرض)
+   - التصميم المتجاوب
 
 
 ================================================================================
