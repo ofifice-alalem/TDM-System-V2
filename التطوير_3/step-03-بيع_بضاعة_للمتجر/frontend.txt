@@ -42,7 +42,7 @@
 - اسم المتجر (store.name)
 - تاريخ الإنشاء (created_at)
 - المبلغ الإجمالي (total_amount)
-- الحالة (status) - راجع ألوان الحالات في: /التطوير_2/design-system/colors.txt
+- الحالة (status) - راجع ألوان الحالات في: /التطوير_3/design-system/colors.txt
 - عدد المنتجات
 - الإجراءات المتاحة (حسب الصلاحيات)
 
@@ -311,32 +311,32 @@
 📁 جميع تفاصيل التصميم موثقة في مجلد design-system:
 
 🎨 الألوان:
-   راجع: /التطوير_2/design-system/colors.txt
+   راجع: /التطوير_3/design-system/colors.txt
    - ألوان الحالات (pending, approved, cancelled)
    - ألوان الأزرار والإجراءات
    - ألوان الجداول والإشعارات
 
 🔲 الأيقونات:
-   راجع: /التطوير_2/design-system/icons.txt
+   راجع: /التطوير_3/design-system/icons.txt
    - أيقونات الإجراءات (عرض، توثيق، إلغاء، طباعة)
    - أيقونات الحالات
    - أيقونات التنقل والبيانات
 
 📦 المكونات:
-   راجع: /التطوير_2/design-system/components.txt
+   راجع: /التطوير_3/design-system/components.txt
    - الأزرار (Primary, Secondary, Danger)
    - البطاقات والجداول
    - النماذج والـ Modals
    - الشارات والتنبيهات
 
 🔤 الخطوط:
-   راجع: /التطوير_2/design-system/typography.txt
+   راجع: /التطوير_3/design-system/typography.txt
    - خط Cairo للعربية
    - أحجام وأوزان الخطوط
    - ألوان النصوص
 
 📐 التخطيطات:
-   راجع: /التطوير_2/design-system/layouts.txt
+   راجع: /التطوير_3/design-system/layouts.txt
    - Navbar و Sidebar
    - تخطيطات الصفحات (قائمة، نموذج، عرض)
    - التصميم المتجاوب

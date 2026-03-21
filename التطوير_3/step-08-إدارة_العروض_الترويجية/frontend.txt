@@ -384,32 +384,32 @@ document.addEventListener('DOMContentLoaded', function() {
 📁 جميع تفاصيل التصميم موثقة في مجلد design-system:
 
 🎨 الألوان:
-   راجع: /التطوير_2/design-system/colors.txt
+   راجع: /التطوير_3/design-system/colors.txt
    - ألوان الحالات (active, inactive, upcoming, expired)
    - ألوان الأزرار والإجراءات
    - ألوان الجداول والإشعارات
 
 🔲 الأيقونات:
-   راجع: /التطوير_2/design-system/icons.txt
+   راجع: /التطوير_3/design-system/icons.txt
    - أيقونات الإجراءات (عرض، تفعيل، تعطيل، حذف)
    - أيقونات الحالات
    - أيقونات التنقل والبيانات
 
 📦 المكونات:
-   راجع: /التطوير_2/design-system/components.txt
+   راجع: /التطوير_3/design-system/components.txt
    - الأزرار (Primary, Secondary, Danger)
    - البطاقات والجداول
    - النماذج والـ Modals
    - الشارات والتنبيهات
 
 🔤 الخطوط:
-   راجع: /التطوير_2/design-system/typography.txt
+   راجع: /التطوير_3/design-system/typography.txt
    - خط Cairo للعربية
    - أحجام وأوزان الخطوط
    - ألوان النصوص
 
 📐 التخطيطات:
-   راجع: /التطوير_2/design-system/layouts.txt
+   راجع: /التطوير_3/design-system/layouts.txt
    - Navbar و Sidebar
    - تخطيطات الصفحات (قائمة، نموذج، عرض)
    - التصميم المتجاوب
