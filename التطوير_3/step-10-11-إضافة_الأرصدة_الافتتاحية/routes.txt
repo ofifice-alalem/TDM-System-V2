@@ -1,0 +1,59 @@
+================================================================================
+              المسارات - إضافة الأرصدة الافتتاحية (Opening Balances)
+================================================================================
+
+📁 الملف: routes/admin.php
+🔒 Middleware: ['auth', 'role:admin']
+
+Route::prefix('opening-balances')->name('opening-balances.')->group(function () {
+
+    // المتاجر
+    Route::get('/stores', [OpeningBalanceController::class, 'storesIndex'])
+        ->name('stores');
+    Route::get('/stores/create', [OpeningBalanceController::class, 'storesCreate'])
+        ->name('stores.create');
+    Route::post('/stores', [OpeningBalanceController::class, 'storeStore'])
+        ->name('stores.store');
+
+    // العملاء
+    Route::get('/customers', [OpeningBalanceController::class, 'customersIndex'])
+        ->name('customers');
+    Route::get('/customers/create', [OpeningBalanceController::class, 'customersCreate'])
+        ->name('customers.create');
+    Route::post('/customers', [OpeningBalanceController::class, 'storeCustomer'])
+        ->name('customers.store');
+
+});
+
+
+================================================================================
+                        جدول المسارات التفصيلي
+================================================================================
+
+=== المتاجر ===
+GET     /admin/opening-balances/stores
+        الاسم: admin.opening-balances.stores
+        الغرض: قائمة الأرصدة الافتتاحية للمتاجر
+
+GET     /admin/opening-balances/stores/create
+        الاسم: admin.opening-balances.stores.create
+        الغرض: نموذج إضافة رصيد افتتاحي لمتجر
+
+POST    /admin/opening-balances/stores
+        الاسم: admin.opening-balances.stores.store
+        الغرض: حفظ الرصيد الافتتاحي للمتجر
+
+=== العملاء ===
+GET     /admin/opening-balances/customers
+        الاسم: admin.opening-balances.customers
+        الغرض: قائمة الأرصدة الافتتاحية للعملاء
+
+GET     /admin/opening-balances/customers/create
+        الاسم: admin.opening-balances.customers.create
+        الغرض: نموذج إضافة رصيد افتتاحي لعميل
+
+POST    /admin/opening-balances/customers
+        الاسم: admin.opening-balances.customers.store
+        الغرض: حفظ الرصيد الافتتاحي للعميل
+
+================================================================================

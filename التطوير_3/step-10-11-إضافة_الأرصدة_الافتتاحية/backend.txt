@@ -1,0 +1,194 @@
+================================================================================
+              عملية: إضافة الأرصدة الافتتاحية (Opening Balances)
+================================================================================
+
+📋 نظرة عامة:
+--------------
+تسجيل الديون السابقة للمتاجر والعملاء قبل تشغيل النظام الحالي.
+✅ Admin فقط يملك صلاحية هذه العملية.
+✅ يُسجل مباشرة في الدفاتر بـ reference_type = 'opening_balance'.
+✅ لا فواتير وهمية، لا جداول إضافية.
+
+================================================================================
+                        🗂️ الجداول المستخدمة
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1️⃣ company_debt_ledger  (للمتاجر)                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+الحقل              القيمة
+──────────────────────────────────────────────────────
+company_id         معرف الشركة المختارة
+reference_type     'opening_balance'
+reference_id       NULL
+amount             المبلغ (موجب)
+balance_after      نفس المبلغ (أول سجل في الدفتر)
+notes              ملاحظة اختيارية
+created_at         تاريخ الإدخال
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2️⃣ customer_debt_ledger  (للعملاء)                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+الحقل              القيمة
+──────────────────────────────────────────────────────
+customer_id        معرف العميل المختار
+reference_type     'opening_balance'
+reference_id       NULL
+amount             المبلغ (موجب)
+balance_after      نفس المبلغ (أول سجل في الدفتر)
+notes              ملاحظة اختيارية
+created_at         تاريخ الإدخال
+
+
+================================================================================
+                        المراحل والجداول المتأثرة
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ إضافة رصيد افتتاحي لمتجر                                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+🔹 الفاعل: Admin
+🔹 الشرط: يجب ألا يكون للشركة رصيد افتتاحي مسجل مسبقاً
+
+📊 الجداول المتأثرة:
+
+1️⃣ company_debt_ledger
+   - إنشاء سجل جديد
+   - الحقول المستخدمة:
+     • company_id
+     • reference_type = 'opening_balance'
+     • reference_id = NULL
+     • amount (موجب)
+     • balance_after = آخر رصيد للشركة + amount
+     • notes
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ إضافة رصيد افتتاحي لعميل                                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+🔹 الفاعل: Admin
+🔹 الشرط: يجب ألا يكون للعميل رصيد افتتاحي مسجل مسبقاً
+
+📊 الجداول المتأثرة:
+
+1️⃣ customer_debt_ledger
+   - إنشاء سجل جديد
+   - الحقول المستخدمة:
+     • customer_id
+     • reference_type = 'opening_balance'
+     • reference_id = NULL
+     • amount (موجب)
+     • balance_after = آخر رصيد للعميل + amount
+     • notes
+
+
+================================================================================
+                            ملخص الجداول المتأثرة
+================================================================================
+
+✅ للمتاجر:
+   1. company_debt_ledger
+
+✅ للعملاء:
+   1. customer_debt_ledger
+
+✅ جداول مرجعية (للقراءة فقط):
+   - companies (اختيار الشركة)
+   - stores (عرض متاجر الشركة)
+   - customers (اختيار العميل)
+
+
+================================================================================
+                        ⚙️ Service & Controller
+================================================================================
+
+📁 app/Services/Admin/OpeningBalanceService.php
+
+addStoreOpeningBalance(array $data)
+   ```php
+   DB::transaction(function () use ($data) {
+       $lastBalance = CompanyDebtLedger::where('company_id', $data['company_id'])
+           ->latest()
+           ->value('balance_after') ?? 0;
+
+       CompanyDebtLedger::create([
+           'company_id'     => $data['company_id'],
+           'reference_type' => 'opening_balance',
+           'reference_id'   => null,
+           'amount'         => $data['amount'],
+           'balance_after'  => $lastBalance + $data['amount'],
+           'notes'          => $data['notes'] ?? null,
+       ]);
+   });
+   ```
+
+addCustomerOpeningBalance(array $data)
+   ```php
+   DB::transaction(function () use ($data) {
+       $lastBalance = CustomerDebtLedger::where('customer_id', $data['customer_id'])
+           ->latest()
+           ->value('balance_after') ?? 0;
+
+       CustomerDebtLedger::create([
+           'customer_id'    => $data['customer_id'],
+           'reference_type' => 'opening_balance',
+           'reference_id'   => null,
+           'amount'         => $data['amount'],
+           'balance_after'  => $lastBalance + $data['amount'],
+           'notes'          => $data['notes'] ?? null,
+       ]);
+   });
+   ```
+
+📁 app/Http/Controllers/Admin/OpeningBalanceController.php
+
+storeStore(Request $request)
+   ```php
+   $validated = $request->validate([
+       'company_id' => 'required|exists:companies,id',
+       'amount'     => 'required|numeric|min:0.01',
+       'notes'      => 'nullable|string',
+   ]);
+   try {
+       $this->service->addStoreOpeningBalance($validated);
+       return redirect()->route('admin.opening-balances.stores')
+           ->with('success', 'تم إضافة الرصيد الافتتاحي بنجاح');
+   } catch (\Exception $e) {
+       return back()->with('error', $e->getMessage())->withInput();
+   }
+   ```
+
+storeCustomer(Request $request)
+   ```php
+   $validated = $request->validate([
+       'customer_id' => 'required|exists:customers,id',
+       'amount'      => 'required|numeric|min:0.01',
+       'notes'       => 'nullable|string',
+   ]);
+   try {
+       $this->service->addCustomerOpeningBalance($validated);
+       return redirect()->route('admin.opening-balances.customers')
+           ->with('success', 'تم إضافة الرصيد الافتتاحي بنجاح');
+   } catch (\Exception $e) {
+       return back()->with('error', $e->getMessage())->withInput();
+   }
+   ```
+
+
+================================================================================
+                            ملاحظات مهمة
+================================================================================
+
+⚠️ قواعد العمل:
+   1. ✅ Admin فقط يملك صلاحية الإضافة
+   2. ✅ المبلغ يجب أن يكون موجباً
+   3. ✅ يمكن إضافة أكثر من رصيد افتتاحي لنفس الشركة/العميل (تراكمي)
+   4. ✅ balance_after يُحسب من آخر سجل في الدفتر
+   5. ✅ لا يمكن حذف الرصيد الافتتاحي بعد الإضافة
+
+================================================================================
