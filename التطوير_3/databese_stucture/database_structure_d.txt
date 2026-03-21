@@ -48,6 +48,12 @@ D. عملية: بيع بضاعة للمتجر
     القيمة الافتراضية: 1
     ملاحظة: ✅ يمكن تعديله (تفعيل/تعطيل)
 
+  • apply_to_all
+    النوع: tinyint(1)
+    القيمة الافتراضية: 1
+    ملاحظة: ✅ يمكن تعديله - هل يطبق على جميع المتاجر؟
+    ملاحظة: إذا كان false، يطبق على متاجر محددة في discount_promotion_stores
+
   • created_by
     النوع: bigint unsigned
     المفتاح: FOREIGN KEY
@@ -110,6 +116,12 @@ D. عملية: بيع بضاعة للمتجر
     النوع: tinyint(1)
     القيمة الافتراضية: 1
     ملاحظة: ✅ يمكن تعديله (تفعيل/تعطيل)
+
+  • apply_to_all
+    النوع: tinyint(1)
+    القيمة الافتراضية: 1
+    ملاحظة: ✅ يمكن تعديله - هل يطبق على جميع المتاجر؟
+    ملاحظة: إذا كان false، يطبق على متاجر محددة في discount_promotion_stores
 
   • created_by
     النوع: bigint unsigned
@@ -365,3 +377,41 @@ D. عملية: بيع بضاعة للمتجر
 ملاحظة: ✅ store_id يكون NULL عند الدفع، ويحتوي على رقم الفرع عند البيع/الإرجاع
 ملاحظة: ✅ balance_after يعكس رصيد الشركة الإجمالي (مجموع كل الفروع)
 ملاحظة: ✅ تم استبدال store_payment بـ company_payment في reference_type
+
+========================================
+25. جدول: discount_promotion_stores (جديد في V3)
+========================================
+
+وظيفته:
+يحدد المتاجر التي يطبق عليها الخصم أو العرض الترويجي.
+يستخدم لكل من invoice_discount_tiers و product_promotions.
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • reference_type
+    النوع: enum('invoice_discount','product_promotion')
+    المفتاح: INDEX
+    القيمة الافتراضية: —
+
+  • reference_id
+    النوع: bigint unsigned
+    المفتاح: INDEX
+    القيمة الافتراضية: —
+    ملاحظة: invoice_discount_tiers.id أو product_promotions.id
+
+  • store_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: stores.id
+    القيمة الافتراضية: —
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+ملاحظة: ✅ يستخدم فقط عندما apply_to_all = false
+ملاحظة: ✅ جدول مشترك لتحديد المتاجر المستهدفة
