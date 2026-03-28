@@ -83,6 +83,7 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
         Route::get('/{factoryInvoice}', [\App\Http\Controllers\Admin\AdminFactoryInvoiceController::class, 'show'])->name('show');
         Route::post('/{factoryInvoice}/document', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'document'])->name('document');
         Route::post('/{factoryInvoice}/cancel', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'cancel'])->name('cancel');
+        Route::post('/{factoryInvoice}/force-cancel', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'forceCancel'])->name('force-cancel');
         Route::get('/{factoryInvoice}/pdf', [\App\Http\Controllers\Admin\AdminFactoryInvoiceController::class, 'pdf'])->name('pdf');
     });
 

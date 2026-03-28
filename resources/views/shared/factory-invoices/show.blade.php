@@ -165,7 +165,7 @@
                         <h2 class="text-2xl font-black {{ $statusConfig['text'] }}">{{ $statusConfig['label'] }}</h2>
                         <p class="text-xs text-gray-400 dark:text-dark-muted mt-2 font-medium">آخر تحديث: {{ $invoice->updated_at->diffForHumans() }}</p>
                         
-                        @if($invoice->status === 'documented' && $invoice->stamped_image)
+                        @if(($invoice->status === 'documented' || $invoice->status === 'cancelled') && $invoice->stamped_image)
                         <button type="button" onclick="showDocumentationModal()" class="mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-dark-bg border border-blue-200 dark:border-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-sm font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors shadow-sm">
                             <i data-lucide="image" class="w-5 h-5"></i>
                             عرض صورة التوثيق
@@ -251,6 +251,24 @@
                                 إلغاء
                             </button>
                         </div>
+                    </form>
+                </div>
+
+                @elseif($invoice->status === 'documented' && in_array(auth()->user()->role_id, [1, 2]))
+                {{-- Force Cancel for documented invoices --}}
+                <div class="bg-white dark:bg-dark-card rounded-[1.5rem] border border-red-200 dark:border-red-500/30 p-6 shadow-lg">
+                    <h3 class="font-bold text-red-600 dark:text-red-400 mb-4 flex items-center gap-2">
+                        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                        إلغاء فاتورة موثقة
+                    </h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">سيتم خصم الكميات من المخزن وتسجيل حركة المخزون تلقائياً.</p>
+                    <form method="POST" action="{{ route($routePrefix . '.factory-invoices.force-cancel', $invoice) }}"
+                        onsubmit="return confirm('هل أنت متأكد من إلغاء هذه الفاتورة الموثقة؟ سيتم خصم الكميات من المخزن.')">
+                        @csrf
+                        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                            إلغاء الفاتورة الموثقة
+                        </button>
                     </form>
                 </div>
                 @endif
@@ -358,7 +376,7 @@
 </script>
 @endpush
 
-@if($invoice->status === 'documented' && $invoice->stamped_image)
+@if(($invoice->status === 'documented' || $invoice->status === 'cancelled') && $invoice->stamped_image)
     @include('shared.modals.documentation-image', [
         'imageUrl' => asset('storage/' . $invoice->stamped_image),
         'invoiceNumber' => $invoice->invoice_number,

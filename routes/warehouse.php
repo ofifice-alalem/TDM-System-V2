@@ -79,6 +79,7 @@ Route::middleware(['web', 'auth', 'role:warehouse'])->group(function () {
             Route::get('/{factoryInvoice}', [FactoryInvoiceController::class, 'show'])->name('show');
             Route::post('/{factoryInvoice}/document', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'document'])->name('document');
             Route::post('/{factoryInvoice}/cancel', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'cancel'])->name('cancel');
+            Route::post('/{factoryInvoice}/force-cancel', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'forceCancel'])->name('force-cancel');
             Route::get('/{factoryInvoice}/pdf', [FactoryInvoiceController::class, 'pdf'])->name('pdf');
         });
     });

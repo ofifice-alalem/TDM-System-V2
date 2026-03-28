@@ -191,6 +191,15 @@ class StoreController extends Controller
             'total_payments' => abs(StoreDebtLedger::where('store_id', $store->id)
                 ->where('entry_type', 'payment')
                 ->sum('amount')),
+            'pending_sales' => SalesInvoice::where('store_id', $store->id)
+                ->where('status', 'pending')
+                ->sum('total_amount'),
+            'pending_payments' => StorePayment::where('store_id', $store->id)
+                ->where('status', 'pending')
+                ->sum('amount'),
+            'pending_returns' => SalesReturn::where('store_id', $store->id)
+                ->where('status', 'pending')
+                ->sum('total_amount'),
         ];
 
         return view('shared.stores.show', compact('store', 'debt', 'transactions', 'stats'));
