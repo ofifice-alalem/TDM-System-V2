@@ -81,10 +81,26 @@ class StoreController extends Controller
             })
             ->withCount('salesInvoices');
         
-        $stores = $query->get()->map(function($store) {
-            $store->total_debt = $this->calculateDebt($store->id);
+        $storeIds = $query->pluck('id');
+
+        $pendingSales = SalesInvoice::whereIn('store_id', $storeIds)->where('status', 'pending')
+            ->selectRaw('store_id, SUM(total_amount) as total')->groupBy('store_id')
+            ->pluck('total', 'store_id');
+
+        $pendingPayments = StorePayment::whereIn('store_id', $storeIds)->where('status', 'pending')
+            ->selectRaw('store_id, SUM(amount) as total')->groupBy('store_id')
+            ->pluck('total', 'store_id');
+
+        $pendingReturns = SalesReturn::whereIn('store_id', $storeIds)->where('status', 'pending')
+            ->selectRaw('store_id, SUM(total_amount) as total')->groupBy('store_id')
+            ->pluck('total', 'store_id');
+
+        $stores = $query->get()->map(function($store) use ($pendingSales, $pendingPayments, $pendingReturns) {
+            $store->confirmed_debt = $this->calculateDebt($store->id);
+            $store->pending_net    = ($pendingSales[$store->id] ?? 0) - ($pendingPayments[$store->id] ?? 0) - ($pendingReturns[$store->id] ?? 0);
+            $store->total_debt     = $store->confirmed_debt + $store->pending_net;
             return $store;
-        })->sortByDesc('total_debt');
+        })->sortByDesc('total_debt')->values();
 
         $stores = new \Illuminate\Pagination\LengthAwarePaginator(
             $stores->forPage($request->get('page', 1), 50),
@@ -109,8 +125,16 @@ class StoreController extends Controller
                 ->groupBy('store_id');
         })->sum('balance_after');
 
-        $totalDebt = (clone $debtQuery)->where('entry_type', 'sale')->sum('amount');
+        $totalDebt     = (clone $debtQuery)->where('entry_type', 'sale')->sum('amount');
         $totalPayments = abs((clone $debtQuery)->whereIn('entry_type', ['payment', 'return'])->sum('amount'));
+
+        $totalPendingSales    = SalesInvoice::whereIn('store_id', $storeIds)->where('status', 'pending')->sum('total_amount');
+        $totalPendingPayments = StorePayment::whereIn('store_id', $storeIds)->where('status', 'pending')->sum('amount');
+        $totalPendingReturns  = SalesReturn::whereIn('store_id', $storeIds)->where('status', 'pending')->sum('total_amount');
+
+        $totalDebt        += $totalPendingSales;
+        $totalPayments    += $totalPendingPayments + $totalPendingReturns;
+        $totalRemaining   += $totalPendingSales - $totalPendingPayments - $totalPendingReturns;
 
         return view('shared.stores.index', compact('stores', 'search', 'totalDebt', 'totalPayments', 'totalRemaining'));
     }
