@@ -95,7 +95,7 @@ class StatisticsController extends Controller
         // الإجماليات حسب الحالة
         $row++;
         $sheet->setCellValue('A'.$row, 'حالة المبيعات');
-        $sheet->mergeCells('A'.$row.':E'.$row);
+        $sheet->mergeCells('A'.$row.':C'.$row);
         $sheet->getStyle('A'.$row)->applyFromArray([
             'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF3E0']],
             'font'      => ['bold' => true, 'size' => 12],
@@ -104,24 +104,85 @@ class StatisticsController extends Controller
         ]);
         $row++;
 
-        $sheet->fromArray(['معلق', 'ملغي', 'مرفوض', 'موثق', 'الكلي'], null, 'A'.$row);
-        $sheet->getStyle('A'.$row.':E'.$row)->applyFromArray([
+        $sheet->fromArray(['معلق', 'موثق', 'الكلي'], null, 'A'.$row);
+        $sheet->getStyle('A'.$row.':C'.$row)->applyFromArray([
             'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFE0B2']],
             'font'      => ['bold' => true],
             'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
         ]);
         $row++;
-
         $st = $results['status_totals'];
         $sheet->fromArray([
-            number_format($st['pending'],   2),
-            number_format($st['cancelled'], 2),
-            number_format($st['rejected'],  2),
-            number_format($st['approved'],  2),
-            number_format($st['total'],     2),
+            number_format($st['pending'],  2),
+            number_format($st['approved'], 2),
+            number_format($st['total'],    2),
         ], null, 'A'.$row);
-        $sheet->getStyle('A'.$row.':E'.$row)->applyFromArray([
+        $sheet->getStyle('A'.$row.':C'.$row)->applyFromArray([
+            'font'      => ['bold' => true],
+            'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ]);
+        $row++;
+
+        // حالة المدفوعات
+        $row++;
+        $sheet->setCellValue('A'.$row, 'حالة المدفوعات');
+        $sheet->mergeCells('A'.$row.':C'.$row);
+        $sheet->getStyle('A'.$row)->applyFromArray([
+            'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E8F5E9']],
+            'font'      => ['bold' => true, 'size' => 12],
+            'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ]);
+        $row++;
+        $sheet->fromArray(['معلق', 'موثق', 'الكلي'], null, 'A'.$row);
+        $sheet->getStyle('A'.$row.':C'.$row)->applyFromArray([
+            'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'C8E6C9']],
+            'font'      => ['bold' => true],
+            'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ]);
+        $row++;
+        $pt = $results['payment_status_totals'];
+        $sheet->fromArray([
+            number_format($pt['pending'],  2),
+            number_format($pt['approved'], 2),
+            number_format($pt['total'],    2),
+        ], null, 'A'.$row);
+        $sheet->getStyle('A'.$row.':C'.$row)->applyFromArray([
+            'font'      => ['bold' => true],
+            'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ]);
+        $row++;
+
+        // حالة المرتجعات
+        $row++;
+        $sheet->setCellValue('A'.$row, 'حالة المرتجعات');
+        $sheet->mergeCells('A'.$row.':C'.$row);
+        $sheet->getStyle('A'.$row)->applyFromArray([
+            'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FBE9E7']],
+            'font'      => ['bold' => true, 'size' => 12],
+            'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ]);
+        $row++;
+        $sheet->fromArray(['معلق', 'موثق', 'الكلي'], null, 'A'.$row);
+        $sheet->getStyle('A'.$row.':C'.$row)->applyFromArray([
+            'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFCCBC']],
+            'font'      => ['bold' => true],
+            'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ]);
+        $row++;
+        $rt = $results['return_status_totals'];
+        $sheet->fromArray([
+            number_format($rt['pending'],  2),
+            number_format($rt['approved'], 2),
+            number_format($rt['total'],    2),
+        ], null, 'A'.$row);
+        $sheet->getStyle('A'.$row.':C'.$row)->applyFromArray([
             'font'      => ['bold' => true],
             'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
@@ -231,21 +292,43 @@ class StatisticsController extends Controller
             ->where(function($q) use ($marketerId, $marketerStoreIds) {
                 $q->where('marketer_id', $marketerId)
                   ->orWhere(function($q2) use ($marketerStoreIds) {
-                      $q2->where('marketer_id', 0)
-                         ->whereIn('store_id', $marketerStoreIds);
+                      $q2->where('marketer_id', 0)->whereIn('store_id', $marketerStoreIds);
                   });
             })
             ->selectRaw('status, SUM(total_amount) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
+            ->groupBy('status')->pluck('total', 'status');
 
         $statusTotals = [
-            'pending'   => $salesByStatus['pending']   ?? 0,
-            'approved'  => $salesByStatus['approved']  ?? 0,
-            'cancelled' => $salesByStatus['cancelled'] ?? 0,
-            'rejected'  => $salesByStatus['rejected']  ?? 0,
+            'pending'  => $salesByStatus['pending']  ?? 0,
+            'approved' => $salesByStatus['approved'] ?? 0,
         ];
         $statusTotals['total'] = array_sum($statusTotals);
+
+        // status totals للمدفوعات
+        $paymentsByStatus = \App\Models\StorePayment::where('marketer_id', $marketerId)
+            ->whereDate('created_at', '>=', $request->from_date)
+            ->whereDate('created_at', '<=', $request->to_date)
+            ->selectRaw('status, SUM(amount) as total')
+            ->groupBy('status')->pluck('total', 'status');
+
+        $paymentStatusTotals = [
+            'pending'  => $paymentsByStatus['pending']  ?? 0,
+            'approved' => $paymentsByStatus['approved'] ?? 0,
+        ];
+        $paymentStatusTotals['total'] = array_sum($paymentStatusTotals);
+
+        // status totals للمرتجعات
+        $returnsByStatus = \App\Models\SalesReturn::where('marketer_id', $marketerId)
+            ->whereDate('created_at', '>=', $request->from_date)
+            ->whereDate('created_at', '<=', $request->to_date)
+            ->selectRaw('status, SUM(total_amount) as total')
+            ->groupBy('status')->pluck('total', 'status');
+
+        $returnStatusTotals = [
+            'pending'  => $returnsByStatus['pending']  ?? 0,
+            'approved' => $returnsByStatus['approved'] ?? 0,
+        ];
+        $returnStatusTotals['total'] = array_sum($returnStatusTotals);
 
         // تفاصيل لكل متجر
         $storesData = [];
@@ -277,8 +360,10 @@ class StatisticsController extends Controller
             'pending_sales'     => $pendingSales,
             'pending_payments'  => $pendingPayments,
             'pending_returns'   => $pendingReturns,
-            'status_totals'     => $statusTotals,
-            'stores_data'       => $storesData,
+            'status_totals'         => $statusTotals,
+            'payment_status_totals' => $paymentStatusTotals,
+            'return_status_totals'  => $returnStatusTotals,
+            'stores_data'           => $storesData,
         ];
     }
 

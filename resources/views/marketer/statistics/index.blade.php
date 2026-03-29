@@ -540,8 +540,32 @@
                         </table>
                     </div>
 
-                    @if($results['data']->hasPages())
-                        <div class="px-6 py-4 border-t border-gray-200 dark:border-dark-border">
+                    @if($results['data']->hasPages() || $results['data']->total() > 0)
+                        {{-- Mobile pagination --}}
+                        <div class="md:hidden px-2 py-3 border-t border-gray-200 dark:border-dark-border space-y-3">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                                عرض {{ $results['data']->firstItem() }} إلى {{ $results['data']->lastItem() }} من {{ $results['data']->total() }} نتيجة
+                            </p>
+                            @if($results['data']->hasPages())
+                            <div class="flex items-center justify-between gap-2">
+                                @if($results['data']->onFirstPage())
+                                    <span class="flex-1 py-2 text-center text-sm font-bold text-gray-300 dark:text-gray-600 bg-gray-100 dark:bg-dark-bg rounded-xl">السابق</span>
+                                @else
+                                    <a href="{{ $results['data']->appends(request()->query())->previousPageUrl() }}" class="flex-1 py-2 text-center text-sm font-bold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-dark-border rounded-xl transition-colors">السابق</a>
+                                @endif
+                                <span class="text-xs font-bold text-gray-500 dark:text-gray-400 shrink-0">
+                                    {{ $results['data']->currentPage() }} / {{ $results['data']->lastPage() }}
+                                </span>
+                                @if($results['data']->hasMorePages())
+                                    <a href="{{ $results['data']->appends(request()->query())->nextPageUrl() }}" class="flex-1 py-2 text-center text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-colors">التالي</a>
+                                @else
+                                    <span class="flex-1 py-2 text-center text-sm font-bold text-gray-300 dark:text-gray-600 bg-gray-100 dark:bg-dark-bg rounded-xl">التالي</span>
+                                @endif
+                            </div>
+                            @endif
+                        </div>
+                        {{-- Desktop pagination --}}
+                        <div class="hidden md:block px-6 py-4 border-t border-gray-200 dark:border-dark-border">
                             {{ $results['data']->appends(request()->query())->links() }}
                         </div>
                     @endif
