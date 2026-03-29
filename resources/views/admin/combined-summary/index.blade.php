@@ -39,21 +39,170 @@
 
         {{-- Stats Cards --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border p-5 shadow-sm">
-                <p class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">إجمالي الفواتير</p>
-                <p class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ number_format($grandInvoices, 2) }}</p>
+            <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border p-4 shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center shrink-0">
+                    <i data-lucide="shopping-cart" class="w-5 h-5 text-blue-500 dark:text-blue-400"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-xs font-bold text-gray-500 dark:text-gray-400">إجمالي الفواتير</p>
+                    <p class="text-lg font-black text-blue-600 dark:text-blue-400 truncate">{{ number_format($grandInvoices, 2) }}</p>
+                </div>
             </div>
-            <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border p-5 shadow-sm">
-                <p class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">إجمالي المدفوعات</p>
-                <p class="text-2xl font-black text-green-600 dark:text-green-400">{{ number_format($grandPayments, 2) }}</p>
+            <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border p-4 shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center shrink-0">
+                    <i data-lucide="banknote" class="w-5 h-5 text-emerald-500 dark:text-emerald-400"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-xs font-bold text-gray-500 dark:text-gray-400">إجمالي المدفوعات</p>
+                    <p class="text-lg font-black text-emerald-600 dark:text-emerald-400 truncate">{{ number_format($grandPayments, 2) }}</p>
+                </div>
             </div>
-            <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border p-5 shadow-sm">
-                <p class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">إجمالي المرتجعات</p>
-                <p class="text-2xl font-black text-orange-600 dark:text-orange-400">{{ number_format($grandReturns, 2) }}</p>
+            <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border p-4 shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 bg-orange-50 dark:bg-orange-500/10 rounded-xl flex items-center justify-center shrink-0">
+                    <i data-lucide="package-x" class="w-5 h-5 text-orange-500 dark:text-orange-400"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-xs font-bold text-gray-500 dark:text-gray-400">إجمالي المرتجعات</p>
+                    <p class="text-lg font-black text-orange-600 dark:text-orange-400 truncate">{{ number_format($grandReturns, 2) }}</p>
+                </div>
             </div>
-            <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border p-5 shadow-sm">
-                <p class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">إجمالي الدين</p>
-                <p class="text-2xl font-black {{ $grandDebt > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }}">{{ number_format($grandDebt, 2) }}</p>
+            <div class="{{ $grandDebt > 0 ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' }} rounded-2xl border p-4 shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 {{ $grandDebt > 0 ? 'bg-red-100 dark:bg-red-500/20' : 'bg-emerald-100 dark:bg-emerald-500/20' }} rounded-xl flex items-center justify-center shrink-0">
+                    <i data-lucide="trending-up" class="w-5 h-5 {{ $grandDebt > 0 ? 'text-red-500 dark:text-red-400' : 'text-emerald-500 dark:text-emerald-400' }}"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-xs font-bold text-gray-500 dark:text-gray-400">إجمالي الدين</p>
+                    <p class="text-lg font-black {{ $grandDebt > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }} truncate">{{ number_format($grandDebt, 2) }}</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Summaries: Stores + Customers --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+            {{-- ملخص المتاجر --}}
+            <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border flex items-center gap-2">
+                    <i data-lucide="store" class="w-4 h-4 text-blue-500"></i>
+                    <h3 class="font-black text-gray-900 dark:text-white text-sm">ملخص المتاجر</h3>
+                </div>
+                <div class="p-5 space-y-3">
+                    <div class="grid grid-cols-3 divide-x divide-x-reverse divide-gray-100 dark:divide-dark-border border border-gray-100 dark:border-dark-border rounded-2xl overflow-hidden">
+                        <div class="p-3 text-center">
+                            <div class="w-7 h-7 bg-blue-50 dark:bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-500 mx-auto mb-1"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i></div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">المبيعات</div>
+                            <div class="text-sm font-black text-blue-600 dark:text-blue-400">{{ number_format($storeSummary['invoices'], 2) }}</div>
+                        </div>
+                        <div class="p-3 text-center">
+                            <div class="w-7 h-7 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-500 mx-auto mb-1"><i data-lucide="banknote" class="w-3.5 h-3.5"></i></div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">المدفوعات</div>
+                            <div class="text-sm font-black text-emerald-600 dark:text-emerald-400">{{ number_format($storeSummary['payments'], 2) }}</div>
+                        </div>
+                        <div class="p-3 text-center">
+                            <div class="w-7 h-7 bg-orange-50 dark:bg-orange-500/10 rounded-lg flex items-center justify-center text-orange-500 mx-auto mb-1"><i data-lucide="package-x" class="w-3.5 h-3.5"></i></div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">المرتجعات</div>
+                            <div class="text-sm font-black text-orange-600 dark:text-orange-400">{{ number_format($storeSummary['returns'], 2) }}</div>
+                        </div>
+                    </div>
+                    @if($storeSummary['pending_invoices'] > 0 || $storeSummary['pending_payments'] > 0 || $storeSummary['pending_returns'] > 0)
+                    <div class="flex gap-3">
+                        {{-- Pending badges --}}
+                        <div class="flex-1 space-y-1.5">
+                        @if($storeSummary['pending_invoices'] > 0)
+                        <div class="flex items-center justify-between bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-xl px-3 py-2">
+                            <div class="flex items-center gap-2 text-blue-700 dark:text-blue-400"><i data-lucide="clock" class="w-3.5 h-3.5"></i><span class="text-xs font-bold">فواتير معلقة</span></div>
+                            <span class="text-xs font-black text-blue-700 dark:text-blue-300">+ {{ number_format($storeSummary['pending_invoices'], 2) }}</span>
+                        </div>
+                        @endif
+                        @if($storeSummary['pending_payments'] > 0)
+                        <div class="flex items-center justify-between bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-xl px-3 py-2">
+                            <div class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400"><i data-lucide="clock" class="w-3.5 h-3.5"></i><span class="text-xs font-bold">إيصالات معلقة</span></div>
+                            <span class="text-xs font-black text-emerald-700 dark:text-emerald-300">- {{ number_format($storeSummary['pending_payments'], 2) }}</span>
+                        </div>
+                        @endif
+                        @if($storeSummary['pending_returns'] > 0)
+                        <div class="flex items-center justify-between bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/30 rounded-xl px-3 py-2">
+                            <div class="flex items-center gap-2 text-orange-700 dark:text-orange-400"><i data-lucide="clock" class="w-3.5 h-3.5"></i><span class="text-xs font-bold">مرتجعات معلقة</span></div>
+                            <span class="text-xs font-black text-orange-700 dark:text-orange-300">- {{ number_format($storeSummary['pending_returns'], 2) }}</span>
+                        </div>
+                        @endif
+                        </div>
+                        {{-- إجمالي الدين --}}
+                        <div class="relative rounded-2xl overflow-hidden shrink-0 w-1/2">
+                            <div class="absolute inset-0 bg-gradient-to-br from-orange-700 to-orange-900"></div>
+                            <div class="relative p-3 h-full flex flex-col justify-between">
+                                <div class="text-white/80 text-xs font-bold">إجمالي الدين</div>
+                                <div class="text-xl font-black text-white">{{ number_format($storeSummary['debt'], 2) }}<span class="text-xs font-bold text-white/70 mr-1">دينار</span></div>
+                                @php $pendingNet = $storeSummary['pending_invoices'] - $storeSummary['pending_payments'] - $storeSummary['pending_returns']; @endphp
+                                <div class="grid grid-cols-2 gap-1 mt-1">
+                                    <div class="bg-white/20 rounded-lg px-2 py-1">
+                                        <div class="text-white/70 text-xs">معتمد</div>
+                                        <div class="text-white text-xs font-black">{{ number_format($storeSummary['approved_debt'], 2) }}</div>
+                                    </div>
+                                    <div class="bg-white/20 rounded-lg px-2 py-1">
+                                        <div class="text-white/70 text-xs">معلق</div>
+                                        <div class="text-white text-xs font-black">{{ number_format($pendingNet, 2) }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @else
+                    {{-- إجمالي الدين بدون pending --}}
+                    <div class="relative rounded-2xl overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-orange-700 to-orange-900"></div>
+                        <div class="relative p-4 flex items-center justify-between">
+                            <div>
+                                <div class="text-white/80 text-xs font-bold mb-1">إجمالي الدين</div>
+                                <div class="text-2xl font-black text-white">{{ number_format($storeSummary['debt'], 2) }} <span class="text-sm font-bold text-white/70">دينار</span></div>
+                            </div>
+                            <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                                <i data-lucide="trending-up" class="w-5 h-5 text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- ملخص العملاء --}}
+            <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border flex items-center gap-2">
+                    <i data-lucide="users" class="w-4 h-4 text-purple-500"></i>
+                    <h3 class="font-black text-gray-900 dark:text-white text-sm">ملخص العملاء</h3>
+                </div>
+                <div class="p-5 space-y-3">
+                    <div class="grid grid-cols-3 divide-x divide-x-reverse divide-gray-100 dark:divide-dark-border border border-gray-100 dark:border-dark-border rounded-2xl overflow-hidden">
+                        <div class="p-3 text-center">
+                            <div class="w-7 h-7 bg-blue-50 dark:bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-500 mx-auto mb-1"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i></div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">المبيعات</div>
+                            <div class="text-sm font-black text-blue-600 dark:text-blue-400">{{ number_format($customerSummary['invoices'], 2) }}</div>
+                        </div>
+                        <div class="p-3 text-center">
+                            <div class="w-7 h-7 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-500 mx-auto mb-1"><i data-lucide="banknote" class="w-3.5 h-3.5"></i></div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">المدفوعات</div>
+                            <div class="text-sm font-black text-emerald-600 dark:text-emerald-400">{{ number_format($customerSummary['payments'], 2) }}</div>
+                        </div>
+                        <div class="p-3 text-center">
+                            <div class="w-7 h-7 bg-orange-50 dark:bg-orange-500/10 rounded-lg flex items-center justify-center text-orange-500 mx-auto mb-1"><i data-lucide="package-x" class="w-3.5 h-3.5"></i></div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">المرتجعات</div>
+                            <div class="text-sm font-black text-orange-600 dark:text-orange-400">{{ number_format($customerSummary['returns'], 2) }}</div>
+                        </div>
+                    </div>
+                    {{-- إجمالي الدين --}}
+                    <div class="relative rounded-2xl overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-purple-700 to-purple-900"></div>
+                        <div class="relative p-4 flex items-center justify-between">
+                            <div>
+                                <div class="text-white/80 text-xs font-bold mb-1">إجمالي الدين</div>
+                                <div class="text-2xl font-black text-white">{{ number_format($customerSummary['debt'], 2) }} <span class="text-sm font-bold text-white/70">دينار</span></div>
+                            </div>
+                            <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                                <i data-lucide="trending-up" class="w-5 h-5 text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -76,6 +225,7 @@
                                 <th class="px-4 py-3 text-left font-bold text-gray-700 dark:text-gray-300">إجمالي المدفوعات</th>
                                 <th class="px-4 py-3 text-left font-bold text-gray-700 dark:text-gray-300">إجمالي المرتجعات</th>
                                 <th class="px-4 py-3 text-left font-bold text-gray-700 dark:text-gray-300">الدين الحالي</th>
+                                <th class="px-4 py-3 text-center font-bold text-gray-700 dark:text-gray-300">دائن / مدين</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-dark-border">
@@ -94,6 +244,15 @@
                                     <td class="px-4 py-3 text-left font-mono font-bold {{ $row->total_debt > 0 ? 'text-red-600 dark:text-red-400' : ($row->total_debt < 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-400') }}">
                                         {{ number_format($row->total_debt, 2) }}
                                     </td>
+                                    <td class="px-4 py-3 text-center">
+                                        @if($row->total_debt > 0)
+                                            <span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-0.5 rounded-lg text-xs font-black">مدين</span>
+                                        @elseif($row->total_debt < 0)
+                                            <span class="bg-emerald-500 text-white px-2 py-0.5 rounded-lg text-xs font-black">دائن</span>
+                                        @else
+                                            <span class="text-gray-400 text-xs">--</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -104,6 +263,15 @@
                                 <td class="px-4 py-3 text-left font-black font-mono text-green-600 dark:text-green-400">{{ number_format($grandPayments, 2) }}</td>
                                 <td class="px-4 py-3 text-left font-black font-mono text-orange-600 dark:text-orange-400">{{ number_format($grandReturns, 2) }}</td>
                                 <td class="px-4 py-3 text-left font-black font-mono {{ $grandDebt > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }}">{{ number_format($grandDebt, 2) }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    @if($grandDebt > 0)
+                                        <span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-0.5 rounded-lg text-xs font-black">مدين</span>
+                                    @elseif($grandDebt < 0)
+                                        <span class="bg-emerald-500 text-white px-2 py-0.5 rounded-lg text-xs font-black">دائن</span>
+                                    @else
+                                        <span class="text-gray-400 text-xs">--</span>
+                                    @endif
+                                </td>
                             </tr>
                         </tfoot>
                     </table>
