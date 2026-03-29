@@ -466,7 +466,7 @@
             @endif
             
             {{-- Stores Link - Available for warehouse and admin only --}}
-            @if(!request()->routeIs('marketer.*'))
+            @if(!request()->routeIs('marketer.*') && !request()->routeIs('sales.*'))
             <a href="{{ request()->routeIs('warehouse.*') ? route('warehouse.stores.index') : route('admin.stores.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('*.stores.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                 <i data-lucide="store" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('*.stores.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
                 <span>المتاجر</span>

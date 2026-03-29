@@ -417,14 +417,14 @@
 <script>
 // بيانات المتاجر للبحث السريع
 const storesData = [
-    @foreach($stores as $store)
+    @foreach($allStoresForSearch as $store)
     {
         id: {{ $store->id }},
         name: @json($store->name),
         owner: @json($store->owner_name),
         location: @json($store->location ?? ''),
         url: "{{ request()->routeIs('marketer.*') ? route('marketer.stores.show', $store) : (request()->routeIs('warehouse.*') ? route('warehouse.stores.show', $store) : route('admin.stores.show', $store)) }}",
-        debt: {{ $store->confirmed_debt + $store->pending_net }},
+        debt: 0,
     },
     @endforeach
 ];

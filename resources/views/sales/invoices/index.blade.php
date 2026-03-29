@@ -134,7 +134,7 @@
                                 <i data-lucide="banknote" class="w-3.5 h-3.5"></i>
                                 المبلغ
                             </div>
-                            <p class="text-lg font-black text-blue-700 dark:text-blue-300">{{ number_format($invoice->total_amount, 0) }} د.ع</p>
+                            <p class="text-lg font-black text-blue-700 dark:text-blue-300">{{ number_format($invoice->total_amount, 0) }} دينار</p>
                         </div>
                         <div class="bg-white dark:bg-dark-card rounded-xl p-4 border-2 border-gray-200 dark:border-dark-border shadow-sm">
                             <p class="text-xs text-gray-500 dark:text-gray-400 mb-2 font-bold">الحالة</p>

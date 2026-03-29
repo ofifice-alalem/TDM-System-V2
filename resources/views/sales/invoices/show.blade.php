@@ -288,7 +288,7 @@
                                 إلغاء الفاتورة
                             </button>
                         </div>
-                        <form id="cancelForm" action="{{ route('sales.invoices.cancel', $invoice) }}" method="POST" class="hidden">
+                        <form id="cancelForm" action="{{ route('sales.invoices.cancel', $invoice->id) }}" method="POST" class="hidden">
                             @csrf
                             @method('DELETE')
                             <div class="space-y-3">

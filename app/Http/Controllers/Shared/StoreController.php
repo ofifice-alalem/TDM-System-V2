@@ -110,6 +110,17 @@ class StoreController extends Controller
             ['path' => $request->url(), 'pageName' => 'page']
         );
 
+        // بيانات البحث السريع - كل المتاجر بدون pagination
+        $allStoresForSearch = Store::query()
+            ->when(auth()->user()->isMarketer(), function($query) {
+                $query->where('marketer_id', auth()->id());
+            })
+            ->when($marketerId && !auth()->user()->isMarketer(), function($query) use ($marketerId) {
+                $query->where('marketer_id', $marketerId);
+            })
+            ->select('id', 'name', 'owner_name', 'location')
+            ->get();
+
         // Filter debt calculations for marketer or selected marketer
         $debtQuery = StoreDebtLedger::query()
             ->when(auth()->user()->isMarketer(), function($query) {
@@ -136,7 +147,7 @@ class StoreController extends Controller
         $totalPayments    += $totalPendingPayments + $totalPendingReturns;
         $totalRemaining   += $totalPendingSales - $totalPendingPayments - $totalPendingReturns;
 
-        return view('shared.stores.index', compact('stores', 'search', 'totalDebt', 'totalPayments', 'totalRemaining'));
+        return view('shared.stores.index', compact('stores', 'search', 'totalDebt', 'totalPayments', 'totalRemaining', 'allStoresForSearch'));
     }
 
     public function show(Store $store)
