@@ -13,8 +13,8 @@ class PaymentService
         return DB::transaction(function () use ($marketerId, $storeId, $amount, $paymentMethod, $notes) {
             $currentDebt = $this->getStoreDebt($storeId);
             
-            if ($amount > $currentDebt) {
-                throw new \Exception("المبلغ المدخل ({$amount}) أكبر من الدين الحالي ({$currentDebt})");
+            if ($amount <= 0) {
+                throw new \Exception('المبلغ يجب أن يكون أكبر من صفر');
             }
 
             return StorePayment::create([

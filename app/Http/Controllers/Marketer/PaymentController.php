@@ -63,12 +63,26 @@ class PaymentController extends Controller
         $stores = Store::where('is_active', true)
             ->get()
             ->map(function($store) {
-                $store->debt = StoreDebtLedger::where('store_id', $store->id)
+                $approved = StoreDebtLedger::where('store_id', $store->id)
                     ->latest('id')
                     ->value('balance_after') ?? 0;
+
+                $pendingSales = \App\Models\SalesInvoice::where('store_id', $store->id)
+                    ->where('status', 'pending')
+                    ->sum('total_amount');
+
+                $pendingPayments = \App\Models\StorePayment::where('store_id', $store->id)
+                    ->where('status', 'pending')
+                    ->sum('amount');
+
+                $pendingReturns = \App\Models\SalesReturn::where('store_id', $store->id)
+                    ->where('status', 'pending')
+                    ->sum('total_amount');
+
+                $store->debt = $approved + $pendingSales - $pendingPayments - $pendingReturns;
                 return $store;
             })
-            ->filter(fn($store) => $store->debt > 0);
+            ->filter(fn($store) => true);
 
         return view('marketer.payments.create', compact('stores'));
     }

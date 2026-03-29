@@ -337,6 +337,30 @@ class StatisticsController extends Controller
             $sales    = (clone $salesQuery)->where('store_id', $store->id)->sum('total_amount');
             $payments = (clone $paymentsQuery)->where('store_id', $store->id)->sum('amount');
             $returns  = (clone $returnsQuery)->where('store_id', $store->id)->sum('total_amount');
+
+            // إضافة pending
+            $sales    += \App\Models\SalesInvoice::where('status', 'pending')
+                ->whereDate('created_at', '>=', $request->from_date)
+                ->whereDate('created_at', '<=', $request->to_date)
+                ->where('store_id', $store->id)
+                ->where(function($q) use ($marketerId) {
+                    $q->where('marketer_id', $marketerId)->orWhere('marketer_id', 0);
+                })->sum('total_amount');
+
+            $payments += \App\Models\StorePayment::where('marketer_id', $marketerId)
+                ->where('status', 'pending')
+                ->whereDate('created_at', '>=', $request->from_date)
+                ->whereDate('created_at', '<=', $request->to_date)
+                ->where('store_id', $store->id)
+                ->sum('amount');
+
+            $returns  += \App\Models\SalesReturn::where('marketer_id', $marketerId)
+                ->where('status', 'pending')
+                ->whereDate('created_at', '>=', $request->from_date)
+                ->whereDate('created_at', '<=', $request->to_date)
+                ->where('store_id', $store->id)
+                ->sum('total_amount');
+
             $balance  = $sales - $payments - $returns;
 
             if ($sales > 0 || $payments > 0 || $returns > 0) {

@@ -105,6 +105,25 @@
     </div>
 </div>
 
+{{-- Confirmation Modal --}}
+<div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+    <div class="bg-white dark:bg-dark-card rounded-2xl shadow-2xl p-6 w-full max-w-sm space-y-4">
+        <div class="flex items-center gap-3 text-amber-600 dark:text-amber-400">
+            <i data-lucide="alert-triangle" class="w-6 h-6 shrink-0"></i>
+            <h3 class="text-base font-black">تأكيد العملية</h3>
+        </div>
+        <p class="text-sm text-gray-700 dark:text-gray-300">
+            المبلغ المدخل <span id="confirm-amount" class="font-black text-gray-900 dark:text-white"></span> د.ل
+            أكبر من الدين الحالي <span id="confirm-debt" class="font-black text-gray-900 dark:text-white"></span> د.ل.
+            <br>هل تريد المتابعة على أي حال؟;
+        </p>
+        <div class="flex gap-3 pt-2">
+            <button id="confirm-btn" class="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold text-sm transition-colors">تأكيد</button>
+            <button id="cancel-btn" class="flex-1 py-2.5 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-dark-border text-gray-700 dark:text-gray-300 rounded-xl font-bold text-sm transition-colors">إلغاء</button>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 const stores = [
@@ -131,11 +150,19 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('الرجاء اختيار المتجر');
             return false;
         }
-        
         const paymentMethod = form.querySelector('input[name="payment_method"]:checked');
         if (!paymentMethod) {
             e.preventDefault();
             alert('الرجاء اختيار طريقة الدفع');
+            return false;
+        }
+        const amount = parseFloat(amountInput.value);
+        const debt   = parseFloat(debtAmount.dataset.value || 0);
+        if (debt > 0 && amount > debt && !form.dataset.confirmed) {
+            e.preventDefault();
+            document.getElementById('confirm-amount').textContent = amount.toFixed(2);
+            document.getElementById('confirm-debt').textContent   = debt.toFixed(2);
+            document.getElementById('confirm-modal').classList.remove('hidden');
             return false;
         }
     });
@@ -161,17 +188,23 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        dropdown.innerHTML = filtered.map(store => `
+        dropdown.innerHTML = filtered.map(store => {
+            const debtLabel = store.debt > 0 ? 'مدين' : (store.debt < 0 ? 'دائن' : 'لا يوجد دين');
+            const debtColor = store.debt > 0 ? 'text-red-600 dark:text-red-400' : (store.debt < 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500');
+            return `
             <div class="store-option px-4 py-3 hover:bg-gray-100 dark:hover:bg-dark-bg cursor-pointer border-b border-gray-100 dark:border-dark-border last:border-0" data-id="${store.id}" data-name="${store.name} - ${store.owner}" data-debt="${store.debt}">
                 <div class="flex justify-between items-center">
                     <div>
                         <div class="font-bold text-gray-900 dark:text-white text-sm">${store.name}</div>
                         <div class="text-xs text-gray-500 dark:text-gray-400">${store.owner}</div>
                     </div>
-                    <div class="text-amber-600 dark:text-amber-400 font-bold text-sm">${store.debt.toFixed(2)} د.ل</div>
+                    <div class="text-left">
+                        <div class="font-bold text-sm ${debtColor}">${Math.abs(store.debt).toFixed(2)} د.ل</div>
+                        <div class="text-xs font-bold ${debtColor}">${debtLabel}</div>
+                    </div>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
         dropdown.classList.remove('hidden');
         
         document.querySelectorAll('.store-option').forEach(option => {
@@ -183,11 +216,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (debt > 0) {
                     debtDisplay.classList.remove('hidden');
-                    debtAmount.textContent = debt.toFixed(2) + ' د.ل';
-
+                    debtAmount.textContent   = debt.toFixed(2) + ' د.ل (مدين)';
+                    debtAmount.dataset.value = debt;
+                } else if (debt < 0) {
+                    debtDisplay.classList.remove('hidden');
+                    debtAmount.textContent   = Math.abs(debt).toFixed(2) + ' د.ل (دائن)';
+                    debtAmount.dataset.value = debt;
                 } else {
-                    debtDisplay.classList.add('hidden');
-
+                    debtDisplay.classList.remove('hidden');
+                    debtAmount.textContent   = '0.00 د.ل (لا يوجد دين)';
+                    debtAmount.dataset.value = 0;
                 }
             });
         });
@@ -200,6 +238,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     amountInput.addEventListener('input', function() {
+    });
+
+    document.getElementById('confirm-btn').addEventListener('click', function() {
+        form.dataset.confirmed = '1';
+        document.getElementById('confirm-modal').classList.add('hidden');
+        form.submit();
+    });
+    document.getElementById('cancel-btn').addEventListener('click', function() {
+        document.getElementById('confirm-modal').classList.add('hidden');
     });
 });
 </script>
