@@ -536,7 +536,7 @@
         </header>
 
         {{-- CONTENT --}}
-        <main class="flex-1 px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+        <main class="flex-1 px-2 sm:px-6 lg:px-8 py-8 animate-fade-in">
             @if(session('success'))
                 <div class="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 rounded-2xl flex items-center transform transition-all hover:scale-[1.01] shadow-sm">
                     <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 ml-4 shrink-0 shadow-sm">
