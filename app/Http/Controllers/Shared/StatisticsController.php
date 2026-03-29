@@ -1084,69 +1084,84 @@ class StatisticsController extends Controller
     private function getStoreSummary($request)
     {
         $storeQuery = $request->store_id !== 'all' ? fn($q) => $q->where('store_id', $request->store_id) : fn($q) => $q;
-        
+
         $totalSales = SalesInvoice::where('status', 'approved')
             ->whereDate('created_at', '>=', $request->from_date)
             ->whereDate('created_at', '<=', $request->to_date)
             ->when($request->store_id !== 'all', $storeQuery)
             ->sum('total_amount');
-        
+
         $totalPayments = StorePayment::where('status', 'approved')
             ->whereDate('created_at', '>=', $request->from_date)
             ->whereDate('created_at', '<=', $request->to_date)
             ->when($request->store_id !== 'all', $storeQuery)
             ->sum('amount');
-        
+
         $totalReturns = SalesReturn::where('status', 'approved')
             ->whereDate('created_at', '>=', $request->from_date)
             ->whereDate('created_at', '<=', $request->to_date)
             ->when($request->store_id !== 'all', $storeQuery)
             ->sum('total_amount');
-        
-        $currentBalance = $totalSales - $totalPayments - $totalReturns;
-        
+
+        $pendingSales = SalesInvoice::where('status', 'pending')
+            ->whereDate('created_at', '>=', $request->from_date)
+            ->whereDate('created_at', '<=', $request->to_date)
+            ->when($request->store_id !== 'all', $storeQuery)
+            ->sum('total_amount');
+
+        $pendingPayments = StorePayment::where('status', 'pending')
+            ->whereDate('created_at', '>=', $request->from_date)
+            ->whereDate('created_at', '<=', $request->to_date)
+            ->when($request->store_id !== 'all', $storeQuery)
+            ->sum('amount');
+
+        $pendingReturns = SalesReturn::where('status', 'pending')
+            ->whereDate('created_at', '>=', $request->from_date)
+            ->whereDate('created_at', '<=', $request->to_date)
+            ->when($request->store_id !== 'all', $storeQuery)
+            ->sum('total_amount');
+
+        $currentBalance = ($totalSales + $pendingSales) - ($totalPayments + $pendingPayments) - ($totalReturns + $pendingReturns);
+        $confirmedBalance = $totalSales - $totalPayments - $totalReturns;
+        $pendingNet = $pendingSales - $pendingPayments - $pendingReturns;
+
         // Get stores data if "all" is selected
         $storesData = [];
         if ($request->store_id === 'all') {
             $stores = Store::where('is_active', true)->get();
             foreach ($stores as $store) {
-                $sales = SalesInvoice::where('status', 'approved')
-                    ->where('store_id', $store->id)
-                    ->whereDate('created_at', '>=', $request->from_date)
-                    ->whereDate('created_at', '<=', $request->to_date)
-                    ->sum('total_amount');
-                
-                $payments = StorePayment::where('status', 'approved')
-                    ->where('store_id', $store->id)
-                    ->whereDate('created_at', '>=', $request->from_date)
-                    ->whereDate('created_at', '<=', $request->to_date)
-                    ->sum('amount');
-                
-                $returns = SalesReturn::where('status', 'approved')
-                    ->where('store_id', $store->id)
-                    ->whereDate('created_at', '>=', $request->from_date)
-                    ->whereDate('created_at', '<=', $request->to_date)
-                    ->sum('total_amount');
-                
-                $balance = $sales - $payments - $returns;
-                
-                $storesData[] = [
-                    'store_name' => $store->name,
-                    'sales' => $sales,
-                    'payments' => $payments,
-                    'returns' => $returns,
-                    'balance' => $balance
-                ];
+                $sales    = SalesInvoice::where('status', 'approved')->where('store_id', $store->id)->whereDate('created_at', '>=', $request->from_date)->whereDate('created_at', '<=', $request->to_date)->sum('total_amount');
+                $payments = StorePayment::where('status', 'approved')->where('store_id', $store->id)->whereDate('created_at', '>=', $request->from_date)->whereDate('created_at', '<=', $request->to_date)->sum('amount');
+                $returns  = SalesReturn::where('status', 'approved')->where('store_id', $store->id)->whereDate('created_at', '>=', $request->from_date)->whereDate('created_at', '<=', $request->to_date)->sum('total_amount');
+                $pSales   = SalesInvoice::where('status', 'pending')->where('store_id', $store->id)->whereDate('created_at', '>=', $request->from_date)->whereDate('created_at', '<=', $request->to_date)->sum('total_amount');
+                $pPay     = StorePayment::where('status', 'pending')->where('store_id', $store->id)->whereDate('created_at', '>=', $request->from_date)->whereDate('created_at', '<=', $request->to_date)->sum('amount');
+                $pRet     = SalesReturn::where('status', 'pending')->where('store_id', $store->id)->whereDate('created_at', '>=', $request->from_date)->whereDate('created_at', '<=', $request->to_date)->sum('total_amount');
+                $balance  = ($sales + $pSales) - ($payments + $pPay) - ($returns + $pRet);
+
+                if ($sales + $payments + $returns + $pSales + $pPay + $pRet > 0) {
+                    $storesData[] = [
+                        'store_name' => $store->name,
+                        'sales'      => $sales + $pSales,
+                        'payments'   => $payments + $pPay,
+                        'returns'    => $returns + $pRet,
+                        'balance'    => $balance,
+                    ];
+                }
             }
         }
-        
+
         return [
-            'is_summary' => true,
-            'total_sales' => $totalSales,
-            'total_payments' => $totalPayments,
-            'total_returns' => $totalReturns,
-            'current_balance' => $currentBalance,
-            'stores_data' => $storesData
+            'is_summary'        => true,
+            'total_sales'       => $totalSales + $pendingSales,
+            'total_payments'    => $totalPayments + $pendingPayments,
+            'total_returns'     => $totalReturns + $pendingReturns,
+            'current_balance'   => $currentBalance,
+            'confirmed_balance' => $confirmedBalance,
+            'pending_net'       => $pendingNet,
+            'pending_sales'     => $pendingSales,
+            'pending_payments'  => $pendingPayments,
+            'pending_returns'   => $pendingReturns,
+            'stores_data'       => $storesData,
         ];
     }
 
