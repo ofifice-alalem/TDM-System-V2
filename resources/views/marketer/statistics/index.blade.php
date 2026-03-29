@@ -357,84 +357,85 @@
                     </div>
 
                     {{-- Mobile Cards --}}
-                    <div class="md:hidden divide-y divide-gray-200 dark:divide-dark-border">
+                    <div class="md:hidden p-2 space-y-3">
                         @forelse($results['data'] as $item)
                             @php
                                 $statusConfig = [
                                     'pending'    => ['bg' => 'bg-amber-100 dark:bg-amber-900/30',     'text' => 'text-amber-700 dark:text-amber-400',   'label' => 'معلق'],
                                     'approved'   => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400','label' => 'موثق'],
                                     'documented' => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400','label' => 'موثق'],
-                                    'cancelled'  => ['bg' => 'bg-gray-100 dark:bg-gray-800/50',       'text' => 'text-gray-700 dark:text-gray-400',     'label' => 'ملغي'],
+                                    'cancelled'  => ['bg' => 'bg-gray-100 dark:bg-gray-800/50',       'text' => 'text-gray-600 dark:text-gray-400',     'label' => 'ملغي'],
                                     'rejected'   => ['bg' => 'bg-red-100 dark:bg-red-900/30',         'text' => 'text-red-700 dark:text-red-400',       'label' => 'مرفوض'],
-                                ][$item->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'label' => $item->status];
+                                ][$item->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-600', 'label' => $item->status];
                             @endphp
-                            <div class="p-4 space-y-3">
-                                {{-- Header row: number + status --}}
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm font-black text-gray-900 dark:text-white">
-                                        @if($results['operation'] == 'sales')             {{ $item->invoice_number }}
-                                        @elseif($results['operation'] == 'payments')      {{ $item->payment_number }}
-                                        @elseif($results['operation'] == 'sales_returns') {{ $item->return_number }}
-                                        @elseif($results['operation'] == 'returns')       {{ $item->return_number }}
-                                        @elseif($results['operation'] == 'requests')      {{ $item->invoice_number }}
-                                        @elseif($results['operation'] == 'withdrawals')   WD-{{ $item->id }}
-                                        @endif
-                                    </span>
-                                    <span class="{{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} px-2 py-1 rounded text-xs font-bold">
-                                        {{ $statusConfig['label'] }}
-                                    </span>
+                            <div class="bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-2xl overflow-hidden">
+                                {{-- Header: store name --}}
+                                @if(in_array($results['operation'], ['sales', 'payments', 'sales_returns']))
+                                <div class="px-4 py-3 bg-gray-400 dark:bg-gray-900">
+                                    <p class="text-sm font-black text-white truncate">{{ $item->store->name ?? '-' }}</p>
                                 </div>
-                                {{-- Details grid --}}
-                                <div class="grid grid-cols-2 gap-2 text-xs">
-                                    <div>
-                                        <span class="text-gray-500 dark:text-gray-400">التاريخ</span>
-                                        <p class="font-bold text-gray-700 dark:text-gray-300 mt-0.5">{{ $item->created_at->format('Y-m-d') }}</p>
+                                @endif
+                                {{-- Body --}}
+                                <div class="px-4 py-3 space-y-2.5">
+                                    {{-- Invoice number + status --}}
+                                    <div class="flex items-center justify-between">
+                                        <a href="
+                                            @if($results['operation'] == 'sales')             {{ route('marketer.sales.show', $item->id) }}
+                                            @elseif($results['operation'] == 'payments')      {{ route('marketer.payments.show', $item->id) }}
+                                            @elseif($results['operation'] == 'sales_returns') {{ route('marketer.sales-returns.show', $item->id) }}
+                                            @elseif($results['operation'] == 'returns')       {{ route('marketer.returns.show', $item->id) }}
+                                            @elseif($results['operation'] == 'requests')      {{ route('marketer.requests.show', $item->id) }}
+                                            @elseif($results['operation'] == 'withdrawals')   {{ route('marketer.withdrawals.show', $item->id) }}
+                                            @endif
+                                        " class="text-sm font-black text-primary-600 dark:text-primary-400 underline underline-offset-2">
+                                            @if($results['operation'] == 'sales')             {{ $item->invoice_number }}
+                                            @elseif($results['operation'] == 'payments')      {{ $item->payment_number }}
+                                            @elseif($results['operation'] == 'sales_returns') {{ $item->return_number }}
+                                            @elseif($results['operation'] == 'returns')       {{ $item->return_number }}
+                                            @elseif($results['operation'] == 'requests')      {{ $item->invoice_number }}
+                                            @elseif($results['operation'] == 'withdrawals')   WD-{{ $item->id }}
+                                            @endif
+                                        </a>
+                                        <span class="{{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} px-2 py-0.5 rounded-lg text-xs font-bold">
+                                            {{ $statusConfig['label'] }}
+                                        </span>
                                     </div>
-                                    @if(in_array($results['operation'], ['sales', 'payments', 'sales_returns']))
-                                    <div>
-                                        <span class="text-gray-500 dark:text-gray-400">المتجر</span>
-                                        <p class="font-bold text-gray-700 dark:text-gray-300 mt-0.5">{{ $item->store->name ?? '-' }}</p>
+                                    {{-- Date with icon --}}
+                                    <div class="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
+                                        <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                        <span class="text-xs font-bold">{{ $item->created_at->format('Y-m-d') }}</span>
                                     </div>
-                                    @endif
-                                    @if($results['operation'] == 'payments')
-                                    <div>
-                                        <span class="text-gray-500 dark:text-gray-400">طريقة الدفع</span>
-                                        <p class="font-bold text-gray-700 dark:text-gray-300 mt-0.5">
+                                </div>
+                                {{-- Footer: amount --}}
+                                @if(!in_array($results['operation'], ['requests', 'returns']))
+                                <div class="px-4 py-2.5 bg-gray-50 dark:bg-dark-bg border-t border-gray-100 dark:border-dark-border flex items-center justify-between">
+                                    <div class="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
+                                        @if($results['operation'] == 'payments')
+                                        <span>
                                             @if($item->payment_method == 'cash') كاش
                                             @elseif($item->payment_method == 'transfer') حوالة
                                             @elseif($item->payment_method == 'certified_check') شيك مصدق
                                             @else - @endif
-                                        </p>
+                                        </span>
+                                        @if(($item->commission->commission_rate ?? 0) > 0)
+                                        <span class="text-gray-200 dark:text-gray-700">|</span>
+                                        <span>عمولة {{ $item->commission->commission_rate }}%</span>
+                                        @endif
+                                        @endif
                                     </div>
-                                    <div>
-                                        <span class="text-gray-500 dark:text-gray-400">نسبة العمولة</span>
-                                        <p class="font-bold text-gray-700 dark:text-gray-300 mt-0.5">{{ $item->commission->commission_rate ?? '-' }}%</p>
-                                    </div>
-                                    @endif
-                                </div>
-                                {{-- Amount / commission footer --}}
-                                @if(!in_array($results['operation'], ['requests', 'returns']))
-                                <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-dark-border">
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">المبلغ</span>
                                     <span class="text-sm font-black text-gray-900 dark:text-white">
                                         @if($results['operation'] == 'sales')             {{ number_format($item->total_amount, 2) }}
                                         @elseif($results['operation'] == 'payments')      {{ number_format($item->amount, 2) }}
                                         @elseif($results['operation'] == 'sales_returns') {{ number_format($item->total_amount, 2) }}
                                         @elseif($results['operation'] == 'withdrawals')   {{ number_format($item->requested_amount, 2) }}
                                         @endif
-                                        دينار
+                                        <span class="text-xs font-bold text-gray-400">دينار</span>
                                     </span>
                                 </div>
-                                @if($results['operation'] == 'payments' && ($item->commission->commission_amount ?? 0) > 0)
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">المستحق</span>
-                                    <span class="text-sm font-black text-emerald-600 dark:text-emerald-400">{{ number_format($item->commission->commission_amount, 2) }} دينار</span>
-                                </div>
-                                @endif
                                 @endif
                             </div>
                         @empty
-                            <div class="px-6 py-12 text-center">
+                            <div class="py-12 text-center">
                                 <i data-lucide="inbox" class="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-3"></i>
                                 <p class="text-gray-500 dark:text-gray-400">لا توجد نتائج</p>
                             </div>
@@ -483,12 +484,18 @@
                                     @endphp
                                     <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
                                         <td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">
-                                            @if($results['operation'] == 'sales')           {{ $item->invoice_number }}
-                                            @elseif($results['operation'] == 'payments')    {{ $item->payment_number }}
-                                            @elseif($results['operation'] == 'sales_returns') {{ $item->return_number }}
-                                            @elseif($results['operation'] == 'returns')     {{ $item->return_number }}
-                                            @elseif($results['operation'] == 'requests')    {{ $item->invoice_number }}
-                                            @elseif($results['operation'] == 'withdrawals') WD-{{ $item->id }}
+                                            @if($results['operation'] == 'sales')
+                                                <a href="{{ route('marketer.sales.show', $item->id) }}" class="text-primary-600 dark:text-primary-400 hover:underline">{{ $item->invoice_number }}</a>
+                                            @elseif($results['operation'] == 'payments')
+                                                <a href="{{ route('marketer.payments.show', $item->id) }}" class="text-primary-600 dark:text-primary-400 hover:underline">{{ $item->payment_number }}</a>
+                                            @elseif($results['operation'] == 'sales_returns')
+                                                <a href="{{ route('marketer.sales-returns.show', $item->id) }}" class="text-primary-600 dark:text-primary-400 hover:underline">{{ $item->return_number }}</a>
+                                            @elseif($results['operation'] == 'returns')
+                                                <a href="{{ route('marketer.returns.show', $item->id) }}" class="text-primary-600 dark:text-primary-400 hover:underline">{{ $item->return_number }}</a>
+                                            @elseif($results['operation'] == 'requests')
+                                                <a href="{{ route('marketer.requests.show', $item->id) }}" class="text-primary-600 dark:text-primary-400 hover:underline">{{ $item->invoice_number }}</a>
+                                            @elseif($results['operation'] == 'withdrawals')
+                                                <a href="{{ route('marketer.withdrawals.show', $item->id) }}" class="text-primary-600 dark:text-primary-400 hover:underline">WD-{{ $item->id }}</a>
                                             @endif
                                         </td>
                                         @if(in_array($results['operation'], ['sales', 'payments', 'sales_returns']))
