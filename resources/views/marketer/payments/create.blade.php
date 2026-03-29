@@ -184,10 +184,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (debt > 0) {
                     debtDisplay.classList.remove('hidden');
                     debtAmount.textContent = debt.toFixed(2) + ' د.ل';
-                    amountInput.max = debt;
+
                 } else {
                     debtDisplay.classList.add('hidden');
-                    amountInput.max = '';
+
                 }
             });
         });
@@ -200,11 +200,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     amountInput.addEventListener('input', function() {
-        const max = parseFloat(this.max);
-        const value = parseFloat(this.value);
-        if (max && value > max) {
-            this.value = max;
-        }
     });
 });
 </script>
