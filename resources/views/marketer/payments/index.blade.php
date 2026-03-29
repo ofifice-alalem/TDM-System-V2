@@ -30,7 +30,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
             <div class="lg:col-span-8">
                 {{-- Filters --}}
-                <details class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6">
+                <details class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6" style="z-index: 1000; position: relative;">
                     <summary class="px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-bg/50 transition-colors rounded-2xl flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <i data-lucide="filter" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i>
@@ -58,9 +58,12 @@
                                 <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">إلى تاريخ</label>
                                 <input type="date" name="to_date" value="{{ request('to_date') }}" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:[color-scheme:dark]">
                             </div>
-                            <div>
+                            <div style="z-index: 1000; position: relative;" id="payment-store-wrapper">
                                 <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">المتجر</label>
-                                <input type="text" name="store" value="{{ request('store') }}" placeholder="ابحث عن متجر..." class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                <input type="text" id="payment-store-search" autocomplete="off" placeholder="ابحث عن متجر..." value="{{ request('store') }}"
+                                    class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                <input type="hidden" name="store" id="payment-store-value" value="{{ request('store') }}">
+                                <div id="payment-store-dropdown" class="hidden absolute z-[9999] w-full mt-1 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-52 overflow-y-auto"></div>
                             </div>
                         </div>
                         <div class="flex gap-2">
@@ -133,9 +136,56 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        lucide.createIcons();
+const paymentStoresData = [
+    @foreach($stores as $store)
+    { name: @json($store->name), owner: @json($store->owner_name) },
+    @endforeach
+];
+
+document.addEventListener('DOMContentLoaded', function () {
+    lucide.createIcons();
+
+    const storeSearch   = document.getElementById('payment-store-search');
+    const storeValue    = document.getElementById('payment-store-value');
+    const storeDropdown = document.getElementById('payment-store-dropdown');
+    const storeWrapper  = document.getElementById('payment-store-wrapper');
+
+    storeSearch.addEventListener('input', function () {
+        const q = this.value.trim().toLowerCase();
+        storeValue.value = this.value;
+        if (!q) { storeDropdown.classList.add('hidden'); return; }
+
+        const results = paymentStoresData.filter(s =>
+            s.name.toLowerCase().includes(q) || s.owner.toLowerCase().includes(q)
+        ).slice(0, 8);
+
+        if (!results.length) {
+            storeDropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">لا توجد نتائج</div>';
+            storeDropdown.classList.remove('hidden');
+            return;
+        }
+
+        storeDropdown.innerHTML = results.map(s => `
+            <div class="payment-store-option px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-dark-bg cursor-pointer border-b border-gray-100 dark:border-dark-border last:border-0" data-name="${s.name}">
+                <div class="font-bold text-sm text-gray-900 dark:text-white">${s.name}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">${s.owner}</div>
+            </div>
+        `).join('');
+        storeDropdown.classList.remove('hidden');
+
+        storeDropdown.querySelectorAll('.payment-store-option').forEach(opt => {
+            opt.addEventListener('click', function () {
+                storeSearch.value = this.dataset.name;
+                storeValue.value  = this.dataset.name;
+                storeDropdown.classList.add('hidden');
+            });
+        });
     });
+
+    document.addEventListener('click', function (e) {
+        if (!storeWrapper.contains(e.target)) storeDropdown.classList.add('hidden');
+    });
+});
 </script>
 @endpush
 @endsection

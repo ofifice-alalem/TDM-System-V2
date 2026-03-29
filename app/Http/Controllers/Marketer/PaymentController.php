@@ -55,7 +55,9 @@ class PaymentController extends Controller
 
         $payments = $query->latest('id')->paginate(20)->withQueryString();
 
-        return view('marketer.payments.index', compact('payments'));
+        $stores = Store::where('marketer_id', auth()->id())->where('is_active', true)->get(['id', 'name', 'owner_name']);
+
+        return view('marketer.payments.index', compact('payments', 'stores'));
     }
 
     public function create()

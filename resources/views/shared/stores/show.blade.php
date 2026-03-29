@@ -290,21 +290,30 @@
                     {{-- Total Debt --}}
                     <div class="p-4">
                         <div class="relative rounded-2xl overflow-hidden">
-                            <div class="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600"></div>
+                            <div class="absolute inset-0 bg-gradient-to-br from-orange-700 to-orange-900"></div>
                             <div class="absolute inset-0 opacity-10">
                                 <div class="absolute -top-4 -left-4 w-24 h-24 bg-white rounded-full"></div>
                                 <div class="absolute -bottom-6 -right-6 w-32 h-32 bg-white rounded-full"></div>
                             </div>
                             <div class="relative p-5">
                                 <div class="flex items-center justify-between mb-3">
-                                    <span class="text-white/80 text-xs font-bold tracking-wide uppercase">إجمالي الدين</span>
+                                    <span class="text-white/90 text-xs font-bold tracking-wide uppercase">إجمالي الدين</span>
                                     <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
                                         <i data-lucide="trending-up" class="w-4 h-4 text-white"></i>
                                     </div>
                                 </div>
                                 <div class="text-3xl font-black text-white tracking-tight">
                                     {{ number_format(abs($totalDebt), 2) }}
-                                    <span class="text-base font-bold text-white/70">دينار</span>
+                                    <span class="text-base font-bold text-white/80">دينار</span>
+                                </div>
+                                <div class="mt-3">
+                                    @if($totalDebt > 0)
+                                        <span class="bg-red-500 text-white px-4 py-1.5 rounded-xl text-sm font-black">مدين</span>
+                                    @elseif($totalDebt < 0)
+                                        <span class="bg-emerald-500 text-white px-4 py-1.5 rounded-xl text-sm font-black">دائن</span>
+                                    @else
+                                        <span class="bg-white/20 text-white px-4 py-1.5 rounded-xl text-sm font-black">--</span>
+                                    @endif
                                 </div>
                                 @if($hasPending)
                                 <div class="mt-3 pt-3 border-t border-white/20 grid grid-cols-2 gap-2 text-xs">

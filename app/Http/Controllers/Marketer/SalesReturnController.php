@@ -60,7 +60,9 @@ class SalesReturnController extends Controller
 
         $returns = $query->paginate(10);
 
-        return view('marketer.sales-returns.index', compact('returns'));
+        $stores = \App\Models\Store::where('marketer_id', auth()->id())->where('is_active', true)->get(['id', 'name', 'owner_name']);
+
+        return view('marketer.sales-returns.index', compact('returns', 'stores'));
     }
 
     public function create()

@@ -31,14 +31,13 @@
                         </select>
                     </div>
 
-                    <div id="store_field" style="display: {{ in_array(request('operation'), ['sales', 'payments', 'sales_returns']) ? 'block' : 'none' }}">
+                    <div id="stat-store-wrapper" style="z-index: 1000; position: relative;" id="store_field" style="display: {{ in_array(request('operation'), ['sales', 'payments', 'sales_returns']) ? 'block' : 'none' }}">
                         <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">المتجر (اختياري)</label>
-                        <select name="marketer_store_id" id="marketer_store_id" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">الكل</option>
-                            @foreach($stores as $store)
-                                <option value="{{ $store->id }}" {{ request('marketer_store_id') == $store->id ? 'selected' : '' }}>{{ $store->name }}</option>
-                            @endforeach
-                        </select>
+                        <input type="text" id="stat-store-search" autocomplete="off" placeholder="ابحث عن متجر..."
+                            value="{{ $stores->firstWhere('id', request('marketer_store_id'))->name ?? '' }}"
+                            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <input type="hidden" name="marketer_store_id" id="stat-store-value" value="{{ request('marketer_store_id') }}">
+                        <div id="stat-store-dropdown" class="hidden absolute z-[9999] w-full mt-1 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-52 overflow-y-auto"></div>
                     </div>
 
                     <div>
@@ -601,7 +600,7 @@
         lucide.createIcons();
 
         const operation  = document.getElementById('operation');
-        const storeField = document.getElementById('store_field');
+        const storeField  = document.getElementById('stat-store-wrapper');
         const statusField = document.getElementById('status_field');
         const statusSelect = document.getElementById('status');
 
@@ -633,6 +632,63 @@
 
         // init on load
         if (operation.value) updateStatus(operation.value);
+
+        // Store dropdown
+        const statStoresData = [
+            @foreach($stores as $store)
+            { id: {{ $store->id }}, name: @json($store->name), owner: @json($store->owner_name ?? '') },
+            @endforeach
+        ];
+
+        const storeSearch   = document.getElementById('stat-store-search');
+        const storeValue    = document.getElementById('stat-store-value');
+        const storeDropdown = document.getElementById('stat-store-dropdown');
+        const storeWrapper  = document.getElementById('stat-store-wrapper');
+
+        storeSearch.addEventListener('input', function () {
+            const q = this.value.trim().toLowerCase();
+            storeValue.value = '';
+            if (!q) {
+                storeDropdown.classList.add('hidden');
+                // إضافة خيار "الكل" عند المسح
+                return;
+            }
+
+            const results = statStoresData.filter(s =>
+                s.name.toLowerCase().includes(q) || s.owner.toLowerCase().includes(q)
+            ).slice(0, 8);
+
+            if (!results.length) {
+                storeDropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">لا توجد نتائج</div>';
+                storeDropdown.classList.remove('hidden');
+                return;
+            }
+
+            storeDropdown.innerHTML = results.map(s => `
+                <div class="stat-store-option px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-dark-bg cursor-pointer border-b border-gray-100 dark:border-dark-border last:border-0" data-id="${s.id}" data-name="${s.name}">
+                    <div class="font-bold text-sm text-gray-900 dark:text-white">${s.name}</div>
+                    ${s.owner ? `<div class="text-xs text-gray-500 dark:text-gray-400">${s.owner}</div>` : ''}
+                </div>
+            `).join('');
+            storeDropdown.classList.remove('hidden');
+
+            storeDropdown.querySelectorAll('.stat-store-option').forEach(opt => {
+                opt.addEventListener('click', function () {
+                    storeSearch.value = this.dataset.name;
+                    storeValue.value  = this.dataset.id;
+                    storeDropdown.classList.add('hidden');
+                });
+            });
+        });
+
+        // خيار "الكل" عند مسح الحقل
+        storeSearch.addEventListener('keydown', function (e) {
+            if (e.key === 'Backspace' && this.value === '') storeValue.value = '';
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!storeWrapper.contains(e.target)) storeDropdown.classList.add('hidden');
+        });
     });
 </script>
 @endpush

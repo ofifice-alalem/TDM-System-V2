@@ -63,7 +63,9 @@ class SalesController extends Controller
 
         $invoices = $query->paginate(20)->withQueryString();
 
-        return view('marketer.sales.index', compact('invoices'));
+        $stores = Store::where('marketer_id', auth()->id())->where('is_active', true)->get(['id', 'name', 'owner_name']);
+
+        return view('marketer.sales.index', compact('invoices', 'stores'));
     }
 
     public function create()
