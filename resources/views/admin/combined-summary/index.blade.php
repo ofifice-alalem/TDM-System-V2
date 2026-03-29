@@ -34,6 +34,11 @@
                     class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all flex items-center gap-2">
                     <i data-lucide="download" class="w-4 h-4"></i> تصدير Excel
                 </a>
+                <a href="{{ route('admin.combined-summary.index', array_merge(request()->query(), ['pdf' => 1])) }}"
+                    target="_blank"
+                    class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all flex items-center gap-2">
+                    <i data-lucide="file-text" class="w-4 h-4"></i> تصدير PDF
+                </a>
             </div>
         </form>
 

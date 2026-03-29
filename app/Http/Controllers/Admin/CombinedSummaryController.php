@@ -31,6 +31,10 @@ class CombinedSummaryController extends Controller
             return $this->export($rows, $fromDate, $toDate);
         }
 
+        if ($request->has('pdf')) {
+            return $this->exportPdf($rows, $fromDate, $toDate);
+        }
+
         $grandInvoices = $rows->sum('total_invoices');
         $grandPayments = $rows->sum('total_payments');
         $grandReturns  = $rows->sum('total_returns');
@@ -118,6 +122,63 @@ class CombinedSummaryController extends Controller
         }
 
         return $rows->sortByDesc('total_debt')->values();
+    }
+
+    private function exportPdf($rows, $fromDate, $toDate)
+    {
+        $arabic = new \ArPHP\I18N\Arabic();
+        $g = fn($text) => $arabic->utf8Glyphs($text);
+
+        $grandInvoices = $rows->sum('total_invoices');
+        $grandPayments = $rows->sum('total_payments');
+        $grandReturns  = $rows->sum('total_returns');
+        $grandDebt     = $rows->sum('total_debt');
+
+        $processedRows = $rows->map(function($row) use ($g) {
+            return (object)[
+                'name'           => $g($row->name),
+                'type'           => $g($row->type),
+                'is_store'       => $row->type === 'متجر',
+                'total_invoices' => $row->total_invoices,
+                'total_payments' => $row->total_payments,
+                'total_returns'  => $row->total_returns,
+                'total_debt'     => $row->total_debt,
+            ];
+        });
+
+        $labels = [
+            'title'          => $g('الملخص المالي الشامل'),
+            'from'           => $g('من'),
+            'to'             => $g('إلى'),
+            'grandTotal'     => $g('الإجماليات الكلية'),
+            'stores'         => $g('المتاجر'),
+            'customers'      => $g('العملاء'),
+            'invoices'       => $g('إجمالي الفواتير'),
+            'payments'       => $g('إجمالي المدفوعات'),
+            'returns'        => $g('إجمالي المرتجعات'),
+            'debt'           => $g('الدين الحالي'),
+            'debtStatus'     => $g('دائن / مدين'),
+            'name'           => $g('الاسم'),
+            'type'           => $g('النوع'),
+            'total'          => $g('الإجمالي'),
+            'debtor'         => $g('مدين'),
+            'creditor'       => $g('دائن'),
+            'currency'       => $g('د.ل'),
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.combined-summary.pdf', compact(
+            'processedRows', 'fromDate', 'toDate',
+            'grandInvoices', 'grandPayments', 'grandReturns', 'grandDebt',
+            'labels', 'rows'
+        ))
+            ->setPaper('a4')
+            ->setOption('isRemoteEnabled', false)
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isFontSubsettingEnabled', true)
+            ->setOption('compress', 1)
+            ->setOption('dpi', 96);
+
+        return $pdf->stream('combined-summary-' . $fromDate . '-' . $toDate . '.pdf');
     }
 
     private function export($rows, $fromDate, $toDate)
