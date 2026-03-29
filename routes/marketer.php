@@ -95,5 +95,10 @@ Route::middleware(['web', 'auth', 'role:marketer'])->group(function () {
         Route::prefix('main-stock')->name('main-stock.')->group(function () {
             Route::get('/', [MainStockController::class, 'index'])->name('index');
         });
+
+        Route::prefix('statistics')->name('statistics.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Marketer\StatisticsController::class, 'index'])->name('index');
+            Route::get('/my-stores', [\App\Http\Controllers\Marketer\StatisticsController::class, 'marketerStores'])->name('stores');
+        });
     });
 });
