@@ -192,9 +192,9 @@ class StatisticsController extends Controller
         // تفاصيل المتاجر
         if (count($results['stores_data']) > 0) {
             $row++;
-            $headers = ['المتجر', 'المبيعات', 'المدفوعات', 'المرتجعات', 'الدين'];
+            $headers = ['المتجر', 'المبيعات', 'المدفوعات', 'المرتجعات', 'الدين', 'دائن / مدين'];
             $sheet->fromArray($headers, null, 'A'.$row);
-            $sheet->getStyle('A'.$row.':E'.$row)->applyFromArray([
+            $sheet->getStyle('A'.$row.':F'.$row)->applyFromArray([
                 'fill'      => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F57C00']],
                 'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                 'borders'   => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
@@ -209,15 +209,22 @@ class StatisticsController extends Controller
                     number_format($r['payments'], 2),
                     number_format($r['returns'],  2),
                     number_format($r['balance'],  2),
+                    $r['balance'] > 0 ? 'مدين' : ($r['balance'] < 0 ? 'دائن' : '--'),
                 ], null, 'A'.$row);
-                $sheet->getStyle('A'.$row.':E'.$row)->applyFromArray([
+                $sheet->getStyle('A'.$row.':F'.$row)->applyFromArray([
                     'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
                 ]);
+                if ($r['balance'] < 0) {
+                    $sheet->getStyle('F'.$row)->applyFromArray([
+                        'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
+                        'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                    ]);
+                }
                 $row++;
             }
         }
 
-        foreach (range('A','E') as $col) {
+        foreach (range('A','F') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 

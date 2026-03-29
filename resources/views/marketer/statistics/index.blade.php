@@ -218,12 +218,21 @@
                                     </div>
                                 </div>
                                 {{-- Debt footer --}}
-                                <div class="flex items-center justify-between {{ $row['balance'] > 0 ? 'bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30' : 'bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30' }} rounded-xl px-3 py-2">
-                                    <div class="flex items-center gap-1.5 {{ $row['balance'] > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}">
+                                <div class="flex items-center justify-between {{ $row['balance'] > 0 ? 'bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30' : ($row['balance'] < 0 ? 'bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30' : 'bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border') }} rounded-xl px-3 py-2">
+                                    <div class="flex items-center gap-1.5 {{ $row['balance'] > 0 ? 'text-red-600 dark:text-red-400' : ($row['balance'] < 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400') }}">
                                         <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
                                         <span class="text-xs font-bold">الدين</span>
                                     </div>
-                                    <span class="text-sm font-black {{ $row['balance'] > 0 ? 'text-red-700 dark:text-red-300' : 'text-emerald-700 dark:text-emerald-300' }}">{{ number_format($row['balance'], 2) }} دينار</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-black {{ $row['balance'] > 0 ? 'text-red-700 dark:text-red-300' : ($row['balance'] < 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-400') }}">{{ number_format($row['balance'], 2) }} دينار</span>
+                                        @if($row['balance'] > 0)
+                                            <span class="text-xs font-black text-red-600 dark:text-red-400">مدين</span>
+                                        @elseif($row['balance'] < 0)
+                                            <span class="text-xs font-black text-emerald-600 dark:text-emerald-400">دائن</span>
+                                        @else
+                                            <span class="text-xs font-black text-gray-400">--</span>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -255,6 +264,7 @@
                                             <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>الدين
                                         </span>
                                     </th>
+                                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">دائن / مدين</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
@@ -264,7 +274,16 @@
                                     <td class="px-6 py-4 text-sm font-bold text-blue-600 dark:text-blue-400">{{ number_format($row['sales'], 2) }}</td>
                                     <td class="px-6 py-4 text-sm font-bold text-emerald-600 dark:text-emerald-400">{{ number_format($row['payments'], 2) }}</td>
                                     <td class="px-6 py-4 text-sm font-bold text-orange-600 dark:text-orange-400">{{ number_format($row['returns'], 2) }}</td>
-                                    <td class="px-6 py-4 text-sm font-black {{ $row['balance'] > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}">{{ number_format($row['balance'], 2) }}</td>
+                                    <td class="px-6 py-4 text-sm font-black {{ $row['balance'] > 0 ? 'text-red-600 dark:text-red-400' : ($row['balance'] < 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400') }}">{{ number_format($row['balance'], 2) }}</td>
+                                    <td class="px-6 py-4">
+                                        @if($row['balance'] > 0)
+                                            <span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-1 rounded-lg text-xs font-black">مدين</span>
+                                        @elseif($row['balance'] < 0)
+                                            <span class="bg-emerald-500 text-white px-2 py-1 rounded-lg text-xs font-black">دائن</span>
+                                        @else
+                                            <span class="text-gray-400 text-xs font-bold">--</span>
+                                        @endif
+                                    </td>
                                 </tr>
                                 @endforeach
                             </tbody>
