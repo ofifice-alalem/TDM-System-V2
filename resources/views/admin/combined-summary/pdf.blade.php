@@ -15,74 +15,50 @@
             src: url('{{ public_path("fonts/Cairo-Bold.ttf") }}') format('truetype');
             font-weight: bold;
         }
-        @page { size: A4; margin: 15px; }
+        @page { size: A4; margin: 20px 24px; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', 'DejaVu Sans', sans-serif; }
-        body { font-size: 10px; color: #1f2937; direction: rtl; background: white; }
-        .container { padding: 0 5px; }
+        body { font-size: 10px; color: #1e293b; direction: rtl; background: #fff; }
 
-        /* ===== HEADER ===== */
-        .header { display: table; width: 100%; padding-bottom: 10px; margin-bottom: 14px; border-bottom: 3px solid #1d4ed8; }
-        .header-right { display: table-cell; text-align: right; vertical-align: middle; }
-        .header-left  { display: table-cell; text-align: left;  vertical-align: middle; width: 90px; padding-left: 4px; }
-        .title    { font-size: 18px; font-weight: bold; color: #1d4ed8; letter-spacing: 0.3px; }
-        .subtitle { font-size: 10px; color: #6b7280; margin-top: 5px; }
-        .date-range { display: inline-block; direction: rtl; }
-        .date-label { color: #9ca3af; font-size: 9px; }
-        .date-val   { color: #1d4ed8; font-weight: bold; font-size: 10px; }
-        .date-arrow { color: #9ca3af; margin: 0 4px; font-size: 10px; }
+        /* HEADER */
+        .header     { display: table; width: 100%; padding-bottom: 12px; margin-bottom: 16px; border-bottom: 2px solid #0f172a; }
+        .h-right    { display: table-cell; vertical-align: middle; text-align: right; }
+        .h-left     { display: table-cell; vertical-align: middle; text-align: left; width: 130px; }
+        .h-title    { font-size: 17px; font-weight: bold; color: #0f172a; }
+        .h-date     { margin-top: 3px; font-size: 9px; color: #64748b; }
+        .h-date span { color: #0f172a; font-weight: bold; }
 
-        /* ===== SUMMARY CARDS ===== */
-        .summary-wrap { display: table; width: 100%; margin-bottom: 12px; }
-        .summary-card { display: table-cell; width: 32%; vertical-align: top; border-radius: 6px; overflow: hidden; }
-        .summary-gap  { display: table-cell; width: 2%; }
+        /* CARDS */
+        .card-bg  { background: #f8fafc; border-top: 2px solid #0f172a; padding: 10px 12px; }
+        .card-title { font-size: 8px; font-weight: bold; color: #64748b; }
+        .cl { text-align: right; color: #475569; font-size: 8.5px; font-weight: bold; padding: 2px 4px 2px 0; }
+        .cv { text-align: left;  color: #0f172a; font-weight: bold; font-size: 9px; padding: 2px 0 2px 4px; }
 
-        .card-header { padding: 5px 8px; font-size: 10px; font-weight: bold; color: #fff; }
-        .card-header-blue   { background: #1d4ed8; }
-        .card-header-green  { background: #059669; }
-        .card-header-purple { background: #7c3aed; }
+        /* TABLE */
+        table  { width: 100%; border-collapse: collapse; direction: rtl; table-layout: fixed; }
+        thead tr { background: #0f172a; }
+        th     { color: #e2e8f0; text-align: right; padding: 7px 8px; font-size: 8.5px; font-weight: bold; }
+        td     { padding: 6px 8px; font-size: 9px; color: #334155; text-align: right; border-bottom: 1px solid #f1f5f9; background: #fff; }
+        tr.row-even td { background: #f8fafc; }
+        td.num      { font-weight: bold; color: #0f172a; }
+        td.name-td  { font-weight: bold; color: #0f172a; }
+        td.idx-td   { color: #64748b; font-size: 8px; text-align: center; }
+        tfoot tr td { background: #f1f5f9; font-weight: bold; font-size: 9px; padding: 7px 8px; border-top: 2px solid #0f172a; border-bottom: none; }
 
-        .card-body { border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 6px 6px; padding: 6px 8px; }
-        .s-row { display: table; width: 100%; margin-bottom: 3px; border-bottom: 1px solid #f3f4f6; padding-bottom: 2px; }
-        .s-row:last-child { border-bottom: none; margin-bottom: 0; }
-        .s-label { display: table-cell; font-size: 9px; color: #6b7280; text-align: right; width: 55%; }
-        .s-val   { display: table-cell; font-size: 10px; font-weight: bold; text-align: left; width: 45%; letter-spacing: 0.3px; }
-
-        /* ===== TABLE ===== */
-        table { width: 100%; border-collapse: collapse; direction: rtl; table-layout: fixed; }
-        thead tr { background: #1d4ed8; }
-        th { color: #fff; text-align: right; padding: 6px 5px; font-size: 9px; font-weight: bold; border: 1px solid #1e40af; }
-        td { border: 1px solid #e5e7eb; padding: 5px 6px; font-size: 9px; color: #111; text-align: right; }
-        td.num { font-size: 9.5px; letter-spacing: 0.4px; font-weight: bold; color: #374151; }
-        tr:nth-child(even) td { background: #f8fafc; }
-        tfoot tr td { background: #eff6ff; font-weight: bold; border-top: 2px solid #1d4ed8; }
-
-        .check-store    { color: #1d4ed8; font-weight: bold; font-size: 11px; }
-        .check-customer { color: #7c3aed; font-weight: bold; font-size: 11px; }
+        /* MISC */
         .debt-pos { color: #dc2626; font-weight: bold; }
-        .debt-neg { color: #059669; font-weight: bold; }
-        .badge-debtor   { background: #fee2e2; color: #dc2626; padding: 1px 5px; border-radius: 3px; font-size: 8px; font-weight: bold; }
-        .badge-creditor { background: #d1fae5; color: #059669; padding: 1px 5px; border-radius: 3px; font-size: 8px; font-weight: bold; }
+        .debt-neg { color: #16a34a; font-weight: bold; }
+        .badge-debtor   { color: #dc2626; font-size: 8px; font-weight: bold; }
+        .badge-creditor { color: #16a34a; font-size: 8px; font-weight: bold; }
+        .check-store    { color: #0f172a; font-size: 11px; }
+        .check-customer { color: #64748b; font-size: 11px; }
+
+        /* FOOTER */
+        .footer   { display: table; width: 100%; margin-top: 14px; padding-top: 8px; border-top: 1px solid #e2e8f0; }
+        .footer-r { display: table-cell; text-align: right; font-size: 7.5px; color: #94a3b8; }
+        .footer-l { display: table-cell; text-align: left;  font-size: 7.5px; color: #94a3b8; }
     </style>
 </head>
 <body>
-<div class="container">
-
-    {{-- Header --}}
-    <div class="header">
-        <div class="header-left">
-            <img src="{{ public_path('logo.png') }}" style="max-height:75px; max-width:140px; display:block;">
-        </div>
-        <div class="header-right">
-            <div class="title">{{ $labels['title'] }}</div>
-            <div class="subtitle">
-                <span class="date-range">
-                    <span class="date-val">{{ $labels['dateTo'] }}</span>
-                    <span class="date-arrow">&#8592;</span>
-                    <span class="date-val">{{ $labels['dateFrom'] }}</span>
-                </span>
-            </div>
-        </div>
-    </div>
 
     @php
         $storeRows    = $rows->where('type', 'متجر');
@@ -90,38 +66,61 @@
         $n = fn($v) => str_replace(['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'], ['0','1','2','3','4','5','6','7','8','9'], number_format($v, 2));
     @endphp
 
-    {{-- Summary Cards --}}
-    <div class="summary-wrap">
-        <div class="summary-card">
-            <div class="card-header card-header-blue">{{ $labels['grandTotal'] }}</div>
-            <div class="card-body">
-                <div class="s-row"><span class="s-val">{{ $n($grandInvoices) }} {{ $labels['currency'] }}</span><span class="s-label">{{ $labels['invoices'] }}</span></div>
-                <div class="s-row"><span class="s-val">{{ $n($grandPayments) }} {{ $labels['currency'] }}</span><span class="s-label">{{ $labels['payments'] }}</span></div>
-                <div class="s-row"><span class="s-val">{{ $n($grandReturns) }} {{ $labels['currency'] }}</span><span class="s-label">{{ $labels['returns'] }}</span></div>
-                <div class="s-row"><span class="s-val {{ $grandDebt > 0 ? 'debt-pos' : 'debt-neg' }}">{{ $n($grandDebt) }} {{ $labels['currency'] }}</span><span class="s-label">{{ $labels['debt'] }}</span></div>
-            </div>
+    {{-- Header --}}
+    <div class="header">
+        <div class="h-left">
+            <img src="{{ public_path('logo.png') }}" style="max-height:105px; max-width:140px; display:block;">
         </div>
-        <div class="summary-gap"></div>
-        <div class="summary-card">
-            <div class="card-header card-header-green">{{ $labels['stores'] }}</div>
-            <div class="card-body">
-                <div class="s-row"><span class="s-val">{{ $n($storeRows->sum('total_invoices')) }} {{ $labels['currency'] }}</span><span class="s-label">{{ $labels['invoices'] }}</span></div>
-                <div class="s-row"><span class="s-val">{{ $n($storeRows->sum('total_payments')) }} {{ $labels['currency'] }}</span><span class="s-label">{{ $labels['payments'] }}</span></div>
-                <div class="s-row"><span class="s-val">{{ $n($storeRows->sum('total_returns')) }} {{ $labels['currency'] }}</span><span class="s-label">{{ $labels['returns'] }}</span></div>
-                <div class="s-row"><span class="s-val {{ $storeRows->sum('total_debt') > 0 ? 'debt-pos' : 'debt-neg' }}">{{ $n($storeRows->sum('total_debt')) }} {{ $labels['currency'] }}</span><span class="s-label">{{ $labels['debt'] }}</span></div>
-            </div>
-        </div>
-        <div class="summary-gap"></div>
-        <div class="summary-card">
-            <div class="card-header card-header-purple">{{ $labels['customers'] }}</div>
-            <div class="card-body">
-                <div class="s-row"><span class="s-val">{{ $n($customerRows->sum('total_invoices')) }} {{ $labels['currency'] }}</span><span class="s-label">{{ $labels['invoices'] }}</span></div>
-                <div class="s-row"><span class="s-val">{{ $n($customerRows->sum('total_payments')) }} {{ $labels['currency'] }}</span><span class="s-label">{{ $labels['payments'] }}</span></div>
-                <div class="s-row"><span class="s-val">{{ $n($customerRows->sum('total_returns')) }} {{ $labels['currency'] }}</span><span class="s-label">{{ $labels['returns'] }}</span></div>
-                <div class="s-row"><span class="s-val {{ $customerRows->sum('total_debt') > 0 ? 'debt-pos' : 'debt-neg' }}">{{ $n($customerRows->sum('total_debt')) }} {{ $labels['currency'] }}</span><span class="s-label">{{ $labels['debt'] }}</span></div>
+        <div class="h-right">
+            <div class="h-title">{{ $labels['title'] }}</div>
+            <div class="h-date">
+                <span>{{ $labels['dateFrom'] }}</span>
+                &nbsp;&#8592;&nbsp;
+                <span>{{ $labels['dateTo'] }}</span>
             </div>
         </div>
     </div>
+
+    {{-- Cards --}}
+    <table style="width:100%; border-collapse:collapse; table-layout:fixed; margin-bottom:18px;">
+        <tr>
+            <td style="width:32%; vertical-align:top; padding:0;">
+                <div class="card-bg">
+                    <div class="card-title">{{ $labels['grandTotal'] }}</div>
+                    <table style="width:100%; border-collapse:collapse; table-layout:fixed; margin-top:6px; direction:ltr;">
+                        <tr><td class="cv" style="width:40%">{{ $n($grandInvoices) }}</td><td class="cl" style="width:60%">{{ $labels['invoices'] }}</td></tr>
+                        <tr><td class="cv">{{ $n($grandPayments) }}</td><td class="cl">{{ $labels['payments'] }}</td></tr>
+                        <tr><td class="cv">{{ $n($grandReturns) }}</td><td class="cl">{{ $labels['returns'] }}</td></tr>
+                        <tr><td class="cv {{ $grandDebt > 0 ? 'debt-pos' : 'debt-neg' }}">{{ $n($grandDebt) }}</td><td class="cl">{{ $labels['debt'] }}</td></tr>
+                    </table>
+                </div>
+            </td>
+            <td style="width:2%"></td>
+            <td style="width:32%; vertical-align:top; padding:0;">
+                <div class="card-bg">
+                    <div class="card-title">{{ $labels['stores'] }}</div>
+                    <table style="width:100%; border-collapse:collapse; table-layout:fixed; margin-top:6px; direction:ltr;">
+                        <tr><td class="cv" style="width:40%">{{ $n($storeRows->sum('total_invoices')) }}</td><td class="cl" style="width:60%">{{ $labels['invoices'] }}</td></tr>
+                        <tr><td class="cv">{{ $n($storeRows->sum('total_payments')) }}</td><td class="cl">{{ $labels['payments'] }}</td></tr>
+                        <tr><td class="cv">{{ $n($storeRows->sum('total_returns')) }}</td><td class="cl">{{ $labels['returns'] }}</td></tr>
+                        <tr><td class="cv {{ $storeRows->sum('total_debt') > 0 ? 'debt-pos' : 'debt-neg' }}">{{ $n($storeRows->sum('total_debt')) }}</td><td class="cl">{{ $labels['debt'] }}</td></tr>
+                    </table>
+                </div>
+            </td>
+            <td style="width:2%"></td>
+            <td style="width:32%; vertical-align:top; padding:0;">
+                <div class="card-bg">
+                    <div class="card-title">{{ $labels['customers'] }}</div>
+                    <table style="width:100%; border-collapse:collapse; table-layout:fixed; margin-top:6px; direction:ltr;">
+                        <tr><td class="cv" style="width:40%">{{ $n($customerRows->sum('total_invoices')) }}</td><td class="cl" style="width:60%">{{ $labels['invoices'] }}</td></tr>
+                        <tr><td class="cv">{{ $n($customerRows->sum('total_payments')) }}</td><td class="cl">{{ $labels['payments'] }}</td></tr>
+                        <tr><td class="cv">{{ $n($customerRows->sum('total_returns')) }}</td><td class="cl">{{ $labels['returns'] }}</td></tr>
+                        <tr><td class="cv {{ $customerRows->sum('total_debt') > 0 ? 'debt-pos' : 'debt-neg' }}">{{ $n($customerRows->sum('total_debt')) }}</td><td class="cl">{{ $labels['debt'] }}</td></tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
 
     {{-- Table --}}
     <table>
@@ -132,19 +131,19 @@
                 <th style="width:13%">{{ $labels['returns'] }}</th>
                 <th style="width:13%">{{ $labels['payments'] }}</th>
                 <th style="width:13%">{{ $labels['invoices'] }}</th>
-                <th style="width:7%">{{ $labels['store'] }}</th>
-                <th style="width:7%">{{ $labels['customer'] }}</th>
+                <th style="width:7%; text-align:center">{{ $labels['store'] }}</th>
+                <th style="width:7%; text-align:center">{{ $labels['customer'] }}</th>
                 <th style="width:21%">{{ $labels['name'] }}</th>
-                <th style="width:4%">#</th>
+                <th style="width:4%; text-align:center">#</th>
             </tr>
         </thead>
         <tbody>
             @foreach($processedRows as $i => $row)
-            <tr>
+            <tr class="{{ $i % 2 !== 0 ? 'row-even' : '' }}">
                 <td style="text-align:center">
                     @if($row->total_debt > 0) <span class="badge-debtor">{{ $labels['debtor'] }}</span>
                     @elseif($row->total_debt < 0) <span class="badge-creditor">{{ $labels['creditor'] }}</span>
-                    @else -- @endif
+                    @else <span style="color:#e2e8f0">--</span> @endif
                 </td>
                 <td class="num {{ $row->total_debt > 0 ? 'debt-pos' : ($row->total_debt < 0 ? 'debt-neg' : '') }}">{{ $row->total_debt != 0 ? $n($row->total_debt) : '--' }}</td>
                 <td class="num">{{ $row->total_returns != 0 ? $n($row->total_returns) : '--' }}</td>
@@ -152,8 +151,8 @@
                 <td class="num">{{ $row->total_invoices != 0 ? $n($row->total_invoices) : '--' }}</td>
                 <td style="text-align:center">@if($row->is_store)<span class="check-store">&#10003;</span>@endif</td>
                 <td style="text-align:center">@if(!$row->is_store)<span class="check-customer">&#10003;</span>@endif</td>
-                <td>{{ $row->name }}</td>
-                <td style="text-align:center">{{ $i + 1 }}</td>
+                <td class="name-td">{{ $row->name }}</td>
+                <td class="idx-td">{{ $i + 1 }}</td>
             </tr>
             @endforeach
         </tbody>
@@ -168,11 +167,16 @@
                 <td class="num">{{ $n($grandReturns) }}</td>
                 <td class="num">{{ $n($grandPayments) }}</td>
                 <td class="num">{{ $n($grandInvoices) }}</td>
-                <td colspan="4" style="text-align:right">{{ $labels['total'] }}</td>
+                <td colspan="4" style="text-align:right; color:#64748b;">{{ $labels['total'] }}</td>
             </tr>
         </tfoot>
     </table>
 
-</div>
+    {{-- Footer --}}
+    <div class="footer">
+        <div class="footer-r">{{ $labels['title'] }}</div>
+        <div class="footer-l">{{ now()->format('Y-m-d  H:i') }}</div>
+    </div>
+
 </body>
 </html>
