@@ -34,10 +34,11 @@ class OldDebtController extends Controller
             } catch (\Exception $e) {}
         }
 
+        $total  = (clone $query)->sum('total_amount');
         $debts  = $query->paginate(20)->withQueryString();
         $stores = Store::orderBy('name')->get();
 
-        return view('admin.old-debts.index', compact('debts', 'stores'));
+        return view('admin.old-debts.index', compact('debts', 'stores', 'total'));
     }
 
     public function create()

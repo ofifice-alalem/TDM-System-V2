@@ -32,6 +32,20 @@
             </div>
         </div>
 
+        {{-- Total Card --}}
+        <div class="bg-gradient-to-l from-orange-500 to-amber-600 rounded-2xl p-5 flex items-center justify-between shadow-lg shadow-orange-200/50 dark:shadow-none">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center">
+                    <i data-lucide="wallet" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <p class="text-white/80 text-xs font-bold">إجمالي الديون السابقة{{ request('store_id') || request('from_date') || request('to_date') ? ' (نتائج الفلترة)' : '' }}</p>
+                    <p class="text-white text-2xl font-black">{{ number_format($total, 2) }} <span class="text-base font-bold text-white/80">دينار</span></p>
+                </div>
+            </div>
+            <i data-lucide="trending-up" class="w-10 h-10 text-white/30"></i>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-8">
 

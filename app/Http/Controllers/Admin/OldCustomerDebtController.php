@@ -34,10 +34,11 @@ class OldCustomerDebtController extends Controller
             } catch (\Exception $e) {}
         }
 
+        $total     = (clone $query)->sum('total_amount');
         $debts     = $query->paginate(20)->withQueryString();
         $customers = Customer::orderBy('name')->get();
 
-        return view('admin.old-customer-debts.index', compact('debts', 'customers'));
+        return view('admin.old-customer-debts.index', compact('debts', 'customers', 'total'));
     }
 
     public function create()

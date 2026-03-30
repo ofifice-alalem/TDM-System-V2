@@ -32,7 +32,7 @@ class ProductsPricingController extends Controller
         $storeItems = DB::table('sales_invoice_items as i')
             ->join('sales_invoices as inv', 'inv.id', '=', 'i.invoice_id')
             ->join('products as p', 'p.id', '=', 'i.product_id')
-            ->where('inv.status', 'approved')
+            ->whereIn('inv.status', ['approved', 'pending'])
             ->whereDate('inv.created_at', '>=', $fromDate)
             ->whereDate('inv.created_at', '<=', $toDate)
             ->select('i.product_id', 'p.name as product_name', 'i.unit_price', 'i.quantity')
