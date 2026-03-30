@@ -118,6 +118,9 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
     // Products Pricing
     Route::get('products-pricing', [\App\Http\Controllers\Admin\ProductsPricingController::class, 'index'])->name('products-pricing.index')->middleware('feature:admin.products-pricing');
 
+    // Staff Pricing
+    Route::get('staff-pricing', [\App\Http\Controllers\Admin\StaffPricingController::class, 'index'])->name('staff-pricing.index');
+
     // Customer Merge
     Route::get('customer-merge', [\App\Http\Controllers\Admin\CustomerMergeController::class, 'index'])->name('customer-merge.index')->middleware('feature:admin.customer-merge');
     Route::post('customer-merge', [\App\Http\Controllers\Admin\CustomerMergeController::class, 'store'])->name('customer-merge.store')->middleware('feature:admin.customer-merge');

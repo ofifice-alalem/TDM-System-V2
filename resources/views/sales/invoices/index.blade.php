@@ -38,7 +38,7 @@
 
         {{-- Filters --}}
         <div class="animate-fade-in">
-            <details class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border overflow-hidden">
+            <details class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border" style="z-index: 1000; position: relative;">
                 <summary class="px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <i data-lucide="filter" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i>
@@ -57,7 +57,12 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">العميل</label>
-                            <input type="text" name="customer" value="{{ request('customer') }}" placeholder="ابحث..." class="w-full px-4 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all">
+                            <div style="z-index: 1000; position: relative;" id="customer-filter-wrapper">
+                                <input type="text" id="customer-filter-search" autocomplete="off" placeholder="ابحث..." value="{{ request('customer') }}"
+                                    class="w-full px-4 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all">
+                                <input type="hidden" name="customer" id="customer-filter-value" value="{{ request('customer') }}">
+                                <div id="customer-filter-dropdown" class="hidden absolute z-[9999] w-full mt-1 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-52 overflow-y-auto"></div>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">من تاريخ</label>
@@ -242,12 +247,59 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        lucide.createIcons();
-        
-        const view = localStorage.getItem('invoicesView') || 'card';
-        setInvoiceView(view);
+const customersData = [
+    @foreach($customers as $customer)
+    { name: @json($customer->name), phone: @json($customer->phone ?? '') },
+    @endforeach
+];
+
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+
+    const search   = document.getElementById('customer-filter-search');
+    const value    = document.getElementById('customer-filter-value');
+    const dropdown = document.getElementById('customer-filter-dropdown');
+    const wrapper  = document.getElementById('customer-filter-wrapper');
+
+    search.addEventListener('input', function () {
+        const q = this.value.trim().toLowerCase();
+        value.value = this.value;
+        if (!q) { dropdown.classList.add('hidden'); return; }
+
+        const results = customersData.filter(c =>
+            c.name.toLowerCase().includes(q) || c.phone.includes(q)
+        ).slice(0, 8);
+
+        if (!results.length) {
+            dropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">لا توجد نتائج</div>';
+            dropdown.classList.remove('hidden');
+            return;
+        }
+
+        dropdown.innerHTML = results.map(c => `
+            <div class="customer-option px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-dark-bg cursor-pointer border-b border-gray-100 dark:border-dark-border last:border-0" data-name="${c.name}">
+                <div class="font-bold text-sm text-gray-900 dark:text-white">${c.name}</div>
+                ${c.phone ? `<div class="text-xs text-gray-500 dark:text-gray-400">${c.phone}</div>` : ''}
+            </div>
+        `).join('');
+        dropdown.classList.remove('hidden');
+
+        dropdown.querySelectorAll('.customer-option').forEach(opt => {
+            opt.addEventListener('click', function () {
+                search.value = this.dataset.name;
+                value.value  = this.dataset.name;
+                dropdown.classList.add('hidden');
+            });
+        });
     });
+
+    document.addEventListener('click', function (e) {
+        if (!wrapper.contains(e.target)) dropdown.classList.add('hidden');
+    });
+
+    const view = localStorage.getItem('invoicesView') || 'card';
+    setInvoiceView(view);
+});
     
     function setInvoiceView(view) {
         const cardView = document.getElementById('cardView');

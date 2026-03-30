@@ -69,7 +69,9 @@ class CustomerInvoiceController extends Controller
 
         $invoices = $query->paginate(20)->withQueryString();
 
-        return view('sales.invoices.index', compact('invoices'));
+        $customers = \App\Models\Customer::where('is_active', true)->orderBy('name')->get(['id', 'name', 'phone']);
+
+        return view('sales.invoices.index', compact('invoices', 'customers'));
     }
 
     public function create()

@@ -436,7 +436,7 @@
                 @endif
             </a>
 
-            <div x-data="{ open: {{ request()->routeIs('admin.statistics.*') || request()->routeIs('admin.customer-statistics.*') || request()->routeIs('admin.combined-summary.*') || request()->routeIs('admin.products-pricing.*') ? 'true' : 'false' }} }">
+            <div x-data="{ open: {{ request()->routeIs('admin.statistics.*') || request()->routeIs('admin.customer-statistics.*') || request()->routeIs('admin.combined-summary.*') || request()->routeIs('admin.products-pricing.*') || request()->routeIs('admin.staff-pricing.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('admin.statistics.*') || request()->routeIs('admin.customer-statistics.*') || request()->routeIs('admin.combined-summary.*') || request()->routeIs('admin.products-pricing.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                     <i data-lucide="bar-chart-3" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('admin.statistics.*') || request()->routeIs('admin.customer-statistics.*') || request()->routeIs('admin.combined-summary.*') || request()->routeIs('admin.products-pricing.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
                     <span>الإحصائيات</span>
@@ -460,6 +460,10 @@
                         <i data-lucide="tag" class="w-4 h-4"></i>
                         <span>تسعير المنتجات</span>
                         @if(!($features['admin.products-pricing'] ?? true))<i data-lucide="lock" class="w-3 h-3 mr-auto"></i>@endif
+                    </a>
+                    <a href="{{ route('admin.staff-pricing.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.staff-pricing.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                        <i data-lucide="user-check" class="w-4 h-4"></i>
+                        <span>معدل الموظفين</span>
                     </a>
                 </div>
             </div>
