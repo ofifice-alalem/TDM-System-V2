@@ -14,6 +14,7 @@ class FeatureSeeder extends Seeder
             ['key' => 'admin.store-merge',       'label' => 'دمج المتاجر',       'role' => 'admin'],
             ['key' => 'admin.combined-summary',  'label' => 'الملخص الشامل',     'role' => 'admin'],
             ['key' => 'admin.products-pricing',  'label' => 'تسعير المنتجات',    'role' => 'admin'],
+            ['key' => 'admin.staff-pricing',     'label' => 'معدل الموظفين',     'role' => 'admin'],
         ];
 
         foreach ($features as $feature) {

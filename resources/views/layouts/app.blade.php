@@ -461,9 +461,10 @@
                         <span>تسعير المنتجات</span>
                         @if(!($features['admin.products-pricing'] ?? true))<i data-lucide="lock" class="w-3 h-3 mr-auto"></i>@endif
                     </a>
-                    <a href="{{ route('admin.staff-pricing.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.staff-pricing.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <a href="{{ route('admin.staff-pricing.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.staff-pricing.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }} {{ ($features['admin.staff-pricing'] ?? true) ? '' : 'opacity-40 pointer-events-none' }}">
                         <i data-lucide="user-check" class="w-4 h-4"></i>
                         <span>معدل الموظفين</span>
+                        @if(!($features['admin.staff-pricing'] ?? true))<i data-lucide="lock" class="w-3 h-3 mr-auto"></i>@endif
                     </a>
                 </div>
             </div>
