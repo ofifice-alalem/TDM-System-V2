@@ -132,6 +132,16 @@
                     </div>
 
                     <div>
+                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">الموظف</label>
+                        <select name="sales_user_id" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="">الكل</option>
+                            @foreach($salesUsers as $user)
+                                <option value="{{ $user->id }}" {{ request('sales_user_id') == $user->id ? 'selected' : '' }}>{{ $user->full_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
                         <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">من تاريخ</label>
                         <input type="date" name="from_date" value="{{ request('from_date') }}" required class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:[color-scheme:dark]">
                     </div>
@@ -147,7 +157,7 @@
                         <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
                         عرض الإحصائيات
                     </button>
-                    @if(request()->hasAny(['customer_id', 'operation', 'from_date', 'to_date']))
+                    @if(request()->hasAny(['customer_id', 'operation', 'from_date', 'to_date', 'sales_user_id']))
                         <button type="submit" name="export" value="1" class="flex-1 sm:flex-none px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all text-sm flex items-center justify-center gap-2">
                             <i data-lucide="download" class="w-4 h-4"></i>
                             تصدير Excel

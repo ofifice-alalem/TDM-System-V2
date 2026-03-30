@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\CustomerInvoice;
 use App\Models\CustomerPayment;
 use App\Models\CustomerReturn;
+use App\Models\User;
 use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -21,6 +22,7 @@ class StatisticsController extends Controller
     public function index(Request $request)
     {
         $customers = Customer::where('is_active', true)->get();
+        $salesUsers = User::where('role_id', 4)->where('is_active', true)->orderBy('full_name')->get();
         $results = null;
 
         if ($request->filled(['operation', 'from_date', 'to_date']) &&
@@ -32,7 +34,7 @@ class StatisticsController extends Controller
             }
         }
 
-        return view($this->viewPrefix() . '.index', compact('customers', 'results'));
+        return view($this->viewPrefix() . '.index', compact('customers', 'salesUsers', 'results'));
     }
 
     private function getStatistics($request, $forExport = false)
@@ -55,6 +57,10 @@ class StatisticsController extends Controller
             $query->whereHas('customer', fn($q) => $q->where('name', 'like', '%' . $request->customer_name . '%'));
         }
 
+        if ($request->filled('sales_user_id')) {
+            $query->where('sales_user_id', $request->sales_user_id);
+        }
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -71,6 +77,7 @@ class StatisticsController extends Controller
             $payments = CustomerPayment::with('customer')
                 ->whereIn('customer_id', $customerIds)
                 ->where('status', 'completed')
+                ->when($request->filled('sales_user_id'), fn($q) => $q->where('sales_user_id', $request->sales_user_id))
                 ->whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date)
                 ->get();
@@ -78,6 +85,7 @@ class StatisticsController extends Controller
             $returns = CustomerReturn::with('customer')
                 ->whereIn('customer_id', $customerIds)
                 ->where('status', 'completed')
+                ->when($request->filled('sales_user_id'), fn($q) => $q->where('sales_user_id', $request->sales_user_id))
                 ->whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date)
                 ->get();
@@ -121,6 +129,10 @@ class StatisticsController extends Controller
         } elseif ($request->filled('customer_name') && $request->customer_id !== 'all') {
             $totalQuery->whereHas('customer', fn($q) => $q->where('name', 'like', '%' . $request->customer_name . '%'));
         }
+
+        if ($request->filled('sales_user_id')) {
+            $totalQuery->where('sales_user_id', $request->sales_user_id);
+        }
         
         $totalQuery->where('status', $request->filled('status') ? $request->status : 'completed')
             ->whereDate('created_at', '>=', $request->from_date)
@@ -144,6 +156,10 @@ class StatisticsController extends Controller
                 $pmQuery->where('customer_id', $request->customer_id);
             } elseif ($request->filled('customer_name') && $request->customer_id !== 'all') {
                 $pmQuery->whereHas('customer', fn($q) => $q->where('name', 'like', '%' . $request->customer_name . '%'));
+            }
+
+            if ($request->filled('sales_user_id')) {
+                $pmQuery->where('sales_user_id', $request->sales_user_id);
             }
             
             $paymentMethodTotals = [
@@ -197,6 +213,7 @@ class StatisticsController extends Controller
         
         $infoData = array_merge($infoData, [
             ['العملية', $operationName],
+            ['الموظف', $request->filled('sales_user_id') ? (User::find($request->sales_user_id)?->full_name ?? '') : 'الكل'],
             ['من تاريخ', $request->from_date],
             ['إلى تاريخ', $request->to_date],
         ]);
