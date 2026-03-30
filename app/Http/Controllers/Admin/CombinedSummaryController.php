@@ -128,10 +128,10 @@ class CombinedSummaryController extends Controller
     {
         $arabic = new \ArPHP\I18N\Arabic();
         $g = fn($text) => $arabic->utf8Glyphs($text);
-        $en = function($str) {
-            return str_replace(['\u0660','\u0661','\u0662','\u0663','\u0664','\u0665','\u0666','\u0667','\u0668','\u0669'],
-                               ['0','1','2','3','4','5','6','7','8','9'], $str);
-        };
+        $en = fn($str) => str_replace(
+            ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'],
+            ['0','1','2','3','4','5','6','7','8','9'], $str
+        );
 
         $grandInvoices = $rows->sum('total_invoices');
         $grandPayments = $rows->sum('total_payments');
@@ -164,11 +164,16 @@ class CombinedSummaryController extends Controller
             'debtStatus'     => $g('دائن / مدين'),
             'name'           => $g('الاسم'),
             'type'           => $g('النوع'),
+            'store'          => $g('متجر'),
+            'customer'       => $g('عميل'),
             'total'          => $g('الإجمالي'),
             'debtor'         => $g('مدين'),
             'creditor'       => $g('دائن'),
             'currency'       => $g('د.ل'),
-            'dateRange'      => $en($g('من: ' . $fromDate . '   إلى: ' . $toDate)),
+            'dateFrom'       => $fromDate,
+            'dateTo'         => $toDate,
+            'labelFrom'      => $g('من'),
+            'labelTo'        => $g('إلى'),
         ];
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.combined-summary.pdf', compact(
