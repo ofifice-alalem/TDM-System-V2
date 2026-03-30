@@ -138,9 +138,9 @@ class CombinedSummaryController extends Controller
         $grandReturns  = $rows->sum('total_returns');
         $grandDebt     = $rows->sum('total_debt');
 
-        $processedRows = $rows->map(function($row) use ($g) {
+        $processedRows = $rows->map(function($row) use ($g, $en) {
             return (object)[
-                'name'           => $g($row->name),
+                'name'           => $en($g($row->name)),
                 'type'           => $g($row->type),
                 'is_store'       => $row->type === 'متجر',
                 'total_invoices' => $row->total_invoices,
@@ -176,6 +176,24 @@ class CombinedSummaryController extends Controller
             'labelTo'        => $g('إلى'),
         ];
 
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.combined-summary.pdf', compact(
+            'processedRows', 'fromDate', 'toDate',
+            'grandInvoices', 'grandPayments', 'grandReturns', 'grandDebt',
+            'labels', 'rows'
+        ))
+            ->setPaper('a4')
+            ->setOption('isRemoteEnabled', false)
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isFontSubsettingEnabled', true)
+            ->setOption('compress', 1)
+            ->setOption('dpi', 96);
+
+        // حساب عدد الصفحات
+        $pdf->render();
+        $totalPages = $pdf->getDomPDF()->getCanvas()->get_page_count();
+        $labels['totalPages'] = $totalPages;
+
+        // إعادة التوليد مع عدد الصفحات
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.combined-summary.pdf', compact(
             'processedRows', 'fromDate', 'toDate',
             'grandInvoices', 'grandPayments', 'grandReturns', 'grandDebt',
