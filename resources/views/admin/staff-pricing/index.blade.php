@@ -228,10 +228,10 @@
                             <th class="px-5 py-3 text-center text-xs font-bold text-gray-700 dark:text-gray-300">المبلغ</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-dark-border">
+                    <tbody>
                         @foreach($staffData['products'] as $product)
                             {{-- Product summary row --}}
-                            <tr class="bg-gray-50/80 dark:bg-dark-bg/60">
+                            <tr class="bg-gray-100/80 dark:bg-gray-800/60 border-t-2 border-gray-300 dark:border-gray-600">
                                 <td class="px-5 py-3" colspan="1">
                                     <div class="flex items-center gap-2">
                                         <div class="w-7 h-7 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center shrink-0">
@@ -258,10 +258,10 @@
                                 </td>
                             </tr>
                             {{-- Price breakdown rows --}}
-                            @foreach($product['prices'] as $price)
-                            <tr class="hover:bg-primary-50/20 dark:hover:bg-primary-900/5 transition-colors">
+                            @foreach($product['prices'] as $priceIndex => $price)
+                            <tr class="bg-white dark:bg-dark-card hover:bg-primary-50/20 dark:hover:bg-primary-900/5 transition-colors">
                                 <td class="px-5 py-2.5 pr-12">
-                                    <span class="text-xs text-gray-400 dark:text-gray-500">└ سعر</span>
+                                    <span class="text-xs text-gray-400 dark:text-gray-500">سعر {{ $priceIndex + 1 }}</span>
                                 </td>
                                 <td class="px-5 py-2.5 text-center">
                                     <span class="inline-flex items-center justify-center px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-lg text-xs font-black">
@@ -406,14 +406,15 @@
                                         <th class="px-5 py-2.5 text-center text-xs font-bold text-gray-600 dark:text-gray-400">مبلغ</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100 dark:divide-dark-border">
+                                <tbody>
                                     @foreach($entry['products'] as $product)
-                                    <tr class="bg-white/60 dark:bg-dark-card/60">
+                                    <tr class="bg-gray-100/80 dark:bg-gray-800/60 border-t-2 border-gray-300 dark:border-gray-600">
                                         <td class="px-6 py-2.5">
                                             <span class="font-black text-gray-800 dark:text-gray-200 text-xs">{{ $product['product_name'] }}</span>
-                                            <span class="text-xs text-gray-400 dark:text-gray-500 mr-2">متوسط: {{ number_format($product['avg_price'], 2) }}</span>
                                         </td>
-                                        <td class="px-5 py-2.5 text-center text-xs text-gray-400">—</td>
+                                        <td class="px-5 py-2.5 text-center">
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">متوسط: <span class="font-black text-gray-700 dark:text-gray-300">{{ number_format($product['avg_price'], 2) }}</span></span>
+                                        </td>
                                         <td class="px-5 py-2.5 text-center">
                                             <span class="text-xs font-black text-gray-600 dark:text-gray-400">{{ number_format(array_sum(array_column($product['prices'], 'times'))) }}</span>
                                         </td>
@@ -424,9 +425,9 @@
                                             <span class="text-xs font-black text-primary-600 dark:text-primary-400">{{ number_format($product['total_amount'], 0) }}</span>
                                         </td>
                                     </tr>
-                                    @foreach($product['prices'] as $price)
-                                    <tr class="hover:bg-amber-50/30 dark:hover:bg-amber-900/5 transition-colors">
-                                        <td class="px-6 py-2 pr-12 text-xs text-gray-400 dark:text-gray-500">└ سعر</td>
+                                    @foreach($product['prices'] as $priceIndex => $price)
+                                    <tr class="bg-white dark:bg-dark-card hover:bg-amber-50/30 dark:hover:bg-amber-900/5 transition-colors">
+                                        <td class="px-6 py-2 pr-12 text-xs text-gray-400 dark:text-gray-500">سعر {{ $priceIndex + 1 }}</td>
                                         <td class="px-5 py-2 text-center">
                                             <span class="inline-flex items-center justify-center px-2.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-black">
                                                 {{ number_format($price['price'], 2) }}
