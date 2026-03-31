@@ -43,7 +43,16 @@
         </form>
 
         {{-- Stats Cards --}}
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border p-4 shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 bg-amber-50 dark:bg-amber-500/10 rounded-xl flex items-center justify-center shrink-0">
+                    <i data-lucide="history" class="w-5 h-5 text-amber-500 dark:text-amber-400"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-xs font-bold text-gray-500 dark:text-gray-400">ديون سابقة</p>
+                    <p class="text-lg font-black text-amber-600 dark:text-amber-400 truncate">{{ number_format($grandOldDebt, 2) }}</p>
+                </div>
+            </div>
             <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border p-4 shadow-sm flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center shrink-0">
                     <i data-lucide="shopping-cart" class="w-5 h-5 text-blue-500 dark:text-blue-400"></i>
@@ -92,7 +101,12 @@
                     <h3 class="font-black text-gray-900 dark:text-white text-sm">ملخص المتاجر</h3>
                 </div>
                 <div class="p-5 space-y-3">
-                    <div class="grid grid-cols-3 divide-x divide-x-reverse divide-gray-100 dark:divide-dark-border border border-gray-100 dark:border-dark-border rounded-2xl overflow-hidden">
+                    <div class="grid grid-cols-4 divide-x divide-x-reverse divide-gray-100 dark:divide-dark-border border border-gray-100 dark:border-dark-border rounded-2xl overflow-hidden">
+                        <div class="p-3 text-center">
+                            <div class="w-7 h-7 bg-amber-50 dark:bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-500 mx-auto mb-1"><i data-lucide="history" class="w-3.5 h-3.5"></i></div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">ديون سابقة</div>
+                            <div class="text-sm font-black text-amber-600 dark:text-amber-400">{{ number_format($storeSummary['old_debt'], 2) }}</div>
+                        </div>
                         <div class="p-3 text-center">
                             <div class="w-7 h-7 bg-blue-50 dark:bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-500 mx-auto mb-1"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i></div>
                             <div class="text-xs text-gray-500 dark:text-gray-400">المبيعات</div>
@@ -177,7 +191,12 @@
                     <h3 class="font-black text-gray-900 dark:text-white text-sm">ملخص العملاء</h3>
                 </div>
                 <div class="p-5 space-y-3">
-                    <div class="grid grid-cols-3 divide-x divide-x-reverse divide-gray-100 dark:divide-dark-border border border-gray-100 dark:border-dark-border rounded-2xl overflow-hidden">
+                    <div class="grid grid-cols-4 divide-x divide-x-reverse divide-gray-100 dark:divide-dark-border border border-gray-100 dark:border-dark-border rounded-2xl overflow-hidden">
+                        <div class="p-3 text-center">
+                            <div class="w-7 h-7 bg-amber-50 dark:bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-500 mx-auto mb-1"><i data-lucide="history" class="w-3.5 h-3.5"></i></div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">ديون سابقة</div>
+                            <div class="text-sm font-black text-amber-600 dark:text-amber-400">{{ number_format($customerSummary['old_debt'], 2) }}</div>
+                        </div>
                         <div class="p-3 text-center">
                             <div class="w-7 h-7 bg-blue-50 dark:bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-500 mx-auto mb-1"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i></div>
                             <div class="text-xs text-gray-500 dark:text-gray-400">المبيعات</div>

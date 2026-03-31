@@ -61,10 +61,10 @@
         /* MISC */
         .debt-pos { color: #dc2626; font-weight: bold; }
         .debt-neg { color: #16a34a; font-weight: bold; }
-        .badge-debtor   { color: #dc2626; font-size: 13px; font-weight: bold; }
-        .badge-creditor { color: #16a34a; font-size: 13px; font-weight: bold; }
-        .check-store    { color: #1d4ed8; font-size: 13px; font-weight: bold; }
-        .check-customer { color: #7c3aed; font-size: 13px; font-weight: bold; }
+        .badge-debtor   { color: #dc2626; font-size: 14px; font-weight: bold; }
+        .badge-creditor { color: #16a34a; font-size: 14px; font-weight: bold; }
+        .check-store    { color: #1d4ed8; font-size: 14px; font-weight: bold; }
+        .check-customer { color: #7c3aed; font-size: 14px; font-weight: bold; }
 
         /* FOOTER */
         .footer   { display: table; width: 100%; margin-top: 14px; padding-top: 8px; border-top: 1px solid #e2e8f0; }
@@ -109,6 +109,7 @@
                         <tr><td class="cv" style="width:40%">{{ $n($grandInvoices) }}</td><td class="cl" style="width:60%">{{ $labels['invoices'] }}</td></tr>
                         <tr><td class="cv">{{ $n($grandPayments) }}</td><td class="cl">{{ $labels['payments'] }}</td></tr>
                         <tr><td class="cv">{{ $n($grandReturns) }}</td><td class="cl">{{ $labels['returns'] }}</td></tr>
+                        <tr><td class="cv" style="color:#d97706; font-weight:bold">{{ $n($rows->sum('old_debt')) }}</td><td class="cl">{{ $labels['old_debt'] }}</td></tr>
                         <tr><td class="cv {{ $grandDebt > 0 ? 'debt-pos' : 'debt-neg' }}">{{ $n($grandDebt) }}</td><td class="cl">{{ $labels['debt'] }}</td></tr>
                     </table>
                 </div>
@@ -121,6 +122,7 @@
                         <tr><td class="cv" style="width:40%">{{ $n($storeRows->sum('total_invoices')) }}</td><td class="cl" style="width:60%">{{ $labels['invoices'] }}</td></tr>
                         <tr><td class="cv">{{ $n($storeRows->sum('total_payments')) }}</td><td class="cl">{{ $labels['payments'] }}</td></tr>
                         <tr><td class="cv">{{ $n($storeRows->sum('total_returns')) }}</td><td class="cl">{{ $labels['returns'] }}</td></tr>
+                        <tr><td class="cv" style="color:#d97706; font-weight:bold">{{ $n($storeRows->sum('old_debt')) }}</td><td class="cl">{{ $labels['old_debt'] }}</td></tr>
                         <tr><td class="cv {{ $storeRows->sum('total_debt') > 0 ? 'debt-pos' : 'debt-neg' }}">{{ $n($storeRows->sum('total_debt')) }}</td><td class="cl">{{ $labels['debt'] }}</td></tr>
                     </table>
                 </div>
@@ -133,6 +135,7 @@
                         <tr><td class="cv" style="width:40%">{{ $n($customerRows->sum('total_invoices')) }}</td><td class="cl" style="width:60%">{{ $labels['invoices'] }}</td></tr>
                         <tr><td class="cv">{{ $n($customerRows->sum('total_payments')) }}</td><td class="cl">{{ $labels['payments'] }}</td></tr>
                         <tr><td class="cv">{{ $n($customerRows->sum('total_returns')) }}</td><td class="cl">{{ $labels['returns'] }}</td></tr>
+                        <tr><td class="cv" style="color:#d97706; font-weight:bold">{{ $n($customerRows->sum('old_debt')) }}</td><td class="cl">{{ $labels['old_debt'] }}</td></tr>
                         <tr><td class="cv {{ $customerRows->sum('total_debt') > 0 ? 'debt-pos' : 'debt-neg' }}">{{ $n($customerRows->sum('total_debt')) }}</td><td class="cl">{{ $labels['debt'] }}</td></tr>
                     </table>
                 </div>
@@ -144,15 +147,16 @@
     <table>
         <thead>
             <tr>
-                <th style="width:9%; text-align:center">{{ $labels['debtor'] }}</th>
-                <th style="width:9%; text-align:center">{{ $labels['creditor'] }}</th>
-                <th style="width:12%">{{ $labels['debt'] }}</th>
-                <th style="width:12%">{{ $labels['returns'] }}</th>
-                <th style="width:12%">{{ $labels['payments'] }}</th>
-                <th style="width:12%">{{ $labels['invoices'] }}</th>
-                <th style="width:7%; text-align:center">{{ $labels['store'] }}</th>
-                <th style="width:7%; text-align:center">{{ $labels['customer'] }}</th>
-                <th style="width:16%">{{ $labels['name'] }}</th>
+                <th style="width:6%; text-align:center; font-size:7px">{{ $labels['debtor'] }}</th>
+                <th style="width:6%; text-align:center; font-size:7px">{{ $labels['creditor'] }}</th>
+                <th style="width:11%">{{ $labels['debt'] }}</th>
+                <th style="width:10%">{{ $labels['returns'] }}</th>
+                <th style="width:10%">{{ $labels['payments'] }}</th>
+                <th style="width:10%">{{ $labels['invoices'] }}</th>
+                <th style="width:10%; color:#d97706">{{ $labels['old_debt'] }}</th>
+                <th style="width:6%; text-align:center">{{ $labels['store'] }}</th>
+                <th style="width:6%; text-align:center">{{ $labels['customer'] }}</th>
+                <th style="width:21%">{{ $labels['name'] }}</th>
                 <th style="width:4%; text-align:center">#</th>
             </tr>
         </thead>
@@ -165,6 +169,7 @@
                 <td class="num">{{ $row->total_returns != 0 ? $n($row->total_returns) : '-' }}</td>
                 <td class="num">{{ $row->total_payments != 0 ? $n($row->total_payments) : '-' }}</td>
                 <td class="num">{{ $row->total_invoices != 0 ? $n($row->total_invoices) : '-' }}</td>
+                <td class="num" style="{{ $row->old_debt > 0 ? 'color:#d97706; font-weight:bold;' : 'color:#94a3b8;' }}">{{ $row->old_debt > 0 ? $n($row->old_debt) : '-' }}</td>
                 <td style="text-align:center">@if($row->is_store)<span class="check-store">&#10003;</span>@endif</td>
                 <td style="text-align:center">@if(!$row->is_store)<span class="check-customer">&#10003;</span>@endif</td>
                 <td class="name-td">{{ $row->name }}</td>
@@ -180,6 +185,7 @@
                 <td class="num">{{ $n($grandReturns) }}</td>
                 <td class="num">{{ $n($grandPayments) }}</td>
                 <td class="num">{{ $n($grandInvoices) }}</td>
+                <td class="num" style="color:#d97706; font-weight:bold">{{ $n($rows->sum('old_debt')) }}</td>
                 <td colspan="4" style="text-align:right; color:#64748b;">{{ $labels['total'] }}</td>
             </tr>
         </tfoot>
