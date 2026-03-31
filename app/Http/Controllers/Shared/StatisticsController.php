@@ -80,8 +80,9 @@ class StatisticsController extends Controller
             $query->where('store_id', $request->store_id);
         }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        $selectedStatuses = $this->resolveStatuses($request);
+        if ($selectedStatuses !== null) {
+            $query->whereIn('status', $selectedStatuses);
         }
 
         $query->whereDate('created_at', '>=', $request->from_date)
@@ -98,72 +99,58 @@ class StatisticsController extends Controller
             'total' => 0
         ];
         
+        $selectedStatuses = $this->resolveStatuses($request);
+        $storeFilter2 = fn($q) => ($request->store_id && $request->store_id !== 'all') ? $q->where('store_id', $request->store_id) : $q;
+
         if ($request->operation == 'payments') {
-            // Single query with groupBy for status totals
-            $statusQuery = StorePayment::selectRaw('status, SUM(amount) as total')
+            $baseQ = StorePayment::selectRaw('status, SUM(amount) as total')
                 ->whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date)
-                ->when($request->store_id && $request->store_id !== 'all', fn($q) => $q->where('store_id', $request->store_id))
-                ->groupBy('status')
-                ->pluck('total', 'status');
-            
-            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
-                $statusTotals[$status] = $statusQuery[$status] ?? 0;
+                ->when(true, $storeFilter2)
+                ->groupBy('status')->pluck('total', 'status');
+            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $s) {
+                $statusTotals[$s] = $baseQ[$s] ?? 0;
             }
-            
-            // Single query with groupBy for payment method totals
+
             $methodQuery = StorePayment::selectRaw('payment_method, SUM(amount) as total')
                 ->whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date)
-                ->when($request->store_id && $request->store_id !== 'all', fn($q) => $q->where('store_id', $request->store_id))
-                ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
-                ->groupBy('payment_method')
-                ->pluck('total', 'payment_method');
-            
+                ->when(true, $storeFilter2)
+                ->when($selectedStatuses !== null, fn($q) => $q->whereIn('status', $selectedStatuses))
+                ->groupBy('payment_method')->pluck('total', 'payment_method');
             $paymentMethodTotals = [
-                'cash' => $methodQuery['cash'] ?? 0,
-                'transfer' => $methodQuery['transfer'] ?? 0,
+                'cash'            => $methodQuery['cash'] ?? 0,
+                'transfer'        => $methodQuery['transfer'] ?? 0,
                 'certified_check' => $methodQuery['certified_check'] ?? 0,
-                'total' => 0
+                'total'           => 0,
             ];
             $paymentMethodTotals['total'] = array_sum([$paymentMethodTotals['cash'], $paymentMethodTotals['transfer'], $paymentMethodTotals['certified_check']]);
-        } else {
-            $paymentMethodTotals = null;
-        }
-        
-        if ($request->operation == 'sales') {
-            // Single query with groupBy
-            $statusQuery = SalesInvoice::selectRaw('status, SUM(total_amount) as total')
+        } elseif ($request->operation == 'sales') {
+            $baseQ = SalesInvoice::selectRaw('status, SUM(total_amount) as total')
                 ->whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date)
-                ->when($request->store_id && $request->store_id !== 'all', fn($q) => $q->where('store_id', $request->store_id))
-                ->groupBy('status')
-                ->pluck('total', 'status');
-            
-            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
-                $statusTotals[$status] = $statusQuery[$status] ?? 0;
+                ->when(true, $storeFilter2)
+                ->groupBy('status')->pluck('total', 'status');
+            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $s) {
+                $statusTotals[$s] = $baseQ[$s] ?? 0;
             }
         } elseif ($request->operation == 'returns') {
-            // Single query with groupBy
-            $statusQuery = SalesReturn::selectRaw('status, SUM(total_amount) as total')
+            $baseQ = SalesReturn::selectRaw('status, SUM(total_amount) as total')
                 ->whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date)
-                ->when($request->store_id && $request->store_id !== 'all', fn($q) => $q->where('store_id', $request->store_id))
-                ->groupBy('status')
-                ->pluck('total', 'status');
-            
-            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
-                $statusTotals[$status] = $statusQuery[$status] ?? 0;
+                ->when(true, $storeFilter2)
+                ->groupBy('status')->pluck('total', 'status');
+            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $s) {
+                $statusTotals[$s] = $baseQ[$s] ?? 0;
             }
         }
         
         $statusTotals['total'] = array_sum([$statusTotals['pending'], $statusTotals['approved'], $statusTotals['cancelled'], $statusTotals['rejected']]);
-        
-        // Calculate total based on selected status or approved by default
-        if ($request->filled('status')) {
-            $total = $statusTotals[$request->status] ?? 0;
+
+        if ($selectedStatuses !== null) {
+            $total = array_sum(array_map(fn($s) => $statusTotals[$s] ?? 0, $selectedStatuses));
         } else {
-            $total = $statusTotals['approved'];
+            $total = $statusTotals['total'];
         }
 
         return [
@@ -328,8 +315,9 @@ class StatisticsController extends Controller
             $query->where('store_id', $request->marketer_store_id);
         }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        $selectedStatuses = $this->resolveStatuses($request);
+        if ($selectedStatuses !== null) {
+            $query->whereIn('status', $selectedStatuses);
         }
 
         $query->whereDate('created_at', '>=', $request->from_date)
@@ -349,166 +337,80 @@ class StatisticsController extends Controller
         ];
         $paymentMethodTotals = null;
         
+        $selectedStatuses = $this->resolveStatuses($request);
+        $storeFilter   = fn($q) => $request->filled('marketer_store_id') ? $q->where('store_id', $request->marketer_store_id) : $q;
+        $marketerFilter = fn($q) => ($request->marketer_id && $request->marketer_id !== 'all') ? $q->where('marketer_id', $request->marketer_id) : $q;
+
         if ($request->operation == 'payments') {
-            $totalQuery = StorePayment::whereDate('created_at', '>=', $request->from_date)
-                ->whereDate('created_at', '<=', $request->to_date);
-            
-            if ($request->marketer_id && $request->marketer_id !== 'all') {
-                $totalQuery->where('marketer_id', $request->marketer_id);
-            }
-            
-            if ($request->filled('marketer_store_id')) {
-                $totalQuery->where('store_id', $request->marketer_store_id);
-            }
-            
-            if ($request->filled('status')) {
-                $totalQuery->where('status', $request->status);
-            } else {
-                $totalQuery->where('status', 'approved');
-            }
-            
-            $total = $totalQuery->sum('amount');
-            
-            $totalCommission = \App\Models\MarketerCommission::whereIn('payment_id', 
-                $totalQuery->pluck('id')
-            )->sum('commission_amount');
-            
-            // Single query with groupBy for status totals
-            $statusQuery = StorePayment::selectRaw('status, SUM(amount) as total')
-                ->whereDate('created_at', '>=', $request->from_date)
+            $baseQuery = StorePayment::whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date)
-                ->when($request->marketer_id && $request->marketer_id !== 'all', fn($q) => $q->where('marketer_id', $request->marketer_id))
-                ->when($request->filled('marketer_store_id'), fn($q) => $q->where('store_id', $request->marketer_store_id))
-                ->groupBy('status')
-                ->pluck('total', 'status');
-            
-            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
-                $statusTotals[$status] = $statusQuery[$status] ?? 0;
+                ->when(true, $marketerFilter)
+                ->when(true, $storeFilter);
+
+            $filteredQuery = (clone $baseQuery)->when($selectedStatuses !== null, fn($q) => $q->whereIn('status', $selectedStatuses));
+            $total = $filteredQuery->sum('amount');
+            $totalCommission = \App\Models\MarketerCommission::whereIn('payment_id', $filteredQuery->pluck('id'))->sum('commission_amount');
+
+            $statusQuery = (clone $baseQuery)->selectRaw('status, SUM(amount) as total')->groupBy('status')->pluck('total', 'status');
+            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $s) {
+                $statusTotals[$s] = $statusQuery[$s] ?? 0;
             }
             $statusTotals['total'] = array_sum([$statusTotals['pending'], $statusTotals['approved'], $statusTotals['cancelled'], $statusTotals['rejected']]);
-            
-            // Single query with groupBy for payment method totals
-            $methodQuery = StorePayment::selectRaw('payment_method, SUM(amount) as total')
-                ->whereDate('created_at', '>=', $request->from_date)
-                ->whereDate('created_at', '<=', $request->to_date)
-                ->when($request->marketer_id && $request->marketer_id !== 'all', fn($q) => $q->where('marketer_id', $request->marketer_id))
-                ->when($request->filled('marketer_store_id'), fn($q) => $q->where('store_id', $request->marketer_store_id))
-                ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
-                ->groupBy('payment_method')
-                ->pluck('total', 'payment_method');
-            
+
+            $methodQuery = (clone $baseQuery)->when($selectedStatuses !== null, fn($q) => $q->whereIn('status', $selectedStatuses))
+                ->selectRaw('payment_method, SUM(amount) as total')->groupBy('payment_method')->pluck('total', 'payment_method');
             $paymentMethodTotals = [
-                'cash' => $methodQuery['cash'] ?? 0,
-                'transfer' => $methodQuery['transfer'] ?? 0,
+                'cash'            => $methodQuery['cash'] ?? 0,
+                'transfer'        => $methodQuery['transfer'] ?? 0,
                 'certified_check' => $methodQuery['certified_check'] ?? 0,
-                'total' => 0
+                'total'           => 0,
             ];
             $paymentMethodTotals['total'] = array_sum([$paymentMethodTotals['cash'], $paymentMethodTotals['transfer'], $paymentMethodTotals['certified_check']]);
+
         } elseif ($request->operation == 'sales') {
-            $totalQuery = SalesInvoice::whereDate('created_at', '>=', $request->from_date)
-                ->whereDate('created_at', '<=', $request->to_date);
-            
-            if ($request->marketer_id && $request->marketer_id !== 'all') {
-                $totalQuery->where('marketer_id', $request->marketer_id);
-            }
-            
-            if ($request->filled('marketer_store_id')) {
-                $totalQuery->where('store_id', $request->marketer_store_id);
-            }
-            
-            if ($request->filled('status')) {
-                $totalQuery->where('status', $request->status);
-            } else {
-                $totalQuery->where('status', 'approved');
-            }
-            
-            $total = $totalQuery->sum('total_amount');
-            
-            // Single query with groupBy for status totals
-            $statusQuery = SalesInvoice::selectRaw('status, SUM(total_amount) as total')
-                ->whereDate('created_at', '>=', $request->from_date)
+            $baseQuery = SalesInvoice::whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date)
-                ->when($request->marketer_id && $request->marketer_id !== 'all', fn($q) => $q->where('marketer_id', $request->marketer_id))
-                ->when($request->filled('marketer_store_id'), fn($q) => $q->where('store_id', $request->marketer_store_id))
-                ->groupBy('status')
-                ->pluck('total', 'status');
-            
-            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
-                $statusTotals[$status] = $statusQuery[$status] ?? 0;
+                ->when(true, $marketerFilter)
+                ->when(true, $storeFilter);
+
+            $total = (clone $baseQuery)->when($selectedStatuses !== null, fn($q) => $q->whereIn('status', $selectedStatuses))->sum('total_amount');
+
+            $statusQuery = (clone $baseQuery)->selectRaw('status, SUM(total_amount) as total')->groupBy('status')->pluck('total', 'status');
+            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $s) {
+                $statusTotals[$s] = $statusQuery[$s] ?? 0;
             }
             $statusTotals['total'] = array_sum([$statusTotals['pending'], $statusTotals['approved'], $statusTotals['cancelled'], $statusTotals['rejected']]);
+
         } elseif ($request->operation == 'returns') {
-            $totalQuery = \App\Models\MarketerReturnRequest::where('status', 'approved')
-                ->whereDate('created_at', '>=', $request->from_date)
-                ->whereDate('created_at', '<=', $request->to_date);
-            
-            if ($request->marketer_id && $request->marketer_id !== 'all') {
-                $totalQuery->where('marketer_id', $request->marketer_id);
-            }
-            
-            if ($request->filled('status')) {
-                $totalQuery->where('status', $request->status);
-            }
-            
-            $total = $totalQuery->sum('total_amount');
-        } elseif ($request->operation == 'sales_returns') {
-            $totalQuery = SalesReturn::whereDate('created_at', '>=', $request->from_date)
-                ->whereDate('created_at', '<=', $request->to_date);
-            
-            if ($request->marketer_id && $request->marketer_id !== 'all') {
-                $totalQuery->where('marketer_id', $request->marketer_id);
-            }
-            
-            if ($request->filled('marketer_store_id')) {
-                $totalQuery->where('store_id', $request->marketer_store_id);
-            }
-            
-            if ($request->filled('status')) {
-                $totalQuery->where('status', $request->status);
-            } else {
-                $totalQuery->where('status', 'approved');
-            }
-            
-            $total = $totalQuery->sum('total_amount');
-            
-            // Single query with groupBy for status totals
-            $statusQuery = SalesReturn::selectRaw('status, SUM(total_amount) as total')
-                ->whereDate('created_at', '>=', $request->from_date)
+            $baseQuery = \App\Models\MarketerReturnRequest::whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date)
-                ->when($request->marketer_id && $request->marketer_id !== 'all', fn($q) => $q->where('marketer_id', $request->marketer_id))
-                ->when($request->filled('marketer_store_id'), fn($q) => $q->where('store_id', $request->marketer_store_id))
-                ->groupBy('status')
-                ->pluck('total', 'status');
-            
-            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
-                $statusTotals[$status] = $statusQuery[$status] ?? 0;
+                ->when(true, $marketerFilter);
+            $total = (clone $baseQuery)->when($selectedStatuses !== null, fn($q) => $q->whereIn('status', $selectedStatuses))->sum('total_amount');
+
+        } elseif ($request->operation == 'sales_returns') {
+            $baseQuery = SalesReturn::whereDate('created_at', '>=', $request->from_date)
+                ->whereDate('created_at', '<=', $request->to_date)
+                ->when(true, $marketerFilter)
+                ->when(true, $storeFilter);
+
+            $total = (clone $baseQuery)->when($selectedStatuses !== null, fn($q) => $q->whereIn('status', $selectedStatuses))->sum('total_amount');
+
+            $statusQuery = (clone $baseQuery)->selectRaw('status, SUM(total_amount) as total')->groupBy('status')->pluck('total', 'status');
+            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $s) {
+                $statusTotals[$s] = $statusQuery[$s] ?? 0;
             }
             $statusTotals['total'] = array_sum([$statusTotals['pending'], $statusTotals['approved'], $statusTotals['cancelled'], $statusTotals['rejected']]);
+
         } elseif ($request->operation == 'withdrawals') {
-            $totalQuery = \App\Models\MarketerWithdrawalRequest::where('status', 'approved')
-                ->whereDate('created_at', '>=', $request->from_date)
-                ->whereDate('created_at', '<=', $request->to_date);
-            
-            if ($request->marketer_id && $request->marketer_id !== 'all') {
-                $totalQuery->where('marketer_id', $request->marketer_id);
-            }
-            
-            if ($request->filled('status')) {
-                $totalQuery->where('status', $request->status);
-            }
-            
-            $total = $totalQuery->sum('requested_amount');
-            
-            // Single query with groupBy for status totals
-            $statusQuery = \App\Models\MarketerWithdrawalRequest::selectRaw('status, SUM(requested_amount) as total')
-                ->whereDate('created_at', '>=', $request->from_date)
+            $baseQuery = \App\Models\MarketerWithdrawalRequest::whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date)
-                ->when($request->marketer_id && $request->marketer_id !== 'all', fn($q) => $q->where('marketer_id', $request->marketer_id))
-                ->groupBy('status')
-                ->pluck('total', 'status');
-            
-            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $status) {
-                $statusTotals[$status] = $statusQuery[$status] ?? 0;
+                ->when(true, $marketerFilter);
+
+            $total = (clone $baseQuery)->when($selectedStatuses !== null, fn($q) => $q->whereIn('status', $selectedStatuses))->sum('requested_amount');
+
+            $statusQuery = (clone $baseQuery)->selectRaw('status, SUM(requested_amount) as total')->groupBy('status')->pluck('total', 'status');
+            foreach (['pending', 'approved', 'cancelled', 'rejected'] as $s) {
+                $statusTotals[$s] = $statusQuery[$s] ?? 0;
             }
             $statusTotals['total'] = array_sum([$statusTotals['pending'], $statusTotals['approved'], $statusTotals['cancelled'], $statusTotals['rejected']]);
         }
@@ -560,13 +462,23 @@ class StatisticsController extends Controller
             'summary' => 'الملخص المالي',
             default => ''
         };
-        $statusName = match($request->status) {
-            'pending' => 'معلق',
-            'approved' => 'موثق',
-            'documented' => 'موثق',
-            'cancelled' => 'ملغي',
-            'rejected' => 'مرفوض',
-            default => 'الكل'
+        $selectedStatuses = $this->resolveStatuses($request);
+        $hasFilter = $selectedStatuses !== null;
+
+        $statusName = match(true) {
+            in_array('debt', (array) $request->input('statuses', [])) || $request->input('status') === 'debt' => 'الدين (معلق + موثق)',
+            $hasFilter && count($selectedStatuses) === 1 => match($selectedStatuses[0]) {
+                'pending'    => 'معلق',
+                'approved'   => 'موثق',
+                'documented' => 'موثق',
+                'cancelled'  => 'ملغي',
+                'rejected'   => 'مرفوض',
+                default      => $selectedStatuses[0],
+            },
+            $hasFilter => implode(' + ', array_map(fn($s) => match($s) {
+                'pending' => 'معلق', 'approved' => 'موثق', 'cancelled' => 'ملغي', 'rejected' => 'مرفوض', default => $s
+            }, $selectedStatuses)),
+            default => 'الكل',
         };
         
         $row = 1;
@@ -601,7 +513,7 @@ class StatisticsController extends Controller
             $row++;
         }
         
-        if ($request->stat_type == 'stores' && isset($results['status_totals']) && !$request->filled('status')) {
+        if ($request->stat_type == 'stores' && isset($results['status_totals']) && !$hasFilter) {
             $row++;
             $sheet->setCellValue('A' . $row, 'الإجماليات حسب الحالة');
             $sheet->mergeCells('A' . $row . ':E' . $row);
@@ -679,7 +591,7 @@ class StatisticsController extends Controller
             $row++;
             
             // Show status totals if no status filter and not requests/returns operations
-            if (!$request->filled('status') && isset($results['status_totals']) && !in_array($request->operation, ['requests', 'returns'])) {
+            if (!$hasFilter && isset($results['status_totals']) && !in_array($request->operation, ['requests', 'returns'])) {
                 $sheet->setCellValue('A' . $row, 'الإجماليات حسب الحالة');
                 $sheet->mergeCells('A' . $row . ':E' . $row);
                 $sheet->getStyle('A' . $row)->applyFromArray([
@@ -719,7 +631,7 @@ class StatisticsController extends Controller
             
             // Show total only if not requests/returns operations
             if (!in_array($request->operation, ['requests', 'returns'])) {
-                $totalLabel = $request->filled('status') ? 'الإجمالي (' . $statusName . ')' : 'الإجمالي (الموثق فقط)';
+                $totalLabel = $hasFilter ? 'الإجمالي (' . $statusName . ')' : 'الإجمالي (الكل)';
                 $sheet->setCellValue('A' . $row, $totalLabel);
                 $sheet->setCellValue('B' . $row, number_format($results['total'], 2) . ' دينار');
                 $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
@@ -769,7 +681,7 @@ class StatisticsController extends Controller
             }
         }
         
-        if ($request->stat_type == 'stores' && $request->filled('status')) {
+        if ($request->stat_type == 'stores' && $hasFilter) {
             $row++;
             $sheet->setCellValue('A' . $row, 'الإجمالي');
             $sheet->setCellValue('B' . $row, number_format($results['total'], 2) . ' دينار');
@@ -1225,6 +1137,30 @@ class StatisticsController extends Controller
             'remaining' => $remaining,
             'marketers_data' => $marketersData
         ];
+    }
+
+    /**
+     * يحول statuses[] أو status أو debt إلى مصفوفة حالات أو null (= الكل)
+     */
+    private function resolveStatuses($request): ?array
+    {
+        // debt = approved + pending
+        if ($request->input('status') === 'debt' || in_array('debt', (array) $request->input('statuses', []))) {
+            return ['approved', 'pending'];
+        }
+
+        // statuses[] متعددة
+        $statuses = array_filter((array) $request->input('statuses', []));
+        if (!empty($statuses)) {
+            return $statuses;
+        }
+
+        // status واحد (للتوافق مع الكود القديم)
+        if ($request->filled('status')) {
+            return [$request->status];
+        }
+
+        return null; // لا فلتر = الكل
     }
 
     private function exportMarketerSummaryToExcel($results, $request, $spreadsheet, $sheet)

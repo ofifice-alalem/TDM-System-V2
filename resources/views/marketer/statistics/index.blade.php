@@ -52,9 +52,26 @@
 
                     <div id="status_field" style="display: {{ request('operation') == 'summary' ? 'none' : 'block' }}">
                         <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">الحالة</label>
-                        <select name="status" id="status" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">الكل</option>
-                        </select>
+                        <div x-data="statusCheckbox()" class="relative" id="status-alpine">
+                            <button type="button" @click="open = !open"
+                                class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 flex items-center justify-between">
+                                <span x-text="label"></span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                            </button>
+                            <div x-show="open" @click.outside="open = false"
+                                class="absolute z-50 mt-1 w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl p-2 space-y-1">
+                                <template x-for="opt in options" :key="opt.value">
+                                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer">
+                                        <input type="checkbox" :value="opt.value" x-model="selected"
+                                            class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                                        <span class="text-sm text-gray-800 dark:text-white" x-text="opt.text"></span>
+                                    </label>
+                                </template>
+                            </div>
+                            <template x-for="s in selected" :key="s">
+                                <input type="hidden" name="statuses[]" :value="s">
+                            </template>
+                        </div>
                     </div>
 
                 </div>
@@ -316,7 +333,7 @@
                     <div class="p-6 border-b border-gray-200 dark:border-dark-border">
                         <h2 class="text-xl font-black text-gray-900 dark:text-white mb-4">النتائج</h2>
 
-                        @if(!request('status') && isset($results['status_totals']) && !in_array($results['operation'], ['requests', 'returns']))
+                        @if(!request()->filled('statuses') && isset($results['status_totals']) && !in_array($results['operation'], ['requests', 'returns']))
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-4">
                             <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 border border-amber-200 dark:border-amber-800">
                                 <p class="text-xs text-amber-600 dark:text-amber-400 font-bold mb-1">معلق</p>
@@ -362,7 +379,7 @@
                         </div>
                         @endif
 
-                        @if(!in_array($results['operation'], ['requests', 'returns']) && request('status'))
+                        @if(!in_array($results['operation'], ['requests', 'returns']) && request()->filled('statuses'))
                         <div class="text-left">
                             <p class="text-xs text-gray-500 dark:text-gray-400">الإجمالي</p>
                             <p class="text-2xl font-black text-primary-600 dark:text-primary-400">{{ number_format($results['total'], 2) }} دينار</p>
@@ -596,42 +613,57 @@
 
 @push('scripts')
 <script>
+    const statusOptions = {
+        sales:         [{value:'debt',text:'الدين'},{value:'pending',text:'معلق'},{value:'approved',text:'موثق'},{value:'cancelled',text:'ملغي'},{value:'rejected',text:'مرفوض'}],
+        payments:      [{value:'debt',text:'الدين'},{value:'pending',text:'معلق'},{value:'approved',text:'موثق'},{value:'cancelled',text:'ملغي'},{value:'rejected',text:'مرفوض'}],
+        sales_returns: [{value:'debt',text:'الدين'},{value:'pending',text:'معلق'},{value:'approved',text:'موثق'},{value:'cancelled',text:'ملغي'},{value:'rejected',text:'مرفوض'}],
+        requests:      [{value:'pending',text:'معلق'},{value:'approved',text:'موافق عليه'},{value:'documented',text:'موثق'},{value:'cancelled',text:'ملغي'},{value:'rejected',text:'مرفوض'}],
+        returns:       [{value:'pending',text:'معلق'},{value:'approved',text:'موافق عليه'},{value:'documented',text:'موثق'},{value:'cancelled',text:'ملغي'},{value:'rejected',text:'مرفوض'}],
+        withdrawals:   [{value:'debt',text:'الدين'},{value:'pending',text:'معلق'},{value:'approved',text:'موثق'},{value:'cancelled',text:'ملغي'},{value:'rejected',text:'مرفوض'}]
+    };
+
+    window.statusCheckbox = function() {
+        const initSelected = @json(array_values(array_filter((array) request('statuses', []))));
+        const initOperation = @json(request('operation', ''));
+        return {
+            open: false,
+            selected: initSelected,
+            currentOp: initOperation,
+            get options() {
+                return statusOptions[this.currentOp] || [];
+            },
+            get label() {
+                if (!this.selected.length) return 'الكل';
+                const opts = this.options;
+                return this.selected.map(function(v) {
+                    const o = opts.find(function(x) { return x.value === v; });
+                    return o ? o.text : v;
+                }).join(' ، ');
+            }
+        };
+    };
+
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
 
-        const operation  = document.getElementById('operation');
+        const operation   = document.getElementById('operation');
         const storeField  = document.getElementById('stat-store-wrapper');
         const statusField = document.getElementById('status_field');
-        const statusSelect = document.getElementById('status');
 
-        const statusOptions = {
-            sales:         [{value:'pending',text:'معلق'},{value:'approved',text:'موثق'},{value:'cancelled',text:'ملغي'},{value:'rejected',text:'مرفوض'}],
-            payments:      [{value:'pending',text:'معلق'},{value:'approved',text:'موثق'},{value:'cancelled',text:'ملغي'},{value:'rejected',text:'مرفوض'}],
-            sales_returns: [{value:'pending',text:'معلق'},{value:'approved',text:'موثق'},{value:'cancelled',text:'ملغي'},{value:'rejected',text:'مرفوض'}],
-            requests:      [{value:'pending',text:'معلق'},{value:'approved',text:'موافق عليه'},{value:'documented',text:'موثق'},{value:'cancelled',text:'ملغي'},{value:'rejected',text:'مرفوض'}],
-            returns:       [{value:'pending',text:'معلق'},{value:'approved',text:'موافق عليه'},{value:'documented',text:'موثق'},{value:'cancelled',text:'ملغي'},{value:'rejected',text:'مرفوض'}],
-            withdrawals:   [{value:'pending',text:'معلق'},{value:'approved',text:'موثق'},{value:'cancelled',text:'ملغي'},{value:'rejected',text:'مرفوض'}],
-            summary:       []
-        };
-
-        function updateStatus(op) {
-            const selected = '{{ request('status') }}';
-            const opts = statusOptions[op] || [];
-            statusSelect.innerHTML = '<option value="">الكل</option>';
-            opts.forEach(o => {
-                const el = document.createElement('option');
-                el.value = o.value; el.text = o.text;
-                if (o.value === selected) el.selected = true;
-                statusSelect.appendChild(el);
-            });
+        function updateStatus(op, resetSelected) {
             statusField.style.display = op === 'summary' ? 'none' : 'block';
             storeField.style.display  = ['sales','payments','sales_returns'].includes(op) ? 'block' : 'none';
+            const alpineEl = document.getElementById('status-alpine');
+            if (alpineEl && alpineEl._x_dataStack) {
+                alpineEl._x_dataStack[0].currentOp = op;
+                if (resetSelected) alpineEl._x_dataStack[0].selected = [];
+            }
         }
 
-        operation.addEventListener('change', function() { updateStatus(this.value); });
+        operation.addEventListener('change', function() { updateStatus(this.value, true); });
 
-        // init on load
-        if (operation.value) updateStatus(operation.value);
+        // init on load — لا نمسح الاختيار
+        if (operation.value) updateStatus(operation.value, false);
 
         // Store dropdown
         const statStoresData = [
