@@ -226,6 +226,7 @@
                                 <th class="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-300">#</th>
                                 <th class="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-300">الاسم</th>
                                 <th class="px-4 py-3 text-center font-bold text-gray-700 dark:text-gray-300">النوع</th>
+                                <th class="px-4 py-3 text-left font-bold text-amber-600 dark:text-amber-400">ديون سابقة</th>
                                 <th class="px-4 py-3 text-left font-bold text-gray-700 dark:text-gray-300">إجمالي الفواتير</th>
                                 <th class="px-4 py-3 text-left font-bold text-gray-700 dark:text-gray-300">إجمالي المدفوعات</th>
                                 <th class="px-4 py-3 text-left font-bold text-gray-700 dark:text-gray-300">إجمالي المرتجعات</th>
@@ -242,6 +243,9 @@
                                         <span class="px-2.5 py-1 rounded-lg text-xs font-bold {{ $row->type === 'متجر' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' }}">
                                             {{ $row->type }}
                                         </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-left font-mono {{ $row->old_debt > 0 ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-gray-400 dark:text-gray-600' }}">
+                                        {{ $row->old_debt > 0 ? number_format($row->old_debt, 2) : '—' }}
                                     </td>
                                     <td class="px-4 py-3 text-left font-mono text-gray-700 dark:text-gray-300">{{ number_format($row->total_invoices, 2) }}</td>
                                     <td class="px-4 py-3 text-left font-mono text-green-600 dark:text-green-400">{{ number_format($row->total_payments, 2) }}</td>
@@ -264,6 +268,7 @@
                         <tfoot>
                             <tr class="bg-gray-100 dark:bg-dark-bg border-t-2 border-gray-300 dark:border-dark-border">
                                 <td colspan="3" class="px-4 py-3 font-black text-gray-900 dark:text-white">الإجمالي</td>
+                                <td class="px-4 py-3 text-left font-black font-mono {{ $grandOldDebt > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400' }}">{{ $grandOldDebt > 0 ? number_format($grandOldDebt, 2) : '—' }}</td>
                                 <td class="px-4 py-3 text-left font-black font-mono text-blue-600 dark:text-blue-400">{{ number_format($grandInvoices, 2) }}</td>
                                 <td class="px-4 py-3 text-left font-black font-mono text-green-600 dark:text-green-400">{{ number_format($grandPayments, 2) }}</td>
                                 <td class="px-4 py-3 text-left font-black font-mono text-orange-600 dark:text-orange-400">{{ number_format($grandReturns, 2) }}</td>

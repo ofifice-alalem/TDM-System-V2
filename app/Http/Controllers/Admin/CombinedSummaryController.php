@@ -38,6 +38,7 @@ class CombinedSummaryController extends Controller
         $grandInvoices = $rows->sum('total_invoices');
         $grandPayments = $rows->sum('total_payments');
         $grandReturns  = $rows->sum('total_returns');
+        $grandOldDebt  = $rows->sum('old_debt');
         $grandDebt     = $rows->sum('total_debt');
 
         // ملخص المتاجر
@@ -64,7 +65,7 @@ class CombinedSummaryController extends Controller
 
         return view('admin.combined-summary.index', compact(
             'rows', 'fromDate', 'toDate',
-            'grandInvoices', 'grandPayments', 'grandReturns', 'grandDebt',
+            'grandInvoices', 'grandPayments', 'grandReturns', 'grandOldDebt', 'grandDebt',
             'storeSummary', 'customerSummary'
         ));
     }
@@ -75,7 +76,9 @@ class CombinedSummaryController extends Controller
 
         // المتاجر
         foreach (Store::orderBy('name')->get() as $store) {
-            $invoices = SalesInvoice::where('store_id', $store->id)->whereIn('status', ['approved', 'pending'])
+            $invoices = SalesInvoice::where('store_id', $store->id)
+                ->whereIn('status', ['approved', 'pending'])
+                ->where('marketer_id', '!=', 0)
                 ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
                 ->sum('total_amount');
             $payments = StorePayment::where('store_id', $store->id)->whereIn('status', ['approved', 'pending'])
@@ -84,8 +87,11 @@ class CombinedSummaryController extends Controller
             $returns = SalesReturn::where('store_id', $store->id)->whereIn('status', ['approved', 'pending'])
                 ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
                 ->sum('total_amount');
+            $oldDebt = SalesInvoice::where('store_id', $store->id)
+                ->where('marketer_id', 0)
+                ->sum('total_amount');
 
-            if ($invoices == 0 && $payments == 0 && $returns == 0) continue;
+            if ($invoices == 0 && $payments == 0 && $returns == 0 && $oldDebt == 0) continue;
 
             $rows->push((object)[
                 'name'           => $store->name,
@@ -93,13 +99,16 @@ class CombinedSummaryController extends Controller
                 'total_invoices' => $invoices,
                 'total_payments' => $payments,
                 'total_returns'  => $returns,
-                'total_debt'     => $invoices - $payments - $returns,
+                'old_debt'       => $oldDebt,
+                'total_debt'     => $invoices - $payments - $returns + $oldDebt,
             ]);
         }
 
         // العملاء
         foreach (Customer::orderBy('name')->get() as $customer) {
-            $invoices = CustomerInvoice::where('customer_id', $customer->id)->where('status', 'completed')
+            $invoices = CustomerInvoice::where('customer_id', $customer->id)
+                ->where('status', 'completed')
+                ->where('sales_user_id', '!=', 0)
                 ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
                 ->sum('total_amount');
             $payments = CustomerPayment::where('customer_id', $customer->id)->where('status', 'completed')
@@ -108,8 +117,11 @@ class CombinedSummaryController extends Controller
             $returns = CustomerReturn::where('customer_id', $customer->id)->where('status', 'completed')
                 ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
                 ->sum('total_amount');
+            $oldDebt = CustomerInvoice::where('customer_id', $customer->id)
+                ->where('sales_user_id', 0)
+                ->sum('total_amount');
 
-            if ($invoices == 0 && $payments == 0 && $returns == 0) continue;
+            if ($invoices == 0 && $payments == 0 && $returns == 0 && $oldDebt == 0) continue;
 
             $rows->push((object)[
                 'name'           => $customer->name,
@@ -117,7 +129,8 @@ class CombinedSummaryController extends Controller
                 'total_invoices' => $invoices,
                 'total_payments' => $payments,
                 'total_returns'  => $returns,
-                'total_debt'     => $invoices - $payments - $returns,
+                'old_debt'       => $oldDebt,
+                'total_debt'     => $invoices - $payments - $returns + $oldDebt,
             ]);
         }
 
