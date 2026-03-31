@@ -158,6 +158,14 @@
                     <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
                     عرض
                 </button>
+                <button type="submit" name="export" value="1" class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-all">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    تصدير Excel
+                </button>
+                <button type="submit" name="pdf" value="1" class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-all">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                    تصدير PDF
+                </button>
                 <a href="{{ route('admin.staff-pricing.index', ['mode' => $mode]) }}"
                    class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-all">
                     <i data-lucide="x" class="w-4 h-4"></i>
