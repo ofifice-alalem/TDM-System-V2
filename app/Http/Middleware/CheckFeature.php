@@ -10,6 +10,11 @@ class CheckFeature
 {
     public function handle(Request $request, Closure $next, string $featureKey)
     {
+        // super_admin يتجاوز فحص الميزات
+        if (auth()->check() && auth()->user()->role_id === 5) {
+            return $next($request);
+        }
+
         $feature = Feature::where('key', $featureKey)->first();
 
         if ($feature && !$feature->isCurrentlyEnabled()) {

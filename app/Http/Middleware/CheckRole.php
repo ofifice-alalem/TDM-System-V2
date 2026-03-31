@@ -16,6 +16,11 @@ class CheckRole
 
         $userRoleId = auth()->user()->role_id;
 
+        // super_admin يملك صلاحية الوصول لكل الأدوار
+        if ($userRoleId === 5) {
+            return $next($request);
+        }
+
         $allowedRoleId = match($role) {
             'marketer'    => 3,
             'warehouse'   => 2,

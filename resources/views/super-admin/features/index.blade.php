@@ -66,6 +66,22 @@
                                 <span :class="activeNow ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'"
                                       class="text-xs font-black px-3 py-1 rounded-lg"
                                       x-text="activeNow ? 'مفعّل' : 'معطّل'"></span>
+                                @php
+                                    $featureUrls = [
+                                        'admin.combined-summary'  => route('admin.combined-summary.index'),
+                                        'admin.products-pricing'  => route('admin.products-pricing.index'),
+                                        'admin.customer-merge'    => route('admin.customer-merge.index'),
+                                        'admin.store-merge'       => route('admin.store-merge.index'),
+                                        'admin.staff-pricing'     => route('admin.staff-pricing.index'),
+                                    ];
+                                @endphp
+                                @if(isset($featureUrls[$feature->key]))
+                                <a href="{{ $featureUrls[$feature->key] }}" target="_blank"
+                                   class="p-2 rounded-xl border bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all"
+                                   title="زيارة الرابط">
+                                    <i data-lucide="external-link" class="w-4 h-4"></i>
+                                </a>
+                                @endif
                                 <button @click="showSettings = !showSettings"
                                     :class="showSettings ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-600 dark:text-accent-400 border-amber-200 dark:border-accent-500/30' : 'bg-gray-50 dark:bg-dark-bg text-gray-400 border-gray-100 dark:border-dark-border hover:bg-gray-100 dark:hover:bg-dark-border'"
                                     class="p-2 rounded-xl border transition-all">
