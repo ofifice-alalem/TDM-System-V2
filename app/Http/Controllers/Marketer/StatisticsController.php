@@ -36,6 +36,10 @@ class StatisticsController extends Controller
                 $results = $this->callProtected($shared, 'getMarketerStatistics', [$request, true]);
                 return $this->callProtected($shared, 'exportToExcel', [$results, $request]);
             }
+
+            if ($results && $request->has('pdf')) {
+                return $this->exportPdf($results, $request);
+            }
         }
 
         return view('marketer.statistics.index', compact('stores', 'results'));
@@ -49,6 +53,141 @@ class StatisticsController extends Controller
             ->get();
 
         return response()->json($stores);
+    }
+
+    private function exportPdf($results, $request)
+    {
+        $arabic = new \ArPHP\I18N\Arabic();
+        $g  = fn($t) => $arabic->utf8Glyphs($t);
+        $en = fn($s) => str_replace(['\u0660','\u0661','\u0662','\u0663','\u0664','\u0665','\u0666','\u0667','\u0668','\u0669'],['0','1','2','3','4','5','6','7','8','9'], $s);
+
+        $marketer = auth()->user();
+        $operation = $request->operation;
+
+        $operationName = match($operation) {
+            'summary'       => 'ملخص المتاجر',
+            'sales'         => 'فواتير البيع',
+            'payments'      => 'إيصالات القبض',
+            'sales_returns' => 'إرجاعات المتاجر',
+            'requests'      => 'طلبات البضاعة',
+            'returns'       => 'إرجاعات البضاعة',
+            'withdrawals'   => 'طلبات سحب الأرباح',
+            default         => $operation
+        };
+
+        $selectedStore = null;
+        if ($request->filled('marketer_store_id')) {
+            $selectedStore = \App\Models\Store::find($request->marketer_store_id);
+        }
+
+        $statusNames = [];
+        if ($request->filled('statuses')) {
+            $map = ['pending' => 'معلق', 'approved' => 'موثق', 'cancelled' => 'ملغي', 'rejected' => 'مرفوض', 'debt' => 'الدين'];
+            $statusNames = array_map(fn($s) => $map[$s] ?? $s, (array) $request->statuses);
+        }
+
+        $hasStore      = in_array($operation, ['sales', 'payments', 'sales_returns']);
+        $hasPayMethod  = $operation === 'payments';
+        $hasCommission = $operation === 'payments' && $request->input('show_commission', '1') == '1';
+        $hasAmount     = !in_array($operation, ['requests', 'returns']);
+        $hasStatus     = $operation !== 'payments' || $request->input('show_status', '1') == '1';
+
+        $labels = [
+            'title'         => $g('إحصائيات المسوق - ' . $marketer->full_name),
+            'marketerName'  => $g($marketer->full_name),
+            'marketer'      => $g('المسوق'),
+            'operationName' => $g($operationName),
+            'operation'     => $g('العملية'),
+            'storeName'     => $selectedStore ? $g($selectedStore->name) : '',
+            'store'         => $g('المتجر'),
+            'statusName'    => $statusNames ? $g(implode(' ، ', $statusNames)) : '',
+            'status'        => $g('الحالة'),
+            'dateFrom'      => $request->from_date,
+            'dateTo'        => $request->to_date,
+            'grandTotal'    => $g('الإجمالي'),
+            'summary'       => $g('ملخص'),
+            'filterInfo'    => $g('معلومات التقرير'),
+            'sales'         => $g('المبيعات'),
+            'payments'      => $g('المدفوعات'),
+            'returns'       => $g('المرتجعات'),
+            'debt'          => $g('الدين'),
+            'salesStatus'   => $g('حالة المبيعات'),
+            'paymentsStatus'=> $g('حالة المدفوعات'),
+            'pending'       => $g('معلق'),
+            'approved'      => $g('موثق'),
+            'total'         => $g('الإجمالي'),
+            'invoiceNum'    => $g('رقم الفاتورة'),
+            'date'          => $g('التاريخ'),
+            'amount'        => $g('المبلغ'),
+            'payMethod'     => $g('طريقة الدفع'),
+            'commRate'      => $g('نسبة العمولة'),
+            'commAmount'    => $g('المستحق'),
+            'cash'          => $g('كاش'),
+            'transfer'      => $g('حوالة'),
+            'check'         => $g('شيك'),
+            'hasStore'      => $hasStore,
+            'hasPaymentMethod' => $hasPayMethod,
+            'hasCommission' => $hasCommission,
+            'hasAmount'     => $hasAmount,
+            'hasStatus'     => $hasStatus,
+        ];
+
+        // ملخص المتاجر
+        if (isset($results['is_store_summary'])) {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('marketer.statistics.pdf', [
+                'type'      => 'store_summary',
+                'data'      => $results,
+                'labels'    => $labels,
+                'g'         => $g,
+                'en'        => $en,
+                'operation' => $operation,
+                'rows'      => collect(),
+            ])->setPaper('a4')->setOption('isHtml5ParserEnabled', true)->setOption('isFontSubsettingEnabled', true);
+
+            $pdf->render();
+            $labels['totalPages'] = $pdf->getDomPDF()->getCanvas()->get_page_count();
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('marketer.statistics.pdf', [
+                'type'      => 'store_summary',
+                'data'      => $results,
+                'labels'    => $labels,
+                'g'         => $g,
+                'en'        => $en,
+                'operation' => $operation,
+                'rows'      => collect(),
+            ])->setPaper('a4')->setOption('isHtml5ParserEnabled', true)->setOption('isFontSubsettingEnabled', true);
+
+            return $pdf->stream('marketer-store-summary-' . $request->from_date . '.pdf');
+        }
+
+        // عمليات تفصيلية — جلب كل البيانات
+        $shared  = new SharedStatisticsController();
+        $fullResults = $this->callProtected($shared, 'getMarketerStatistics', [$request, true]);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('marketer.statistics.pdf', [
+            'type'      => 'detail',
+            'data'      => $fullResults,
+            'labels'    => $labels,
+            'g'         => $g,
+            'en'        => $en,
+            'operation' => $operation,
+            'rows'      => $fullResults['data'],
+        ])->setPaper('a4')->setOption('isHtml5ParserEnabled', true)->setOption('isFontSubsettingEnabled', true);
+
+        $pdf->render();
+        $labels['totalPages'] = $pdf->getDomPDF()->getCanvas()->get_page_count();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('marketer.statistics.pdf', [
+            'type'      => 'detail',
+            'data'      => $fullResults,
+            'labels'    => $labels,
+            'g'         => $g,
+            'en'        => $en,
+            'operation' => $operation,
+            'rows'      => $fullResults['data'],
+        ])->setPaper('a4')->setOption('isHtml5ParserEnabled', true)->setOption('isFontSubsettingEnabled', true);
+
+        return $pdf->stream('marketer-statistics-' . $operation . '-' . $request->from_date . '.pdf');
     }
 
     private function exportStoreSummaryToExcel($results, $request)

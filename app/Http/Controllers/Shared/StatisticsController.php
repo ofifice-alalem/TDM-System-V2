@@ -755,12 +755,14 @@ class StatisticsController extends Controller
             }
         } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments'])) {
             if ($request->operation == 'payments') {
+                $showCommission = $request->input('show_commission', '1') == '1';
+                $showStatus     = $request->input('show_status', '1') == '1';
                 if ($request->marketer_id == 'all') {
-                    $headers = ['#', 'رقم الفاتورة', 'المسوق', 'المتجر', 'نسبة العمولة', 'القيمة المستحقة', 'طريقة الدفع', 'التاريخ', 'الحالة', 'المبلغ'];
-                    $lastCol = 'J';
+                    $headers = array_values(array_filter(['#', 'رقم الفاتورة', 'المسوق', 'المتجر', $showCommission ? 'نسبة العمولة' : null, $showCommission ? 'القيمة المستحقة' : null, 'طريقة الدفع', 'التاريخ', $showStatus ? 'الحالة' : null, 'المبلغ']));
+                    $lastCol = chr(ord('A') + count($headers) - 1);
                 } else {
-                    $headers = ['#', 'رقم الفاتورة', 'المتجر', 'نسبة العمولة', 'القيمة المستحقة', 'طريقة الدفع', 'التاريخ', 'الحالة', 'المبلغ'];
-                    $lastCol = 'I';
+                    $headers = array_values(array_filter(['#', 'رقم الفاتورة', 'المتجر', $showCommission ? 'نسبة العمولة' : null, $showCommission ? 'القيمة المستحقة' : null, 'طريقة الدفع', 'التاريخ', $showStatus ? 'الحالة' : null, 'المبلغ']));
+                    $lastCol = chr(ord('A') + count($headers) - 1);
                 }
             } else {
                 if ($request->marketer_id == 'all') {
@@ -889,31 +891,33 @@ class StatisticsController extends Controller
                 }
             } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments'])) {
                 if ($request->operation == 'payments') {
+                    $showCommission = $request->input('show_commission', '1') == '1';
+                    $showStatus     = $request->input('show_status', '1') == '1';
                     if ($request->marketer_id == 'all') {
-                        $rowData = [
+                        $rowData = array_values(array_filter([
                             $invoiceNumber,
                             $item->marketer->full_name ?? '',
                             $item->store->name ?? '',
-                            ($item->commission->commission_rate ?? '-') . '%',
-                            number_format($item->commission->commission_amount ?? 0, 2),
+                            $showCommission ? (($item->commission->commission_rate ?? '-') . '%') : null,
+                            $showCommission ? number_format($item->commission->commission_amount ?? 0, 2) : null,
                             $paymentMethod,
                             $item->created_at->format('Y-m-d'),
-                            $status,
+                            $showStatus ? $status : null,
                             number_format($amount, 2)
-                        ];
-                        $statusCol = 'H';
+                        ], fn($v) => $v !== null));
+                        $statusCol = $showStatus ? chr(ord('B') + count($rowData) - 2) : null;
                     } else {
-                        $rowData = [
+                        $rowData = array_values(array_filter([
                             $invoiceNumber,
                             $item->store->name ?? '',
-                            ($item->commission->commission_rate ?? '-') . '%',
-                            number_format($item->commission->commission_amount ?? 0, 2),
+                            $showCommission ? (($item->commission->commission_rate ?? '-') . '%') : null,
+                            $showCommission ? number_format($item->commission->commission_amount ?? 0, 2) : null,
                             $paymentMethod,
                             $item->created_at->format('Y-m-d'),
-                            $status,
+                            $showStatus ? $status : null,
                             number_format($amount, 2)
-                        ];
-                        $statusCol = 'G';
+                        ], fn($v) => $v !== null));
+                        $statusCol = $showStatus ? chr(ord('B') + count($rowData) - 2) : null;
                     }
                 } else {
                     if ($request->marketer_id == 'all') {

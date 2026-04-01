@@ -74,6 +74,25 @@
                         </div>
                     </div>
 
+                    {{-- خيارات عرض الأعمدة (إيصالات القبض فقط) --}}
+                    <div id="col_options_field" style="display: {{ request('operation') == 'payments' ? 'block' : 'none' }}">
+                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">عرض الأعمدة</label>
+                        <div class="bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 space-y-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="hidden" name="show_commission" value="0">
+                                <input type="checkbox" name="show_commission" value="1" {{ request('show_commission', '1') == '1' ? 'checked' : '' }}
+                                    class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                                <span class="text-sm text-gray-800 dark:text-white">نسبة العمولة + القيمة المستحقة</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="hidden" name="show_status" value="0">
+                                <input type="checkbox" name="show_status" value="1" {{ request('show_status', '1') == '1' ? 'checked' : '' }}
+                                    class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                                <span class="text-sm text-gray-800 dark:text-white">الحالة</span>
+                            </label>
+                        </div>
+                    </div>
+
                 </div>
 
                 <div class="flex flex-wrap gap-2">
@@ -86,6 +105,12 @@
                             <i data-lucide="download" class="w-4 h-4"></i>
                             تصدير Excel
                         </button>
+                        <a href="{{ request()->fullUrlWithQuery(['pdf' => 1]) }}"
+                           target="_blank"
+                           class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-4 h-4"></i>
+                            تصدير PDF
+                        </a>
                         <a href="{{ route('marketer.statistics.index') }}" class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
                             <i data-lucide="x" class="w-4 h-4"></i>
                             إعادة تعيين
@@ -495,12 +520,16 @@
                                         <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المتجر</th>
                                     @endif
                                     @if($results['operation'] == 'payments')
+                                        @if(request('show_commission', '1') == '1')
                                         <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">نسبة العمولة</th>
                                         <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">القيمة المستحقة</th>
+                                        @endif
                                         <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">طريقة الدفع</th>
                                     @endif
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">التاريخ</th>
+                                    @if(request('operation') != 'payments' || request('show_status', '1') == '1')
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">الحالة</th>
+                                    @endif
                                     @if(!in_array($results['operation'], ['requests', 'returns']))
                                         <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المبلغ</th>
                                     @endif
@@ -537,8 +566,10 @@
                                             <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->store->name ?? '-' }}</td>
                                         @endif
                                         @if($results['operation'] == 'payments')
+                                            @if(request('show_commission', '1') == '1')
                                             <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->commission->commission_rate ?? '-' }}%</td>
                                             <td class="px-6 py-4 text-sm font-bold text-emerald-600 dark:text-emerald-400">{{ number_format($item->commission->commission_amount ?? 0, 2) }}</td>
+                                            @endif
                                             <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                                                 @if($item->payment_method == 'cash') كاش
                                                 @elseif($item->payment_method == 'transfer') حوالة
@@ -547,11 +578,13 @@
                                             </td>
                                         @endif
                                         <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->created_at->format('Y-m-d') }}</td>
+                                        @if($results['operation'] != 'payments' || request('show_status', '1') == '1')
                                         <td class="px-6 py-4">
                                             <span class="{{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} px-2 py-1 rounded text-xs font-bold">
                                                 {{ $statusConfig['label'] }}
                                             </span>
                                         </td>
+                                        @endif
                                         @if(!in_array($results['operation'], ['requests', 'returns']))
                                             <td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">
                                                 @if($results['operation'] == 'sales')           {{ number_format($item->total_amount, 2) }}
@@ -653,6 +686,8 @@
         function updateStatus(op, resetSelected) {
             statusField.style.display = op === 'summary' ? 'none' : 'block';
             storeField.style.display  = ['sales','payments','sales_returns'].includes(op) ? 'block' : 'none';
+            const colOptionsField = document.getElementById('col_options_field');
+            if (colOptionsField) colOptionsField.style.display = op === 'payments' ? 'block' : 'none';
             const alpineEl = document.getElementById('status-alpine');
             if (alpineEl && alpineEl._x_dataStack) {
                 alpineEl._x_dataStack[0].currentOp = op;
