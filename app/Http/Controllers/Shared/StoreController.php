@@ -216,25 +216,23 @@ class StoreController extends Controller
         
         $debt = $this->calculateDebt($store->id);
         
+        $pendingSales    = SalesInvoice::where('store_id', $store->id)->where('status', 'pending')->sum('total_amount');
+        $pendingPayments = StorePayment::where('store_id', $store->id)->where('status', 'pending')->sum('amount');
+        $pendingReturns  = SalesReturn::where('store_id', $store->id)->where('status', 'pending')->sum('total_amount');
+
         $stats = [
             'total_sales' => StoreDebtLedger::where('store_id', $store->id)
                 ->where('entry_type', 'sale')
-                ->sum('amount'),
+                ->sum('amount') + $pendingSales,
             'total_returns' => abs(StoreDebtLedger::where('store_id', $store->id)
                 ->where('entry_type', 'return')
-                ->sum('amount')),
+                ->sum('amount')) + $pendingReturns,
             'total_payments' => abs(StoreDebtLedger::where('store_id', $store->id)
                 ->where('entry_type', 'payment')
-                ->sum('amount')),
-            'pending_sales' => SalesInvoice::where('store_id', $store->id)
-                ->where('status', 'pending')
-                ->sum('total_amount'),
-            'pending_payments' => StorePayment::where('store_id', $store->id)
-                ->where('status', 'pending')
-                ->sum('amount'),
-            'pending_returns' => SalesReturn::where('store_id', $store->id)
-                ->where('status', 'pending')
-                ->sum('total_amount'),
+                ->sum('amount')) + $pendingPayments,
+            'pending_sales'    => $pendingSales,
+            'pending_payments' => $pendingPayments,
+            'pending_returns'  => $pendingReturns,
         ];
 
         return view('shared.stores.show', compact('store', 'debt', 'transactions', 'stats'));

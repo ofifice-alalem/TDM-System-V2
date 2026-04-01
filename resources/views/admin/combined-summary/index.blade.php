@@ -16,17 +16,131 @@
 
         {{-- Filter --}}
         <form method="GET" action="{{ route('admin.combined-summary.index') }}" class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border p-5 shadow-sm">
-            <div class="flex flex-wrap gap-4 items-end">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">من تاريخ</label>
                     <input type="date" name="from_date" value="{{ $fromDate }}"
-                        class="bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm [color-scheme:light] dark:[color-scheme:dark]">
+                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm [color-scheme:light] dark:[color-scheme:dark]">
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">إلى تاريخ</label>
                     <input type="date" name="to_date" value="{{ $toDate }}"
-                        class="bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm [color-scheme:light] dark:[color-scheme:dark]">
+                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm [color-scheme:light] dark:[color-scheme:dark]">
                 </div>
+
+                {{-- فلتر الموظف --}}
+                <div x-data="{
+                    open: false,
+                    search: '{{ optional($staff->firstWhere('id', $staffId))->full_name ?? '' }}',
+                    value: '{{ $staffId ?? '' }}',
+                    items: {{ Js::from($staff->map(fn($u) => ['id' => $u->id, 'name' => $u->full_name, 'role' => $u->role_id == 3 ? 'مسوق' : 'مبيعات'])) }},
+                    get filtered() { return this.search.length < 1 ? this.items : this.items.filter(i => i.name.includes(this.search)); }
+                }" class="relative" id="staff-filter-wrap">
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">الموظف (اختياري)</label>
+                    <input type="text" x-model="search" @focus="open=true" @click.outside="open=false" autocomplete="off"
+                        @input="if(!search){ value=''; document.getElementById('staff-id-input').value=''; }"
+                        placeholder="الكل..."
+                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <input type="hidden" name="staff_id" id="staff-id-input" :value="value">
+                    <div x-show="open" class="absolute z-50 mt-1 w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-52 overflow-y-auto">
+                        <div @click="search=''; value=''; open=false; document.getElementById('staff-id-input').value='';" class="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer text-sm text-gray-500">الكل</div>
+                        <template x-for="item in filtered" :key="item.id">
+                            <div @click="search=item.name; value=item.id; open=false; document.getElementById('staff-id-input').value=item.id;"
+                                class="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer border-t border-gray-100 dark:border-dark-border">
+                                <div class="text-sm font-bold text-gray-900 dark:text-white" x-text="item.name"></div>
+                                <div class="text-xs text-gray-400" x-text="item.role"></div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                {{-- تضمين الديون السابقة --}}
+                <div class="flex items-end pb-1">
+                    <label class="flex items-center gap-3 cursor-pointer select-none">
+                        <div class="relative">
+                            <input type="hidden" name="include_old_debt" value="0">
+                            <input type="checkbox" name="include_old_debt" value="1" id="include-old-debt-cb"
+                                {{ $includeOldDebt ? 'checked' : '' }}
+                                class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-primary-600 transition-colors"></div>
+                            <div class="absolute top-0.5 right-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-[-20px]"></div>
+                        </div>
+                        <span class="text-sm font-bold text-gray-700 dark:text-gray-300">تضمين الديون السابقة</span>
+                    </label>
+                </div>
+
+                {{-- فلتر النوع --}}
+                <div x-data="{
+                    type: '{{ $storeId ? 'store' : ($customerId ? 'customer' : 'all') }}',
+                    storeSearch: '{{ optional($stores->firstWhere('id', $storeId))->name ?? '' }}',
+                    storeValue: '{{ $storeId ?? '' }}',
+                    storeItems: {{ Js::from($stores->map(fn($s) => ['id' => $s->id, 'name' => $s->name])) }},
+                    storeOpen: false,
+                    customerSearch: '{{ optional($customers->firstWhere('id', $customerId))->name ?? '' }}',
+                    customerValue: '{{ $customerId ?? '' }}',
+                    customerItems: {{ Js::from($customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name])) }},
+                    customerOpen: false,
+                    get storeFiltered() { return this.storeSearch.length < 1 ? this.storeItems : this.storeItems.filter(i => i.name.includes(this.storeSearch)); },
+                    get customerFiltered() { return this.customerSearch.length < 1 ? this.customerItems : this.customerItems.filter(i => i.name.includes(this.customerSearch)); }
+                }" class="space-y-3">
+
+                    {{-- Radio buttons --}}
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">عرض</label>
+                        <div class="flex gap-3">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" x-model="type" value="all" class="text-primary-600 focus:ring-primary-500">
+                                <span class="text-sm font-bold text-gray-700 dark:text-gray-300">الكل</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" x-model="type" value="store" class="text-primary-600 focus:ring-primary-500">
+                                <span class="text-sm font-bold text-gray-700 dark:text-gray-300">المتاجر</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" x-model="type" value="customer" class="text-primary-600 focus:ring-primary-500">
+                                <span class="text-sm font-bold text-gray-700 dark:text-gray-300">العملاء</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    {{-- دروبداون المتجر --}}
+                    <div x-show="type === 'store'" class="relative">
+                        <input type="text" x-model="storeSearch" @focus="storeOpen=true" @click.outside="storeOpen=false" autocomplete="off"
+                            placeholder="ابحث عن متجر..."
+                            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <input type="hidden" name="store_id" :value="type === 'store' ? storeValue : ''">
+                        <div x-show="storeOpen" class="absolute z-50 mt-1 w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-52 overflow-y-auto">
+                            <div @click="storeSearch=''; storeValue=''; storeOpen=false" class="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer text-sm text-gray-500">الكل</div>
+                            <template x-for="item in storeFiltered" :key="item.id">
+                                <div @click="storeSearch=item.name; storeValue=item.id; storeOpen=false"
+                                    class="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer border-t border-gray-100 dark:border-dark-border text-sm font-bold text-gray-900 dark:text-white" x-text="item.name">
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    {{-- دروبداون العميل --}}
+                    <div x-show="type === 'customer'" class="relative">
+                        <input type="text" x-model="customerSearch" @focus="customerOpen=true" @click.outside="customerOpen=false" autocomplete="off"
+                            placeholder="ابحث عن عميل..."
+                            class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <input type="hidden" name="customer_id" :value="type === 'customer' ? customerValue : ''">
+                        <div x-show="customerOpen" class="absolute z-50 mt-1 w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-52 overflow-y-auto">
+                            <div @click="customerSearch=''; customerValue=''; customerOpen=false" class="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer text-sm text-gray-500">الكل</div>
+                            <template x-for="item in customerFiltered" :key="item.id">
+                                <div @click="customerSearch=item.name; customerValue=item.id; customerOpen=false"
+                                    class="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer border-t border-gray-100 dark:border-dark-border text-sm font-bold text-gray-900 dark:text-white" x-text="item.name">
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    {{-- hidden inputs للتصفية حسب النوع --}}
+                    <input type="hidden" name="entity_type" :value="type">
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-3">
                 <button type="submit" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all flex items-center gap-2">
                     <i data-lucide="search" class="w-4 h-4"></i> عرض
                 </button>
@@ -39,11 +153,18 @@
                     class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all flex items-center gap-2">
                     <i data-lucide="file-text" class="w-4 h-4"></i> تصدير PDF
                 </a>
+                @if($storeId || $customerId || $staffId || request('entity_type', 'all') !== 'all')
+                <a href="{{ route('admin.combined-summary.index', ['from_date' => $fromDate, 'to_date' => $toDate]) }}"
+                    class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all flex items-center gap-2">
+                    <i data-lucide="x" class="w-4 h-4"></i> إلغاء الفلاتر
+                </a>
+                @endif
             </div>
         </form>
 
         {{-- Stats Cards --}}
-        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="grid grid-cols-2 lg:grid-cols-{{ $includeOldDebt ? '5' : '4' }} gap-4">
+            @if($includeOldDebt)
             <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border p-4 shadow-sm flex items-center gap-3">
                 <div class="w-10 h-10 bg-amber-50 dark:bg-amber-500/10 rounded-xl flex items-center justify-center shrink-0">
                     <i data-lucide="history" class="w-5 h-5 text-amber-500 dark:text-amber-400"></i>
@@ -53,6 +174,7 @@
                     <p class="text-lg font-black text-amber-600 dark:text-amber-400 truncate">{{ number_format($grandOldDebt, 2) }}</p>
                 </div>
             </div>
+            @endif
             <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border p-4 shadow-sm flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center shrink-0">
                     <i data-lucide="shopping-cart" class="w-5 h-5 text-blue-500 dark:text-blue-400"></i>
@@ -101,12 +223,14 @@
                     <h3 class="font-black text-gray-900 dark:text-white text-sm">ملخص المتاجر</h3>
                 </div>
                 <div class="p-5 space-y-3">
-                    <div class="grid grid-cols-4 divide-x divide-x-reverse divide-gray-100 dark:divide-dark-border border border-gray-100 dark:border-dark-border rounded-2xl overflow-hidden">
+                    <div class="grid grid-cols-{{ $includeOldDebt ? '4' : '3' }} divide-x divide-x-reverse divide-gray-100 dark:divide-dark-border border border-gray-100 dark:border-dark-border rounded-2xl overflow-hidden">
+                        @if($includeOldDebt)
                         <div class="p-3 text-center">
                             <div class="w-7 h-7 bg-amber-50 dark:bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-500 mx-auto mb-1"><i data-lucide="history" class="w-3.5 h-3.5"></i></div>
                             <div class="text-xs text-gray-500 dark:text-gray-400">ديون سابقة</div>
                             <div class="text-sm font-black text-amber-600 dark:text-amber-400">{{ number_format($storeSummary['old_debt'], 2) }}</div>
                         </div>
+                        @endif
                         <div class="p-3 text-center">
                             <div class="w-7 h-7 bg-blue-50 dark:bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-500 mx-auto mb-1"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i></div>
                             <div class="text-xs text-gray-500 dark:text-gray-400">المبيعات</div>
@@ -191,12 +315,14 @@
                     <h3 class="font-black text-gray-900 dark:text-white text-sm">ملخص العملاء</h3>
                 </div>
                 <div class="p-5 space-y-3">
-                    <div class="grid grid-cols-4 divide-x divide-x-reverse divide-gray-100 dark:divide-dark-border border border-gray-100 dark:border-dark-border rounded-2xl overflow-hidden">
+                    <div class="grid grid-cols-{{ $includeOldDebt ? '4' : '3' }} divide-x divide-x-reverse divide-gray-100 dark:divide-dark-border border border-gray-100 dark:border-dark-border rounded-2xl overflow-hidden">
+                        @if($includeOldDebt)
                         <div class="p-3 text-center">
                             <div class="w-7 h-7 bg-amber-50 dark:bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-500 mx-auto mb-1"><i data-lucide="history" class="w-3.5 h-3.5"></i></div>
                             <div class="text-xs text-gray-500 dark:text-gray-400">ديون سابقة</div>
                             <div class="text-sm font-black text-amber-600 dark:text-amber-400">{{ number_format($customerSummary['old_debt'], 2) }}</div>
                         </div>
+                        @endif
                         <div class="p-3 text-center">
                             <div class="w-7 h-7 bg-blue-50 dark:bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-500 mx-auto mb-1"><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i></div>
                             <div class="text-xs text-gray-500 dark:text-gray-400">المبيعات</div>
@@ -245,7 +371,9 @@
                                 <th class="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-300">#</th>
                                 <th class="px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-300">الاسم</th>
                                 <th class="px-4 py-3 text-center font-bold text-gray-700 dark:text-gray-300">النوع</th>
+                                @if($includeOldDebt)
                                 <th class="px-4 py-3 text-left font-bold text-amber-600 dark:text-amber-400">ديون سابقة</th>
+                                @endif
                                 <th class="px-4 py-3 text-left font-bold text-gray-700 dark:text-gray-300">إجمالي الفواتير</th>
                                 <th class="px-4 py-3 text-left font-bold text-gray-700 dark:text-gray-300">إجمالي المدفوعات</th>
                                 <th class="px-4 py-3 text-left font-bold text-gray-700 dark:text-gray-300">إجمالي المرتجعات</th>
@@ -263,9 +391,11 @@
                                             {{ $row->type }}
                                         </span>
                                     </td>
+                                    @if($includeOldDebt)
                                     <td class="px-4 py-3 text-left font-mono {{ $row->old_debt > 0 ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-gray-400 dark:text-gray-600' }}">
                                         {{ $row->old_debt > 0 ? number_format($row->old_debt, 2) : '—' }}
                                     </td>
+                                    @endif
                                     <td class="px-4 py-3 text-left font-mono text-gray-700 dark:text-gray-300">{{ number_format($row->total_invoices, 2) }}</td>
                                     <td class="px-4 py-3 text-left font-mono text-green-600 dark:text-green-400">{{ number_format($row->total_payments, 2) }}</td>
                                     <td class="px-4 py-3 text-left font-mono text-orange-600 dark:text-orange-400">{{ number_format($row->total_returns, 2) }}</td>
@@ -286,8 +416,10 @@
                         </tbody>
                         <tfoot>
                             <tr class="bg-gray-100 dark:bg-dark-bg border-t-2 border-gray-300 dark:border-dark-border">
-                                <td colspan="3" class="px-4 py-3 font-black text-gray-900 dark:text-white">الإجمالي</td>
+                                <td colspan="{{ $includeOldDebt ? '3' : '2' }}" class="px-4 py-3 font-black text-gray-900 dark:text-white">الإجمالي</td>
+                                @if($includeOldDebt)
                                 <td class="px-4 py-3 text-left font-black font-mono {{ $grandOldDebt > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400' }}">{{ $grandOldDebt > 0 ? number_format($grandOldDebt, 2) : '—' }}</td>
+                                @endif
                                 <td class="px-4 py-3 text-left font-black font-mono text-blue-600 dark:text-blue-400">{{ number_format($grandInvoices, 2) }}</td>
                                 <td class="px-4 py-3 text-left font-black font-mono text-green-600 dark:text-green-400">{{ number_format($grandPayments, 2) }}</td>
                                 <td class="px-4 py-3 text-left font-black font-mono text-orange-600 dark:text-orange-400">{{ number_format($grandReturns, 2) }}</td>
@@ -312,6 +444,8 @@
 </div>
 
 @push('scripts')
-<script>document.addEventListener('DOMContentLoaded', () => lucide.createIcons());</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
+</script>
 @endpush
 @endsection

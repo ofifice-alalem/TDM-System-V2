@@ -97,11 +97,14 @@
         $storeRows    = $rows->where('type', 'متجر');
         $customerRows = $rows->where('type', 'عميل');
         $n = fn($v) => str_replace(['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'], ['0','1','2','3','4','5','6','7','8','9'], number_format($v, 2));
+        $hasFilter   = !empty($labels['filterStaff']) || !empty($labels['filterStore']) || !empty($labels['filterCustomer']);
+        $showOldDebt = $labels['showOldDebt'] ?? true;
     @endphp
 
     {{-- Cards --}}
     <table style="width:100%; border-collapse:collapse; table-layout:fixed; margin-bottom:18px;">
         <tr>
+            {{-- كارت الإجماليات الكلية --}}
             <td style="width:32%; vertical-align:top; padding:0;">
                 <div class="card-bg">
                     <div class="card-title">{{ $labels['grandTotal'] }}</div>
@@ -109,12 +112,50 @@
                         <tr><td class="cv" style="width:40%">{{ $n($grandInvoices) }}</td><td class="cl" style="width:60%">{{ $labels['invoices'] }}</td></tr>
                         <tr><td class="cv">{{ $n($grandPayments) }}</td><td class="cl">{{ $labels['payments'] }}</td></tr>
                         <tr><td class="cv">{{ $n($grandReturns) }}</td><td class="cl">{{ $labels['returns'] }}</td></tr>
+                        @if($showOldDebt)
                         <tr><td class="cv" style="color:#d97706; font-weight:bold">{{ $n($rows->sum('old_debt')) }}</td><td class="cl">{{ $labels['old_debt'] }}</td></tr>
+                        @endif
                         <tr><td class="cv {{ $grandDebt > 0 ? 'debt-pos' : 'debt-neg' }}">{{ $n($grandDebt) }}</td><td class="cl">{{ $labels['debt'] }}</td></tr>
                     </table>
                 </div>
             </td>
             <td style="width:2%"></td>
+
+            @if($hasFilter)
+            {{-- كارت الفلاتر المطبقة --}}
+            <td style="width:66%; vertical-align:top; padding:0;" colspan="3">
+                <div class="card-bg" style="border-top-color:#7c3aed;">
+                    <div class="card-title" style="color:#7c3aed;">{{ $labels['filterLabel'] ?? 'الفلاتر المطبقة' }}</div>
+                    <table style="width:100%; border-collapse:collapse; table-layout:fixed; margin-top:6px; direction:rtl;">
+                        @if(!empty($labels['filterCustomer']))
+                        <tr>
+                            <td class="cv" style="width:65%; text-align:right; font-size:10px;">{{ $labels['filterCustomer'] }}</td>
+                            <td class="cl" style="width:35%; text-align:right;">{{ $labels['filterCustomerLabel'] ?? 'العميل' }}</td>
+                        </tr>
+                        @endif
+                        @if(!empty($labels['filterStore']))
+                        <tr>
+                            <td class="cv" style="text-align:right; font-size:10px;">{{ $labels['filterStore'] }}</td>
+                            <td class="cl" style="text-align:right;">{{ $labels['filterStoreLabel'] ?? 'المتجر' }}</td>
+                        </tr>
+                        @endif
+                        @if(!empty($labels['filterStaff']))
+                        <tr>
+                            <td class="cv" style="text-align:right; font-size:10px;">{{ $labels['filterStaff'] }}</td>
+                            <td class="cl" style="text-align:right;">{{ $labels['filterStaffLabel'] ?? 'الموظف' }}</td>
+                        </tr>
+                        @endif
+                        @if(!empty($labels['filterOldDebt']))
+                        <tr>
+                            <td class="cv" style="text-align:right; font-size:10px; {{ str_contains($labels['filterOldDebt'] ?? '', 'غير') ? 'color:#dc2626;' : 'color:#16a34a;' }}">{{ $labels['filterOldDebt'] }}</td>
+                            <td class="cl" style="text-align:right;">{{ $labels['filterOldDebtLabel'] ?? 'الديون السابقة' }}</td>
+                        </tr>
+                        @endif
+                    </table>
+                </div>
+            </td>
+            @else
+            {{-- كارت المتاجر --}}
             <td style="width:32%; vertical-align:top; padding:0;">
                 <div class="card-bg">
                     <div class="card-title">{{ $labels['stores'] }}</div>
@@ -128,6 +169,7 @@
                 </div>
             </td>
             <td style="width:2%"></td>
+            {{-- كارت العملاء --}}
             <td style="width:32%; vertical-align:top; padding:0;">
                 <div class="card-bg">
                     <div class="card-title">{{ $labels['customers'] }}</div>
@@ -140,6 +182,7 @@
                     </table>
                 </div>
             </td>
+            @endif
         </tr>
     </table>
 
@@ -149,14 +192,18 @@
             <tr>
                 <th style="width:6%; text-align:center; font-size:7px">{{ $labels['debtor'] }}</th>
                 <th style="width:6%; text-align:center; font-size:7px">{{ $labels['creditor'] }}</th>
-                <th style="width:11%">{{ $labels['debt'] }}</th>
-                <th style="width:10%">{{ $labels['returns'] }}</th>
-                <th style="width:10%">{{ $labels['payments'] }}</th>
-                <th style="width:10%">{{ $labels['invoices'] }}</th>
-                <th style="width:10%; color:#d97706">{{ $labels['old_debt'] }}</th>
+                <th style="width:{{ $hasFilter ? '13' : '11' }}%">{{ $labels['debt'] }}</th>
+                <th style="width:{{ $hasFilter ? '12' : '10' }}%">{{ $labels['returns'] }}</th>
+                <th style="width:{{ $hasFilter ? '12' : '10' }}%">{{ $labels['payments'] }}</th>
+                <th style="width:{{ $hasFilter ? '12' : '10' }}%">{{ $labels['invoices'] }}</th>
+                @if($showOldDebt)
+                <th style="width:{{ $hasFilter ? '12' : '10' }}%; color:#d97706">{{ $labels['old_debt'] }}</th>
+                @endif
+                @if(!$hasFilter)
                 <th style="width:6%; text-align:center">{{ $labels['store'] }}</th>
                 <th style="width:6%; text-align:center">{{ $labels['customer'] }}</th>
-                <th style="width:21%">{{ $labels['name'] }}</th>
+                @endif
+                <th style="width:{{ $hasFilter ? '25' : '21' }}%">{{ $labels['name'] }}</th>
                 <th style="width:4%; text-align:center">#</th>
             </tr>
         </thead>
@@ -169,9 +216,13 @@
                 <td class="num">{{ $row->total_returns != 0 ? $n($row->total_returns) : '-' }}</td>
                 <td class="num">{{ $row->total_payments != 0 ? $n($row->total_payments) : '-' }}</td>
                 <td class="num">{{ $row->total_invoices != 0 ? $n($row->total_invoices) : '-' }}</td>
+                @if($showOldDebt)
                 <td class="num" style="{{ $row->old_debt > 0 ? 'color:#d97706; font-weight:bold;' : 'color:#94a3b8;' }}">{{ $row->old_debt > 0 ? $n($row->old_debt) : '-' }}</td>
+                @endif
+                @if(!$hasFilter)
                 <td style="text-align:center">@if($row->is_store)<span class="check-store">&#10003;</span>@endif</td>
                 <td style="text-align:center">@if(!$row->is_store)<span class="check-customer">&#10003;</span>@endif</td>
+                @endif
                 <td class="name-td">{{ $row->name }}</td>
                 <td class="idx-td">{{ $i + 1 }}</td>
             </tr>
@@ -185,8 +236,10 @@
                 <td class="num">{{ $n($grandReturns) }}</td>
                 <td class="num">{{ $n($grandPayments) }}</td>
                 <td class="num">{{ $n($grandInvoices) }}</td>
+                @if($showOldDebt)
                 <td class="num" style="color:#d97706; font-weight:bold">{{ $n($rows->sum('old_debt')) }}</td>
-                <td colspan="4" style="text-align:right; color:#64748b;">{{ $labels['total'] }}</td>
+                @endif
+                <td colspan="{{ $hasFilter ? 2 : 4 }}" style="text-align:right; color:#64748b;">{{ $labels['total'] }}</td>
             </tr>
         </tfoot>
     </table>

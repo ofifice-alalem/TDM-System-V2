@@ -22,17 +22,24 @@ class CombinedSummaryController extends Controller
 {
     public function index(Request $request)
     {
-        $fromDate = $request->input('from_date', now()->startOfMonth()->format('Y-m-d'));
-        $toDate   = $request->input('to_date', now()->format('Y-m-d'));
+        $fromDate   = $request->input('from_date', now()->startOfMonth()->format('Y-m-d'));
+        $toDate     = $request->input('to_date', now()->format('Y-m-d'));
+        $storeId      = $request->input('entity_type') === 'store'    ? $request->input('store_id')    : null;
+        $customerId   = $request->input('entity_type') === 'customer'  ? $request->input('customer_id') : null;
+        $staffId      = $request->input('staff_id');
+        $entityType   = $request->input('entity_type', 'all'); // all | store | customer
+        $includeOldDebt = $request->hasAny(['from_date', 'to_date', 'export', 'pdf'])
+            ? (bool) $request->input('include_old_debt', 0)
+            : true;
 
-        $rows = $this->buildRows($fromDate, $toDate);
+        $rows = $this->buildRows($fromDate, $toDate, $storeId, $customerId, $staffId, $includeOldDebt, $entityType);
 
         if ($request->has('export')) {
-            return $this->export($rows, $fromDate, $toDate);
+            return $this->export($rows, $fromDate, $toDate, $storeId, $customerId, $staffId, $includeOldDebt, $entityType);
         }
 
         if ($request->has('pdf')) {
-            return $this->exportPdf($rows, $fromDate, $toDate);
+            return $this->exportPdf($rows, $fromDate, $toDate, $storeId, $customerId, $staffId, $includeOldDebt);
         }
 
         $grandInvoices = $rows->sum('total_invoices');
@@ -41,21 +48,28 @@ class CombinedSummaryController extends Controller
         $grandOldDebt  = $rows->sum('old_debt');
         $grandDebt     = $rows->sum('total_debt');
 
-        // ملخص المتاجر
-        $storeRows     = $rows->where('type', 'متجر');
-        $storeSummary  = [
+        $storeRows    = $rows->where('type', 'متجر');
+        $storeSummary = [
             'invoices'  => $storeRows->sum('total_invoices'),
             'payments'  => $storeRows->sum('total_payments'),
             'returns'   => $storeRows->sum('total_returns'),
             'old_debt'  => $storeRows->sum('old_debt'),
             'debt'      => $storeRows->sum('total_debt'),
-            'pending_invoices' => SalesInvoice::where('status', 'pending')->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)->sum('total_amount'),
-            'pending_payments' => StorePayment::where('status', 'pending')->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)->sum('amount'),
-            'pending_returns'  => SalesReturn::where('status', 'pending')->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)->sum('total_amount'),
+            'pending_invoices' => SalesInvoice::where('status', 'pending')
+                ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+                ->when($staffId, fn($q) => $q->where('marketer_id', $staffId))
+                ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)->sum('total_amount'),
+            'pending_payments' => StorePayment::where('status', 'pending')
+                ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+                ->when($staffId, fn($q) => $q->where('marketer_id', $staffId))
+                ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)->sum('amount'),
+            'pending_returns'  => SalesReturn::where('status', 'pending')
+                ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+                ->when($staffId, fn($q) => $q->where('marketer_id', $staffId))
+                ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)->sum('total_amount'),
         ];
         $storeSummary['approved_debt'] = $storeSummary['debt'] - ($storeSummary['pending_invoices'] - $storeSummary['pending_payments'] - $storeSummary['pending_returns']);
 
-        // ملخص العملاء
         $customerRows    = $rows->where('type', 'عميل');
         $customerSummary = [
             'invoices' => $customerRows->sum('total_invoices'),
@@ -65,85 +79,103 @@ class CombinedSummaryController extends Controller
             'debt'     => $customerRows->sum('total_debt'),
         ];
 
+        $stores    = Store::orderBy('name')->get(['id', 'name']);
+        $customers = Customer::orderBy('name')->get(['id', 'name']);
+        $staff     = \App\Models\User::whereIn('role_id', [3, 4])->where('is_active', true)->orderBy('full_name')->get(['id', 'full_name', 'role_id']);
+
         return view('admin.combined-summary.index', compact(
-            'rows', 'fromDate', 'toDate',
+            'rows', 'fromDate', 'toDate', 'storeId', 'customerId', 'staffId', 'includeOldDebt',
             'grandInvoices', 'grandPayments', 'grandReturns', 'grandOldDebt', 'grandDebt',
-            'storeSummary', 'customerSummary'
+            'storeSummary', 'customerSummary',
+            'stores', 'customers', 'staff'
         ));
     }
 
-    private function buildRows($fromDate, $toDate)
+    private function buildRows($fromDate, $toDate, $storeId = null, $customerId = null, $staffId = null, $includeOldDebt = true, $entityType = 'all')
     {
         $rows = collect();
 
-        // المتاجر
-        foreach (Store::orderBy('name')->get() as $store) {
-            $invoices = SalesInvoice::where('store_id', $store->id)
-                ->whereIn('status', ['approved', 'pending'])
-                ->where('marketer_id', '!=', 0)
-                ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
-                ->sum('total_amount');
-            $payments = StorePayment::where('store_id', $store->id)->whereIn('status', ['approved', 'pending'])
-                ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
-                ->sum('amount');
-            $returns = SalesReturn::where('store_id', $store->id)->whereIn('status', ['approved', 'pending'])
-                ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
-                ->sum('total_amount');
-            $oldDebt = SalesInvoice::where('store_id', $store->id)
-                ->where('marketer_id', 0)
-                ->sum('total_amount');
+        // المتاجر — تظهر إذا entityType = all أو store
+        if ($entityType !== 'customer') {
+            $storeQuery = Store::orderBy('name');
+            if ($storeId) $storeQuery->where('id', $storeId);
 
-            if ($invoices == 0 && $payments == 0 && $returns == 0 && $oldDebt == 0) continue;
+            foreach ($storeQuery->get() as $store) {
+                $invoices = SalesInvoice::where('store_id', $store->id)
+                    ->whereIn('status', ['approved', 'pending'])
+                    ->where('marketer_id', '!=', 0)
+                    ->when($staffId, fn($q) => $q->where('marketer_id', $staffId))
+                    ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
+                    ->sum('total_amount');
+                $payments = StorePayment::where('store_id', $store->id)->whereIn('status', ['approved', 'pending'])
+                    ->when($staffId, fn($q) => $q->where('marketer_id', $staffId))
+                    ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
+                    ->sum('amount');
+                $returns = SalesReturn::where('store_id', $store->id)->whereIn('status', ['approved', 'pending'])
+                    ->when($staffId, fn($q) => $q->where('marketer_id', $staffId))
+                    ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
+                    ->sum('total_amount');
+                $oldDebt = $includeOldDebt ? SalesInvoice::where('store_id', $store->id)->where('marketer_id', 0)->sum('total_amount') : 0;
 
-            $rows->push((object)[
-                'name'           => $store->name,
-                'type'           => 'متجر',
-                'total_invoices' => $invoices,
-                'total_payments' => $payments,
-                'total_returns'  => $returns,
-                'old_debt'       => $oldDebt,
-                'total_debt'     => $invoices - $payments - $returns + $oldDebt,
-            ]);
+                if ($invoices == 0 && $payments == 0 && $returns == 0 && $oldDebt == 0) continue;
+
+                $rows->push((object)[
+                    'name'           => $store->name,
+                    'type'           => 'متجر',
+                    'total_invoices' => $invoices,
+                    'total_payments' => $payments,
+                    'total_returns'  => $returns,
+                    'old_debt'       => $oldDebt,
+                    'total_debt'     => $invoices - $payments - $returns + $oldDebt,
+                ]);
+            }
         }
 
-        // العملاء
-        foreach (Customer::orderBy('name')->get() as $customer) {
-            $invoices = CustomerInvoice::where('customer_id', $customer->id)
-                ->where('status', 'completed')
-                ->where('sales_user_id', '!=', 0)
-                ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
-                ->sum('total_amount');
-            $payments = CustomerPayment::where('customer_id', $customer->id)->where('status', 'completed')
-                ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
-                ->sum('amount');
-            $returns = CustomerReturn::where('customer_id', $customer->id)->where('status', 'completed')
-                ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
-                ->sum('total_amount');
-            $oldDebt = CustomerInvoice::where('customer_id', $customer->id)
-                ->where('sales_user_id', 0)
-                ->sum('total_amount');
+        // العملاء — تظهر إذا entityType = all أو customer
+        $staffIsMarketer = $staffId && \App\Models\User::where('id', $staffId)->value('role_id') == 3;
+        if ($entityType !== 'store' && !$staffIsMarketer) {
+            $customerQuery = Customer::orderBy('name');
+            if ($customerId) $customerQuery->where('id', $customerId);
 
-            if ($invoices == 0 && $payments == 0 && $returns == 0 && $oldDebt == 0) continue;
+            foreach ($customerQuery->get() as $customer) {
+                $invoices = CustomerInvoice::where('customer_id', $customer->id)
+                    ->where('status', 'completed')
+                    ->where('sales_user_id', '!=', 0)
+                    ->when($staffId, fn($q) => $q->where('sales_user_id', $staffId))
+                    ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
+                    ->sum('total_amount');
+                $payments = CustomerPayment::where('customer_id', $customer->id)->where('status', 'completed')
+                    ->when($staffId, fn($q) => $q->where('sales_user_id', $staffId))
+                    ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
+                    ->sum('amount');
+                $returns = CustomerReturn::where('customer_id', $customer->id)->where('status', 'completed')
+                    ->when($staffId, fn($q) => $q->where('sales_user_id', $staffId))
+                    ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)
+                    ->sum('total_amount');
+                $oldDebt = $includeOldDebt ? CustomerInvoice::where('customer_id', $customer->id)->where('sales_user_id', 0)->sum('total_amount') : 0;
 
-            $rows->push((object)[
-                'name'           => $customer->name,
-                'type'           => 'عميل',
-                'total_invoices' => $invoices,
-                'total_payments' => $payments,
-                'total_returns'  => $returns,
-                'old_debt'       => $oldDebt,
-                'total_debt'     => $invoices - $payments - $returns + $oldDebt,
-            ]);
+                if ($invoices == 0 && $payments == 0 && $returns == 0 && $oldDebt == 0) continue;
+
+                $rows->push((object)[
+                    'name'           => $customer->name,
+                    'type'           => 'عميل',
+                    'total_invoices' => $invoices,
+                    'total_payments' => $payments,
+                    'total_returns'  => $returns,
+                    'old_debt'       => $oldDebt,
+                    'total_debt'     => $invoices - $payments - $returns + $oldDebt,
+                ]);
+            }
         }
 
         return $rows->sortByDesc('total_debt')->values();
     }
 
-    private function exportPdf($rows, $fromDate, $toDate)
+    private function exportPdf($rows, $fromDate, $toDate, $storeId = null, $customerId = null, $staffId = null, $includeOldDebt = true)
     {
         $arabic = new \ArPHP\I18N\Arabic();
-        $g = fn($text) => $arabic->utf8Glyphs($text);
-        $en = fn($str) => str_replace(
+        $g  = fn($text) => $arabic->utf8Glyphs($text);
+        $en = fn($str)  => str_replace(
             ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'],
             ['0','1','2','3','4','5','6','7','8','9'], $str
         );
@@ -153,23 +185,19 @@ class CombinedSummaryController extends Controller
         $grandReturns  = $rows->sum('total_returns');
         $grandDebt     = $rows->sum('total_debt');
 
-        $processedRows = $rows->map(function($row) use ($g, $en) {
-            return (object)[
-                'name'           => $en($g($row->name)),
-                'type'           => $g($row->type),
-                'is_store'       => $row->type === 'متجر',
-                'total_invoices' => $row->total_invoices,
-                'total_payments' => $row->total_payments,
-                'total_returns'  => $row->total_returns,
-                'old_debt'       => $row->old_debt,
-                'total_debt'     => $row->total_debt,
-            ];
-        });
+        $processedRows = $rows->map(fn($row) => (object)[
+            'name'           => $en($g($row->name)),
+            'type'           => $g($row->type),
+            'is_store'       => $row->type === 'متجر',
+            'total_invoices' => $row->total_invoices,
+            'total_payments' => $row->total_payments,
+            'total_returns'  => $row->total_returns,
+            'old_debt'       => $row->old_debt,
+            'total_debt'     => $row->total_debt,
+        ]);
 
         $labels = [
             'title'          => $g('الملخص المالي الشامل'),
-            'from'           => $g('من'),
-            'to'             => $g('إلى'),
             'grandTotal'     => $g('الإجماليات الكلية'),
             'stores'         => $g('المتاجر'),
             'customers'      => $g('العملاء'),
@@ -191,42 +219,35 @@ class CombinedSummaryController extends Controller
             'dateTo'         => $toDate,
             'labelFrom'      => $g('من'),
             'labelTo'        => $g('إلى'),
+            'filterStaff'      => $staffId    ? $en($g(\App\Models\User::find($staffId)?->full_name ?? '')) : null,
+            'filterStore'      => $storeId    ? $en($g(Store::find($storeId)?->name ?? ''))                : null,
+            'filterCustomer'   => $customerId ? $en($g(Customer::find($customerId)?->name ?? ''))          : null,
+            'filterLabel'      => $g('الفلاتر المطبقة'),
+            'filterStaffLabel'    => $g('الموظف'),
+            'filterStoreLabel'    => $g('المتجر'),
+            'filterCustomerLabel' => $g('العميل'),
+            'filterOldDebt'       => $staffId ? ($includeOldDebt ? $g('مضمنة') : $g('غير مضمنة')) : null,
+            'filterOldDebtLabel'  => $g('الديون السابقة'),
+            'showOldDebt'         => $includeOldDebt,
         ];
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.combined-summary.pdf', compact(
-            'processedRows', 'fromDate', 'toDate',
-            'grandInvoices', 'grandPayments', 'grandReturns', 'grandDebt',
-            'labels', 'rows'
-        ))
-            ->setPaper('a4')
-            ->setOption('isRemoteEnabled', false)
-            ->setOption('isHtml5ParserEnabled', true)
-            ->setOption('isFontSubsettingEnabled', true)
-            ->setOption('compress', 1)
-            ->setOption('dpi', 96);
+        $viewData = compact('processedRows', 'fromDate', 'toDate', 'grandInvoices', 'grandPayments', 'grandReturns', 'grandDebt', 'labels', 'rows');
 
-        // حساب عدد الصفحات
+        $options = ['isRemoteEnabled' => false, 'isHtml5ParserEnabled' => true, 'isFontSubsettingEnabled' => true, 'compress' => 1, 'dpi' => 96];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.combined-summary.pdf', $viewData)->setPaper('a4');
+        foreach ($options as $k => $v) $pdf->setOption($k, $v);
         $pdf->render();
-        $totalPages = $pdf->getDomPDF()->getCanvas()->get_page_count();
-        $labels['totalPages'] = $totalPages;
+        $labels['totalPages'] = $pdf->getDomPDF()->getCanvas()->get_page_count();
 
-        // إعادة التوليد مع عدد الصفحات
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.combined-summary.pdf', compact(
-            'processedRows', 'fromDate', 'toDate',
-            'grandInvoices', 'grandPayments', 'grandReturns', 'grandDebt',
-            'labels', 'rows'
-        ))
-            ->setPaper('a4')
-            ->setOption('isRemoteEnabled', false)
-            ->setOption('isHtml5ParserEnabled', true)
-            ->setOption('isFontSubsettingEnabled', true)
-            ->setOption('compress', 1)
-            ->setOption('dpi', 96);
+        $viewData['labels'] = $labels;
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.combined-summary.pdf', $viewData)->setPaper('a4');
+        foreach ($options as $k => $v) $pdf->setOption($k, $v);
 
         return $pdf->stream('combined-summary-' . $fromDate . '-' . $toDate . '.pdf');
     }
 
-    private function export($rows, $fromDate, $toDate)
+    private function export($rows, $fromDate, $toDate, $storeId = null, $customerId = null, $staffId = null, $includeOldDebt = true, $entityType = 'all')
     {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -234,44 +255,59 @@ class CombinedSummaryController extends Controller
 
         $row = 1;
 
-        // معلومات
-        foreach ([['من تاريخ', $fromDate], ['إلى تاريخ', $toDate]] as $info) {
+        // معلومات الفلاتر
+        $infoRows = [['من تاريخ', $fromDate], ['إلى تاريخ', $toDate]];
+        if ($entityType !== 'all') $infoRows[] = ['عرض', match($entityType) { 'store' => 'المتاجر فقط', 'customer' => 'العملاء فقط', default => 'الكل' }];
+        if ($staffId)    $infoRows[] = ['الموظف',  \App\Models\User::find($staffId)?->full_name ?? ''];
+        if ($staffId)    $infoRows[] = ['الديون السابقة', $includeOldDebt ? 'مضمنة' : 'غير مضمنة'];
+        if ($storeId)    $infoRows[] = ['المتجر',   Store::find($storeId)?->name ?? ''];
+        if ($customerId) $infoRows[] = ['العميل',   Customer::find($customerId)?->name ?? ''];
+
+        foreach ($infoRows as $info) {
             $sheet->setCellValue('A' . $row, $info[0]);
             $sheet->setCellValue('B' . $row, $info[1]);
             $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
-                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E3F2FD']],
-                'font' => ['bold' => true, 'size' => 12],
+                'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E3F2FD']],
+                'font'    => ['bold' => true, 'size' => 12],
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             ]);
             $row++;
         }
-
         $row++;
 
         // ملخص المتاجر
         $storeRows  = $rows->where('type', 'متجر');
-        $pendingInv = SalesInvoice::where('status', 'pending')->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)->sum('total_amount');
-        $pendingPay = StorePayment::where('status', 'pending')->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)->sum('amount');
-        $pendingRet = SalesReturn::where('status', 'pending')->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)->sum('total_amount');
+        $pendingInv = SalesInvoice::where('status', 'pending')
+            ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+            ->when($staffId, fn($q) => $q->where('marketer_id', $staffId))
+            ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)->sum('total_amount');
+        $pendingPay = StorePayment::where('status', 'pending')
+            ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+            ->when($staffId, fn($q) => $q->where('marketer_id', $staffId))
+            ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)->sum('amount');
+        $pendingRet = SalesReturn::where('status', 'pending')
+            ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+            ->when($staffId, fn($q) => $q->where('marketer_id', $staffId))
+            ->whereDate('created_at', '>=', $fromDate)->whereDate('created_at', '<=', $toDate)->sum('total_amount');
 
         $sheet->setCellValue('A' . $row, 'ملخص المتاجر');
         $sheet->mergeCells('A' . $row . ':G' . $row);
         $sheet->getStyle('A' . $row)->applyFromArray([
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1565C0']],
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1565C0']],
+            'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
+            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
         $row++;
         $sheet->fromArray(['ديون سابقة', 'المبيعات', 'المدفوعات', 'المرتجعات', 'إجمالي الدين', 'فواتير معلقة', 'إيصالات معلقة'], null, 'A' . $row);
         $sheet->getStyle('A' . $row . ':G' . $row)->applyFromArray([
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'BBDEFB']],
-            'font' => ['bold' => true],
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'BBDEFB']],
+            'font'      => ['bold' => true],
+            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
         $row++;
-        $storeDebt = $storeRows->sum('total_debt');
+        $storeDebt    = $storeRows->sum('total_debt');
         $storeOldDebt = $storeRows->sum('old_debt');
         $sheet->fromArray([
             number_format($storeOldDebt, 2),
@@ -283,13 +319,9 @@ class CombinedSummaryController extends Controller
             number_format($pendingPay, 2),
         ], null, 'A' . $row);
         $sheet->getStyle('A' . $row . ':G' . $row)->applyFromArray([
-            'font' => ['bold' => true],
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            'font'      => ['bold' => true],
+            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-        ]);
-        $sheet->getStyle('A' . $row)->applyFromArray([
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF8E1']],
-            'font' => ['bold' => true, 'color' => ['rgb' => 'E65100']],
         ]);
         $sheet->getStyle('E' . $row)->applyFromArray([
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $storeDebt > 0 ? 'FFCDD2' : 'C8E6C9']],
@@ -302,21 +334,21 @@ class CombinedSummaryController extends Controller
         $sheet->setCellValue('A' . $row, 'ملخص العملاء');
         $sheet->mergeCells('A' . $row . ':E' . $row);
         $sheet->getStyle('A' . $row)->applyFromArray([
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '6A1B9A']],
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '6A1B9A']],
+            'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
+            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
         $row++;
         $sheet->fromArray(['ديون سابقة', 'المبيعات', 'المدفوعات', 'المرتجعات', 'إجمالي الدين'], null, 'A' . $row);
         $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E1BEE7']],
-            'font' => ['bold' => true],
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E1BEE7']],
+            'font'      => ['bold' => true],
+            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
         $row++;
-        $custDebt = $customerRows->sum('total_debt');
+        $custDebt    = $customerRows->sum('total_debt');
         $custOldDebt = $customerRows->sum('old_debt');
         $sheet->fromArray([
             number_format($custOldDebt, 2),
@@ -326,13 +358,9 @@ class CombinedSummaryController extends Controller
             number_format($custDebt, 2),
         ], null, 'A' . $row);
         $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
-            'font' => ['bold' => true],
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            'font'      => ['bold' => true],
+            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-        ]);
-        $sheet->getStyle('A' . $row)->applyFromArray([
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFF8E1']],
-            'font' => ['bold' => true, 'color' => ['rgb' => 'E65100']],
         ]);
         $sheet->getStyle('E' . $row)->applyFromArray([
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $custDebt > 0 ? 'FFCDD2' : 'C8E6C9']],
@@ -341,60 +369,59 @@ class CombinedSummaryController extends Controller
         $row += 2;
 
         // رؤوس الأعمدة
-        $headers = ['الاسم', 'النوع', 'ديون سابقة', 'إجمالي الفواتير', 'إجمالي المدفوعات', 'إجمالي المرتجعات', 'الدين الحالي', 'دائن / مدين'];
+        $headers = ['الاسم', 'النوع'];
+        if ($includeOldDebt) $headers[] = 'ديون سابقة';
+        array_push($headers, 'إجمالي الفواتير', 'إجمالي المدفوعات', 'إجمالي المرتجعات', 'الدين الحالي', 'دائن / مدين');
+        $lastCol = $includeOldDebt ? 'H' : 'G';
+        $debtCol = $includeOldDebt ? 'G' : 'F';
+        $statusCol = $lastCol;
+
         $sheet->fromArray($headers, null, 'A' . $row);
-        $sheet->getStyle('A' . $row . ':H' . $row)->applyFromArray([
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1565C0']],
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
+            'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1565C0']],
+            'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
+            'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
         $row++;
 
-        // البيانات
         foreach ($rows as $item) {
             $typeColor = $item->type === 'متجر' ? 'E3F2FD' : 'F3E5F5';
             $debtColor = $item->total_debt > 0 ? 'FFCDD2' : ($item->total_debt < 0 ? 'C8E6C9' : 'F5F5F5');
             $debtLabel = $item->total_debt > 0 ? 'مدين' : ($item->total_debt < 0 ? 'دائن' : '--');
 
-            $oldDebtColor = $item->old_debt > 0 ? 'FFF8E1' : 'F5F5F5';
-            $sheet->fromArray([
-                $item->name,
-                $item->type,
-                number_format($item->old_debt, 2),
+            $rowData = [$item->name, $item->type];
+            if ($includeOldDebt) $rowData[] = number_format($item->old_debt, 2);
+            array_push($rowData,
                 number_format($item->total_invoices, 2),
                 number_format($item->total_payments, 2),
                 number_format($item->total_returns, 2),
                 number_format($item->total_debt, 2),
-                $debtLabel,
-            ], null, 'A' . $row);
+                $debtLabel
+            );
 
-            $sheet->getStyle('A' . $row . ':H' . $row)->applyFromArray([
-                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
-            ]);
+            $sheet->fromArray($rowData, null, 'A' . $row);
+            $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray(['borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]]);
             $sheet->getStyle('B' . $row)->applyFromArray([
-                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $typeColor]],
-                'font' => ['bold' => true],
+                'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $typeColor]],
+                'font'      => ['bold' => true],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
             ]);
-            $sheet->getStyle('C' . $row)->applyFromArray([
-                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $oldDebtColor]],
-                'font' => ['bold' => $item->old_debt > 0, 'color' => ['rgb' => $item->old_debt > 0 ? 'E65100' : '9E9E9E']],
-            ]);
-            $sheet->getStyle('G' . $row)->applyFromArray([
+            if ($includeOldDebt) {
+                $sheet->getStyle('C' . $row)->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $item->old_debt > 0 ? 'FFF8E1' : 'F5F5F5']],
+                    'font' => ['bold' => $item->old_debt > 0, 'color' => ['rgb' => $item->old_debt > 0 ? 'E65100' : '9E9E9E']],
+                ]);
+            }
+            $sheet->getStyle($debtCol . $row)->applyFromArray([
                 'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $debtColor]],
                 'font' => ['bold' => true],
             ]);
-            if ($item->total_debt < 0) {
-                $sheet->getStyle('H' . $row)->applyFromArray([
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
-                    'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-                ]);
-            } elseif ($item->total_debt > 0) {
-                $sheet->getStyle('H' . $row)->applyFromArray([
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFCDD2']],
-                    'font' => ['bold' => true, 'color' => ['rgb' => 'C62828']],
+            $hColor = $item->total_debt < 0 ? ['bg' => '4CAF50', 'fg' => 'FFFFFF'] : ($item->total_debt > 0 ? ['bg' => 'FFCDD2', 'fg' => 'C62828'] : null);
+            if ($hColor) {
+                $sheet->getStyle($statusCol . $row)->applyFromArray([
+                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $hColor['bg']]],
+                    'font'      => ['bold' => true, 'color' => ['rgb' => $hColor['fg']]],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
                 ]);
             }
@@ -403,37 +430,33 @@ class CombinedSummaryController extends Controller
 
         // الإجماليات
         $row++;
-        $grandDebt = $rows->sum('total_debt');
+        $grandDebt    = $rows->sum('total_debt');
         $grandOldDebt = $rows->sum('old_debt');
-        $sheet->fromArray([
-            'الإجمالي', '',
-            number_format($grandOldDebt, 2),
+        $totalRow = ['الإجمالي', ''];
+        if ($includeOldDebt) $totalRow[] = number_format($grandOldDebt, 2);
+        array_push($totalRow,
             number_format($rows->sum('total_invoices'), 2),
             number_format($rows->sum('total_payments'), 2),
             number_format($rows->sum('total_returns'), 2),
             number_format($grandDebt, 2),
-            $grandDebt > 0 ? 'مدين' : ($grandDebt < 0 ? 'دائن' : '--'),
-        ], null, 'A' . $row);
-        $sheet->getStyle('A' . $row . ':H' . $row)->applyFromArray([
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E8EAF6']],
-            'font' => ['bold' => true, 'size' => 12],
+            $grandDebt > 0 ? 'مدين' : ($grandDebt < 0 ? 'دائن' : '--')
+        );
+        $sheet->fromArray($totalRow, null, 'A' . $row);
+        $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
+            'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E8EAF6']],
+            'font'    => ['bold' => true, 'size' => 12],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
         ]);
-        if ($grandDebt < 0) {
-            $sheet->getStyle('H' . $row)->applyFromArray([
-                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
-                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-            ]);
-        } elseif ($grandDebt > 0) {
-            $sheet->getStyle('H' . $row)->applyFromArray([
-                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFCDD2']],
-                'font' => ['bold' => true, 'color' => ['rgb' => 'C62828']],
+        $gColor = $grandDebt < 0 ? ['bg' => '4CAF50', 'fg' => 'FFFFFF'] : ($grandDebt > 0 ? ['bg' => 'FFCDD2', 'fg' => 'C62828'] : null);
+        if ($gColor) {
+            $sheet->getStyle($statusCol . $row)->applyFromArray([
+                'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $gColor['bg']]],
+                'font'      => ['bold' => true, 'color' => ['rgb' => $gColor['fg']]],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
             ]);
         }
 
-        foreach (range('A', 'H') as $col) {
+        foreach (range('A', $lastCol) as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
