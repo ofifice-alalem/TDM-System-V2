@@ -263,7 +263,8 @@ class StatisticsController extends Controller
                     number_format($storeData['returns'], 2),
                     number_format($storeData['balance'], 2)
                 ];
-                $sheet->fromArray($rowData, null, 'A' . $row);
+                $sheet->fromArray($rowData, null, 'B' . $row);
+            $sheet->setCellValue('A' . $row, $rowIndex++);
                 $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
                     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
                 ]);
@@ -737,50 +738,50 @@ class StatisticsController extends Controller
         if ($request->stat_type == 'stores') {
             if ($request->operation == 'payments') {
                 if ($request->store_id == 'all') {
-                    $headers = ['رقم الفاتورة', 'المتجر', 'المسوق', 'طريقة الدفع', 'التاريخ', 'الحالة', 'المبلغ'];
-                    $lastCol = 'G';
+                    $headers = ['#', 'رقم الفاتورة', 'المتجر', 'المسوق', 'طريقة الدفع', 'التاريخ', 'الحالة', 'المبلغ'];
+                    $lastCol = 'H';
                 } else {
-                    $headers = ['رقم الفاتورة', 'المسوق', 'طريقة الدفع', 'التاريخ', 'الحالة', 'المبلغ'];
-                    $lastCol = 'F';
+                    $headers = ['#', 'رقم الفاتورة', 'المسوق', 'طريقة الدفع', 'التاريخ', 'الحالة', 'المبلغ'];
+                    $lastCol = 'G';
                 }
             } else {
                 if ($request->store_id == 'all') {
-                    $headers = ['رقم الفاتورة', 'المتجر', 'المسوق', 'التاريخ', 'الحالة', 'المبلغ'];
-                    $lastCol = 'F';
+                    $headers = ['#', 'رقم الفاتورة', 'المتجر', 'المسوق', 'التاريخ', 'الحالة', 'المبلغ'];
+                    $lastCol = 'G';
                 } else {
-                    $headers = ['رقم الفاتورة', 'المسوق', 'التاريخ', 'الحالة', 'المبلغ'];
-                    $lastCol = 'E';
+                    $headers = ['#', 'رقم الفاتورة', 'المسوق', 'التاريخ', 'الحالة', 'المبلغ'];
+                    $lastCol = 'F';
                 }
             }
         } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['sales', 'payments'])) {
             if ($request->operation == 'payments') {
                 if ($request->marketer_id == 'all') {
-                    $headers = ['رقم الفاتورة', 'المسوق', 'المتجر', 'نسبة العمولة', 'القيمة المستحقة', 'طريقة الدفع', 'التاريخ', 'الحالة', 'المبلغ'];
-                    $lastCol = 'I';
+                    $headers = ['#', 'رقم الفاتورة', 'المسوق', 'المتجر', 'نسبة العمولة', 'القيمة المستحقة', 'طريقة الدفع', 'التاريخ', 'الحالة', 'المبلغ'];
+                    $lastCol = 'J';
                 } else {
-                    $headers = ['رقم الفاتورة', 'المتجر', 'نسبة العمولة', 'القيمة المستحقة', 'طريقة الدفع', 'التاريخ', 'الحالة', 'المبلغ'];
-                    $lastCol = 'H';
+                    $headers = ['#', 'رقم الفاتورة', 'المتجر', 'نسبة العمولة', 'القيمة المستحقة', 'طريقة الدفع', 'التاريخ', 'الحالة', 'المبلغ'];
+                    $lastCol = 'I';
                 }
             } else {
                 if ($request->marketer_id == 'all') {
-                    $headers = ['رقم الفاتورة', 'المسوق', 'المتجر', 'التاريخ', 'الحالة', 'المبلغ'];
-                    $lastCol = 'F';
+                    $headers = ['#', 'رقم الفاتورة', 'المسوق', 'المتجر', 'التاريخ', 'الحالة', 'المبلغ'];
+                    $lastCol = 'G';
                 } else {
-                    $headers = ['رقم الفاتورة', 'المتجر', 'التاريخ', 'الحالة', 'المبلغ'];
-                    $lastCol = 'E';
+                    $headers = ['#', 'رقم الفاتورة', 'المتجر', 'التاريخ', 'الحالة', 'المبلغ'];
+                    $lastCol = 'F';
                 }
             }
         } elseif ($request->stat_type == 'marketers' && in_array($request->operation, ['requests', 'returns'])) {
             if ($request->marketer_id == 'all') {
-                $headers = ['رقم الفاتورة', 'المسوق', 'التاريخ', 'الحالة'];
-                $lastCol = 'D';
+                $headers = ['#', 'رقم الفاتورة', 'المسوق', 'التاريخ', 'الحالة'];
+                $lastCol = 'E';
             } else {
-                $headers = ['رقم الفاتورة', 'التاريخ', 'الحالة'];
-                $lastCol = 'C';
+                $headers = ['#', 'رقم الفاتورة', 'التاريخ', 'الحالة'];
+                $lastCol = 'D';
             }
         } else {
-            $headers = ['رقم الفاتورة', 'التاريخ', 'الحالة', 'المبلغ'];
-            $lastCol = 'D';
+            $headers = ['#', 'رقم الفاتورة', 'التاريخ', 'الحالة', 'المبلغ'];
+            $lastCol = 'E';
         }
         
         $sheet->fromArray($headers, null, 'A' . $row);
@@ -794,6 +795,7 @@ class StatisticsController extends Controller
         $row++;
         
         // البيانات
+        $rowIndex = 1;
         foreach ($results['data'] as $item) {
             $invoiceNumber = match($results['operation']) {
                 'sales' => $item->invoice_number,
@@ -962,7 +964,8 @@ class StatisticsController extends Controller
                 $statusCol = 'C';
             }
             
-            $sheet->fromArray($rowData, null, 'A' . $row);
+            $sheet->fromArray($rowData, null, 'B' . $row);
+            $sheet->setCellValue('A' . $row, $rowIndex++);
             
             $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
                 'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],

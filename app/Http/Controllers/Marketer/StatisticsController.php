@@ -32,6 +32,8 @@ class StatisticsController extends Controller
                 if (isset($results['is_store_summary'])) {
                     return $this->exportStoreSummaryToExcel($results, $request);
                 }
+                // إعادة جلب البيانات كاملة بدون pagination
+                $results = $this->callProtected($shared, 'getMarketerStatistics', [$request, true]);
                 return $this->callProtected($shared, 'exportToExcel', [$results, $request]);
             }
         }
