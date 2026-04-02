@@ -24,13 +24,17 @@ class StatisticsController extends Controller
 
         if ($request->filled(['stat_type', 'from_date', 'to_date'])) {
             if ($request->stat_type == 'stores' && $request->filled('operation')) {
-                $results = $this->getStatistics($request, $request->has('export'));
+                $results = $this->getStatistics($request, $request->has('export') || $request->has('pdf'));
             } elseif ($request->stat_type == 'marketers' && $request->filled(['marketer_id', 'operation'])) {
-                $results = $this->getMarketerStatistics($request, $request->has('export'));
+                $results = $this->getMarketerStatistics($request, $request->has('export') || $request->has('pdf'));
             }
-            
+
             if ($results && $request->has('export')) {
                 return $this->exportToExcel($results, $request);
+            }
+
+            if ($results && $request->has('pdf')) {
+                return $this->exportPdf($results, $request);
             }
         }
 
@@ -998,6 +1002,129 @@ class StatisticsController extends Controller
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit;
+    }
+
+    private function exportPdf($results, $request)
+    {
+        $arabic = new \ArPHP\I18N\Arabic();
+        $g  = fn($t) => $arabic->utf8Glyphs($t);
+        $en = fn($s) => str_replace(
+            ['\u0660','\u0661','\u0662','\u0663','\u0664','\u0665','\u0666','\u0667','\u0668','\u0669'],
+            ['0','1','2','3','4','5','6','7','8','9'], $s
+        );
+
+        $operation = $request->operation;
+
+        $operationName = match($operation) {
+            'summary'       => 'الملخص المالي',
+            'sales'         => 'فواتير البيع',
+            'payments'      => 'إيصالات القبض',
+            'sales_returns' => 'إرجاعات المتاجر',
+            'requests'      => 'طلبات البضاعة',
+            'returns'       => 'إرجاعات البضاعة',
+            'withdrawals'   => 'طلبات سحب الأرباح',
+            default         => $operation,
+        };
+
+        // اسم الكيان (متجر أو مسوق)
+        if ($request->stat_type === 'stores') {
+            $entityName = $request->store_id === 'all'
+                ? 'الكل'
+                : (Store::find($request->store_id)?->name ?? '');
+        } else {
+            $entityName = $request->marketer_id === 'all'
+                ? 'الكل'
+                : (\App\Models\User::find($request->marketer_id)?->full_name ?? '');
+        }
+
+        $selectedStore = null;
+        if ($request->filled('marketer_store_id')) {
+            $selectedStore = Store::find($request->marketer_store_id);
+        }
+
+        $statusNames = [];
+        if ($request->filled('statuses')) {
+            $map = ['pending' => 'معلق', 'approved' => 'موثق', 'cancelled' => 'ملغي', 'rejected' => 'مرفوض', 'debt' => 'الدين'];
+            $statusNames = array_map(fn($s) => $map[$s] ?? $s, (array) $request->statuses);
+        }
+
+        $hasStore      = $request->stat_type === 'stores'
+            ? ($request->store_id === 'all')
+            : in_array($operation, ['sales', 'payments', 'sales_returns']);
+        $hasMarketer   = $request->stat_type === 'marketers' && $request->marketer_id === 'all';
+        $hasPayMethod  = $operation === 'payments';
+        $hasCommission = $operation === 'payments' && $request->stat_type === 'marketers';
+        $hasAmount     = !in_array($operation, ['requests', 'returns']);
+        $hasStatus     = true;
+
+        $labels = [
+            'title'            => $g('إحصائيات الإدارة'),
+            'entityName'       => $g($entityName),
+            'entityLabel'      => $g($request->stat_type === 'stores' ? 'المتجر' : 'المسوق'),
+            'operationName'    => $g($operationName),
+            'operation'        => $g('العملية'),
+            'storeName'        => $selectedStore ? $g($selectedStore->name) : '',
+            'store'            => $g('المتجر'),
+            'marketer'         => $g('المسوق'),
+            'statusName'       => $statusNames ? $g(implode(' ، ', $statusNames)) : '',
+            'status'           => $g('الحالة'),
+            'dateFrom'         => $request->from_date,
+            'dateTo'           => $request->to_date,
+            'grandTotal'       => $g('الإجمالي'),
+            'summary'          => $g('ملخص'),
+            'filterInfo'       => $g('معلومات التقرير'),
+            'sales'            => $g('المبيعات'),
+            'payments'         => $g('المدفوعات'),
+            'returns'          => $g('المرتجعات'),
+            'debt'             => $g('الدين'),
+            'salesStatus'      => $g('حالة المبيعات'),
+            'paymentsStatus'   => $g('حالة المدفوعات'),
+            'pending'          => $g('معلق'),
+            'approved'         => $g('موثق'),
+            'total'            => $g('الإجمالي'),
+            'invoiceNum'       => $g('رقم الفاتورة'),
+            'date'             => $g('التاريخ'),
+            'amount'           => $g('المبلغ'),
+            'payMethod'        => $g('طريقة الدفع'),
+            'commRate'         => $g('نسبة العمولة'),
+            'commAmount'       => $g('المستحق'),
+            'cash'             => $g('كاش'),
+            'transfer'         => $g('حوالة'),
+            'check'            => $g('شيك'),
+            'hasStore'         => $hasStore,
+            'hasMarketer'      => $hasMarketer,
+            'hasPaymentMethod' => $hasPayMethod,
+            'hasCommission'    => $hasCommission,
+            'hasAmount'        => $hasAmount,
+            'hasStatus'        => $hasStatus,
+        ];
+
+        $viewData = [
+            'type'      => isset($results['is_summary']) ? 'summary' : 'detail',
+            'data'      => $results,
+            'labels'    => $labels,
+            'g'         => $g,
+            'en'        => $en,
+            'operation' => $operation,
+            'statType'  => $request->stat_type,
+            'rows'      => isset($results['is_summary']) ? collect() : $results['data'],
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('shared.statistics.pdf', $viewData)
+            ->setPaper('a4')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isFontSubsettingEnabled', true);
+
+        $pdf->render();
+        $labels['totalPages'] = $pdf->getDomPDF()->getCanvas()->get_page_count();
+        $viewData['labels']   = $labels;
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('shared.statistics.pdf', $viewData)
+            ->setPaper('a4')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isFontSubsettingEnabled', true);
+
+        return $pdf->stream('admin-statistics-' . $operation . '-' . $request->from_date . '.pdf');
     }
 
     private function getStoreSummary($request)
