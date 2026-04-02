@@ -160,6 +160,7 @@ $L = [
 {{-- ===== إيصال قبض ===== --}}
 @elseif($inv['operation'] === 'payments')
 <div class="rcpt-container">
+    @if($inv['isInvalid'])<div class="inv-invalid">{!! $L['invalid'] !!}</div>@endif
     <div class="rcpt-company-header">
         @if($inv['logoBase64'])<img src="data:image/png;base64,{{ $inv['logoBase64'] }}" alt="">@endif
         <div class="rcpt-company-name">{!! $inv['companyName'] !!}</div>
@@ -289,6 +290,7 @@ $L = [
 {{-- ===== سحب أرباح ===== --}}
 @elseif($inv['operation'] === 'withdrawals')
 <div class="rcpt-container">
+    @if($inv['isInvalid'])<div class="inv-invalid">{!! $L['invalid'] !!}</div>@endif
     <div class="rcpt-company-header">
         @if($inv['logoBase64'])<img src="data:image/png;base64,{{ $inv['logoBase64'] }}" alt="">@endif
         <div class="rcpt-company-name">{!! $inv['companyName'] !!}</div>
