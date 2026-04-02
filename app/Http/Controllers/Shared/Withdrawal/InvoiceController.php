@@ -8,6 +8,25 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
+    public function getWithdrawalData(MarketerWithdrawalRequest $withdrawal)
+    {
+        $withdrawal->load('marketer');
+
+        $logoPath   = public_path('images/company.png');
+        $logoBase64 = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : null;
+
+        return response()->json([
+            'withdrawal_id'  => $withdrawal->id,
+            'status'         => $withdrawal->status,
+            'date'           => $withdrawal->created_at->format('Y-m-d'),
+            'logo_base64'    => $logoBase64,
+            'marketer'       => $withdrawal->marketer->full_name ?? '---',
+            'marketer_phone' => $withdrawal->marketer->phone ?? '---',
+            'amount'         => number_format($withdrawal->requested_amount, 2),
+            'notes'          => $withdrawal->notes,
+        ]);
+    }
+
     public function generateWithdrawalInvoicePdf(MarketerWithdrawalRequest $withdrawal)
     {
         $withdrawal->load('marketer', 'approvedByUser', 'rejectedByUser');

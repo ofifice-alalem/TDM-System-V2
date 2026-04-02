@@ -438,9 +438,7 @@
                                 @if(!in_array($results['operation'], ['requests', 'returns']))
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المبلغ</th>
                                 @endif
-                                @if($results['operation'] === 'sales')
-                                    <th class="px-6 py-3 text-center text-xs font-bold text-gray-600 dark:text-gray-400">الفاتورة</th>
-                                @endif
+                                <th class="px-6 py-3 text-center text-xs font-bold text-gray-600 dark:text-gray-400">عرض</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
@@ -537,17 +535,37 @@
                                             دينار
                                         </td>
                                     @endif
-                                    @if($results['operation'] === 'sales')
-                                        <td class="px-6 py-4 text-center">
-                                            <button
-                                                type="button"
-                                                onclick="openInvoiceModal('{{ route('warehouse.sales.invoice-data', $item->id) }}', '{{ $item->invoice_number }}')"
-                                                class="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-500/30 rounded-lg text-xs font-bold hover:bg-primary-100 dark:hover:bg-primary-500/20 transition-colors">
-                                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-                                                عرض
-                                            </button>
-                                        </td>
-                                    @endif
+                                    @php
+                                        $invoiceDataUrl = match($results['operation']) {
+                                            'sales'         => route('warehouse.sales.invoice-data', $item->id),
+                                            'payments'      => route('warehouse.payments.invoice-data', $item->id),
+                                            'sales_returns' => route('warehouse.sales-returns.invoice-data', $item->id),
+                                            'requests'      => route('warehouse.requests.invoice-data', $item->id),
+                                            'returns'       => route('warehouse.returns.invoice-data', $item->id),
+                                            'withdrawals'   => route('admin.withdrawals.invoice-data', $item->id),
+                                            default         => null,
+                                        };
+                                        $invoiceLabel = match($results['operation']) {
+                                            'sales'         => $item->invoice_number,
+                                            'payments'      => $item->payment_number,
+                                            'sales_returns' => $item->return_number,
+                                            'requests'      => $item->invoice_number,
+                                            'returns'       => $item->invoice_number,
+                                            'withdrawals'   => 'WD-' . $item->id,
+                                            default         => $item->id,
+                                        };
+                                    @endphp
+                                    <td class="px-6 py-4 text-center">
+                                        @if($invoiceDataUrl)
+                                        <button
+                                            type="button"
+                                            onclick="openInvoiceModal('{{ $invoiceDataUrl }}', '{{ $invoiceLabel }}', '{{ $results['operation'] }}')"
+                                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-500/30 rounded-lg text-xs font-bold hover:bg-primary-100 dark:hover:bg-primary-500/20 transition-colors">
+                                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                            عرض
+                                        </button>
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
@@ -859,7 +877,7 @@
 </script>
 
 <script>
-function openInvoiceModal(url, number) {
+function openInvoiceModal(url, number, operation) {
     const modal = document.getElementById('invoiceModal');
     const loading = document.getElementById('invoiceModalLoading');
     const content = document.getElementById('invoiceModalContent');
@@ -867,16 +885,15 @@ function openInvoiceModal(url, number) {
     loading.style.display = 'flex';
     content.style.display = 'none';
     content.innerHTML = '';
-    document.getElementById('modalInvoiceTitle').textContent = 'فاتورة ' + number;
+    document.getElementById('modalInvoiceTitle').textContent = number;
 
-    // حفظ رابط PDF لزر التحميل
     const pdfUrl = url.replace('/invoice-data', '/pdf');
     document.getElementById('downloadPdfBtn').href = pdfUrl;
 
     fetch(url)
         .then(r => r.json())
         .then(data => {
-            content.innerHTML = buildInvoiceHtml(data);
+            content.innerHTML = buildInvoiceHtml(data, operation);
             loading.style.display = 'none';
             content.style.display = 'block';
         })
@@ -889,7 +906,16 @@ function closeInvoiceModal() {
     document.getElementById('invoiceModal').style.display = 'none';
 }
 
-function buildInvoiceHtml(d) {
+function buildInvoiceHtml(d, operation) {
+    if (operation === 'payments')      return buildPaymentHtml(d);
+    if (operation === 'sales_returns') return buildSalesReturnHtml(d);
+    if (operation === 'requests')      return buildRequestHtml(d);
+    if (operation === 'returns')       return buildReturnHtml(d);
+    if (operation === 'withdrawals')   return buildWithdrawalHtml(d);
+    return buildSalesHtml(d);
+}
+
+function buildSalesHtml(d) {
     const fmt = v => { const n = parseFloat(String(v).replace(/,/g, '')); return isNaN(n) ? v : n.toLocaleString('en', {minimumFractionDigits: 2, maximumFractionDigits: 2}); };
     const statusMap = {
         pending:   {label: 'معلق',   bg: '#FEF3C7', color: '#92400E'},
@@ -987,6 +1013,223 @@ function buildInvoiceHtml(d) {
                 <div style="border-top:2px solid #818CF8;margin-top:10px;padding-top:12px;display:flex;justify-content:space-between;align-items:baseline">
                     <span style="font-size:15px;font-weight:bold;text-transform:uppercase;letter-spacing:0.05em">الإجمالي النهائي:</span>
                     <span style="font-size:28px;font-weight:900;color:#1D4ED8">${fmt(d.total)} <span style="font-size:14px;font-weight:bold;color:#6B7280">د</span></span>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function buildPaymentHtml(d) {
+    const fmt = v => { const n = parseFloat(String(v).replace(/,/g, '')); return isNaN(n) ? v : n.toLocaleString('en', {minimumFractionDigits: 2, maximumFractionDigits: 2}); };
+    const statusMap = { pending: {label: 'معلق', bg: '#FEF3C7', color: '#92400E'}, approved: {label: 'موثق', bg: '#D1FAE5', color: '#065F46'}, cancelled: {label: 'ملغي', bg: '#F3F4F6', color: '#374151'}, rejected: {label: 'مرفوض', bg: '#FEE2E2', color: '#991B1B'} };
+    const st = statusMap[d.status] || {label: d.status, bg: '#F3F4F6', color: '#374151'};
+    const logoHtml = d.logo_base64 ? `<img src="data:image/png;base64,${d.logo_base64}" style="max-height:70px;max-width:130px;display:block">` : '';
+    return `
+    <div dir="rtl" style="font-family:Arial,sans-serif;color:#111">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+            <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                    <span style="background:#ECFDF5;color:#065F46;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:bold;border:1px solid #A7F3D0">إيصال قبض</span>
+                    <span style="color:#9CA3AF;font-size:11px">${d.date}</span>
+                </div>
+                <div style="font-size:26px;font-weight:900">إيصال #${d.payment_number}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+                ${logoHtml}
+                <span style="background:${st.bg};color:${st.color};padding:5px 14px;border-radius:10px;font-size:12px;font-weight:900">${st.label}</span>
+            </div>
+        </div>
+        <div style="background:#F9FAFB;border-radius:16px;padding:16px;margin-bottom:16px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div><div style="font-size:11px;color:#9CA3AF;margin-bottom:2px">اسم المتجر</div><div style="font-weight:bold;font-size:14px">${d.store}</div></div>
+                <div><div style="font-size:11px;color:#9CA3AF;margin-bottom:2px">رقم الهاتف</div><div style="font-weight:bold;font-size:14px">${d.store_phone}</div></div>
+                <div><div style="font-size:11px;color:#9CA3AF;margin-bottom:2px">المسوق</div><div style="font-weight:bold;font-size:14px">${d.marketer}</div></div>
+                <div><div style="font-size:11px;color:#9CA3AF;margin-bottom:2px">طريقة الدفع</div><div style="font-weight:bold;font-size:14px">${d.payment_method}</div></div>
+            </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end">
+            <div style="background:linear-gradient(135deg,#ECFDF5,#D1FAE5);border-radius:20px;padding:20px 24px;min-width:280px;border:2px solid #6EE7B7">
+                <div style="border-top:2px solid #34D399;padding-top:12px;display:flex;justify-content:space-between;align-items:baseline">
+                    <span style="font-size:15px;font-weight:bold">المبلغ المسدد:</span>
+                    <span style="font-size:28px;font-weight:900;color:#065F46">${fmt(d.amount)} <span style="font-size:14px;font-weight:bold;color:#6B7280">د</span></span>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function buildSalesReturnHtml(d) {
+    const fmt = v => { const n = parseFloat(String(v).replace(/,/g, '')); return isNaN(n) ? v : n.toLocaleString('en', {minimumFractionDigits: 2, maximumFractionDigits: 2}); };
+    const statusMap = { pending: {label: 'معلق', bg: '#FEF3C7', color: '#92400E'}, approved: {label: 'موثق', bg: '#D1FAE5', color: '#065F46'}, cancelled: {label: 'ملغي', bg: '#F3F4F6', color: '#374151'}, rejected: {label: 'مرفوض', bg: '#FEE2E2', color: '#991B1B'}, debt: {label: 'دين', bg: '#FFF7ED', color: '#9A3412'} };
+    const st = statusMap[d.status] || {label: d.status, bg: '#F3F4F6', color: '#374151'};
+    const logoHtml = d.logo_base64 ? `<img src="data:image/png;base64,${d.logo_base64}" style="max-height:70px;max-width:130px;display:block">` : '';
+    const rows = d.items.map((item, i) => `
+        <tr>
+            <td style="padding:12px 16px;background:${i%2===0?'rgba(249,250,251,0.5)':'#fff'};border-bottom:1px solid #F3F4F6;font-weight:bold;font-size:13px">${item.name}</td>
+            <td style="padding:12px 16px;background:${i%2===0?'rgba(249,250,251,0.5)':'#fff'};border-bottom:1px solid #F3F4F6;text-align:center">
+                <span style="display:inline-block;background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:3px 12px;font-weight:900;font-size:13px">${item.quantity}</span>
+            </td>
+            <td style="padding:12px 16px;background:${i%2===0?'rgba(249,250,251,0.5)':'#fff'};border-bottom:1px solid #F3F4F6;text-align:center;font-size:13px">${item.price} د</td>
+            <td style="padding:12px 16px;background:${i%2===0?'rgba(249,250,251,0.5)':'#fff'};border-bottom:1px solid #F3F4F6;text-align:center;font-weight:900;font-size:13px">${item.total} د</td>
+        </tr>`).join('');
+    return `
+    <div dir="rtl" style="font-family:Arial,sans-serif;color:#111">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+            <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                    <span style="background:#FFF7ED;color:#9A3412;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:bold;border:1px solid #FED7AA">إرجاع متجر</span>
+                    <span style="color:#9CA3AF;font-size:11px">${d.date}</span>
+                </div>
+                <div style="font-size:26px;font-weight:900">إرجاع #${d.return_number}</div>
+                <div style="font-size:12px;color:#6B7280;margin-top:4px">فاتورة أصلية: ${d.invoice_number}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+                ${logoHtml}
+                <span style="background:${st.bg};color:${st.color};padding:5px 14px;border-radius:10px;font-size:12px;font-weight:900">${st.label}</span>
+            </div>
+        </div>
+        <div style="background:#F9FAFB;border-radius:16px;padding:16px;margin-bottom:16px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div><div style="font-size:11px;color:#9CA3AF;margin-bottom:2px">اسم المتجر</div><div style="font-weight:bold;font-size:14px">${d.store}</div></div>
+                <div><div style="font-size:11px;color:#9CA3AF;margin-bottom:2px">رقم الهاتف</div><div style="font-weight:bold;font-size:14px">${d.store_phone}</div></div>
+                <div><div style="font-size:11px;color:#9CA3AF;margin-bottom:2px">المسوق</div><div style="font-weight:bold;font-size:14px">${d.marketer}</div></div>
+            </div>
+        </div>
+        <div style="border-radius:16px;overflow:hidden;border:1px solid #E5E7EB;margin-bottom:16px">
+            <table style="width:100%;border-collapse:collapse">
+                <thead><tr style="background:#F9FAFB">
+                    <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:bold;color:#9CA3AF">المنتج</th>
+                    <th style="padding:10px 16px;text-align:center;font-size:11px;font-weight:bold;color:#9CA3AF">الكمية</th>
+                    <th style="padding:10px 16px;text-align:center;font-size:11px;font-weight:bold;color:#9CA3AF">السعر</th>
+                    <th style="padding:10px 16px;text-align:center;font-size:11px;font-weight:bold;color:#9CA3AF">الإجمالي</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+        <div style="display:flex;justify-content:flex-end">
+            <div style="background:linear-gradient(135deg,#FFF7ED,#FED7AA);border-radius:20px;padding:20px 24px;min-width:280px;border:2px solid #FDBA74">
+                <div style="border-top:2px solid #FB923C;padding-top:12px;display:flex;justify-content:space-between;align-items:baseline">
+                    <span style="font-size:15px;font-weight:bold">الإجمالي:</span>
+                    <span style="font-size:28px;font-weight:900;color:#9A3412">${fmt(d.total)} <span style="font-size:14px;font-weight:bold;color:#6B7280">د</span></span>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function buildRequestHtml(d) {
+    const statusMap = { pending: {label: 'معلق', bg: '#FEF3C7', color: '#92400E'}, approved: {label: 'موافق عليه', bg: '#DBEAFE', color: '#1E40AF'}, documented: {label: 'موثق', bg: '#D1FAE5', color: '#065F46'}, cancelled: {label: 'ملغي', bg: '#F3F4F6', color: '#374151'}, rejected: {label: 'مرفوض', bg: '#FEE2E2', color: '#991B1B'} };
+    const st = statusMap[d.status] || {label: d.status, bg: '#F3F4F6', color: '#374151'};
+    const logoHtml = d.logo_base64 ? `<img src="data:image/png;base64,${d.logo_base64}" style="max-height:70px;max-width:130px;display:block">` : '';
+    const rows = d.items.map((item, i) => `
+        <tr>
+            <td style="padding:12px 16px;background:${i%2===0?'rgba(249,250,251,0.5)':'#fff'};border-bottom:1px solid #F3F4F6;font-weight:bold;font-size:13px">${item.name}</td>
+            <td style="padding:12px 16px;background:${i%2===0?'rgba(249,250,251,0.5)':'#fff'};border-bottom:1px solid #F3F4F6;text-align:center">
+                <span style="display:inline-block;background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:3px 12px;font-weight:900;font-size:13px">${item.quantity}</span>
+            </td>
+        </tr>`).join('');
+    return `
+    <div dir="rtl" style="font-family:Arial,sans-serif;color:#111">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+            <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                    <span style="background:#EEF2FF;color:#4338CA;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:bold;border:1px solid #C7D2FE">طلب بضاعة</span>
+                    <span style="color:#9CA3AF;font-size:11px">${d.date}</span>
+                </div>
+                <div style="font-size:26px;font-weight:900">طلب #${d.invoice_number}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+                ${logoHtml}
+                <span style="background:${st.bg};color:${st.color};padding:5px 14px;border-radius:10px;font-size:12px;font-weight:900">${st.label}</span>
+            </div>
+        </div>
+        <div style="background:#F9FAFB;border-radius:16px;padding:16px;margin-bottom:16px">
+            <div><div style="font-size:11px;color:#9CA3AF;margin-bottom:2px">المسوق</div><div style="font-weight:bold;font-size:14px">${d.marketer}</div></div>
+        </div>
+        <div style="border-radius:16px;overflow:hidden;border:1px solid #E5E7EB">
+            <table style="width:100%;border-collapse:collapse">
+                <thead><tr style="background:#F9FAFB">
+                    <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:bold;color:#9CA3AF">المنتج</th>
+                    <th style="padding:10px 16px;text-align:center;font-size:11px;font-weight:bold;color:#9CA3AF">الكمية</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    </div>`;
+}
+
+function buildReturnHtml(d) {
+    const statusMap = { pending: {label: 'معلق', bg: '#FEF3C7', color: '#92400E'}, approved: {label: 'موافق عليه', bg: '#DBEAFE', color: '#1E40AF'}, documented: {label: 'موثق', bg: '#D1FAE5', color: '#065F46'}, cancelled: {label: 'ملغي', bg: '#F3F4F6', color: '#374151'}, rejected: {label: 'مرفوض', bg: '#FEE2E2', color: '#991B1B'} };
+    const st = statusMap[d.status] || {label: d.status, bg: '#F3F4F6', color: '#374151'};
+    const logoHtml = d.logo_base64 ? `<img src="data:image/png;base64,${d.logo_base64}" style="max-height:70px;max-width:130px;display:block">` : '';
+    const rows = d.items.map((item, i) => `
+        <tr>
+            <td style="padding:12px 16px;background:${i%2===0?'rgba(249,250,251,0.5)':'#fff'};border-bottom:1px solid #F3F4F6;font-weight:bold;font-size:13px">${item.name}</td>
+            <td style="padding:12px 16px;background:${i%2===0?'rgba(249,250,251,0.5)':'#fff'};border-bottom:1px solid #F3F4F6;text-align:center">
+                <span style="display:inline-block;background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:3px 12px;font-weight:900;font-size:13px">${item.quantity}</span>
+            </td>
+        </tr>`).join('');
+    return `
+    <div dir="rtl" style="font-family:Arial,sans-serif;color:#111">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+            <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                    <span style="background:#FFF7ED;color:#9A3412;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:bold;border:1px solid #FED7AA">إرجاع بضاعة</span>
+                    <span style="color:#9CA3AF;font-size:11px">${d.date}</span>
+                </div>
+                <div style="font-size:26px;font-weight:900">إرجاع #${d.invoice_number}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+                ${logoHtml}
+                <span style="background:${st.bg};color:${st.color};padding:5px 14px;border-radius:10px;font-size:12px;font-weight:900">${st.label}</span>
+            </div>
+        </div>
+        <div style="background:#F9FAFB;border-radius:16px;padding:16px;margin-bottom:16px">
+            <div><div style="font-size:11px;color:#9CA3AF;margin-bottom:2px">المسوق</div><div style="font-weight:bold;font-size:14px">${d.marketer}</div></div>
+        </div>
+        <div style="border-radius:16px;overflow:hidden;border:1px solid #E5E7EB">
+            <table style="width:100%;border-collapse:collapse">
+                <thead><tr style="background:#F9FAFB">
+                    <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:bold;color:#9CA3AF">المنتج</th>
+                    <th style="padding:10px 16px;text-align:center;font-size:11px;font-weight:bold;color:#9CA3AF">الكمية</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    </div>`;
+}
+
+function buildWithdrawalHtml(d) {
+    const fmt = v => { const n = parseFloat(String(v).replace(/,/g, '')); return isNaN(n) ? v : n.toLocaleString('en', {minimumFractionDigits: 2, maximumFractionDigits: 2}); };
+    const statusMap = { pending: {label: 'معلق', bg: '#FEF3C7', color: '#92400E'}, approved: {label: 'موثق', bg: '#D1FAE5', color: '#065F46'}, cancelled: {label: 'ملغي', bg: '#F3F4F6', color: '#374151'}, rejected: {label: 'مرفوض', bg: '#FEE2E2', color: '#991B1B'} };
+    const st = statusMap[d.status] || {label: d.status, bg: '#F3F4F6', color: '#374151'};
+    const logoHtml = d.logo_base64 ? `<img src="data:image/png;base64,${d.logo_base64}" style="max-height:70px;max-width:130px;display:block">` : '';
+    return `
+    <div dir="rtl" style="font-family:Arial,sans-serif;color:#111">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+            <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                    <span style="background:#F0FDF4;color:#166534;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:bold;border:1px solid #BBF7D0">سحب أرباح</span>
+                    <span style="color:#9CA3AF;font-size:11px">${d.date}</span>
+                </div>
+                <div style="font-size:26px;font-weight:900">سحب #WD-${d.withdrawal_id}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+                ${logoHtml}
+                <span style="background:${st.bg};color:${st.color};padding:5px 14px;border-radius:10px;font-size:12px;font-weight:900">${st.label}</span>
+            </div>
+        </div>
+        <div style="background:#F9FAFB;border-radius:16px;padding:16px;margin-bottom:16px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div><div style="font-size:11px;color:#9CA3AF;margin-bottom:2px">المسوق</div><div style="font-weight:bold;font-size:14px">${d.marketer}</div></div>
+                ${d.notes ? `<div><div style="font-size:11px;color:#9CA3AF;margin-bottom:2px">ملاحظات</div><div style="font-weight:bold;font-size:14px">${d.notes}</div></div>` : ''}
+            </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end">
+            <div style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border-radius:20px;padding:20px 24px;min-width:280px;border:2px solid #86EFAC">
+                <div style="border-top:2px solid #4ADE80;padding-top:12px;display:flex;justify-content:space-between;align-items:baseline">
+                    <span style="font-size:15px;font-weight:bold">المبلغ المطلوب:</span>
+                    <span style="font-size:28px;font-weight:900;color:#166534">${fmt(d.amount)} <span style="font-size:14px;font-weight:bold;color:#6B7280">د</span></span>
                 </div>
             </div>
         </div>

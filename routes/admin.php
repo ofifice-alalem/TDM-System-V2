@@ -56,6 +56,7 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
     Route::prefix('withdrawals')->name('withdrawals.')->group(function () {
         Route::get('/', [AdminWithdrawalController::class, 'index'])->name('index');
         Route::get('/{withdrawal}', [AdminWithdrawalController::class, 'show'])->name('show');
+        Route::get('/{withdrawal}/invoice-data', [\App\Http\Controllers\Shared\Withdrawal\InvoiceController::class, 'getWithdrawalData'])->name('invoice-data');
         Route::get('/{withdrawal}/pdf', [\App\Http\Controllers\Shared\Withdrawal\InvoiceController::class, 'generateWithdrawalInvoicePdf'])->name('pdf');
         Route::post('/{withdrawal}/approve', [AdminWithdrawalController::class, 'approve'])->name('approve');
         Route::post('/{withdrawal}/reject', [AdminWithdrawalController::class, 'reject'])->name('reject');

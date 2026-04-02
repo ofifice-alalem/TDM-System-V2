@@ -19,6 +19,7 @@ Route::middleware(['web', 'auth', 'role:warehouse'])->group(function () {
             Route::patch('{id}/reject', [WarehouseRequestController::class, 'reject'])->name('reject');
             Route::post('{id}/document', [WarehouseRequestController::class, 'document'])->name('document');
             Route::get('{id}/documentation', [WarehouseRequestController::class, 'viewDocumentation'])->name('documentation');
+            Route::get('{id}/invoice-data', [\App\Http\Controllers\Shared\Request\InvoiceController::class, 'getRequestData'])->name('invoice-data');
             Route::get('{id}/pdf', [WarehouseRequestController::class, 'pdf'])->name('pdf');
             Route::get('{id}', [WarehouseRequestController::class, 'show'])->name('show');
         });
@@ -29,6 +30,7 @@ Route::middleware(['web', 'auth', 'role:warehouse'])->group(function () {
             Route::patch('{id}/reject', [WarehouseReturnController::class, 'reject'])->name('reject');
             Route::post('{id}/document', [WarehouseReturnController::class, 'document'])->name('document');
             Route::get('{id}/documentation', [WarehouseReturnController::class, 'viewDocumentation'])->name('documentation');
+            Route::get('{id}/invoice-data', [\App\Http\Controllers\Shared\Return\InvoiceController::class, 'getReturnData'])->name('invoice-data');
             Route::get('{id}/pdf', [WarehouseReturnController::class, 'pdf'])->name('pdf');
             Route::get('{id}', [WarehouseReturnController::class, 'show'])->name('show');
         });
@@ -55,6 +57,7 @@ Route::middleware(['web', 'auth', 'role:warehouse'])->group(function () {
         Route::prefix('payments')->name('payments.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Warehouse\WarehousePaymentController::class, 'index'])->name('index');
             Route::get('/{payment}', [\App\Http\Controllers\Warehouse\WarehousePaymentController::class, 'show'])->name('show');
+            Route::get('/{payment}/invoice-data', [\App\Http\Controllers\Shared\Payment\InvoiceController::class, 'getPaymentData'])->name('invoice-data');
             Route::get('/{payment}/pdf', [\App\Http\Controllers\Shared\Payment\InvoiceController::class, 'generatePaymentInvoicePdf'])->name('pdf');
             Route::post('/{id}/approve', [\App\Http\Controllers\Warehouse\WarehousePaymentController::class, 'approve'])->name('approve');
             Route::patch('/{id}/reject', [\App\Http\Controllers\Warehouse\WarehousePaymentController::class, 'reject'])->name('reject');
@@ -63,6 +66,7 @@ Route::middleware(['web', 'auth', 'role:warehouse'])->group(function () {
         Route::prefix('sales-returns')->name('sales-returns.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'index'])->name('index');
             Route::get('/{salesReturn}', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'show'])->name('show');
+            Route::get('/{salesReturn}/invoice-data', [\App\Http\Controllers\Shared\SalesReturn\InvoiceController::class, 'getReturnData'])->name('invoice-data');
             Route::get('/{salesReturn}/pdf', [\App\Http\Controllers\Shared\SalesReturn\InvoiceController::class, 'generateSalesReturnInvoicePdf'])->name('pdf');
             Route::post('/{id}/approve', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'approve'])->name('approve');
             Route::patch('/{id}/reject', [\App\Http\Controllers\Warehouse\WarehouseSalesReturnController::class, 'reject'])->name('reject');

@@ -8,6 +8,32 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
+    public function getPaymentData(StorePayment $payment)
+    {
+        $payment->load('store', 'marketer');
+
+        $methodLabels = [
+            'cash'            => 'كاش',
+            'transfer'        => 'حوالة',
+            'certified_check' => 'شيك مصدق',
+        ];
+
+        $logoPath   = public_path('images/company.png');
+        $logoBase64 = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : null;
+
+        return response()->json([
+            'payment_number' => $payment->payment_number,
+            'status'         => $payment->status,
+            'date'           => $payment->created_at->format('Y-m-d'),
+            'logo_base64'    => $logoBase64,
+            'store'          => $payment->store->name ?? '---',
+            'store_phone'    => $payment->store->phone ?? '---',
+            'marketer'       => $payment->marketer->full_name ?? '---',
+            'payment_method' => $methodLabels[$payment->payment_method] ?? '---',
+            'amount'         => number_format($payment->amount, 2),
+        ]);
+    }
+
     public function generatePaymentInvoicePdf(StorePayment $payment)
     {
         $payment->load('store', 'marketer', 'keeper');
