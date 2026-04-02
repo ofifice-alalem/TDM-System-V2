@@ -238,6 +238,66 @@
                             </div>
                         </div>
 
+                        @if($payment->status === 'pending' || $payment->status === 'approved')
+                            <div x-data="{ showAdjust: false }" class="mt-2">
+                                <button
+                                    type="button"
+                                    x-show="!showAdjust"
+                                    @click="showAdjust = true"
+                                    class="w-full bg-white dark:bg-dark-card border-2 border-amber-200 dark:border-amber-900/30 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm">
+                                    <i data-lucide="pencil" class="w-5 h-5"></i>
+                                    تعديل الإيصال
+                                </button>
+
+                                <div
+                                    x-show="showAdjust"
+                                    x-transition
+                                    class="bg-amber-50 dark:bg-amber-900/10 rounded-2xl p-4 border border-amber-200 dark:border-amber-900/30"
+                                    style="display: none;">
+
+                                    <form action="{{ route('marketer.payments.adjust', $payment) }}" method="POST" class="space-y-3">
+                                        @csrf
+                                        @method('PATCH')
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-amber-800 dark:text-amber-300 mb-1">المبلغ:</label>
+                                            <input type="number" name="amount" step="0.01" min="0.01"
+                                                value="{{ $payment->amount }}"
+                                                class="w-full bg-white dark:bg-dark-bg border border-amber-200 dark:border-amber-800 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
+                                                required>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-amber-800 dark:text-amber-300 mb-1">طريقة الدفع:</label>
+                                            <select name="payment_method"
+                                                class="w-full bg-white dark:bg-dark-bg border border-amber-200 dark:border-amber-800 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200">
+                                                <option value="cash" {{ $payment->payment_method === 'cash' ? 'selected' : '' }}>نقدي</option>
+                                                <option value="transfer" {{ $payment->payment_method === 'transfer' ? 'selected' : '' }}>تحويل بنكي</option>
+                                                <option value="certified_check" {{ $payment->payment_method === 'certified_check' ? 'selected' : '' }}>شيك مصدق</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-amber-800 dark:text-amber-300 mb-1">ملاحظات:</label>
+                                            <textarea name="notes" rows="2"
+                                                class="w-full bg-white dark:bg-dark-bg border border-amber-200 dark:border-amber-800 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
+                                                placeholder="اختياري...">{{ $payment->notes }}</textarea>
+                                        </div>
+
+                                        <div class="flex gap-2">
+                                            <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
+                                                حفظ التعديل
+                                            </button>
+                                            <button type="button" @click="showAdjust = false"
+                                                class="px-4 py-2.5 bg-white dark:bg-dark-card border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 font-bold rounded-xl text-sm hover:bg-amber-50 transition-colors">
+                                                تراجع
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        @endif
+
                         @if($payment->status === 'pending')
                             <div x-data="{ showCancel: false }" class="mt-4">
                             <button 

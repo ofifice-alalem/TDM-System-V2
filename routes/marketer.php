@@ -67,6 +67,7 @@ Route::middleware(['web', 'auth', 'role:marketer'])->group(function () {
             Route::get('/{payment}/pdf', [\App\Http\Controllers\Shared\Payment\InvoiceController::class, 'generatePaymentInvoicePdf'])->name('pdf');
             Route::get('/{payment}/payment-data', [\App\Http\Controllers\Shared\Payments\PaymentReceiptController::class, 'getPaymentData'])->name('payment-data');
             Route::patch('/{payment}/cancel', [\App\Http\Controllers\Marketer\PaymentController::class, 'cancel'])->name('cancel');
+            Route::patch('/{payment}/adjust', [\App\Http\Controllers\Marketer\PaymentController::class, 'adjust'])->name('adjust');
         });
 
         Route::prefix('commissions')->name('commissions.')->group(function () {

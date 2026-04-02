@@ -123,6 +123,29 @@ class PaymentController extends Controller
         return view('marketer.payments.show', compact('payment'));
     }
 
+    public function adjust(StorePayment $payment, Request $request)
+    {
+        if ($payment->marketer_id != auth()->id()) {
+            abort(403, 'غير مصرح لك بالوصول لهذا الإيصال');
+        }
+        if ($payment->status === 'cancelled' || $payment->status === 'rejected') {
+            return back()->with('error', 'لا يمكن تعديل إيصال ملغي أو مرفوض');
+        }
+
+        $validated = $request->validate([
+            'amount'         => 'required|numeric|min:0.01',
+            'payment_method' => 'required|in:cash,transfer,certified_check',
+            'notes'          => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $this->service->adjustPayment($payment->id, $validated['amount'], $validated['payment_method'], $validated['notes'] ?? null);
+            return back()->with('success', 'تم تعديل الإيصال بنجاح');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
     public function cancel(StorePayment $payment, Request $request)
     {
         if ($payment->marketer_id != auth()->id()) {

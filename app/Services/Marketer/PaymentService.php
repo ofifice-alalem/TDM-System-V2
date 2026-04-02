@@ -4,6 +4,7 @@ namespace App\Services\Marketer;
 
 use App\Models\StorePayment;
 use App\Models\StoreDebtLedger;
+use App\Models\MarketerCommission;
 use Illuminate\Support\Facades\DB;
 
 class PaymentService
@@ -26,6 +27,39 @@ class PaymentService
                 'status' => 'pending',
                 'notes' => $notes,
             ]);
+        });
+    }
+
+    public function adjustPayment($paymentId, $newAmount, $newMethod, $notes)
+    {
+        return DB::transaction(function () use ($paymentId, $newAmount, $newMethod, $notes) {
+            $payment = StorePayment::findOrFail($paymentId);
+            $oldAmount = $payment->amount;
+
+            $payment->update([
+                'amount'         => $newAmount,
+                'payment_method' => $newMethod,
+                'notes'          => $notes,
+            ]);
+
+            if ($payment->status === 'approved' && $oldAmount != $newAmount) {
+                $ledger = StoreDebtLedger::where('payment_id', $paymentId)->first();
+                if ($ledger) {
+                    $diff = $oldAmount - $newAmount;
+                    $ledger->update([
+                        'amount'        => -$newAmount,
+                        'balance_after' => $ledger->balance_after + $diff,
+                    ]);
+                }
+
+                $commission = MarketerCommission::where('payment_id', $paymentId)->first();
+                if ($commission) {
+                    $commission->update([
+                        'payment_amount'    => $newAmount,
+                        'commission_amount' => $newAmount * ($commission->commission_rate / 100),
+                    ]);
+                }
+            }
         });
     }
 
