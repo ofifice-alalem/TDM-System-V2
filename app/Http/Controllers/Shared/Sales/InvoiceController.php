@@ -149,9 +149,17 @@ class InvoiceController extends Controller
         
         $formatNumber = fn($num) => $num == floor($num) ? number_format($num, 0) : number_format($num, 2);
         
+        $logoPath = public_path('images/company.png');
+        $logoBase64 = null;
+        if (file_exists($logoPath)) {
+            $logoBase64 = base64_encode(file_get_contents($logoPath));
+        }
+
         return response()->json([
             'invoice_number' => $sale->invoice_number,
+            'status'         => $sale->status,
             'date' => $sale->created_at->format('Y-m-d'),
+            'logo_base64'    => $logoBase64,
             'store' => $sale->store_id == 46 && $sale->notes
                 ? $sale->store->name . ' / ' . $sale->notes
                 : $sale->store->name,

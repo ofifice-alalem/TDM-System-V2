@@ -36,6 +36,7 @@ Route::middleware(['web', 'auth', 'role:warehouse'])->group(function () {
         Route::prefix('sales')->name('sales.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Warehouse\WarehouseSalesController::class, 'index'])->name('index');
             Route::get('{id}', [\App\Http\Controllers\Warehouse\WarehouseSalesController::class, 'show'])->name('show');
+            Route::get('{sale}/invoice-data', [\App\Http\Controllers\Shared\Sales\InvoiceController::class, 'getInvoiceData'])->name('invoice-data');
             Route::get('{sale}/pdf', [\App\Http\Controllers\Shared\Sales\InvoiceController::class, 'generateSalesInvoicePdf'])->name('pdf');
             Route::post('{id}/approve', [\App\Http\Controllers\Warehouse\WarehouseSalesController::class, 'approve'])->name('approve');
             Route::post('{id}/reject', [\App\Http\Controllers\Warehouse\WarehouseSalesController::class, 'reject'])->name('reject');

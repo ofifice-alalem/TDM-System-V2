@@ -396,8 +396,6 @@
 
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                <div class="overflow-x-auto">
-                    <table class="w-full">
                         <thead class="bg-gray-50 dark:bg-dark-bg border-b border-gray-200 dark:border-dark-border">
                             <tr>
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">
@@ -439,6 +437,9 @@
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">الحالة</th>
                                 @if(!in_array($results['operation'], ['requests', 'returns']))
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المبلغ</th>
+                                @endif
+                                @if($results['operation'] === 'sales')
+                                    <th class="px-6 py-3 text-center text-xs font-bold text-gray-600 dark:text-gray-400">الفاتورة</th>
                                 @endif
                             </tr>
                         </thead>
@@ -536,6 +537,17 @@
                                             دينار
                                         </td>
                                     @endif
+                                    @if($results['operation'] === 'sales')
+                                        <td class="px-6 py-4 text-center">
+                                            <button
+                                                type="button"
+                                                onclick="openInvoiceModal('{{ route('warehouse.sales.invoice-data', $item->id) }}', '{{ $item->invoice_number }}')"
+                                                class="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-500/30 rounded-lg text-xs font-bold hover:bg-primary-100 dark:hover:bg-primary-500/20 transition-colors">
+                                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                                عرض
+                                            </button>
+                                        </td>
+                                    @endif
                                 </tr>
                             @empty
                                 <tr>
@@ -559,6 +571,34 @@
             @endif
         @endif
 
+    </div>
+</div>
+
+{{-- Invoice Modal --}}
+<div id="invoiceModal" class="fixed inset-0 z-[9999] items-center justify-center p-4" style="display:none">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeInvoiceModal()"></div>
+    <div class="relative bg-white dark:bg-dark-card rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-dark-border shrink-0">
+            <h3 class="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+                <i data-lucide="file-text" class="w-5 h-5 text-primary-500"></i>
+                <span id="modalInvoiceTitle">فاتورة بيع</span>
+            </h3>
+            <div class="flex items-center gap-2">
+                <a id="downloadPdfBtn" href="#" download class="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-dark-bg text-white rounded-xl text-sm font-bold hover:bg-gray-700 transition-colors">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    تحميل PDF
+                </a>
+                <button onclick="closeInvoiceModal()" class="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-dark-bg text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+        <div id="invoiceModalBody" class="overflow-y-auto flex-1 p-6">
+            <div id="invoiceModalLoading" class="flex items-center justify-center py-20">
+                <div class="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+            </div>
+            <div id="invoiceModalContent" style="display:none"></div>
+        </div>
     </div>
 </div>
 
@@ -816,6 +856,144 @@
                 });
         }
     });
+</script>
+
+<script>
+function openInvoiceModal(url, number) {
+    const modal = document.getElementById('invoiceModal');
+    const loading = document.getElementById('invoiceModalLoading');
+    const content = document.getElementById('invoiceModalContent');
+    modal.style.display = 'flex';
+    loading.style.display = 'flex';
+    content.style.display = 'none';
+    content.innerHTML = '';
+    document.getElementById('modalInvoiceTitle').textContent = 'فاتورة ' + number;
+
+    // حفظ رابط PDF لزر التحميل
+    const pdfUrl = url.replace('/invoice-data', '/pdf');
+    document.getElementById('downloadPdfBtn').href = pdfUrl;
+
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            content.innerHTML = buildInvoiceHtml(data);
+            loading.style.display = 'none';
+            content.style.display = 'block';
+        })
+        .catch(() => {
+            loading.innerHTML = '<p class="text-red-500 text-center py-8">حدث خطأ في تحميل الفاتورة</p>';
+        });
+}
+
+function closeInvoiceModal() {
+    document.getElementById('invoiceModal').style.display = 'none';
+}
+
+function buildInvoiceHtml(d) {
+    const fmt = v => { const n = parseFloat(String(v).replace(/,/g, '')); return isNaN(n) ? v : n.toLocaleString('en', {minimumFractionDigits: 2, maximumFractionDigits: 2}); };
+    const statusMap = {
+        pending:   {label: 'معلق',   bg: '#FEF3C7', color: '#92400E'},
+        approved:  {label: 'موثق',   bg: '#D1FAE5', color: '#065F46'},
+        cancelled: {label: 'ملغي',   bg: '#F3F4F6', color: '#374151'},
+        rejected:  {label: 'مرفوض', bg: '#FEE2E2', color: '#991B1B'},
+    };
+    const st = statusMap[d.status] || {label: d.status, bg: '#F3F4F6', color: '#374151'};
+
+    const logoHtml = d.logo_base64
+        ? `<img src="data:image/png;base64,${d.logo_base64}" style="max-height:70px;max-width:130px;display:block">`
+        : `<div style="width:80px;height:60px;background:#F3F4F6;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9CA3AF">شعار</div>`;
+
+    const rows = d.items.map((item, i) => `
+        <tr>
+            <td style="padding:14px 16px;background:${i%2===0?'rgba(249,250,251,0.5)':'#fff'};border-radius:0;border-bottom:1px solid #F3F4F6;font-weight:bold;font-size:13px">${item.name}</td>
+            <td style="padding:14px 16px;background:${i%2===0?'rgba(249,250,251,0.5)':'#fff'};border-bottom:1px solid #F3F4F6;text-align:center">
+                <span style="display:inline-block;background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:3px 12px;font-weight:900;font-size:13px">${item.quantity}</span>
+            </td>
+            <td style="padding:14px 16px;background:${i%2===0?'rgba(249,250,251,0.5)':'#fff'};border-bottom:1px solid #F3F4F6;text-align:center;font-size:13px;color:#374151">${item.price} د</td>
+            <td style="padding:14px 16px;background:${i%2===0?'rgba(249,250,251,0.5)':'#fff'};border-bottom:1px solid #F3F4F6;text-align:center;font-weight:900;font-size:13px">${item.total} د</td>
+        </tr>`).join('');
+
+    const discountRows = [
+        parseFloat(String(d.product_discount).replace(/,/g,'')) > 0
+            ? `<div style="display:flex;justify-content:space-between;font-size:14px;padding:4px 0"><span style="color:#059669;font-weight:600">خصم المنتجات (هدايا):</span><span style="color:#059669;font-weight:900">- ${fmt(d.product_discount)} د</span></div>` : '',
+        parseFloat(String(d.invoice_discount).replace(/,/g,'')) > 0
+            ? `<div style="display:flex;justify-content:space-between;font-size:14px;padding:4px 0"><span style="color:#2563EB;font-weight:600">خصم الفاتورة:</span><span style="color:#2563EB;font-weight:900">- ${fmt(d.invoice_discount)} د</span></div>` : '',
+    ].join('');
+
+    return `
+    <div dir="rtl" style="font-family:Arial,sans-serif;color:#111">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+            <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                    <span style="background:#EEF2FF;color:#4F46E5;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:bold;border:1px solid #C7D2FE">فاتورة بيع</span>
+                    <span style="color:#9CA3AF;font-size:11px;font-family:monospace">${d.date}</span>
+                </div>
+                <div style="font-size:26px;font-weight:900">فاتورة #${d.invoice_number}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+                ${logoHtml}
+                <span style="background:${st.bg};color:${st.color};padding:5px 14px;border-radius:10px;font-size:12px;font-weight:900">${st.label}</span>
+            </div>
+        </div>
+
+        <div style="background:#F9FAFB;border-radius:16px;padding:16px;margin-bottom:16px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div style="display:flex;align-items:center;gap:10px">
+                    <div style="flex:1">
+                        <div style="font-size:11px;color:#9CA3AF;margin-bottom:2px">اسم المتجر</div>
+                        <div style="font-weight:bold;font-size:14px">${d.store}</div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <div style="flex:1">
+                        <div style="font-size:11px;color:#9CA3AF;margin-bottom:2px">رقم الهاتف</div>
+                        <div style="font-weight:bold;font-size:14px">${d.store_phone}</div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <div style="flex:1">
+                        <div style="font-size:11px;color:#9CA3AF;margin-bottom:2px">المسوق</div>
+                        <div style="font-weight:bold;font-size:14px">${d.marketer}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="border-radius:16px;overflow:hidden;border:1px solid #E5E7EB;margin-bottom:16px">
+            <table style="width:100%;border-collapse:collapse">
+                <thead>
+                    <tr style="background:#F9FAFB">
+                        <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:bold;color:#9CA3AF;text-transform:uppercase">المنتج</th>
+                        <th style="padding:10px 16px;text-align:center;font-size:11px;font-weight:bold;color:#9CA3AF;text-transform:uppercase">الكمية</th>
+                        <th style="padding:10px 16px;text-align:center;font-size:11px;font-weight:bold;color:#9CA3AF;text-transform:uppercase">السعر</th>
+                        <th style="padding:10px 16px;text-align:center;font-size:11px;font-weight:bold;color:#9CA3AF;text-transform:uppercase">الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end">
+            <div style="background:linear-gradient(135deg,#EEF2FF,#E0E7FF);border-radius:20px;padding:20px 24px;min-width:280px;border:2px solid #C7D2FE">
+                <div style="display:flex;justify-content:space-between;font-size:14px;padding:4px 0">
+                    <span style="color:#374151;font-weight:600">عدد البضاعة:</span>
+                    <span style="font-weight:900">${d.total_items}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:14px;padding:4px 0">
+                    <span style="color:#374151;font-weight:600">المجموع الفرعي:</span>
+                    <span style="font-weight:900">${fmt(d.subtotal)} د</span>
+                </div>
+                ${discountRows}
+                <div style="border-top:2px solid #818CF8;margin-top:10px;padding-top:12px;display:flex;justify-content:space-between;align-items:baseline">
+                    <span style="font-size:15px;font-weight:bold;text-transform:uppercase;letter-spacing:0.05em">الإجمالي النهائي:</span>
+                    <span style="font-size:28px;font-weight:900;color:#1D4ED8">${fmt(d.total)} <span style="font-size:14px;font-weight:bold;color:#6B7280">د</span></span>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInvoiceModal(); });
 </script>
 @endpush
 @endsection
