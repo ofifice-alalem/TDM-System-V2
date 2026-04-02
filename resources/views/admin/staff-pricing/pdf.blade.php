@@ -80,6 +80,7 @@
 @php $n = fn($v) => number_format((float)$v, 2); $ni = fn($v) => number_format((int)$v); @endphp
 
 @foreach($entries as $entry)
+<div style="{{ !$loop->first ? 'page-break-before: always;' : '' }}">
 {{-- Staff header - separate table --}}
 <table style="margin-bottom:0; border-collapse:collapse; width:100%;">
     <tr class="staff-head">
@@ -123,6 +124,7 @@
     </tr>
 </table>
 <div class="spacer"></div>
+</div>
 @endforeach
 
 <div class="footer">
