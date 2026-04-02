@@ -134,11 +134,9 @@
                         <input type="date" name="to_date" value="{{ request('to_date') }}" required class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 dark:[color-scheme:dark]">
                     </div>
 
-                    <div>
+                    <div id="status_field">
                         <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">الحالة</label>
-                        <select name="status" id="status" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option value="">الكل</option>
-                        </select>
+                        <div id="status_checkboxes" class="flex flex-wrap gap-2 mt-1"></div>
                     </div>
                     </div>
                 </div>
@@ -334,7 +332,7 @@
             <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg overflow-hidden">
                 <div class="p-6 border-b border-gray-200 dark:border-dark-border">
                     <h2 class="text-xl font-black text-gray-900 dark:text-white mb-4">النتائج</h2>
-                    @if((request('stat_type') == 'stores' || request('stat_type') == 'marketers') && !request('status') && isset($results['status_totals']) && !in_array($results['operation'], ['requests', 'returns']))
+                    @if((request('stat_type') == 'stores' || request('stat_type') == 'marketers') && !request('status') && !request()->filled('statuses') && isset($results['status_totals']) && !in_array($results['operation'], ['requests', 'returns']))
                         <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                             <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 border border-amber-200 dark:border-amber-800">
                                 <p class="text-xs text-amber-600 dark:text-amber-400 font-bold mb-1">معلق</p>
@@ -378,7 +376,7 @@
                             </div>
                         </div>
                     @endif
-                    @if((request('stat_type') == 'stores' || request('stat_type') == 'marketers') && !request('status'))
+                    @if((request('stat_type') == 'stores' || request('stat_type') == 'marketers') && !request('status') && !request()->filled('statuses'))
                         @if($results['operation'] == 'payments' && isset($results['payment_method_totals']))
                         @endif
                     @elseif(!in_array($results['operation'], ['requests', 'returns']))
@@ -457,6 +455,20 @@
                                 @endphp
                                 <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
                                     <td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">
+                                        @php
+                                            $showUrl = match($results['operation']) {
+                                                'sales'         => route('warehouse.sales.show', $item->id),
+                                                'payments'      => route('warehouse.payments.show', $item->id),
+                                                'sales_returns' => route('warehouse.sales-returns.show', $item->id),
+                                                'requests'      => route('warehouse.requests.show', $item->id),
+                                                'returns'       => route('warehouse.returns.show', $item->id),
+                                                'withdrawals'   => route('admin.withdrawals.show', $item->id),
+                                                default         => null,
+                                            };
+                                        @endphp
+                                        @if($showUrl)
+                                            <a href="{{ $showUrl }}" target="_blank" class="text-primary-600 dark:text-primary-400 hover:underline">
+                                        @endif
                                         @if($results['operation'] == 'sales')
                                             {{ $item->invoice_number }}
                                         @elseif($results['operation'] == 'payments')
@@ -469,6 +481,9 @@
                                             {{ $item->invoice_number }}
                                         @elseif($results['operation'] == 'withdrawals')
                                             WD-{{ $item->id }}
+                                        @endif
+                                        @if($showUrl)
+                                            </a>
                                         @endif
                                     </td>
                                     @if(request('stat_type') == 'stores')
@@ -581,7 +596,6 @@
         
         // Status options based on operation type
         const statusOptions = {
-            // For requests and returns from marketer
             'requests': [
                 {value: 'pending', text: 'معلق'},
                 {value: 'approved', text: 'موافق عليه'},
@@ -597,19 +611,21 @@
                 {value: 'rejected', text: 'مرفوض'}
             ],
             'sales_returns': [
+                {value: 'debt', text: 'الدين', color: 'orange'},
                 {value: 'pending', text: 'معلق'},
                 {value: 'approved', text: 'موثق'},
                 {value: 'cancelled', text: 'ملغي'},
                 {value: 'rejected', text: 'مرفوض'}
             ],
-            // For sales and payments
             'sales': [
+                {value: 'debt', text: 'الدين', color: 'orange'},
                 {value: 'pending', text: 'معلق'},
                 {value: 'approved', text: 'موثق'},
                 {value: 'cancelled', text: 'ملغي'},
                 {value: 'rejected', text: 'مرفوض'}
             ],
             'payments': [
+                {value: 'debt', text: 'الدين', color: 'orange'},
                 {value: 'pending', text: 'معلق'},
                 {value: 'approved', text: 'موثق'},
                 {value: 'cancelled', text: 'ملغي'},
@@ -624,9 +640,55 @@
             ]
         };
         
+        const selectedStatuses = {!! json_encode(array_filter((array) request('statuses', []))) !!};
+        const selectedStatusLegacy = '{{ request('status') }}';
         const selectedOperation = '{{ request('operation') }}';
-        
-        // Load marketer stores when marketer is selected
+        const statusContainer = document.getElementById('status_checkboxes');
+        const statusField = document.getElementById('status_field');
+
+        function updateStatusOptions(operationType) {
+            const options = statusOptions[operationType] || [];
+            statusContainer.innerHTML = '';
+
+            if (options.length === 0) {
+                statusField.style.display = 'none';
+                return;
+            }
+            statusField.style.display = 'block';
+
+            options.forEach(opt => {
+                const isDebt = opt.value === 'debt';
+                const isChecked = selectedStatuses.includes(opt.value)
+                    || selectedStatusLegacy === opt.value
+                    || (isDebt && selectedStatusLegacy === 'debt');
+
+                const colorMap = {
+                    orange: 'bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-300',
+                    default: 'bg-gray-50 dark:bg-dark-bg border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-300'
+                };
+                const colorClass = colorMap[opt.color] || colorMap.default;
+                const checkedClass = isChecked ? '!bg-primary-600 !border-primary-600 !text-white' : '';
+
+                const label = document.createElement('label');
+                label.className = `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold cursor-pointer transition-all select-none ${colorClass} ${checkedClass}`;
+                label.innerHTML = `
+                    <input type="checkbox" name="statuses[]" value="${opt.value}" class="hidden" ${isChecked ? 'checked' : ''}>
+                    ${opt.text}
+                `;
+
+                label.addEventListener('click', function() {
+                    const cb = this.querySelector('input');
+                    cb.checked = !cb.checked;
+                    if (cb.checked) {
+                        this.classList.add('!bg-primary-600', '!border-primary-600', '!text-white');
+                    } else {
+                        this.classList.remove('!bg-primary-600', '!border-primary-600', '!text-white');
+                    }
+                });
+
+                statusContainer.appendChild(label);
+            });
+        }
         marketerSelect.addEventListener('change', function() {
             const marketerId = this.value;
             // Only load if operation is sales or payments
@@ -683,12 +745,10 @@
                 operation.appendChild(option);
             });
             
-            // Update status options when operation changes
             if (selected) {
                 updateStatusOptions(selected);
             }
             
-            // Show/hide marketer store field based on operation
             if (statType.value === 'marketers' && ['sales', 'payments', 'sales_returns'].includes(operation.value)) {
                 marketerStoreField.style.display = 'block';
             } else {
@@ -696,32 +756,12 @@
             }
         }
         
-        function updateStatusOptions(operationType) {
-            const selectedStatus = '{{ request('status') }}';
-            const options = statusOptions[operationType] || [];
-            
-            statusSelect.innerHTML = '<option value="">الكل</option>';
-            options.forEach(opt => {
-                const option = document.createElement('option');
-                option.value = opt.value;
-                option.text = opt.text;
-                if (selectedStatus && opt.value === selectedStatus) {
-                    option.selected = true;
-                }
-                statusSelect.appendChild(option);
-            });
-        }
-        
         // Listen to operation changes
         operation.addEventListener('change', function() {
             updateStatusOptions(this.value);
             
-            // Show/hide status field for summary operation
-            const statusField = statusSelect.closest('div');
             if (this.value === 'summary') {
                 statusField.style.display = 'none';
-            } else {
-                statusField.style.display = 'block';
             }
             
             if (statType.value === 'marketers' && ['sales', 'payments', 'sales_returns'].includes(this.value)) {
@@ -753,7 +793,7 @@
             statType.dispatchEvent(new Event('change'));
         }
         
-        // Initialize status options on load if operation is selected
+        // Initialize status checkboxes on load
         if (operation.value) {
             updateStatusOptions(operation.value);
         }
