@@ -1004,6 +1004,183 @@ class StatisticsController extends Controller
         exit;
     }
 
+    public function bulkInvoicesPdf(Request $request)
+    {
+        $arabic     = new \ArPHP\I18N\Arabic();
+        $g          = fn($t) => $arabic->utf8Glyphs($t);
+        $statusLabels = [
+            'pending'    => 'قيد الانتظار',
+            'approved'   => 'موثق',
+            'documented' => 'موثق',
+            'rejected'   => 'مرفوض',
+            'cancelled'  => 'ملغي',
+        ];
+        $methodLabels = [
+            'cash'            => 'نقدي',
+            'transfer'        => 'تحويل بنكي',
+            'certified_check' => 'شيك مصدق',
+        ];
+
+        $logoPath   = public_path('images/company.png');
+        $logoBase64 = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : null;
+        $companyName = $g('شركة المتفوقون الأوائل للصناعات البلاستيكية');
+
+        // جلب البيانات كاملة بدون pagination
+        $operation = $request->operation;
+        if ($request->stat_type === 'stores') {
+            $results = $this->getStatistics($request, true);
+        } else {
+            $results = $this->getMarketerStatistics($request, true);
+        }
+
+        if (!$results || empty($results['data'])) {
+            abort(404, 'لا توجد بيانات');
+        }
+
+        $items = $results['data'];
+
+        // بناء بيانات كل فاتورة حسب نوع العملية
+        $invoices = $items->map(function ($item) use ($operation, $arabic, $g, $statusLabels, $methodLabels, $logoBase64, $companyName) {
+            $status      = $statusLabels[$item->status] ?? $item->status;
+            $isInvalid   = in_array($item->status, ['cancelled', 'rejected']);
+            $statusValue = $item->status;
+
+            $base = [
+                'operation'   => $operation,
+                'status'      => $g($status),
+                'statusValue' => $statusValue,
+                'isInvalid'   => $isInvalid,
+                'date'        => $item->created_at->format('Y-m-d H:i'),
+                'logoBase64'  => $logoBase64,
+                'companyName' => $companyName,
+            ];
+
+            if ($operation === 'sales') {
+                $item->loadMissing('items.product', 'store', 'marketer', 'keeper', 'rejectedBy');
+                return array_merge($base, [
+                    'invoiceNumber'  => $item->invoice_number,
+                    'title'          => $g('فاتورة بيع'),
+                    'storeName'      => $g($item->store->name ?? '-'),
+                    'storePhone'     => $item->store->phone ?? '-',
+                    'marketerName'   => $g($item->marketer->full_name ?? '-'),
+                    'keeperName'     => $item->keeper ? $g($item->keeper->full_name) : null,
+                    'rejectedByName' => $item->rejectedBy ? $g($item->rejectedBy->full_name) : null,
+                    'confirmedDate'  => $item->confirmed_at?->format('Y-m-d H:i'),
+                    'rejectedDate'   => $item->rejected_at?->format('Y-m-d H:i'),
+                    'subtotal'       => number_format($item->subtotal, 2),
+                    'productDiscount'=> number_format($item->product_discount, 2),
+                    'invoiceDiscount'=> number_format($item->invoice_discount_amount, 2),
+                    'totalAmount'    => number_format($item->total_amount, 2),
+                    'totalProducts'  => $item->items->sum(fn($i) => $i->quantity + $i->free_quantity),
+                    'items'          => $item->items->map(fn($i) => (object)[
+                        'name'          => $g($i->product->name ?? '-'),
+                        'quantity'      => $i->quantity,
+                        'freeQuantity'  => $i->free_quantity,
+                        'totalQuantity' => $i->quantity + $i->free_quantity,
+                        'unitPrice'     => number_format($i->unit_price, 2),
+                        'totalPrice'    => number_format(($i->quantity + $i->free_quantity) * $i->unit_price, 2),
+                    ]),
+                ]);
+            }
+
+            if ($operation === 'payments') {
+                $item->loadMissing('store', 'marketer', 'keeper');
+                return array_merge($base, [
+                    'paymentNumber' => $item->payment_number,
+                    'title'         => $g('إيصال قبض'),
+                    'storeName'     => $g($item->store->name ?? '-'),
+                    'marketerName'  => $g($item->marketer->full_name ?? '-'),
+                    'keeperName'    => $item->keeper ? $g($item->keeper->full_name) : null,
+                    'confirmedDate' => $item->confirmed_at?->format('Y-m-d H:i'),
+                    'paymentMethod' => $g($methodLabels[$item->payment_method] ?? '-'),
+                    'amount'        => number_format($item->amount, 2),
+                ]);
+            }
+
+            if ($operation === 'sales_returns') {
+                $item->loadMissing('items.product', 'store', 'marketer', 'salesInvoice', 'keeper');
+                return array_merge($base, [
+                    'returnNumber'  => $item->return_number,
+                    'invoiceNumber' => $item->salesInvoice->invoice_number ?? '-',
+                    'title'         => $g('إرجاع متجر'),
+                    'storeName'     => $g($item->store->name ?? '-'),
+                    'marketerName'  => $g($item->marketer->full_name ?? '-'),
+                    'keeperName'    => $item->keeper ? $g($item->keeper->full_name) : null,
+                    'confirmedDate' => $item->confirmed_at?->format('Y-m-d H:i'),
+                    'totalAmount'   => number_format($item->total_amount, 2),
+                    'items'         => $item->items->map(fn($i) => (object)[
+                        'name'       => $g($i->product->name ?? '-'),
+                        'quantity'   => $i->quantity,
+                        'unit_price' => number_format($i->unit_price, 2),
+                        'total_price'=> number_format($i->quantity * $i->unit_price, 2),
+                    ]),
+                ]);
+            }
+
+            if ($operation === 'requests') {
+                $item->loadMissing('items.product', 'marketer', 'approver', 'rejecter');
+                return array_merge($base, [
+                    'invoiceNumber' => $item->invoice_number,
+                    'title'         => $g('طلب بضاعة'),
+                    'marketerName'  => $g($item->marketer->full_name ?? '-'),
+                    'approvedBy'    => $item->approver ? $g($item->approver->full_name) : null,
+                    'rejectedBy'    => ($item->status === 'rejected' && $item->rejecter) ? $g($item->rejecter->full_name) : null,
+                    'rejectedDate'  => $item->rejected_at?->format('Y-m-d H:i') ?? $item->updated_at->format('Y-m-d H:i'),
+                    'items'         => $item->items->map(fn($i) => (object)[
+                        'name'     => $g($i->product->name ?? '-'),
+                        'quantity' => $i->quantity,
+                    ]),
+                ]);
+            }
+
+            if ($operation === 'returns') {
+                $item->loadMissing('items.product', 'marketer', 'approver', 'rejecter');
+                return array_merge($base, [
+                    'invoiceNumber' => $item->invoice_number,
+                    'title'         => $g('إرجاع بضاعة'),
+                    'marketerName'  => $g($item->marketer->full_name ?? '-'),
+                    'approvedBy'    => $item->approver ? $g($item->approver->full_name) : null,
+                    'approvedDate'  => $item->approved_at?->format('Y-m-d H:i'),
+                    'rejectedBy'    => $item->rejecter ? $g($item->rejecter->full_name) : null,
+                    'rejectedDate'  => $item->rejected_at?->format('Y-m-d H:i'),
+                    'totalQuantity' => $item->items->sum('quantity'),
+                    'items'         => $item->items->map(fn($i) => (object)[
+                        'name'     => $g($i->product->name ?? '-'),
+                        'quantity' => $i->quantity,
+                    ]),
+                ]);
+            }
+
+            if ($operation === 'withdrawals') {
+                $item->loadMissing('marketer', 'approvedByUser', 'rejectedByUser');
+                return array_merge($base, [
+                    'withdrawalNumber' => $item->id,
+                    'title'            => $g('طلب سحب أرباح'),
+                    'marketerName'     => $g($item->marketer->full_name ?? '-'),
+                    'approvedBy'       => $item->approvedByUser ? $g($item->approvedByUser->full_name) : null,
+                    'approvedAt'       => $item->approved_at?->format('Y-m-d H:i'),
+                    'rejectedBy'       => $item->rejectedByUser ? $g($item->rejectedByUser->full_name) : null,
+                    'rejectedAt'       => $item->rejected_at?->format('Y-m-d H:i'),
+                    'amount'           => number_format($item->requested_amount, 2),
+                    'notes'            => $item->notes ? $g($item->notes) : null,
+                ]);
+            }
+
+            return null;
+        })->filter()->values();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('shared.statistics.bulk-invoices-pdf', [
+            'invoices'  => $invoices,
+            'operation' => $operation,
+            'g'         => $g,
+        ])
+        ->setPaper('a4')
+        ->setOption('isHtml5ParserEnabled', true)
+        ->setOption('isFontSubsettingEnabled', true);
+
+        return $pdf->stream('bulk-' . $operation . '-' . $request->from_date . '.pdf');
+    }
+
     private function exportPdf($results, $request)
     {
         $arabic = new \ArPHP\I18N\Arabic();

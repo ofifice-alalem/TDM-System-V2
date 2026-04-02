@@ -146,6 +146,7 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
     Route::prefix('statistics')->name('statistics.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Shared\StatisticsController::class, 'index'])->name('index');
         Route::get('/marketer-stores/{marketer}', [\App\Http\Controllers\Shared\StatisticsController::class, 'getMarketerStores'])->name('marketer-stores');
+        Route::get('/bulk-invoices-pdf', [\App\Http\Controllers\Shared\StatisticsController::class, 'bulkInvoicesPdf'])->name('bulk-invoices-pdf');
     });
     
 });

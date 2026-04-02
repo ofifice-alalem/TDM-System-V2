@@ -155,6 +155,12 @@
                             <i data-lucide="file-text" class="w-4 h-4"></i>
                             تصدير PDF
                         </button>
+                        @if(!in_array(request('operation'), ['summary', '']))
+                        <a id="bulkPdfBtn" href="#" target="_blank" class="px-6 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
+                            <i data-lucide="files" class="w-4 h-4"></i>
+                            تحميل كل الفواتير PDF
+                        </a>
+                        @endif
                         <a href="{{ route('admin.statistics.index') }}" class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
                             <i data-lucide="x" class="w-4 h-4"></i>
                             إعادة تعيين
@@ -629,6 +635,14 @@
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
         
+        // تعيين رابط زر تحميل كل الفواتير
+        const bulkBtn = document.getElementById('bulkPdfBtn');
+        if (bulkBtn) {
+            const bulkUrl = new URL('{{ route("admin.statistics.bulk-invoices-pdf") }}', window.location.origin);
+            new URLSearchParams(window.location.search).forEach((v, k) => bulkUrl.searchParams.set(k, v));
+            bulkBtn.href = bulkUrl.toString();
+        }
+
         const statType = document.getElementById('stat_type');
         const filtersContainer = document.getElementById('filters_container');
         const storeField = document.getElementById('store_field');
