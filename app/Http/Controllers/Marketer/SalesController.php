@@ -118,7 +118,16 @@ class SalesController extends Controller
 
         $sale->load('items.product', 'store', 'keeper');
         $stores = Store::where('is_active', true)->get(['id', 'name', 'owner_name']);
-        return view('marketer.sales.show', ['invoice' => $sale, 'stores' => $stores]);
+        $products = Product::with('activePromotion')
+            ->where('is_active', true)
+            ->leftJoin('marketer_actual_stock', function ($join) {
+                $join->on('products.id', '=', 'marketer_actual_stock.product_id')
+                    ->where('marketer_actual_stock.marketer_id', auth()->id());
+            })
+            ->select('products.*', 'marketer_actual_stock.quantity as stock')
+            ->orderBy('products.name', 'asc')
+            ->get();
+        return view('marketer.sales.show', ['invoice' => $sale, 'stores' => $stores, 'products' => $products]);
     }
 
     public function adjust(SalesInvoice $sale, Request $request)

@@ -302,16 +302,43 @@
                                             </div>
                                         </div>
 
-                                        <div id="adjust-items-container" class="space-y-2">
-                                            @foreach($invoice->items as $item)
-                                            <div class="adjust-item flex gap-2 items-center">
-                                                <input type="hidden" name="items[{{ $loop->index }}][product_id]" value="{{ $item->product_id }}">
-                                                <span class="text-xs font-bold text-amber-800 dark:text-amber-300 flex-1 truncate">{{ $item->product->name }}</span>
-                                                <input type="number" name="items[{{ $loop->index }}][quantity]" value="{{ $item->quantity }}" min="1"
-                                                    class="w-20 bg-white dark:bg-dark-bg border border-amber-200 dark:border-amber-800 rounded-lg p-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-200"
-                                                    required>
+                                        <div>
+                                            <label class="block text-xs font-bold text-amber-800 dark:text-amber-300 mb-1">المنتجات:</label>
+                                            <div id="adjust-items" class="space-y-2">
+                                                @foreach($invoice->items as $item)
+                                                <div class="adjust-row flex gap-2 items-center">
+                                                    <select name="items[{{ $loop->index }}][product_id]" class="adjust-product-select flex-1 bg-white dark:bg-dark-bg border border-amber-200 dark:border-amber-800 rounded-lg p-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-200" required>
+                                                        <option value="">اختر منتج</option>
+                                                        @foreach($products as $p)
+                                                            @php
+                                                                $stockForOption = $p->stock ?? 0;
+                                                                if ($p->id == $item->product_id) {
+                                                                    $stockForOption += $item->quantity;
+                                                                }
+                                                            @endphp
+                                                            @if($stockForOption > 0)
+                                                            <option value="{{ $p->id }}"
+                                                                data-stock="{{ $stockForOption }}"
+                                                                data-price="{{ $p->current_price }}"
+                                                                {{ $p->id == $item->product_id ? 'selected' : '' }}>
+                                                                {{ $p->name }} | متوفر: {{ $stockForOption }}
+                                                            </option>
+                                                            @endif
+                                                        @endforeach
+                                                    </select>
+                                                    <input type="number" name="items[{{ $loop->index }}][quantity]" value="{{ $item->quantity }}" min="1"
+                                                        class="adjust-qty w-20 bg-white dark:bg-dark-bg border border-amber-200 dark:border-amber-800 rounded-lg p-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-200"
+                                                        required>
+                                                    <button type="button" onclick="removeAdjustRow(this)" class="text-red-400 hover:text-red-600 shrink-0">
+                                                        <i data-lucide="x" class="w-4 h-4"></i>
+                                                    </button>
+                                                </div>
+                                                @endforeach
                                             </div>
-                                            @endforeach
+                                            <button type="button" onclick="addAdjustRow()" class="mt-2 w-full flex items-center justify-center gap-1 py-2 bg-white dark:bg-dark-bg border border-dashed border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 rounded-lg text-xs font-bold hover:bg-amber-50 transition-colors">
+                                                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                                إضافة منتج
+                                            </button>
                                         </div>
 
                                         <div>
@@ -539,6 +566,88 @@
     });
 
     const allStores = @json($stores->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'owner' => $s->owner_name]));
+
+    const allProducts = @json($products->map(fn($p) => [
+        'id'    => $p->id,
+        'name'  => $p->name,
+        'stock' => ($p->stock ?? 0) + ($p->id ? 0 : 0), // stock already includes current invoice qty from controller
+        'price' => $p->current_price,
+    ]));
+
+    // إضافة الكميات الحالية للفاتورة للمخزون المتاح
+    const invoiceItemsQty = @json($invoice->items->pluck('quantity', 'product_id'));
+    const adjustProducts = allProducts.map(p => ({
+        ...p,
+        stock: (p.stock ?? 0) + (invoiceItemsQty[p.id] ?? 0)
+    })).filter(p => p.stock > 0);
+
+    let adjustRowIndex = {{ $invoice->items->count() }};
+
+    function addAdjustRow() {
+        const container = document.getElementById('adjust-items');
+        const idx = adjustRowIndex++;
+        const options = adjustProducts.map(p =>
+            `<option value="${p.id}" data-stock="${p.stock}" data-price="${p.price}">${p.name} | متوفر: ${p.stock}</option>`
+        ).join('');
+
+        const row = document.createElement('div');
+        row.className = 'adjust-row flex gap-2 items-center';
+        row.innerHTML = `
+            <select name="items[${idx}][product_id]" class="adjust-product-select flex-1 bg-white dark:bg-dark-bg border border-amber-200 dark:border-amber-800 rounded-lg p-2 text-xs focus:outline-none focus:ring-2 focus:ring-amber-200" required>
+                <option value="">اختر منتج</option>
+                ${options}
+            </select>
+            <input type="number" name="items[${idx}][quantity]" min="1" placeholder="0"
+                class="adjust-qty w-20 bg-white dark:bg-dark-bg border border-amber-200 dark:border-amber-800 rounded-lg p-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-200"
+                required>
+            <button type="button" onclick="removeAdjustRow(this)" class="text-red-400 hover:text-red-600 shrink-0">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        `;
+
+        row.querySelector('.adjust-product-select').addEventListener('change', function () {
+            const opt = this.options[this.selectedIndex];
+            const qtyInput = this.closest('.adjust-row').querySelector('.adjust-qty');
+            qtyInput.max = opt.dataset.stock || '';
+        });
+
+        container.appendChild(row);
+        lucide.createIcons();
+        reindexAdjustRows();
+    }
+
+    function removeAdjustRow(btn) {
+        const container = document.getElementById('adjust-items');
+        if (container.querySelectorAll('.adjust-row').length > 1) {
+            btn.closest('.adjust-row').remove();
+            reindexAdjustRows();
+        }
+    }
+
+    function reindexAdjustRows() {
+        document.querySelectorAll('#adjust-items .adjust-row').forEach((row, i) => {
+            row.querySelector('[name*="product_id"]').name = `items[${i}][product_id]`;
+            row.querySelector('[name*="quantity"]').name = `items[${i}][quantity]`;
+        });
+        adjustRowIndex = document.querySelectorAll('#adjust-items .adjust-row').length;
+    }
+
+    // ضبط max للصفوف الموجودة مسبقاً
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('#adjust-items .adjust-product-select').forEach(select => {
+            select.addEventListener('change', function () {
+                const opt = this.options[this.selectedIndex];
+                const qtyInput = this.closest('.adjust-row').querySelector('.adjust-qty');
+                qtyInput.max = opt.dataset.stock || '';
+            });
+            // ضبط max للصف الحالي
+            const opt = select.options[select.selectedIndex];
+            if (opt) {
+                const qtyInput = select.closest('.adjust-row').querySelector('.adjust-qty');
+                if (qtyInput) qtyInput.max = opt.dataset.stock || '';
+            }
+        });
+    });
 
     function storeSearch(defaultId, defaultLabel) {
         return {
