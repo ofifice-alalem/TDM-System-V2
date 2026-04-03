@@ -277,7 +277,7 @@
                                     class="bg-amber-50 dark:bg-amber-900/10 rounded-2xl p-4 border border-amber-200 dark:border-amber-900/30"
                                     style="display: none;">
 
-                                    <form action="{{ route('marketer.sales.adjust', $invoice) }}" method="POST" class="space-y-3">
+                                    <form id="adjust-form" action="{{ route('marketer.sales.adjust', $invoice) }}" method="POST" class="space-y-3">
                                         @csrf
                                         @method('PATCH')
 
