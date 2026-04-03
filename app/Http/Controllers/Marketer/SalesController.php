@@ -127,7 +127,24 @@ class SalesController extends Controller
             ->select('products.*', 'marketer_actual_stock.quantity as stock')
             ->orderBy('products.name', 'asc')
             ->get();
-        return view('marketer.sales.show', ['invoice' => $sale, 'stores' => $stores, 'products' => $products]);
+
+        $storesJson = $stores->map(fn($s) => [
+            'id'    => $s->id,
+            'name'  => $s->name,
+            'owner' => $s->owner_name,
+        ])->values();
+
+        $productsJson = $products->map(fn($p) => [
+            'id'    => $p->id,
+            'name'  => $p->name,
+            'stock' => $p->stock ?? 0,
+            'price' => $p->current_price,
+        ])->values();
+
+        $invoiceItemsQty = $sale->items->pluck('quantity', 'product_id');
+
+        return view('marketer.sales.show', compact('sale', 'stores', 'products', 'storesJson', 'productsJson', 'invoiceItemsQty')
+            + ['invoice' => $sale]);
     }
 
     public function adjust(SalesInvoice $sale, Request $request)
