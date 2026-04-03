@@ -112,9 +112,74 @@
 
                         <div id="marketer_store_field" style="display: {{ request('stat_type') == 'marketers' && in_array(request('operation'), ['sales', 'payments', 'sales_returns']) ? 'block' : 'none' }}">
                             <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">المتجر (اختياري)</label>
-                            <select name="marketer_store_id" id="marketer_store_id" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                                <option value="">الكل</option>
-                            </select>
+                            <div
+                                x-data="{
+                                    search: '{{ request('marketer_store_id') ? '' : '' }}',
+                                    selectedId: '{{ request('marketer_store_id') ?? '' }}',
+                                    open: false,
+                                    stores: [],
+                                    filtered: [],
+                                    init() { this.filtered = this.stores; },
+                                    setStores(list) {
+                                        this.stores = list;
+                                        this.filtered = list;
+                                        const cur = this.stores.find(s => s.id == this.selectedId);
+                                        this.search = cur ? cur.name : '';
+                                    },
+                                    filter() {
+                                        this.selectedId = '';
+                                        const q = this.search.toLowerCase();
+                                        this.filtered = q ? this.stores.filter(s => s.name.toLowerCase().includes(q)) : this.stores;
+                                        this.open = true;
+                                    },
+                                    select(id, name) {
+                                        this.selectedId = id;
+                                        this.search = name;
+                                        this.open = false;
+                                    },
+                                    clear() {
+                                        this.selectedId = '';
+                                        this.search = '';
+                                        this.open = false;
+                                    }
+                                }"
+                                x-ref="marketerStoreWidget"
+                                @click.outside="open = false"
+                                id="marketer_store_widget"
+                            >
+                                <div class="relative">
+                                    <input
+                                        type="text"
+                                        x-model="search"
+                                        @focus="open = true"
+                                        @input="filter()"
+                                        placeholder="ابحث عن متجر..."
+                                        autocomplete="off"
+                                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 pr-10"
+                                    >
+                                    <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute top-1/2 -translate-y-1/2 right-3 pointer-events-none"></i>
+                                    <input type="hidden" name="marketer_store_id" x-model="selectedId">
+                                    <div
+                                        x-show="open"
+                                        x-transition
+                                        class="absolute z-50 w-full mt-1 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl overflow-hidden"
+                                        style="max-height: 220px; overflow-y: auto;"
+                                    >
+                                        <div
+                                            @click="clear()"
+                                            class="px-4 py-2.5 text-sm font-bold text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 cursor-pointer border-b border-gray-100 dark:border-dark-border"
+                                        >الكل</div>
+                                        <template x-for="s in filtered" :key="s.id">
+                                            <div
+                                                @click="select(s.id, s.name)"
+                                                class="px-4 py-2.5 text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer"
+                                                x-text="s.name"
+                                            ></div>
+                                        </template>
+                                        <div x-show="filtered.length === 0" class="px-4 py-3 text-sm text-gray-400 dark:text-gray-500 text-center">لا توجد نتائج</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div>
