@@ -252,6 +252,90 @@
                             </div>
                         </div>
 
+                        @if($invoice->status === 'pending' || $invoice->status === 'approved')
+                            @php $hasPromotion = $invoice->items->whereNotNull('promotion_id')->isNotEmpty(); @endphp
+
+                            @if($hasPromotion)
+                            <div class="mt-2 flex items-center gap-2 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3">
+                                <i data-lucide="info" class="w-4 h-4 text-amber-500 shrink-0"></i>
+                                <p class="text-xs text-amber-700 dark:text-amber-400 font-medium">لا يمكن تعديل فاتورة تحتوي على عروض ترويجية</p>
+                            </div>
+                            @else
+                            <div x-data="{ showAdjust: false }" class="mt-2">
+                                <button
+                                    type="button"
+                                    x-show="!showAdjust"
+                                    @click="showAdjust = true"
+                                    class="w-full bg-white dark:bg-dark-card border-2 border-amber-200 dark:border-amber-900/30 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm">
+                                    <i data-lucide="pencil" class="w-5 h-5"></i>
+                                    تعديل الفاتورة
+                                </button>
+
+                                <div
+                                    x-show="showAdjust"
+                                    x-transition
+                                    class="bg-amber-50 dark:bg-amber-900/10 rounded-2xl p-4 border border-amber-200 dark:border-amber-900/30"
+                                    style="display: none;">
+
+                                    <form action="{{ route('marketer.sales.adjust', $invoice) }}" method="POST" class="space-y-3">
+                                        @csrf
+                                        @method('PATCH')
+
+                                        <div x-data="storeSearch({{ $invoice->store_id }}, '{{ $invoice->store->name }} - {{ $invoice->store->owner_name }}')">
+                                            <label class="block text-xs font-bold text-amber-800 dark:text-amber-300 mb-1">المتجر:</label>
+                                            <div class="relative">
+                                                <input type="text" x-model="search" @input="filter" @focus="open = true" @click.outside="open = false"
+                                                    autocomplete="off"
+                                                    placeholder="ابحث عن المتجر..."
+                                                    class="w-full bg-white dark:bg-dark-bg border border-amber-200 dark:border-amber-800 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200">
+                                                <input type="hidden" name="store_id" x-model="selectedId" required>
+                                                <div x-show="open && results.length > 0"
+                                                    class="absolute z-50 w-full mt-1 bg-white dark:bg-dark-card border border-amber-200 dark:border-amber-800 rounded-xl shadow-xl max-h-40 overflow-y-auto"
+                                                    style="display:none">
+                                                    <template x-for="store in results" :key="store.id">
+                                                        <div @click="select(store)" class="px-3 py-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 cursor-pointer border-b border-amber-100 dark:border-amber-900/20 last:border-0">
+                                                            <div class="font-bold text-gray-900 dark:text-white text-xs" x-text="store.name"></div>
+                                                            <div class="text-[10px] text-gray-500" x-text="store.owner"></div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="adjust-items-container" class="space-y-2">
+                                            @foreach($invoice->items as $item)
+                                            <div class="adjust-item flex gap-2 items-center">
+                                                <input type="hidden" name="items[{{ $loop->index }}][product_id]" value="{{ $item->product_id }}">
+                                                <span class="text-xs font-bold text-amber-800 dark:text-amber-300 flex-1 truncate">{{ $item->product->name }}</span>
+                                                <input type="number" name="items[{{ $loop->index }}][quantity]" value="{{ $item->quantity }}" min="1"
+                                                    class="w-20 bg-white dark:bg-dark-bg border border-amber-200 dark:border-amber-800 rounded-lg p-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-200"
+                                                    required>
+                                            </div>
+                                            @endforeach
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-amber-800 dark:text-amber-300 mb-1">ملاحظات:</label>
+                                            <textarea name="notes" rows="2"
+                                                class="w-full bg-white dark:bg-dark-bg border border-amber-200 dark:border-amber-800 rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
+                                                placeholder="اختياري...">{{ $invoice->notes }}</textarea>
+                                        </div>
+
+                                        <div class="flex gap-2">
+                                            <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
+                                                حفظ التعديل
+                                            </button>
+                                            <button type="button" @click="showAdjust = false"
+                                                class="px-4 py-2.5 bg-white dark:bg-dark-card border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 font-bold rounded-xl text-sm hover:bg-amber-50 transition-colors">
+                                                تراجع
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            @endif
+                        @endif
+
                         @if($invoice->status === 'pending')
                             <div x-data="{ showCancel: false }" class="mt-4">
                                 <button 
@@ -290,6 +374,51 @@
                                             <button 
                                                 type="button" 
                                                 @click="showCancel = false"
+                                                class="px-4 py-2.5 bg-white dark:bg-dark-card border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 font-bold rounded-xl text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                                تراجع
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($invoice->status === 'approved')
+                            <div x-data="{ showCancelApproved: false }" class="mt-4">
+                                <button
+                                    type="button"
+                                    x-show="!showCancelApproved"
+                                    @click="showCancelApproved = true"
+                                    class="w-full bg-white dark:bg-dark-card border-2 border-red-50 dark:border-red-900/30 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-100 dark:hover:border-red-800 py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group shadow-sm">
+                                    <i data-lucide="x-circle" class="w-5 h-5 group-hover:rotate-90 transition-transform"></i>
+                                    إلغاء الفاتورة
+                                </button>
+
+                                <div
+                                    x-show="showCancelApproved"
+                                    x-transition
+                                    class="bg-red-50 dark:bg-red-900/10 rounded-2xl p-4 border border-red-100 dark:border-red-900/30"
+                                    style="display: none;">
+
+                                    <form action="{{ route('marketer.sales.cancel-approved', $invoice) }}" method="POST">
+                                        @csrf
+                                        @method('PATCH')
+
+                                        <label class="block text-xs font-bold text-red-800 dark:text-red-300 mb-2 mr-1">سبب الإلغاء:</label>
+                                        <textarea
+                                            name="notes"
+                                            rows="2"
+                                            class="w-full bg-white dark:bg-dark-bg border border-red-200 dark:border-red-800 rounded-xl p-3 text-sm focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-200 dark:focus:ring-red-900/50 transition-all placeholder:text-red-300 dark:placeholder:text-red-700 dark:text-white mb-3"
+                                            placeholder="اكتب السبب هنا..."
+                                            required></textarea>
+
+                                        <div class="flex gap-2">
+                                            <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors shadow-sm">
+                                                تأكيد الإلغاء
+                                            </button>
+                                            <button
+                                                type="button"
+                                                @click="showCancelApproved = false"
                                                 class="px-4 py-2.5 bg-white dark:bg-dark-card border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 font-bold rounded-xl text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                                                 تراجع
                                             </button>
@@ -408,6 +537,30 @@
             console.error('Failed to load Cairo font:', err);
         });
     });
+
+    const allStores = @json($stores->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'owner' => $s->owner_name]));
+
+    function storeSearch(defaultId, defaultLabel) {
+        return {
+            search: defaultLabel,
+            selectedId: defaultId,
+            open: false,
+            results: [],
+            filter() {
+                this.selectedId = '';
+                const q = this.search.toLowerCase();
+                this.results = q.length === 0 ? [] : allStores.filter(
+                    s => s.name.toLowerCase().includes(q) || s.owner.toLowerCase().includes(q)
+                );
+                this.open = this.results.length > 0;
+            },
+            select(store) {
+                this.selectedId = store.id;
+                this.search = store.name + ' - ' + store.owner;
+                this.open = false;
+            }
+        };
+    }
 
     let bluetoothDevice = null;
     let bluetoothCharacteristic = null;

@@ -115,9 +115,61 @@ class SalesController extends Controller
         if ($sale->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذه الفاتورة');
         }
-        
+
         $sale->load('items.product', 'store', 'keeper');
-        return view('marketer.sales.show', ['invoice' => $sale]);
+        $stores = Store::where('is_active', true)->get(['id', 'name', 'owner_name']);
+        return view('marketer.sales.show', ['invoice' => $sale, 'stores' => $stores]);
+    }
+
+    public function adjust(SalesInvoice $sale, Request $request)
+    {
+        if ($sale->marketer_id != auth()->id()) {
+            abort(403, 'غير مصرح لك بالوصول لهذه الفاتورة');
+        }
+        if (!in_array($sale->status, ['pending', 'approved'])) {
+            return back()->with('error', 'لا يمكن تعديل هذه الفاتورة');
+        }
+
+        $validated = $request->validate([
+            'store_id'           => 'required|exists:stores,id',
+            'items'              => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity'   => 'required|integer|min:1',
+            'notes'              => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $this->service->adjustInvoice(
+                $sale->id,
+                auth()->id(),
+                $validated['store_id'],
+                $validated['items'],
+                $validated['notes'] ?? null
+            );
+            return back()->with('success', 'تم تعديل الفاتورة بنجاح');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function cancelApproved(SalesInvoice $sale, Request $request)
+    {
+        if ($sale->marketer_id != auth()->id()) {
+            abort(403, 'غير مصرح لك بالوصول لهذه الفاتورة');
+        }
+
+        $validated = $request->validate([
+            'notes' => 'required|string|max:500'
+        ]);
+
+        try {
+            $this->service->cancelApprovedInvoice($sale->id, auth()->id());
+            $sale->update(['notes' => $validated['notes']]);
+            return redirect()->route('marketer.sales.index')
+                ->with('success', 'تم إلغاء الفاتورة بنجاح');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function cancel(SalesInvoice $sale, Request $request)

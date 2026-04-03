@@ -47,6 +47,8 @@ Route::middleware(['web', 'auth', 'role:marketer'])->group(function () {
             Route::post('/', [SalesController::class, 'store'])->name('store');
             Route::get('/{sale}', [SalesController::class, 'show'])->name('show');
             Route::delete('/{sale}/cancel', [SalesController::class, 'cancel'])->name('cancel');
+            Route::patch('/{sale}/cancel-approved', [SalesController::class, 'cancelApproved'])->name('cancel-approved');
+            Route::patch('/{sale}/adjust', [SalesController::class, 'adjust'])->name('adjust');
             Route::get('/{sale}/pdf', [\App\Http\Controllers\Shared\Sales\InvoiceController::class, 'generateSalesInvoicePdf'])->name('pdf');
             Route::get('/{sale}/pdf-thermal', [\App\Http\Controllers\Shared\Sales\InvoiceController::class, 'generateSalesInvoiceThermalPdf'])->name('pdf-thermal');
             Route::get('/{sale}/invoice-data', [\App\Http\Controllers\Shared\Sales\InvoiceController::class, 'getInvoiceData'])->name('invoice-data');
