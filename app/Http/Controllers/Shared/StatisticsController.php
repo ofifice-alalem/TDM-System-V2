@@ -1004,8 +1004,20 @@ class StatisticsController extends Controller
         exit;
     }
 
+    public function bulkInvoicesCount(Request $request)
+    {
+        if ($request->stat_type === 'stores') {
+            $results = $this->getStatistics($request, true);
+        } else {
+            $results = $this->getMarketerStatistics($request, true);
+        }
+        return response()->json(['count' => $results ? count($results['data']) : 0]);
+    }
+
     public function bulkInvoicesPdf(Request $request)
     {
+        $offset = max(0, (int) $request->input('offset', 0));
+        $limit  = min(70, max(50, (int) $request->input('limit', 0))) ?: null;
         $arabic     = new \ArPHP\I18N\Arabic();
         $g          = fn($t) => $arabic->utf8Glyphs($t);
         $statusLabels = [
@@ -1037,7 +1049,10 @@ class StatisticsController extends Controller
             abort(404, 'لا توجد بيانات');
         }
 
-        $items = $results['data'];
+        $items = collect($results['data']);
+        if ($limit) {
+            $items = $items->slice($offset, $limit)->values();
+        }
 
         // بناء بيانات كل فاتورة حسب نوع العملية
         $invoices = $items->map(function ($item) use ($operation, $arabic, $g, $statusLabels, $methodLabels, $logoBase64, $companyName) {
@@ -1178,7 +1193,8 @@ class StatisticsController extends Controller
         ->setOption('isHtml5ParserEnabled', true)
         ->setOption('isFontSubsettingEnabled', true);
 
-        return $pdf->stream('bulk-' . $operation . '-' . $request->from_date . '.pdf');
+        $suffix = $limit ? ('-' . ($offset + 1) . '-' . ($offset + count($invoices))) : '';
+        return $pdf->stream('bulk-' . $operation . '-' . $request->from_date . $suffix . '.pdf');
     }
 
     private function exportPdf($results, $request)

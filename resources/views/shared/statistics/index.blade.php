@@ -221,10 +221,10 @@
                             تصدير PDF
                         </button>
                         @if(!in_array(request('operation'), ['summary', '']))
-                        <a id="bulkPdfBtn" href="#" target="_blank" class="px-6 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
+                        <button type="button" onclick="openBulkModal()" class="px-6 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
                             <i data-lucide="files" class="w-4 h-4"></i>
                             تحميل كل الفواتير PDF
-                        </a>
+                        </button>
                         @endif
                         <a href="{{ route('admin.statistics.index') }}" class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
                             <i data-lucide="x" class="w-4 h-4"></i>
@@ -667,6 +667,68 @@
     </div>
 </div>
 
+{{-- Bulk PDF Modal --}}
+<div id="bulkModal" class="fixed inset-0 z-[9999] items-center justify-center p-4" style="display:none">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeBulkModal()"></div>
+    <div class="relative bg-white dark:bg-dark-card rounded-2xl shadow-2xl w-full max-w-md">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-dark-border">
+            <h3 class="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+                <i data-lucide="files" class="w-5 h-5 text-violet-500"></i>
+                تحميل الفواتير
+            </h3>
+            <button onclick="closeBulkModal()" class="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-dark-bg text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        {{-- loading --}}
+        <div id="bulkModalLoading" class="flex items-center justify-center py-12">
+            <div class="w-8 h-8 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin"></div>
+        </div>
+
+        {{-- content --}}
+        <div id="bulkModalContent" class="px-6 py-5 space-y-4" style="display:none">
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                عدد النتائج: <span id="bulkCount" class="font-black text-gray-900 dark:text-white"></span>
+            </p>
+
+            {{-- ملف واحد --}}
+            <a id="bulkSingleBtn" href="#" target="_blank"
+               class="flex items-center gap-3 w-full px-4 py-3 bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/30 rounded-xl hover:bg-violet-100 dark:hover:bg-violet-500/20 transition-colors">
+                <i data-lucide="file-down" class="w-5 h-5 text-violet-600 dark:text-violet-400 shrink-0"></i>
+                <div>
+                    <div class="font-bold text-sm text-violet-700 dark:text-violet-300">تحميل في ملف واحد</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">جميع الفواتير في PDF واحد</div>
+                </div>
+            </a>
+
+            {{-- دفعات --}}
+            <div id="bulkChunksSection">
+                <button type="button" onclick="toggleChunks()"
+                        class="flex items-center gap-3 w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-right">
+                    <i data-lucide="layers" class="w-5 h-5 text-gray-500 shrink-0"></i>
+                    <div class="flex-1">
+                        <div class="font-bold text-sm text-gray-700 dark:text-gray-300">تحميل على أجزاء</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">تقسيم الفواتير إلى ملفات أصغر</div>
+                    </div>
+                    <i data-lucide="chevron-down" id="chunksChevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
+                </button>
+
+                <div id="chunksPanel" style="display:none" class="mt-3 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <label class="text-xs font-bold text-gray-600 dark:text-gray-400 shrink-0">فواتير لكل ملف:</label>
+                        <input type="number" id="chunkSize" min="50" max="70" value="70"
+                               oninput="clampChunkSize(this); renderChunks()"
+                               class="w-24 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg px-3 py-1.5 text-sm text-center font-bold focus:outline-none focus:ring-2 focus:ring-violet-500">
+                        <span class="text-xs text-gray-400">(50 - 70)</span>
+                    </div>
+                    <div id="chunksList" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Invoice Modal --}}
 <div id="invoiceModal" class="fixed inset-0 z-[9999] items-center justify-center p-4" style="display:none">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeInvoiceModal()"></div>
@@ -700,14 +762,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
         
-        // تعيين رابط زر تحميل كل الفواتير
-        const bulkBtn = document.getElementById('bulkPdfBtn');
-        if (bulkBtn) {
-            const bulkUrl = new URL('{{ route("admin.statistics.bulk-invoices-pdf") }}', window.location.origin);
-            new URLSearchParams(window.location.search).forEach((v, k) => bulkUrl.searchParams.set(k, v));
-            bulkBtn.href = bulkUrl.toString();
-        }
-
         const statType = document.getElementById('stat_type');
         const filtersContainer = document.getElementById('filters_container');
         const storeField = document.getElementById('store_field');
@@ -1319,7 +1373,91 @@ function buildWithdrawalHtml(d) {
     </div>`;
 }
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInvoiceModal(); });
+// ===== Bulk PDF =====
+let _bulkBaseUrl = '';
+let _bulkCount   = 0;
+let _chunksOpen  = false;
+
+function openBulkModal() {
+    const modal = document.getElementById('bulkModal');
+    document.getElementById('bulkModalLoading').style.display = 'flex';
+    document.getElementById('bulkModalContent').style.display = 'none';
+    document.getElementById('chunksPanel').style.display = 'none';
+    _chunksOpen = false;
+    document.getElementById('chunksChevron').style.transform = '';
+    modal.style.display = 'flex';
+    lucide.createIcons();
+
+    const countUrl = new URL('{{ route("admin.statistics.bulk-invoices-count") }}', window.location.origin);
+    new URLSearchParams(window.location.search).forEach((v, k) => countUrl.searchParams.set(k, v));
+
+    _bulkBaseUrl = new URL('{{ route("admin.statistics.bulk-invoices-pdf") }}', window.location.origin);
+    new URLSearchParams(window.location.search).forEach((v, k) => _bulkBaseUrl.searchParams.set(k, v));
+
+    fetch(countUrl)
+        .then(r => r.json())
+        .then(data => {
+            _bulkCount = data.count;
+            document.getElementById('bulkCount').textContent = _bulkCount;
+            document.getElementById('bulkSingleBtn').href = _bulkBaseUrl.toString();
+            document.getElementById('bulkModalLoading').style.display = 'none';
+            document.getElementById('bulkModalContent').style.display = 'block';
+            lucide.createIcons();
+        });
+}
+
+function closeBulkModal() {
+    document.getElementById('bulkModal').style.display = 'none';
+}
+
+function toggleChunks() {
+    _chunksOpen = !_chunksOpen;
+    const panel   = document.getElementById('chunksPanel');
+    const chevron = document.getElementById('chunksChevron');
+    panel.style.display   = _chunksOpen ? 'block' : 'none';
+    chevron.style.transform = _chunksOpen ? 'rotate(180deg)' : '';
+    if (_chunksOpen) renderChunks();
+}
+
+function clampChunkSize(el) {
+    let v = el.value;
+    // لا يسمح إلا بالأرقام
+    v = v.replace(/[^0-9]/g, '');
+    if (v === '') { el.value = ''; return; }
+    const n = parseInt(v);
+    // أول رقم يجب أن يكون 5 أو 6 أو 7
+    const first = parseInt(v[0]);
+    if (first < 5)      { el.value = '50'; return; }
+    if (first > 7)      { el.value = '70'; return; }
+    // بعد إدخال رقمين
+    if (v.length >= 2) {
+        if (n < 50)     { el.value = '50'; return; }
+        if (n > 70)     { el.value = '70'; return; }
+        el.value = String(n);
+    } else {
+        el.value = v;
+    }
+}
+
+function renderChunks() {
+    const size = Math.min(70, Math.max(50, parseInt(document.getElementById('chunkSize').value) || 70));
+    const list = document.getElementById('chunksList');
+    list.innerHTML = '';
+    for (let offset = 0; offset < _bulkCount; offset += size) {
+        const end = Math.min(offset + size, _bulkCount);
+        const url = new URL(_bulkBaseUrl.toString());
+        url.searchParams.set('offset', offset);
+        url.searchParams.set('limit', size);
+        const a = document.createElement('a');
+        a.href   = url.toString();
+        a.target = '_blank';
+        a.className = 'flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl hover:bg-violet-50 dark:hover:bg-violet-500/10 hover:border-violet-300 transition-colors';
+        a.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-violet-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><span class="text-sm font-bold text-gray-700 dark:text-gray-300">فواتير ${offset + 1} - ${end}</span><span class="text-xs text-gray-400 mr-auto">(${end - offset} فاتورة)</span>`;
+        list.appendChild(a);
+    }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeInvoiceModal(); closeBulkModal(); } });
 </script>
 @endpush
 @endsection
