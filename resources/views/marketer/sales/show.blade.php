@@ -313,12 +313,14 @@
                                                     @if($availableStock > 0)
                                                     <div class="adjust-product-row {{ $invoiceItem ? '' : 'hidden' }}"
                                                          data-product-id="{{ $p->id }}"
-                                                         data-stock="{{ $availableStock }}">
+                                                         data-stock="{{ $availableStock }}"
+                                                         data-price="{{ $p->current_price }}">
                                                         <div class="flex items-center gap-2 bg-white dark:bg-dark-bg border border-amber-200 dark:border-amber-800 rounded-lg p-2">
                                                             <span class="flex-1 text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{{ $p->name }}</span>
                                                             <span class="text-[10px] text-gray-400 shrink-0">{{ $availableStock }}</span>
                                                             <input type="number" name="" value="{{ $invoiceItem ? $invoiceItem->quantity : 1 }}"
                                                                 min="1" max="{{ $availableStock }}"
+                                                                oninput="calcAdjustTotal()"
                                                                 class="qty-input w-16 border border-amber-200 dark:border-amber-700 rounded-lg p-1 text-sm text-center bg-amber-50 dark:bg-amber-900/20 focus:outline-none focus:ring-2 focus:ring-amber-300">
                                                             <button type="button" onclick="toggleAdjustProduct(this)" class="text-red-400 hover:text-red-600 shrink-0">
                                                                 <i data-lucide="x" class="w-4 h-4"></i>
@@ -334,6 +336,25 @@
                                                 إضافة منتج
                                             </button>
                                             <div id="adjust-product-dropdown" class="hidden mt-1 bg-white dark:bg-dark-card border border-amber-200 dark:border-amber-800 rounded-xl shadow-xl max-h-48 overflow-y-auto"></div>
+                                        </div>
+
+                                        <div class="bg-white dark:bg-dark-bg rounded-xl p-3 border border-amber-200 dark:border-amber-800 space-y-1.5">
+                                            <div class="flex justify-between text-xs">
+                                                <span class="text-gray-500 dark:text-gray-400">عدد البضاعة</span>
+                                                <span id="adj-total-items" class="font-bold text-gray-800 dark:text-gray-200">0</span>
+                                            </div>
+                                            <div class="flex justify-between text-xs">
+                                                <span class="text-gray-500 dark:text-gray-400">المجموع الفرعي</span>
+                                                <span id="adj-subtotal" class="font-bold text-gray-800 dark:text-gray-200">0.00</span>
+                                            </div>
+                                            <div class="flex justify-between text-xs text-blue-600 dark:text-blue-400" id="adj-discount-row" style="display:none!important">
+                                                <span>خصم الفاتورة</span>
+                                                <span id="adj-discount">0.00</span>
+                                            </div>
+                                            <div class="flex justify-between text-sm pt-1 border-t border-amber-200 dark:border-amber-800">
+                                                <span class="font-bold text-gray-800 dark:text-gray-200">الإجمالي</span>
+                                                <span id="adj-total" class="font-black text-amber-600 dark:text-amber-400">0.00 دينار</span>
+                                            </div>
                                         </div>
 
                                         <div>
@@ -594,6 +615,7 @@
                 row.classList.remove('hidden');
                 dd.classList.add('hidden');
                 updateAdjustAddBtn();
+                calcAdjustTotal();
                 lucide.createIcons();
             };
             dd.appendChild(div);
@@ -606,6 +628,34 @@
         btn.disabled = hiddenCount === 0;
         btn.classList.toggle('opacity-40', hiddenCount === 0);
         btn.classList.toggle('cursor-not-allowed', hiddenCount === 0);
+        calcAdjustTotal();
+    }
+
+    function calcAdjustTotal() {
+        let totalItems = 0, subtotal = 0;
+        document.querySelectorAll('#adjust-items .adjust-product-row:not(.hidden)').forEach(row => {
+            const qty = parseInt(row.querySelector('.qty-input').value) || 0;
+            const price = parseFloat(row.dataset.price || 0);
+            totalItems += qty;
+            subtotal += qty * price;
+        });
+
+        document.getElementById('adj-total-items').textContent = totalItems;
+        document.getElementById('adj-subtotal').textContent = subtotal.toFixed(2);
+
+        fetch(`{{ url('/calculate-invoice-discount') }}?amount=${subtotal}`)
+            .then(r => r.json())
+            .then(data => {
+                const disc = data.discount_amount || 0;
+                const total = subtotal - disc;
+                const discRow = document.getElementById('adj-discount-row');
+                discRow.style.cssText = disc > 0 ? '' : 'display:none!important';
+                document.getElementById('adj-discount').textContent = disc.toFixed(2);
+                document.getElementById('adj-total').textContent = total.toFixed(2) + ' دينار';
+            })
+            .catch(() => {
+                document.getElementById('adj-total').textContent = subtotal.toFixed(2) + ' دينار';
+            });
     }
 
     function submitAdjustForm() {
