@@ -31,19 +31,26 @@
                 </div>
                 <h2 class="font-black text-gray-800 dark:text-gray-200">
                     {{ match($role) {
-                        'admin'                => 'المدير',
-                        'admin.statistics'     => 'المدير - الإحصائيات',
-                        'marketer'             => 'المسوق',
-                        'marketer.statistics'  => 'المسوق - الإحصائيات',
-                        'warehouse'            => 'المستودع',
-                        'sales'                => 'المبيعات',
-                        default                => $role
+                        'admin'                        => 'المدير',
+                        'admin.statistics'             => 'المدير - الإحصائيات',
+                        'admin.customer-statistics'    => 'المدير - إحصائيات العملاء',
+                        'marketer'                     => 'المسوق',
+                        'marketer.statistics'          => 'المسوق - الإحصائيات',
+                        'warehouse'                    => 'المستودع',
+                        'sales'                        => 'المبيعات',
+                        default                        => $role
                     } }}
                 </h2>
                 @if($role === 'admin.statistics')
                 <a href="{{ route('admin.statistics.index') }}" target="_blank"
                    class="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-500 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
                    title="فتح صفحة الإحصائيات">
+                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                </a>
+                @elseif($role === 'admin.customer-statistics')
+                <a href="{{ route('admin.customer-statistics.index') }}" target="_blank"
+                   class="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-500 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+                   title="فتح صفحة إحصائيات العملاء">
                     <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
                 </a>
                 @elseif($role === 'marketer.statistics')

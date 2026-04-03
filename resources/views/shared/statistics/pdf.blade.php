@@ -62,9 +62,9 @@
             <div class="ph-sub">
                 {{ $labels['entityName'] }}
                 &nbsp;|&nbsp;
-                <span>{{ $labels['dateFrom'] }}</span>
-                &nbsp;&#8592;&nbsp;
                 <span>{{ $labels['dateTo'] }}</span>
+                &nbsp;&#8592;&nbsp;
+                <span>{{ $labels['dateFrom'] }}</span>
             </div>
         </div>
     </div>
@@ -286,13 +286,13 @@
             @endif
             <th style="width:10%">{{ $labels['payMethod'] }}</th>
             @endif
+            <th>{{ $labels['invoiceNum'] }}</th>
             @if($labels['hasStore'] ?? false)
-            <th style="width:18%">{{ $labels['store'] }}</th>
+            <th style="width:28%">{{ $labels['store'] }}</th>
             @endif
             @if($labels['hasMarketer'] ?? false)
-            <th style="width:18%">{{ $labels['marketer'] }}</th>
+            <th style="width:28%">{{ $labels['marketer'] }}</th>
             @endif
-            <th>{{ $labels['invoiceNum'] }}</th>
             <th style="width:4%; text-align:center">#</th>
         </tr>
     </thead>
@@ -332,13 +332,13 @@
             @endif
             <td style="font-size:7.5px;">{{ $g(match($item->payment_method ?? '') { 'cash' => 'كاش', 'transfer' => 'حوالة', 'certified_check' => 'شيك مصدق', default => '-' }) }}</td>
             @endif
+            <td style="font-size:7.5px; font-weight:bold; color:#0f172a;">{{ $en($num) }}</td>
             @if($labels['hasStore'] ?? false)
-            <td style="font-size:7.5px;">{{ $g($item->store->name ?? '-') }}</td>
+            <td style="font-size:7.5px;">{{ $en($g($item->store->name ?? '-')) }}</td>
             @endif
             @if($labels['hasMarketer'] ?? false)
-            <td style="font-size:7.5px;">{{ $g($item->marketer->full_name ?? '-') }}</td>
+            <td style="font-size:7.5px;">{{ $en($g($item->marketer->full_name ?? '-')) }}</td>
             @endif
-            <td style="font-size:7.5px; font-weight:bold; color:#0f172a;">{{ $en($num) }}</td>
             <td class="idx-td">{{ $i + 1 }}</td>
         </tr>
         @endforeach

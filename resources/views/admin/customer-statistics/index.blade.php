@@ -3,7 +3,12 @@
 @section('title', 'الإحصائيات')
 
 @section('content')
-
+@php
+    $isSuperAdmin          = auth()->user()?->role_id === 5;
+    $featureBulkPdf        = $isSuperAdmin || (\App\Models\Feature::where('key','admin.customer-statistics.bulk-pdf')->first()?->isCurrentlyEnabled() ?? true);
+    $featureExportPdf      = $isSuperAdmin || (\App\Models\Feature::where('key','admin.customer-statistics.export-pdf')->first()?->isCurrentlyEnabled() ?? true);
+    $featureInvoicePreview = $isSuperAdmin || (\App\Models\Feature::where('key','admin.customer-statistics.invoice-preview')->first()?->isCurrentlyEnabled() ?? true);
+@endphp
 <div class="min-h-screen py-6 sm:py-8">
     <div class="max-w-7xl mx-auto px-4">
 
@@ -162,6 +167,18 @@
                             <i data-lucide="download" class="w-4 h-4"></i>
                             تصدير Excel
                         </button>
+                        @if($featureExportPdf && $results && !isset($results['is_summary']))
+                        <button type="submit" name="pdf" value="1" formtarget="_blank" class="flex-1 sm:flex-none px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all text-sm flex items-center justify-center gap-2">
+                            <i data-lucide="file-text" class="w-4 h-4"></i>
+                            تصدير PDF
+                        </button>
+                        @endif
+                        @if($featureBulkPdf && $results && !isset($results['is_summary']) && request('operation') !== 'summary')
+                        <button type="button" onclick="openBulkModal()" class="flex-1 sm:flex-none px-6 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold transition-all text-sm flex items-center justify-center gap-2">
+                            <i data-lucide="files" class="w-4 h-4"></i>
+                            تحميل كل الفواتير PDF
+                        </button>
+                        @endif
                         <a href="{{ route('admin.customer-statistics.index') }}" class="flex-1 sm:flex-none px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all text-sm flex items-center justify-center gap-2">
                             <i data-lucide="x" class="w-4 h-4"></i>
                             إعادة تعيين
@@ -253,6 +270,9 @@
                                 @if($results['operation'] == 'invoices')
                                 <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">المرتجعات</th>
                                 @endif
+                                @if($featureInvoicePreview)
+                                <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">عرض</th>
+                                @endif
                                 @else
                                 <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">إجمالي الفواتير</th>
                                 <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">إجمالي المدفوعات</th>
@@ -331,6 +351,38 @@
                                             @endforeach
                                         @else
                                             <span class="text-gray-400 dark:text-gray-600">-</span>
+                                        @endif
+                                    </td>
+                                    @endif
+                                    @if($featureInvoicePreview)
+                                    @php
+                                        $previewUrl = match($results['operation']) {
+                                            'invoices' => route('admin.customer-statistics.invoice-data', $item->id),
+                                            'payments' => route('admin.customer-statistics.payment-data', $item->id),
+                                            'returns'  => route('admin.customer-statistics.return-data', $item->id),
+                                            default    => null,
+                                        };
+                                        $pdfUrl = match($results['operation']) {
+                                            'invoices' => route('admin.customer-statistics.invoice-pdf', $item->id),
+                                            'payments' => route('admin.customer-statistics.payment-pdf', $item->id),
+                                            'returns'  => route('admin.customer-statistics.return-pdf', $item->id),
+                                            default    => null,
+                                        };
+                                        $previewLabel = match($results['operation']) {
+                                            'invoices' => $item->invoice_number,
+                                            'payments' => $item->payment_number,
+                                            'returns'  => $item->return_number,
+                                            default    => $item->id,
+                                        };
+                                    @endphp
+                                    <td class="px-6 py-4 text-center">
+                                        @if($previewUrl)
+                                        <button type="button"
+                                            onclick="openInvoiceModal('{{ $previewUrl }}', '{{ $previewLabel }}', '{{ $results['operation'] }}', '{{ $pdfUrl }}')"
+                                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-500/30 rounded-lg text-xs font-bold hover:bg-primary-100 dark:hover:bg-primary-500/20 transition-colors">
+                                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                            عرض
+                                        </button>
                                         @endif
                                     </td>
                                     @endif
@@ -520,6 +572,85 @@
     </div>
 </div>
 
+{{-- Bulk PDF Modal --}}
+<div id="bulkModal" class="fixed inset-0 z-[9999] items-center justify-center p-4" style="display:none">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeBulkModal()"></div>
+    <div class="relative bg-white dark:bg-dark-card rounded-2xl shadow-2xl w-full max-w-md">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-dark-border">
+            <h3 class="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+                <i data-lucide="files" class="w-5 h-5 text-violet-500"></i>
+                تحميل الفواتير
+            </h3>
+            <button onclick="closeBulkModal()" class="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-dark-bg text-gray-500 dark:text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <div id="bulkModalLoading" class="flex items-center justify-center py-12">
+            <div class="w-8 h-8 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin"></div>
+        </div>
+        <div id="bulkModalContent" class="px-6 py-5 space-y-4" style="display:none">
+            <p class="text-sm text-gray-600 dark:text-gray-400">عدد النتائج: <span id="bulkCount" class="font-black text-gray-900 dark:text-white"></span></p>
+            <a id="bulkSingleBtn" href="#" target="_blank"
+               class="flex items-center gap-3 w-full px-4 py-3 bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/30 rounded-xl hover:bg-violet-100 dark:hover:bg-violet-500/20 transition-colors">
+                <i data-lucide="file-down" class="w-5 h-5 text-violet-600 dark:text-violet-400 shrink-0"></i>
+                <div>
+                    <div class="font-bold text-sm text-violet-700 dark:text-violet-300">تحميل في ملف واحد</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">جميع الفواتير في PDF واحد</div>
+                </div>
+            </a>
+            <div id="bulkChunksSection">
+                <button type="button" onclick="toggleChunks()"
+                        class="flex items-center gap-3 w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-right">
+                    <i data-lucide="layers" class="w-5 h-5 text-gray-500 dark:text-gray-400 shrink-0"></i>
+                    <div class="flex-1">
+                        <div class="font-bold text-sm text-gray-700 dark:text-gray-300">تحميل على أجزاء</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">تقسيم الفواتير إلى ملفات أصغر</div>
+                    </div>
+                    <i data-lucide="chevron-down" id="chunksChevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
+                </button>
+                <div id="chunksPanel" style="display:none" class="mt-3 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <label class="text-xs font-bold text-gray-600 dark:text-gray-400 shrink-0">فواتير لكل ملف:</label>
+                        <input type="number" id="chunkSize" min="50" max="70" value="70"
+                               oninput="clampChunkSize(this); renderChunks()"
+                               class="w-24 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-white rounded-lg px-3 py-1.5 text-sm text-center font-bold focus:outline-none focus:ring-2 focus:ring-violet-500">
+                        <span class="text-xs text-gray-400 dark:text-gray-500">(50 - 70)</span>
+                    </div>
+                    <div id="chunksList" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Invoice Preview Modal --}}
+<div id="invoiceModal" class="fixed inset-0 z-[9999] items-center justify-center p-4" style="display:none">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeInvoiceModal()"></div>
+    <div class="relative bg-white dark:bg-dark-card rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-dark-border shrink-0">
+            <h3 class="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+                <i data-lucide="file-text" class="w-5 h-5 text-primary-500"></i>
+                <span id="modalInvoiceTitle">فاتورة</span>
+            </h3>
+            <div class="flex items-center gap-2">
+                <a id="downloadPdfBtn" href="#" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-dark-bg text-white rounded-xl text-sm font-bold hover:bg-gray-700 transition-colors">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    تحميل PDF
+                </a>
+                <button onclick="closeInvoiceModal()" class="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-dark-bg text-gray-500 dark:text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+        <div id="invoiceModalBody" class="overflow-y-auto flex-1 p-6 bg-white dark:bg-dark-card">
+            <div id="invoiceModalLoading" class="flex items-center justify-center py-20">
+                <div class="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+            </div>
+            <div id="invoiceModalContent" style="display:none"></div>
+        </div>
+    </div>
+</div>
+
 {{-- Quick Date Modal --}}
 <div id="quickDateModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-dark-card rounded-2xl shadow-2xl max-w-md w-full p-5 sm:p-6 border border-gray-200 dark:border-dark-border">
@@ -584,8 +715,195 @@
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
     });
+</script>
 
+<script>
+let _currentInvoiceOperation = null;
+let _bulkBaseUrl, _bulkCount, _chunksOpen = false;
 
+function openInvoiceModal(url, number, operation, pdfUrl) {
+    _currentInvoiceOperation = operation;
+    const modal   = document.getElementById('invoiceModal');
+    const loading = document.getElementById('invoiceModalLoading');
+    const content = document.getElementById('invoiceModalContent');
+    modal.style.display = 'flex';
+    loading.style.display = 'flex';
+    content.style.display = 'none';
+    content.innerHTML = '';
+    document.getElementById('modalInvoiceTitle').textContent = number;
+    document.getElementById('downloadPdfBtn').href = pdfUrl || '#';
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            content._data = data;
+            content.innerHTML = buildInvoiceHtml(data, operation);
+            loading.style.display = 'none';
+            content.style.display = 'block';
+            lucide.createIcons();
+        })
+        .catch(() => {
+            loading.innerHTML = '<p class="text-red-500 text-center py-8">حدث خطأ في تحميل الفاتورة</p>';
+        });
+}
+
+new MutationObserver(() => {
+    const content = document.getElementById('invoiceModalContent');
+    if (content && content.style.display !== 'none' && content._data && _currentInvoiceOperation) {
+        content.innerHTML = buildInvoiceHtml(content._data, _currentInvoiceOperation);
+    }
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+function closeInvoiceModal() { document.getElementById('invoiceModal').style.display = 'none'; }
+
+function buildInvoiceHtml(d, operation) {
+    const dk = document.documentElement.classList.contains('dark');
+    const T = {
+        text: dk ? '#e2e8f0' : '#111111', sub: dk ? '#94a3b8' : '#374151',
+        muted: dk ? '#64748b' : '#9CA3AF', border: dk ? '#2a354c' : '#E5E7EB',
+        rowA: dk ? 'rgba(255,255,255,0.03)' : 'rgba(249,250,251,0.7)', rowB: 'transparent',
+    };
+    const fmt = v => { const n = parseFloat(String(v).replace(/,/g,'')); return isNaN(n) ? v : n.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+    const statusMap = {
+        completed: dk ? {label:'مكتمل', bg:'#064e3b', color:'#6ee7b7'} : {label:'مكتمل', bg:'#D1FAE5', color:'#065F46'},
+        approved:  dk ? {label:'مكتمل', bg:'#064e3b', color:'#6ee7b7'} : {label:'مكتمل', bg:'#D1FAE5', color:'#065F46'},
+        cancelled: dk ? {label:'ملغي',   bg:'#1f2937', color:'#9ca3af'} : {label:'ملغي',   bg:'#F3F4F6', color:'#374151'},
+    };
+    const st = statusMap[d.status] || statusMap.cancelled;
+    const logoHtml = d.logo_base64 ? `<img src="data:image/png;base64,${d.logo_base64}" style="max-height:70px;max-width:130px;display:block">` : '';
+
+    function makeHeader(badgeBg, badgeColor, badgeBorder, badgeText, title, subtitle) {
+        return `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;color:${T.text}">
+            <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                    <span style="background:${badgeBg};color:${badgeColor};border:1px solid ${badgeBorder};padding:3px 10px;border-radius:6px;font-size:11px;font-weight:bold">${badgeText}</span>
+                    <span style="color:${T.muted};font-size:11px">${d.date}</span>
+                </div>
+                <div style="font-size:24px;font-weight:900;color:${T.text}">${title}</div>
+                ${subtitle ? `<div style="font-size:12px;color:${T.muted};margin-top:4px">${subtitle}</div>` : ''}
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+                ${logoHtml}
+                <span style="background:${st.bg};color:${st.color};padding:5px 14px;border-radius:10px;font-size:12px;font-weight:900">${st.label}</span>
+            </div>
+        </div>`;
+    }
+    function makeInfo(fields) {
+        const cells = fields.map(([label, val]) => `<div><div style="font-size:11px;color:${T.muted};margin-bottom:3px">${label}</div><div style="font-weight:bold;font-size:14px;color:${T.text}">${val}</div></div>`).join('');
+        return `<div style="border:1px solid ${T.border};border-radius:14px;padding:16px;margin-bottom:16px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">${cells}</div></div>`;
+    }
+    function makeTable(heads, rows) {
+        const ths = heads.map(h => `<th style="padding:10px 16px;text-align:${h.align||'right'};font-size:11px;font-weight:bold;color:${T.muted};border-bottom:1px solid ${T.border}">${h.label}</th>`).join('');
+        const trs = rows.map((item, i) => `<tr style="background:${i%2===0?T.rowA:T.rowB}">
+            <td style="padding:13px 16px;border-bottom:1px solid ${T.border};font-weight:bold;font-size:13px;color:${T.text}">${item.name}</td>
+            <td style="padding:13px 16px;border-bottom:1px solid ${T.border};text-align:center"><span style="border:1px solid ${T.border};border-radius:10px;padding:3px 12px;font-weight:900;font-size:13px;color:${T.text}">${item.quantity}</span></td>
+            ${item.price !== undefined ? `<td style="padding:13px 16px;border-bottom:1px solid ${T.border};text-align:center;font-size:13px;color:${T.sub}">${item.price} د</td>` : ''}
+            ${item.total !== undefined ? `<td style="padding:13px 16px;border-bottom:1px solid ${T.border};text-align:center;font-weight:900;font-size:13px;color:${T.text}">${item.total} د</td>` : ''}
+        </tr>`).join('');
+        return `<div style="border:1px solid ${T.border};border-radius:14px;overflow:hidden;margin-bottom:16px"><table style="width:100%;border-collapse:collapse;color:${T.text}"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
+    }
+    function makeTotalBox(borderClr, divClr, label, value, valColor) {
+        return `<div style="display:flex;justify-content:flex-end"><div style="border:2px solid ${borderClr};border-radius:18px;padding:20px 24px;min-width:280px;color:${T.text}"><div style="border-top:2px solid ${divClr};padding-top:12px;display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:15px;font-weight:bold;color:${T.text}">${label}</span><span style="font-size:28px;font-weight:900;color:${valColor}">${fmt(value)} <span style="font-size:14px;font-weight:bold;color:${T.muted}">د</span></span></div></div></div>`;
+    }
+    const wrap = c => `<div dir="rtl" style="font-family:Cairo,Arial,sans-serif;color:${T.text}">${c}</div>`;
+
+    if (operation === 'invoices') {
+        const heads = [{label:'المنتج'},{label:'الكمية',align:'center'},{label:'السعر',align:'center'},{label:'الإجمالي',align:'center'}];
+        const discounts = [
+            parseFloat(String(d.invoice_discount).replace(/,/g,'')) > 0 ? `<div style="display:flex;justify-content:space-between;font-size:14px;padding:4px 0"><span style="color:${dk?'#60a5fa':'#2563EB'};font-weight:600">خصم الفاتورة:</span><span style="color:${dk?'#60a5fa':'#2563EB'};font-weight:900">- ${fmt(d.invoice_discount)} د</span></div>` : '',
+        ].join('');
+        const summary = `<div style="display:flex;justify-content:flex-end"><div style="border:2px solid ${dk?'#4338ca':'#C7D2FE'};border-radius:18px;padding:20px 24px;min-width:280px;color:${T.text}">
+            <div style="display:flex;justify-content:space-between;font-size:14px;padding:4px 0"><span style="color:${T.sub};font-weight:600">عدد البضاعة:</span><span style="font-weight:900;color:${T.text}">${d.total_items}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:14px;padding:4px 0"><span style="color:${T.sub};font-weight:600">المجموع الفرعي:</span><span style="font-weight:900;color:${T.text}">${fmt(d.subtotal)} د</span></div>
+            ${discounts}
+            <div style="border-top:2px solid ${dk?'#818cf8':'#818CF8'};margin-top:10px;padding-top:12px;display:flex;justify-content:space-between;align-items:baseline">
+                <span style="font-size:15px;font-weight:bold;color:${T.text}">الإجمالي النهائي:</span>
+                <span style="font-size:28px;font-weight:900;color:${dk?'#93c5fd':'#1D4ED8'}">${fmt(d.total)} <span style="font-size:14px;font-weight:bold;color:${T.muted}">د</span></span>
+            </div>
+        </div></div>`;
+        return wrap(
+            makeHeader(dk?'#1e1b4b':'#EEF2FF', dk?'#a5b4fc':'#4F46E5', dk?'#4338ca':'#C7D2FE', 'فاتورة مبيعات', `فاتورة #${d.invoice_number}`, null) +
+            makeInfo([['العميل', d.store],['رقم الهاتف', d.store_phone],['الموظف', d.marketer]]) +
+            makeTable(heads, d.items) + summary
+        );
+    }
+    if (operation === 'payments') {
+        return wrap(
+            makeHeader(dk?'#052e16':'#ECFDF5', dk?'#4ade80':'#065F46', dk?'#16a34a':'#A7F3D0', 'إيصال قبض', `إيصال #${d.payment_number}`, null) +
+            makeInfo([['العميل', d.store],['رقم الهاتف', d.store_phone],['الموظف', d.marketer],['طريقة الدفع', d.payment_method]]) +
+            makeTotalBox(dk?'#16a34a':'#6EE7B7', dk?'#22c55e':'#34D399', 'المبلغ المسدد:', d.amount, dk?'#4ade80':'#065F46')
+        );
+    }
+    if (operation === 'returns') {
+        const heads = [{label:'المنتج'},{label:'الكمية',align:'center'},{label:'السعر',align:'center'},{label:'الإجمالي',align:'center'}];
+        return wrap(
+            makeHeader(dk?'#431407':'#FFF7ED', dk?'#fb923c':'#9A3412', dk?'#c2410c':'#FED7AA', 'مرتجع عميل', `مرتجع #${d.return_number}`, `فاتورة أصلية: ${d.invoice_number}`) +
+            makeInfo([['العميل', d.store],['رقم الهاتف', d.store_phone],['الموظف', d.marketer]]) +
+            makeTable(heads, d.items.map(i => ({name: i.name, quantity: i.quantity, price: i.unit_price, total: i.total_price}))) +
+            makeTotalBox(dk?'#c2410c':'#FDBA74', dk?'#ea580c':'#FB923C', 'الإجمالي:', d.total, dk?'#fb923c':'#9A3412')
+        );
+    }
+    return '';
+}
+
+function openBulkModal() {
+    const modal = document.getElementById('bulkModal');
+    document.getElementById('bulkModalLoading').style.display = 'flex';
+    document.getElementById('bulkModalContent').style.display = 'none';
+    document.getElementById('chunksPanel').style.display = 'none';
+    _chunksOpen = false;
+    document.getElementById('chunksChevron').style.transform = '';
+    modal.style.display = 'flex';
+    lucide.createIcons();
+
+    const countUrl = new URL('{{ route("admin.customer-statistics.bulk-invoices-count") }}', window.location.origin);
+    new URLSearchParams(window.location.search).forEach((v, k) => countUrl.searchParams.set(k, v));
+
+    _bulkBaseUrl = new URL('{{ route("admin.customer-statistics.bulk-invoices-pdf") }}', window.location.origin);
+    new URLSearchParams(window.location.search).forEach((v, k) => _bulkBaseUrl.searchParams.set(k, v));
+
+    fetch(countUrl)
+        .then(r => r.json())
+        .then(data => {
+            _bulkCount = data.count;
+            document.getElementById('bulkCount').textContent = _bulkCount;
+            document.getElementById('bulkSingleBtn').href = _bulkBaseUrl.toString();
+            document.getElementById('bulkModalLoading').style.display = 'none';
+            document.getElementById('bulkModalContent').style.display = 'block';
+            lucide.createIcons();
+        });
+}
+function closeBulkModal() { document.getElementById('bulkModal').style.display = 'none'; }
+function toggleChunks() {
+    _chunksOpen = !_chunksOpen;
+    document.getElementById('chunksPanel').style.display = _chunksOpen ? 'block' : 'none';
+    document.getElementById('chunksChevron').style.transform = _chunksOpen ? 'rotate(180deg)' : '';
+    if (_chunksOpen) renderChunks();
+}
+function clampChunkSize(el) {
+    let v = el.value.replace(/[^0-9]/g, '');
+    if (!v) { el.value = ''; return; }
+    const n = parseInt(v);
+    if (v.length >= 2) { el.value = String(Math.min(70, Math.max(50, n))); }
+    else { el.value = v; }
+}
+function renderChunks() {
+    const size = Math.min(70, Math.max(50, parseInt(document.getElementById('chunkSize').value) || 70));
+    const list = document.getElementById('chunksList');
+    list.innerHTML = '';
+    for (let offset = 0; offset < _bulkCount; offset += size) {
+        const end = Math.min(offset + size, _bulkCount);
+        const url = new URL(_bulkBaseUrl.toString());
+        url.searchParams.set('offset', offset);
+        url.searchParams.set('limit', size);
+        const a = document.createElement('a');
+        a.href = url.toString();
+        a.target = '_blank';
+        a.className = 'flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-300 rounded-xl hover:bg-violet-50 dark:hover:bg-violet-500/10 hover:border-violet-300 transition-colors';
+        a.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-violet-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><span class="text-sm font-bold">فواتير ${offset + 1} - ${end}</span><span class="text-xs text-gray-400 mr-auto">(${end - offset} فاتورة)</span>`;
+        list.appendChild(a);
+    }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeInvoiceModal(); closeBulkModal(); } });
 </script>
 @endpush
 @endsection

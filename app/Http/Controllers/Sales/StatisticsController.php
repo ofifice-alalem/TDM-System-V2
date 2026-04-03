@@ -27,17 +27,191 @@ class StatisticsController extends Controller
 
         if ($request->filled(['operation', 'from_date', 'to_date']) &&
             ($request->filled('customer_id') || $request->filled('customer_name'))) {
-            $results = $this->getStatistics($request, $request->has('export'));
-            
+            $results = $this->getStatistics($request, $request->has('export') || $request->has('pdf'));
+
             if ($results && $request->has('export')) {
                 return $this->exportToExcel($results, $request);
+            }
+
+            if ($results && $request->has('pdf')) {
+                return $this->exportPdf($results, $request);
             }
         }
 
         return view($this->viewPrefix() . '.index', compact('customers', 'salesUsers', 'results'));
     }
 
-    private function getStatistics($request, $forExport = false)
+    protected function exportPdf($results, $request)
+    {
+        // إعادة جلب البيانات كاملة بدون pagination
+        $fullResults = $this->getStatistics($request, true);
+        if (!$fullResults) return back();
+
+        $arabic = new \ArPHP\I18N\Arabic();
+        $g  = fn($t) => $arabic->utf8Glyphs($t);
+        $en = fn($s) => str_replace(['\u0660','\u0661','\u0662','\u0663','\u0664','\u0665','\u0666','\u0667','\u0668','\u0669'],['0','1','2','3','4','5','6','7','8','9'], $s);
+
+        $operation = $fullResults['operation'];
+        $operationName = match($operation) {
+            'invoices' => 'فواتير العملاء',
+            'payments' => 'إيصالات القبض',
+            'returns'  => 'مرتجعات العملاء',
+            default    => $operation,
+        };
+
+        $customer = ($request->filled('customer_id') && $request->customer_id !== 'all')
+            ? Customer::find($request->customer_id)
+            : null;
+
+        if ($customer) {
+            $entityName = $customer->name;
+        } elseif ($request->filled('customer_name')) {
+            $entityName = $request->customer_name;
+        } else {
+            // إذا كانت النتائج لعميل واحد فقط نعرض اسمه، وإلا الكل
+            $uniqueCustomers = $fullResults['data']->pluck('customer_id')->unique();
+            $entityName = $uniqueCustomers->count() === 1
+                ? ($fullResults['data']->first()?->customer->name ?? 'الكل')
+                : 'الكل';
+        }
+
+        $statusNames = [];
+        if ($request->filled('status')) {
+            $map = ['completed' => 'مكتمل', 'cancelled' => 'ملغي'];
+            $statusNames = [$map[$request->status] ?? $request->status];
+        }
+
+        $labels = [
+            'title'         => $g('إحصائيات العملاء - ' . $entityName),
+            'entityName'    => $g($entityName),
+            'entityLabel'   => $g('العميل'),
+            'operationName' => $g($operationName),
+            'operation'     => $g('العملية'),
+            'storeName'     => '',
+            'store'         => $g('العميل'),
+            'marketer'      => $g('الموظف'),
+            'statusName'    => $statusNames ? $g(implode(' ، ', $statusNames)) : '',
+            'status'        => $g('الحالة'),
+            'dateFrom'      => $request->from_date,
+            'dateTo'        => $request->to_date,
+            'grandTotal'    => $g('الإجمالي'),
+            'summary'       => $g('ملخص'),
+            'filterInfo'    => $g('معلومات التقرير'),
+            'sales'         => $g('المبيعات'),
+            'payments'      => $g('المدفوعات'),
+            'returns'       => $g('المرتجعات'),
+            'debt'          => $g('الدين'),
+            'salesStatus'   => $g('حالة المبيعات'),
+            'paymentsStatus'=> $g('حالة المدفوعات'),
+            'pending'       => $g('معلق'),
+            'approved'      => $g('موثق'),
+            'total'         => $g('الإجمالي'),
+            'invoiceNum'    => $g('رقم الفاتورة'),
+            'date'          => $g('التاريخ'),
+            'amount'        => $g('المبلغ'),
+            'payMethod'     => $g('طريقة الدفع'),
+            'commRate'      => $g('نسبة العمولة'),
+            'commAmount'    => $g('المستحق'),
+            'cash'          => $g('نقدي'),
+            'transfer'      => $g('تحويل'),
+            'check'         => $g('شيك'),
+            'hasStore'      => true,
+            'hasMarketer'   => false,
+            'hasPaymentMethod' => $operation === 'payments',
+            'hasCommission' => false,
+            'hasAmount'     => true,
+            'hasStatus'     => true,
+        ];
+
+        $pdfOperation = match($operation) {
+            'invoices' => 'sales',
+            'returns'  => 'sales_returns',
+            default    => $operation,
+        };
+
+        // حساب status_totals للملخص في الـ PDF
+        $baseCountQuery = match($operation) {
+            'invoices' => CustomerInvoice::query(),
+            'payments' => CustomerPayment::query(),
+            'returns'  => CustomerReturn::query(),
+            default    => null,
+        };
+        $statusTotals = null;
+        $paymentMethodTotals = null;
+        if ($baseCountQuery) {
+            if ($request->filled('customer_id') && $request->customer_id !== 'all') {
+                $baseCountQuery->where('customer_id', $request->customer_id);
+            } elseif ($request->filled('customer_name')) {
+                $baseCountQuery->whereHas('customer', fn($q) => $q->where('name', 'like', '%' . $request->customer_name . '%'));
+            }
+            if ($request->filled('sales_user_id')) $baseCountQuery->where('sales_user_id', $request->sales_user_id);
+            $baseCountQuery->whereDate('created_at', '>=', $request->from_date)
+                           ->whereDate('created_at', '<=', $request->to_date);
+
+            $amountCol = $operation === 'payments' ? 'amount' : 'total_amount';
+            $byStatus  = (clone $baseCountQuery)->selectRaw("status, SUM({$amountCol}) as total")
+                ->groupBy('status')->pluck('total', 'status');
+
+            // تحويل completed -> approved للـ view
+            $statusTotals = [
+                'pending'  => 0,
+                'approved' => ($byStatus['completed'] ?? 0) + ($byStatus['approved'] ?? 0),
+                'cancelled'=> $byStatus['cancelled'] ?? 0,
+                'rejected' => 0,
+                'total'    => 0,
+            ];
+            $statusTotals['total'] = $statusTotals['approved'] + $statusTotals['cancelled'];
+
+            if ($operation === 'payments') {
+                $paymentMethodTotals = [
+                    'cash'            => (clone $baseCountQuery)->where('payment_method', 'cash')->sum('amount'),
+                    'transfer'        => (clone $baseCountQuery)->where('payment_method', 'transfer')->sum('amount'),
+                    'certified_check' => (clone $baseCountQuery)->where('payment_method', 'check')->sum('amount'),
+                ];
+            }
+        }
+
+        $fullResults['status_totals']         = $statusTotals;
+        $fullResults['payment_method_totals'] = $paymentMethodTotals;
+
+        // تحويل status completed إلى approved وإضافة virtual attributes لتوافق الـ view
+        $rows = $fullResults['data']->map(function($item) {
+            $item->status = $item->status === 'completed' ? 'approved' : $item->status;
+            // الـ view يستخدم store->name و marketer->full_name
+            $item->store    = (object)['name' => $item->customer->name ?? '-'];
+            $item->marketer = (object)['full_name' => $item->salesUser->full_name ?? '-'];
+            return $item;
+        });
+
+        $viewData = [
+            'type'      => 'detail',
+            'data'      => $fullResults,
+            'labels'    => $labels,
+            'g'         => $g,
+            'en'        => $en,
+            'operation' => $pdfOperation,
+            'statType'  => 'stores',
+            'rows'      => $rows,
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('shared.statistics.pdf', $viewData)
+            ->setPaper('a4')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isFontSubsettingEnabled', true);
+
+        $pdf->render();
+        $labels['totalPages'] = $pdf->getDomPDF()->getCanvas()->get_page_count();
+        $viewData['labels'] = $labels;
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('shared.statistics.pdf', $viewData)
+            ->setPaper('a4')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isFontSubsettingEnabled', true);
+
+        return $pdf->stream('customer-statistics-' . $operation . '-' . $request->from_date . '.pdf');
+    }
+
+    protected function getStatistics($request, $forExport = false)
     {
         $query = match($request->operation) {
             'invoices' => CustomerInvoice::with(['customer', 'salesUser', 'returns' => function($q) {

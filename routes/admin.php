@@ -140,6 +140,14 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
         Route::get('/quick-payments', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'quickPayments'])->name('quick-payments');
         Route::get('/quick-returns', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'quickReturns'])->name('quick-returns');
         Route::get('/quick-summary', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'quickSummary'])->name('quick-summary');
+        Route::get('/bulk-invoices-count', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'bulkInvoicesCount'])->name('bulk-invoices-count');
+        Route::get('/bulk-invoices-pdf', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'bulkInvoicesPdf'])->name('bulk-invoices-pdf');
+        Route::get('/invoice-data/{invoice}', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'invoiceData'])->name('invoice-data');
+        Route::get('/payment-data/{payment}', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'paymentData'])->name('payment-data');
+        Route::get('/return-data/{return}', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'returnData'])->name('return-data');
+        Route::get('/invoice-pdf/{invoice}', [\App\Http\Controllers\Shared\Sales\CustomerInvoiceController::class, 'generateInvoicePdf'])->name('invoice-pdf');
+        Route::get('/payment-pdf/{payment}', [\App\Http\Controllers\Shared\Sales\CustomerPaymentController::class, 'generatePaymentPdf'])->name('payment-pdf');
+        Route::get('/return-pdf/{return}', [\App\Http\Controllers\Shared\Sales\CustomerReturnController::class, 'generateReturnPdf'])->name('return-pdf');
     });
 
     // Statistics
