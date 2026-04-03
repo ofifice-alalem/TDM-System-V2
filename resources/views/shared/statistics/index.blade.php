@@ -3,7 +3,12 @@
 @section('title', 'الإحصائيات')
 
 @section('content')
-
+@php
+    $isSuperAdmin          = auth()->user()?->role_id === 5;
+    $featureBulkPdf        = $isSuperAdmin || (\App\Models\Feature::where('key','admin.statistics.bulk-pdf')->first()?->isCurrentlyEnabled() ?? true);
+    $featureExportPdf      = $isSuperAdmin || (\App\Models\Feature::where('key','admin.statistics.export-pdf')->first()?->isCurrentlyEnabled() ?? true);
+    $featureInvoicePreview = $isSuperAdmin || (\App\Models\Feature::where('key','admin.statistics.invoice-preview')->first()?->isCurrentlyEnabled() ?? true);
+@endphp
 <div class="min-h-screen py-8">
     <div class="max-w-7xl mx-auto px-4">
         
@@ -216,11 +221,13 @@
                             <i data-lucide="download" class="w-4 h-4"></i>
                             تصدير Excel
                         </button>
+                        @if($featureExportPdf)
                         <button type="submit" name="pdf" value="1" class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
                             <i data-lucide="file-text" class="w-4 h-4"></i>
                             تصدير PDF
                         </button>
-                        @if(!in_array(request('operation'), ['summary', '']))
+                        @endif
+                        @if(!in_array(request('operation'), ['summary', '']) && $featureBulkPdf)
                         <button type="button" onclick="openBulkModal()" class="px-6 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
                             <i data-lucide="files" class="w-4 h-4"></i>
                             تحميل كل الفواتير PDF
@@ -513,7 +520,9 @@
                                 @if(!in_array($results['operation'], ['requests', 'returns']))
                                     <th class="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المبلغ</th>
                                 @endif
+                                @if($featureInvoicePreview)
                                 <th class="px-6 py-3 text-center text-xs font-bold text-gray-600 dark:text-gray-400">عرض</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-dark-border">
@@ -631,7 +640,7 @@
                                         };
                                     @endphp
                                     <td class="px-6 py-4 text-center">
-                                        @if($invoiceDataUrl)
+                                        @if($invoiceDataUrl && $featureInvoicePreview)
                                         <button
                                             type="button"
                                             onclick="openInvoiceModal('{{ $invoiceDataUrl }}', '{{ $invoiceLabel }}', '{{ $results['operation'] }}')"

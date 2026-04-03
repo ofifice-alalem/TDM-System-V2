@@ -31,13 +31,28 @@
                 </div>
                 <h2 class="font-black text-gray-800 dark:text-gray-200">
                     {{ match($role) {
-                        'admin'     => 'المدير',
-                        'marketer'  => 'المسوق',
-                        'warehouse' => 'المستودع',
-                        'sales'     => 'المبيعات',
-                        default     => $role
+                        'admin'                => 'المدير',
+                        'admin.statistics'     => 'المدير - الإحصائيات',
+                        'marketer'             => 'المسوق',
+                        'marketer.statistics'  => 'المسوق - الإحصائيات',
+                        'warehouse'            => 'المستودع',
+                        'sales'                => 'المبيعات',
+                        default                => $role
                     } }}
                 </h2>
+                @if($role === 'admin.statistics')
+                <a href="{{ route('admin.statistics.index') }}" target="_blank"
+                   class="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-500 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+                   title="فتح صفحة الإحصائيات">
+                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                </a>
+                @elseif($role === 'marketer.statistics')
+                <a href="{{ route('marketer.statistics.index') }}" target="_blank"
+                   class="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-500 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+                   title="فتح صفحة إحصائيات المسوق">
+                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                </a>
+                @endif
                 <span class="text-xs font-bold text-gray-400 bg-gray-100 dark:bg-dark-border px-2.5 py-0.5 rounded-full">{{ $roleFeatures->count() }} ميزة</span>
             </div>
 
