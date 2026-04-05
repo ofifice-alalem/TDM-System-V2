@@ -67,6 +67,8 @@ class StatisticsController extends Controller
             $entityName = $customer->name;
         } elseif ($request->filled('customer_name')) {
             $entityName = $request->customer_name;
+        } elseif ($operation === 'summary') {
+            $entityName = 'الكل';
         } else {
             // إذا كانت النتائج لعميل واحد فقط نعرض اسمه، وإلا الكل
             $uniqueCustomers = $fullResults['data']->pluck('customer_id')->unique();
@@ -85,7 +87,13 @@ class StatisticsController extends Controller
             'title'         => $g('إحصائيات العملاء - ' . $entityName),
             'entityName'    => $g($entityName),
             'entityLabel'   => $g('العميل'),
-            'operationName' => $g($operationName),
+            'operationName' => $g(match($operation) {
+                'invoices' => 'فواتير العملاء',
+                'payments' => 'إيصالات القبض',
+                'returns'  => 'مرتجعات العملاء',
+                'summary'  => 'الملخص المالي',
+                default    => $operation,
+            }),
             'operation'     => $g('العملية'),
             'storeName'     => '',
             'store'         => $g('العميل'),
@@ -128,6 +136,50 @@ class StatisticsController extends Controller
             'returns'  => 'sales_returns',
             default    => $operation,
         };
+
+        // للملخص نبني البيانات بالشكل الذي يتوقعه الـ view
+        if ($operation === 'summary') {
+            $summaryRows = $fullResults['data'];
+            $viewData = [
+                'type'      => 'summary',
+                'data'      => [
+                    'is_marketer_summary' => false,
+                    'total_sales'    => $fullResults['total'],
+                    'total_payments' => $fullResults['grand_payments'],
+                    'total_returns'  => $fullResults['grand_returns'],
+                    'current_balance'=> $fullResults['grand_debt'],
+                    'stores_data'    => $summaryRows->map(fn($r) => [
+                        'store_name' => $r->customer->name ?? '-',
+                        'sales'      => $r->total_invoices,
+                        'payments'   => $r->total_payments,
+                        'returns'    => $r->total_returns,
+                        'balance'    => $r->total_debt,
+                    ])->values()->toArray(),
+                ],
+                'labels'    => $labels,
+                'g'         => $g,
+                'en'        => $en,
+                'operation' => 'summary',
+                'statType'  => 'stores',
+                'rows'      => collect(),
+            ];
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('shared.statistics.pdf', $viewData)
+                ->setPaper('a4')
+                ->setOption('isHtml5ParserEnabled', true)
+                ->setOption('isFontSubsettingEnabled', true);
+
+            $pdf->render();
+            $labels['totalPages'] = $pdf->getDomPDF()->getCanvas()->get_page_count();
+            $viewData['labels'] = $labels;
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('shared.statistics.pdf', $viewData)
+                ->setPaper('a4')
+                ->setOption('isHtml5ParserEnabled', true)
+                ->setOption('isFontSubsettingEnabled', true);
+
+            return $pdf->stream('customer-statistics-summary-' . $request->from_date . '.pdf');
+        }
 
         // حساب status_totals للملخص في الـ PDF
         $baseCountQuery = match($operation) {
@@ -177,7 +229,7 @@ class StatisticsController extends Controller
         $fullResults['payment_method_totals'] = $paymentMethodTotals;
 
         // تحويل status completed إلى approved وإضافة virtual attributes لتوافق الـ view
-        $rows = $fullResults['data']->map(function($item) {
+        $rows = $operation === 'summary' ? collect() : $fullResults['data']->map(function($item) {
             $item->status = $item->status === 'completed' ? 'approved' : $item->status;
             // الـ view يستخدم store->name و marketer->full_name
             $item->store    = (object)['name' => $item->customer->name ?? '-'];
