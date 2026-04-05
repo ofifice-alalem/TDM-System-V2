@@ -41,13 +41,13 @@ class CombinedSummaryController extends Controller
 
         // تاب الملخص الشامل لكل زبون
         if ($tab === 'clients') {
-            $clientsData = $this->buildClientProductData($fromDate, $toDate, $storeId, $customerId, $productId, $entityType, $storeName, $customerName);
+            $clientsData = $this->buildClientProductData($fromDate, $toDate, $storeId, $customerId, $productId, $entityType, $storeName, $customerName, $staffId);
 
             if ($request->has('export')) {
-                return $this->exportClientsExcel($clientsData, $fromDate, $toDate, $productId, $sortBy, $entityType, $storeName, $customerName);
+                return $this->exportClientsExcel($clientsData, $fromDate, $toDate, $productId, $sortBy, $entityType, $storeName, $customerName, $staffId);
             }
             if ($request->has('pdf')) {
-                return $this->exportClientsPdf($clientsData, $fromDate, $toDate, $productId, $entityType, $storeName, $customerName);
+                return $this->exportClientsPdf($clientsData, $fromDate, $toDate, $productId, $entityType, $storeName, $customerName, $staffId);
             }
 
             usort($clientsData, function($a, $b) use ($sortBy) {
@@ -137,7 +137,7 @@ class CombinedSummaryController extends Controller
     private function buildClientProductData(
         string $fromDate, string $toDate,
         ?int $storeId = null, ?int $customerId = null, ?string $productId = null,
-        string $entityType = 'all', ?string $storeName = null, ?string $customerName = null
+        string $entityType = 'all', ?string $storeName = null, ?string $customerName = null, $staffId = null
     ): array {
         $result = [];
 
@@ -152,6 +152,7 @@ class CombinedSummaryController extends Controller
                     ->join('products as p', 'p.id', '=', 'i.product_id')
                     ->whereIn('inv.status', ['approved', 'pending'])
                     ->where('inv.store_id', $store->id)
+                    ->when($staffId, fn($q) => $q->where('inv.marketer_id', $staffId))
                     ->whereDate('inv.created_at', '>=', $fromDate)
                     ->whereDate('inv.created_at', '<=', $toDate)
                     ->when($productId, fn($q) => $q->where('i.product_id', $productId))
@@ -176,35 +177,39 @@ class CombinedSummaryController extends Controller
             if ($customerId) $customerQuery->where('id', $customerId);
             elseif ($customerName) $customerQuery->where('name', 'like', '%' . $customerName . '%');
 
-            foreach ($customerQuery->get() as $customer) {
-                $items = DB::table('customer_invoice_items as i')
-                    ->join('customer_invoices as inv', 'inv.id', '=', 'i.invoice_id')
-                    ->join('products as p', 'p.id', '=', 'i.product_id')
-                    ->where('inv.status', 'completed')
-                    ->where('inv.customer_id', $customer->id)
-                    ->whereDate('inv.created_at', '>=', $fromDate)
-                    ->whereDate('inv.created_at', '<=', $toDate)
-                    ->when($productId, fn($q) => $q->where('i.product_id', $productId))
-                    ->select('i.product_id', 'p.name as product_name', 'i.unit_price', 'i.quantity')
-                    ->get();
+            $staffIsMarketer = $staffId && \App\Models\User::where('id', $staffId)->value('role_id') == 3;
+            if (!$staffIsMarketer) {
+                foreach ($customerQuery->get() as $customer) {
+                    $items = DB::table('customer_invoice_items as i')
+                        ->join('customer_invoices as inv', 'inv.id', '=', 'i.invoice_id')
+                        ->join('products as p', 'p.id', '=', 'i.product_id')
+                        ->where('inv.status', 'completed')
+                        ->where('inv.customer_id', $customer->id)
+                        ->when($staffId, fn($q) => $q->where('inv.sales_user_id', $staffId))
+                        ->whereDate('inv.created_at', '>=', $fromDate)
+                        ->whereDate('inv.created_at', '<=', $toDate)
+                        ->when($productId, fn($q) => $q->where('i.product_id', $productId))
+                        ->select('i.product_id', 'p.name as product_name', 'i.unit_price', 'i.quantity')
+                        ->get();
 
-                if ($items->isEmpty()) continue;
+                    if ($items->isEmpty()) continue;
 
-                $result[] = [
-                    'id'           => $customer->id,
-                    'name'         => $customer->name,
-                    'type'         => 'عميل',
-                    'products'     => $this->groupByProduct($items),
-                    'total_qty'    => $items->sum('quantity'),
-                    'total_amount' => round($items->sum(fn($i) => $i->unit_price * $i->quantity), 2),
-                ];
+                    $result[] = [
+                        'id'           => $customer->id,
+                        'name'         => $customer->name,
+                        'type'         => 'عميل',
+                        'products'     => $this->groupByProduct($items),
+                        'total_qty'    => $items->sum('quantity'),
+                        'total_amount' => round($items->sum(fn($i) => $i->unit_price * $i->quantity), 2),
+                    ];
+                }
             }
         }
 
         return $result;
     }
 
-    private function exportClientsPdf(array $clientsData, string $fromDate, string $toDate, ?string $productId, string $entityType = 'all', ?string $storeName = null, ?string $customerName = null)
+    private function exportClientsPdf(array $clientsData, string $fromDate, string $toDate, ?string $productId, string $entityType = 'all', ?string $storeName = null, ?string $customerName = null, $staffId = null)
     {
         $arabic = new \ArPHP\I18N\Arabic();
         $g  = fn($text) => $arabic->utf8Glyphs($text);
@@ -255,6 +260,7 @@ class CombinedSummaryController extends Controller
             'filterEntity'      => $entityLabel,
             'filterEntityLabel' => $g('عرض'),
             'filterSearch'      => $storeName ? $en($g($storeName)) : ($customerName ? $en($g($customerName)) : null),
+            'filterStaff'       => $staffId ? $en($g(\App\Models\User::find($staffId)?->full_name ?? '')) : null,
             'filterSearchLabel' => $g('بحث'),
             'dateFrom'          => $fromDate,
             'dateTo'            => $toDate,
@@ -274,7 +280,7 @@ class CombinedSummaryController extends Controller
         return $pdf->stream('client-products-' . $fromDate . '-' . $toDate . '.pdf');
     }
 
-    private function exportClientsExcel(array $clientsData, string $fromDate, string $toDate, ?string $productId, string $sortBy, string $entityType = 'all', ?string $storeName = null, ?string $customerName = null)
+    private function exportClientsExcel(array $clientsData, string $fromDate, string $toDate, ?string $productId, string $sortBy, string $entityType = 'all', ?string $storeName = null, ?string $customerName = null, $staffId = null)
     {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -283,9 +289,10 @@ class CombinedSummaryController extends Controller
         $row = 1;
         $infoRows = [['من تاريخ', $fromDate], ['إلى تاريخ', $toDate]];
         $infoRows[] = ['عرض', match($entityType) { 'store' => 'المتاجر فقط', 'customer' => 'العملاء فقط', default => 'الكل' }];
+        if ($staffId)      $infoRows[] = ['الموظف', \App\Models\User::find($staffId)?->full_name ?? ''];
         if ($storeName)    $infoRows[] = ['بحث (متجر)', $storeName];
         if ($customerName) $infoRows[] = ['بحث (عميل)', $customerName];
-        if ($productId) $infoRows[] = ['المنتج', Product::find($productId)?->name ?? $productId];
+        if ($productId)    $infoRows[] = ['المنتج', Product::find($productId)?->name ?? $productId];
         $infoRows[] = ['ترتيب حسب', $sortBy === 'qty' ? 'الكمية' : 'المبلغ'];
 
         foreach ($infoRows as $info) {

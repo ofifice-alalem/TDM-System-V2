@@ -72,6 +72,9 @@
                 @if(!empty($labels['filterSearch']))
                 &nbsp;|&nbsp; {{ $labels['filterSearch'] }}
                 @endif
+                @if(!empty($labels['filterStaff']))
+                &nbsp;|&nbsp; {{ $labels['filterStaff'] }}
+                @endif
                 @if(!empty($labels['filterProd']))
                 &nbsp;|&nbsp; {{ $labels['filterProd'] }}
                 @endif
