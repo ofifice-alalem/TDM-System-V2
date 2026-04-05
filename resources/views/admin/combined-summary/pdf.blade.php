@@ -103,70 +103,65 @@
     @endphp
 
     {{-- Cover Page --}}
-    <div style="page-break-after: always; min-height: 700px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 60px 40px;">
+    <div style="page-break-after: always; min-height: 700px; text-align: center; padding: 60px 40px;">
 
         {{-- Logo --}}
         <div style="margin-bottom: 30px;">
-            <img src="{{ public_path('images/company.png') }}" style="max-height:210px; max-width:350px;">
+            <img src="{{ public_path('images/company.png') }}" style="max-height:180px; max-width:350px;">
         </div>
 
-        {{-- Title --}}
+        {{-- Title + Dates --}}
         <div style="border-bottom: 3px solid #0f172a; padding-bottom: 16px; margin-bottom: 30px; width: 100%;">
             <div style="font-size: 22px; font-weight: bold; color: #0f172a; margin-bottom: 10px; text-align:center;">{{ $labels['title'] }}</div>
             <table style="width: auto; border-collapse: collapse; direction: rtl; margin: 0 auto;">
                 <tr>
                     <td style="border: none; padding: 4px 16px; text-align: center;">
-                        <div style="font-size: 9px; color: #94a3b8; font-weight: bold; margin-bottom: 3px;">{{ $labels['labelTo'] }}</div>
-                        <div style="font-size: 16px; font-weight: bold; color: #0f172a; background: #f1f5f9; padding: 6px 14px; border-radius: 4px;">{{ $labels['dateTo'] }}</div>
+                        <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 3px;">{{ $labels['labelTo'] }}</div>
+                        <div style="font-size: 16px; font-weight: bold; color: #0f172a; border: 1px solid #e2e8f0; padding: 6px 14px;">{{ $labels['dateTo'] }}</div>
                     </td>
-                    <td style="border: none; padding: 4px 8px; font-size: 18px; color: #94a3b8; text-align: center;">&#8592;</td>
+                    <td style="border: none; padding: 4px 8px; font-size: 18px; color: #64748b; text-align: center;">&#8592;</td>
                     <td style="border: none; padding: 4px 16px; text-align: center;">
-                        <div style="font-size: 9px; color: #94a3b8; font-weight: bold; margin-bottom: 3px;">{{ $labels['labelFrom'] }}</div>
-                        <div style="font-size: 16px; font-weight: bold; color: #0f172a; background: #f1f5f9; padding: 6px 14px; border-radius: 4px;">{{ $labels['dateFrom'] }}</div>
+                        <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 3px;">{{ $labels['labelFrom'] }}</div>
+                        <div style="font-size: 16px; font-weight: bold; color: #0f172a; border: 1px solid #e2e8f0; padding: 6px 14px;">{{ $labels['dateFrom'] }}</div>
                     </td>
                 </tr>
             </table>
         </div>
 
         {{-- Details Table --}}
-        <table style="width: 80%; border-collapse: collapse; direction: rtl; margin: 0 auto;">
-
-            {{-- عرض --}}
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 10px 12px; font-size: 12px; font-weight: bold; color: #0f172a; text-align: right; border: none;">{{ $labels['filterEntity'] ?? $labels['showAll'] ?? '' }}</td>
-                <td style="padding: 10px 12px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; width: 40%; border: none;">{{ $labels['filterEntityLabel'] ?? '' }}</td>
+        <table style="width: 80%; border-collapse: collapse; direction: rtl; margin: 0 auto; border: 2px solid #0f172a;">
+            <tr style="background: #f8fafc; border-bottom: 2px solid #0f172a;">
+                <td colspan="2" style="padding: 8px 12px; font-size: 10px; font-weight: bold; color: #64748b; text-align: center; border: none; letter-spacing: 1px;">&#x2014; {{ $labels['filterLabel'] ?? '' }} &#x2014;</td>
             </tr>
 
-            {{-- الديون السابقة --}}
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 10px 12px; font-size: 12px; font-weight: bold; text-align: right; border: none;
-                    {{ ($labels['showOldDebt'] ?? true) ? 'color:#16a34a;' : 'color:#dc2626;' }}">
-                    {{ $labels['filterOldDebt'] ?? '' }}
-                </td>
-                <td style="padding: 10px 12px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; border: none;">{{ $labels['filterOldDebtLabel'] ?? '' }}</td>
+            <tr style="border-bottom: 1px solid #94a3b8;">
+                <td style="padding: 10px 16px; font-size: 13px; font-weight: bold; color: #0f172a; text-align: right; border: none; border-left: 2px solid #0f172a;">{{ $labels['filterEntity'] ?? $labels['showAll'] ?? '' }}</td>
+                <td style="padding: 10px 16px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; width: 35%; border: none;">{{ $labels['filterEntityLabel'] ?? '' }}</td>
             </tr>
 
-            {{-- الموظف --}}
+            <tr style="border-bottom: 1px solid #94a3b8;">
+                <td style="padding: 10px 16px; font-size: 13px; font-weight: bold; text-align: right; border: none; border-left: 2px solid #0f172a; color: #0f172a;">{{ $labels['filterOldDebt'] ?? '' }}</td>
+                <td style="padding: 10px 16px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; border: none;">{{ $labels['filterOldDebtLabel'] ?? '' }}</td>
+            </tr>
+
             @if(!empty($labels['filterStaff']))
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 10px 12px; font-size: 12px; font-weight: bold; color: #0f172a; text-align: right; border: none;">{{ $labels['filterStaff'] }}</td>
-                <td style="padding: 10px 12px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; border: none;">{{ $labels['filterStaffLabel'] ?? '' }}</td>
+            <tr style="border-bottom: 1px solid #94a3b8;">
+                <td style="padding: 10px 16px; font-size: 13px; font-weight: bold; color: #0f172a; text-align: right; border: none; border-left: 2px solid #0f172a;">{{ $labels['filterStaff'] }}</td>
+                <td style="padding: 10px 16px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; border: none;">{{ $labels['filterStaffLabel'] ?? '' }}</td>
             </tr>
             @endif
 
-            {{-- المتجر --}}
             @if(!empty($labels['filterStore']))
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 10px 12px; font-size: 12px; font-weight: bold; color: #0f172a; text-align: right; border: none;">{{ $labels['filterStore'] }}</td>
-                <td style="padding: 10px 12px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; border: none;">{{ $labels['filterStoreLabel'] ?? '' }}</td>
+            <tr style="border-bottom: 1px solid #94a3b8;">
+                <td style="padding: 10px 16px; font-size: 13px; font-weight: bold; color: #0f172a; text-align: right; border: none; border-left: 2px solid #0f172a;">{{ $labels['filterStore'] }}</td>
+                <td style="padding: 10px 16px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; border: none;">{{ $labels['filterStoreLabel'] ?? '' }}</td>
             </tr>
             @endif
 
-            {{-- العميل --}}
             @if(!empty($labels['filterCustomer']))
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 10px 12px; font-size: 12px; font-weight: bold; color: #0f172a; text-align: right; border: none;">{{ $labels['filterCustomer'] }}</td>
-                <td style="padding: 10px 12px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; border: none;">{{ $labels['filterCustomerLabel'] ?? '' }}</td>
+            <tr style="border-bottom: 1px solid #94a3b8;">
+                <td style="padding: 10px 16px; font-size: 13px; font-weight: bold; color: #0f172a; text-align: right; border: none; border-left: 2px solid #0f172a;">{{ $labels['filterCustomer'] }}</td>
+                <td style="padding: 10px 16px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; border: none;">{{ $labels['filterCustomerLabel'] ?? '' }}</td>
             </tr>
             @endif
 
@@ -174,28 +169,28 @@
 
         {{-- Totals --}}
         <div style="margin-top: 40px; width: 90%; border-top: 2px solid #0f172a; padding-top: 20px; margin-left: auto; margin-right: auto;">
-            <table style="width: 100%; border-collapse: collapse; direction: rtl;">
+            <table style="width: 100%; border-collapse: collapse; direction: rtl; border: 2px solid #0f172a;">
                 <tr>
-                    <td style="padding: 12px 8px; text-align: center; border: 1px solid #e2e8f0; background: {{ $grandDebt > 0 ? '#fef2f2' : '#f0fdf4' }};">
-                        <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px;">{{ $labels['debt'] }}</div>
-                        <div style="font-size: 15px; font-weight: bold; color: {{ $grandDebt > 0 ? '#dc2626' : '#16a34a' }};">{{ $n($grandDebt) }}</div>
+                    <td style="padding: 14px 8px; text-align: center; border-left: 2px solid #0f172a; background: #f8fafc;">
+                        <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px; letter-spacing: 1px;">{{ $labels['debt'] }}</div>
+                        <div style="font-size: 18px; font-weight: bold; color: #0f172a;">{{ $n($grandDebt) }}</div>
                     </td>
-                    <td style="padding: 12px 8px; text-align: center; border: 1px solid #e2e8f0; background: #f8fafc;">
-                        <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px;">{{ $labels['returns'] }}</div>
-                        <div style="font-size: 15px; font-weight: bold; color: #d97706;">{{ $n($grandReturns) }}</div>
+                    <td style="padding: 14px 8px; text-align: center; border-left: 2px solid #0f172a; background: #f8fafc;">
+                        <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px; letter-spacing: 1px;">{{ $labels['returns'] }}</div>
+                        <div style="font-size: 18px; font-weight: bold; color: #0f172a;">{{ $n($grandReturns) }}</div>
                     </td>
-                    <td style="padding: 12px 8px; text-align: center; border: 1px solid #e2e8f0; background: #f8fafc;">
-                        <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px;">{{ $labels['payments'] }}</div>
-                        <div style="font-size: 15px; font-weight: bold; color: #16a34a;">{{ $n($grandPayments) }}</div>
+                    <td style="padding: 14px 8px; text-align: center; border-left: 2px solid #0f172a; background: #f8fafc;">
+                        <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px; letter-spacing: 1px;">{{ $labels['payments'] }}</div>
+                        <div style="font-size: 18px; font-weight: bold; color: #0f172a;">{{ $n($grandPayments) }}</div>
                     </td>
-                    <td style="padding: 12px 8px; text-align: center; border: 1px solid #e2e8f0; background: #f8fafc;">
-                        <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px;">{{ $labels['invoices'] }}</div>
-                        <div style="font-size: 15px; font-weight: bold; color: #0f172a;">{{ $n($grandInvoices) }}</div>
+                    <td style="padding: 14px 8px; text-align: center; {{ $labels['showOldDebt'] && $grandOldDebt > 0 ? 'border-left: 2px solid #0f172a;' : '' }} background: #f8fafc;">
+                        <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px; letter-spacing: 1px;">{{ $labels['invoices'] }}</div>
+                        <div style="font-size: 18px; font-weight: bold; color: #0f172a;">{{ $n($grandInvoices) }}</div>
                     </td>
                     @if($labels['showOldDebt'] && $grandOldDebt > 0)
-                    <td style="padding: 12px 8px; text-align: center; border: 1px solid #e2e8f0; background: #fffbeb;">
-                        <div style="font-size: 9px; color: #d97706; font-weight: bold; margin-bottom: 6px;">{{ $labels['old_debt'] }}</div>
-                        <div style="font-size: 15px; font-weight: bold; color: #d97706;">{{ $n($grandOldDebt) }}</div>
+                    <td style="padding: 14px 8px; text-align: center; background: #f8fafc;">
+                        <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px; letter-spacing: 1px;">{{ $labels['old_debt'] }}</div>
+                        <div style="font-size: 18px; font-weight: bold; color: #0f172a;">{{ $n($grandOldDebt) }}</div>
                     </td>
                     @endif
                 </tr>

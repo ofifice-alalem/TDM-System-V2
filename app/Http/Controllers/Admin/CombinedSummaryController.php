@@ -267,6 +267,7 @@ class CombinedSummaryController extends Controller
             'filterStaff'       => $staffId ? $en($g(\App\Models\User::find($staffId)?->full_name ?? '')) : null,
             'filterStaffLabel'  => $g('الموظف'),
             'filterProdLabel'   => $g('المنتج'),
+            'filterLabel'       => $g('تفاصيل التقرير'),
             'grandQty'          => $grandQty,
             'grandAmount'       => $grandAmount,
             'dateFrom'          => $fromDate,

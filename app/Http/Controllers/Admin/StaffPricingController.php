@@ -114,6 +114,7 @@ class StaffPricingController extends Controller
             'filterSortLabel' => $g('ترتيب'),
             'staffLabel'      => $g('الموظف'),
             'allStaff'        => $g('الكل'),
+            'filterLabel'     => $g('تفاصيل التقرير'),
             'grandQty'     => $grandQty,
             'grandAmount'  => $grandAmount,
             'dateFrom'     => $fromDate,
