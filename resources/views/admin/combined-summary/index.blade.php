@@ -14,8 +14,25 @@
             </div>
         </div>
 
+        {{-- Tabs --}}
+        <div class="flex gap-2">
+            <a href="{{ request()->fullUrlWithQuery(['tab' => 'financial']) }}"
+               class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2
+                   {{ $tab === 'financial' ? 'bg-primary-600 text-white shadow-md' : 'bg-white dark:bg-dark-card text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-bg' }}">
+                <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+                الملخص المالي
+            </a>
+            <a href="{{ request()->fullUrlWithQuery(['tab' => 'clients']) }}"
+               class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2
+                   {{ $tab === 'clients' ? 'bg-teal-600 text-white shadow-md' : 'bg-white dark:bg-dark-card text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-bg' }}">
+                <i data-lucide="package" class="w-4 h-4"></i>
+                الملخص الشامل لكل زبون
+            </a>
+        </div>
+
         {{-- Filter --}}
         <form method="GET" action="{{ route('admin.combined-summary.index') }}" class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border p-5 shadow-sm">
+        <input type="hidden" name="tab" value="{{ $tab }}">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">من تاريخ</label>
@@ -144,6 +161,42 @@
                 </div>
             </div>
 
+            {{-- فلتر المنتج (تاب الزبائن فقط) --}}
+            @if($tab === 'clients')
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 border-t border-gray-100 dark:border-dark-border pt-4"
+                 x-data="{
+                    search: '{{ $products->firstWhere('id', $productId)?->name ?? '' }}',
+                    selectedId: '{{ $productId ?? '' }}',
+                    open: false,
+                    items: {{ Js::from($products->map(fn($p) => ['id' => $p->id, 'name' => $p->name])) }},
+                    get filtered() { return this.search.length < 1 ? this.items : this.items.filter(i => i.name.includes(this.search)); }
+                 }" @click.outside="open=false">
+                <div class="relative">
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">المنتج (اختياري)</label>
+                    <input type="text" x-model="search" @focus="open=true" autocomplete="off"
+                        @input="selectedId=''"
+                        placeholder="كل المنتجات..."
+                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <input type="hidden" name="product_id" :value="selectedId">
+                    <div x-show="open" class="absolute z-50 mt-1 w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-52 overflow-y-auto">
+                        <div @click="search=''; selectedId=''; open=false" class="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer text-sm text-gray-500">كل المنتجات</div>
+                        <template x-for="item in filtered" :key="item.id">
+                            <div @click="search=item.name; selectedId=item.id; open=false"
+                                class="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer border-t border-gray-100 dark:border-dark-border text-sm font-bold text-gray-900 dark:text-white" x-text="item.name">
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">ترتيب حسب</label>
+                    <select name="sort_by" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        <option value="amount" {{ ($sortBy ?? 'amount') === 'amount' ? 'selected' : '' }}>المبلغ</option>
+                        <option value="qty" {{ ($sortBy ?? '') === 'qty' ? 'selected' : '' }}>الكمية</option>
+                    </select>
+                </div>
+            </div>
+            @endif
+
             <div class="flex flex-wrap gap-3">
                 <button type="submit" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all flex items-center gap-2">
                     <i data-lucide="search" class="w-4 h-4"></i> عرض
@@ -157,8 +210,8 @@
                     class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all flex items-center gap-2">
                     <i data-lucide="file-text" class="w-4 h-4"></i> تصدير PDF
                 </a>
-                @if($storeId || $customerId || $staffId || request('entity_type', 'all') !== 'all')
-                <a href="{{ route('admin.combined-summary.index', ['from_date' => $fromDate, 'to_date' => $toDate]) }}"
+                @if($storeId || $customerId || $staffId || request('entity_type', 'all') !== 'all' || $productId)
+                <a href="{{ route('admin.combined-summary.index', ['tab' => $tab, 'from_date' => $fromDate, 'to_date' => $toDate]) }}"
                     class="px-6 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-bold transition-all flex items-center gap-2">
                     <i data-lucide="x" class="w-4 h-4"></i> إلغاء الفلاتر
                 </a>
@@ -166,6 +219,148 @@
             </div>
         </form>
 
+        {{-- ===== تاب الملخص الشامل لكل زبون ===== --}}
+        @if($tab === 'clients')
+
+        @if($clientsData && count($clientsData) > 0)
+        @php
+            $grandQty    = array_sum(array_column($clientsData, 'total_qty'));
+            $grandAmount = array_sum(array_column($clientsData, 'total_amount'));
+        @endphp
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-white dark:bg-dark-card rounded-2xl p-4 border border-gray-200 dark:border-dark-border shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 bg-teal-50 dark:bg-teal-500/10 rounded-xl flex items-center justify-center shrink-0">
+                    <i data-lucide="package" class="w-5 h-5 text-teal-600 dark:text-teal-400"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 font-bold">إجمالي الكمية</p>
+                    <p class="text-xl font-black text-gray-900 dark:text-white">{{ number_format($grandQty) }}</p>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-dark-card rounded-2xl p-4 border border-gray-200 dark:border-dark-border shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 bg-teal-50 dark:bg-teal-500/10 rounded-xl flex items-center justify-center shrink-0">
+                    <i data-lucide="banknote" class="w-5 h-5 text-teal-600 dark:text-teal-400"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 font-bold">إجمالي المبلغ</p>
+                    <p class="text-xl font-black text-teal-600 dark:text-teal-400">{{ number_format($grandAmount, 0) }} <span class="text-xs font-normal text-gray-500">د</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-gray-100 dark:border-dark-border">
+                <h3 class="font-black text-gray-900 dark:text-white flex items-center gap-2">
+                    <i data-lucide="users" class="w-5 h-5 text-teal-500"></i>
+                    الزبائن
+                    <span class="text-xs font-bold text-gray-400 dark:text-gray-500 mr-1">— مرتب حسب {{ ($sortBy ?? 'amount') === 'qty' ? 'الكمية' : 'المبلغ' }}</span>
+                </h3>
+            </div>
+            <div class="divide-y divide-gray-100 dark:divide-dark-border">
+                @foreach($clientsData as $index => $entry)
+                @php
+                    $isStore = $entry['type'] === 'متجر';
+                    $pct = $grandAmount > 0 ? round(($entry['total_amount'] / $grandAmount) * 100, 1) : 0;
+                @endphp
+                <div x-data="{ open: false }">
+                    <button @click="open = !open"
+                        class="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 dark:hover:bg-dark-bg/60 transition-colors text-right">
+                        <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0
+                            {{ $index === 0 ? 'bg-amber-400 text-white' : ($index === 1 ? 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200' : ($index === 2 ? 'bg-orange-300 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400')) }}">
+                            {{ $index + 1 }}
+                        </span>
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 {{ $isStore ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30' }}">
+                            <i data-lucide="{{ $isStore ? 'store' : 'user' }}" class="w-4 h-4 {{ $isStore ? 'text-blue-600 dark:text-blue-400' : 'text-purple-600 dark:text-purple-400' }}"></i>
+                        </div>
+                        <div class="flex-1 min-w-0 text-right">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-black text-gray-900 dark:text-white text-sm">{{ $entry['name'] }}</span>
+                                <span class="px-2 py-0.5 rounded-lg text-xs font-black {{ $isStore ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' }}">
+                                    {{ $entry['type'] }}
+                                </span>
+                            </div>
+                            <div class="mt-1.5 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden w-full max-w-xs">
+                                <div class="h-full rounded-full {{ $isStore ? 'bg-blue-500' : 'bg-purple-500' }}" style="width: {{ $pct }}%"></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 shrink-0">
+                            <div class="text-center hidden sm:block">
+                                <p class="text-xs text-gray-400 dark:text-gray-500">كمية</p>
+                                <p class="text-sm font-black text-gray-700 dark:text-gray-300">{{ number_format($entry['total_qty']) }}</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-xs text-gray-400 dark:text-gray-500">مبلغ</p>
+                                <p class="text-sm font-black text-teal-600 dark:text-teal-400">{{ number_format($entry['total_amount'], 0) }}</p>
+                            </div>
+                            <div class="text-center hidden sm:block">
+                                <p class="text-xs text-gray-400 dark:text-gray-500">نسبة</p>
+                                <p class="text-sm font-black text-gray-500 dark:text-gray-400">{{ $pct }}%</p>
+                            </div>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''"></i>
+                        </div>
+                    </button>
+                    <div x-show="open" x-collapse class="border-t border-gray-100 dark:border-dark-border bg-gray-50/50 dark:bg-dark-bg/30">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="bg-gray-100/80 dark:bg-gray-800/50">
+                                        <th class="px-6 py-2.5 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المنتج</th>
+                                        <th class="px-5 py-2.5 text-center text-xs font-bold text-gray-600 dark:text-gray-400">السعر</th>
+                                        <th class="px-5 py-2.5 text-center text-xs font-bold text-gray-600 dark:text-gray-400">مرات</th>
+                                        <th class="px-5 py-2.5 text-center text-xs font-bold text-gray-600 dark:text-gray-400">كمية</th>
+                                        <th class="px-5 py-2.5 text-center text-xs font-bold text-gray-600 dark:text-gray-400">مبلغ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($entry['products'] as $product)
+                                    <tr class="bg-gray-100/80 dark:bg-gray-800/60 border-t-2 border-gray-300 dark:border-gray-600">
+                                        <td class="px-6 py-2.5">
+                                            <span class="font-black text-gray-800 dark:text-gray-200 text-xs">{{ $product['product_name'] }}</span>
+                                        </td>
+                                        <td class="px-5 py-2.5 text-center">
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">متوسط: <span class="font-black text-gray-700 dark:text-gray-300">{{ number_format($product['avg_price'], 2) }}</span></span>
+                                        </td>
+                                        <td class="px-5 py-2.5 text-center">
+                                            <span class="text-xs font-black text-gray-600 dark:text-gray-400">{{ number_format(array_sum(array_column($product['prices'], 'times'))) }}</span>
+                                        </td>
+                                        <td class="px-5 py-2.5 text-center">
+                                            <span class="inline-flex items-center justify-center px-2 py-0.5 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 rounded text-xs font-black">{{ number_format($product['total_qty']) }}</span>
+                                        </td>
+                                        <td class="px-5 py-2.5 text-center">
+                                            <span class="text-xs font-black text-teal-600 dark:text-teal-400">{{ number_format($product['total_amount'], 0) }}</span>
+                                        </td>
+                                    </tr>
+                                    @foreach($product['prices'] as $priceIndex => $price)
+                                    <tr class="bg-white dark:bg-dark-card hover:bg-amber-50/30 dark:hover:bg-amber-900/5 transition-colors">
+                                        <td class="px-6 py-2 pr-12 text-xs text-gray-400 dark:text-gray-500">سعر {{ $priceIndex + 1 }}</td>
+                                        <td class="px-5 py-2 text-center">
+                                            <span class="inline-flex items-center justify-center px-2.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-black">
+                                                {{ number_format($price['price'], 2) }}
+                                            </span>
+                                        </td>
+                                        <td class="px-5 py-2 text-center text-xs text-gray-500 dark:text-gray-400">{{ $price['times'] }}</td>
+                                        <td class="px-5 py-2 text-center text-xs text-gray-600 dark:text-gray-300 font-bold">{{ number_format($price['total_qty']) }}</td>
+                                        <td class="px-5 py-2 text-center text-xs text-gray-600 dark:text-gray-300 font-bold">{{ number_format($price['total_amount'], 0) }}</td>
+                                    </tr>
+                                    @endforeach
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @else
+        <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border p-16 text-center shadow-sm">
+            <i data-lucide="inbox" class="w-12 h-12 text-gray-300 mx-auto mb-3"></i>
+            <p class="text-gray-500 dark:text-gray-400 font-bold">لا توجد بيانات في هذه الفترة</p>
+        </div>
+        @endif
+
+        @else
+        {{-- ===== تاب الملخص المالي (الأصلي) ===== --}}
         {{-- Stats Cards --}}
         <div class="grid grid-cols-2 lg:grid-cols-{{ $includeOldDebt ? '5' : '4' }} gap-4">
             @if($includeOldDebt)
@@ -446,6 +641,8 @@
 
     </div>
 </div>
+
+        @endif {{-- end tab financial --}}
 
 @push('scripts')
 <script>

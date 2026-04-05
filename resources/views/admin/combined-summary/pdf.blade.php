@@ -84,10 +84,11 @@
         </div>
         <div class="ph-r">
             <div class="ph-title">{{ $labels['title'] }}</div>
-            <div class="ph-date">
-                <span>{{ $labels['dateTo'] }}</span>
-                &nbsp;&#8592;&nbsp;
-                <span>{{ $labels['dateFrom'] }}</span>
+            <div style="margin-top:3px; font-size:8px; color:#64748b; text-align:right;">
+                {{ $labels['dateTo'] }} - {{ $labels['dateFrom'] }}
+                @if(!empty($labels['filterEntity']))
+                &nbsp;|&nbsp; {{ $labels['filterEntity'] }}
+                @endif
             </div>
         </div>
     </div>
