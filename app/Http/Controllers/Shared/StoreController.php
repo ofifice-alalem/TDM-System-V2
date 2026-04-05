@@ -7,7 +7,7 @@ use App\Models\Store;
 use App\Models\SalesInvoice;
 use App\Models\SalesReturn;
 use App\Models\StorePayment;
-use App\Models\StoreDebtLedger;
+use App\Models\StoreDebtLedger; // kept for reference
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -121,33 +121,18 @@ class StoreController extends Controller
             ->select('id', 'name', 'owner_name', 'location')
             ->get();
 
-        // Filter debt calculations for marketer or selected marketer
-        $debtQuery = StoreDebtLedger::query()
-            ->when(auth()->user()->isMarketer(), function($query) {
-                $query->whereIn('store_id', Store::where('marketer_id', auth()->id())->pluck('id'));
-            })
-            ->when($marketerId && !auth()->user()->isMarketer(), function($query) use ($marketerId) {
-                $query->whereIn('store_id', Store::where('marketer_id', $marketerId)->pluck('id'));
-            });
-
-        $totalRemaining = (clone $debtQuery)->whereIn('id', function($query) {
-            $query->selectRaw('MAX(id)')
-                ->from('store_debt_ledger')
-                ->groupBy('store_id');
-        })->sum('balance_after');
-
-        $totalDebt     = (clone $debtQuery)->where('entry_type', 'sale')->sum('amount');
-        $totalPayments = abs((clone $debtQuery)->whereIn('entry_type', ['payment', 'return'])->sum('amount'));
-
         $totalPendingSales    = SalesInvoice::whereIn('store_id', $storeIds)->where('status', 'pending')->sum('total_amount');
         $totalPendingPayments = StorePayment::whereIn('store_id', $storeIds)->where('status', 'pending')->sum('amount');
         $totalPendingReturns  = SalesReturn::whereIn('store_id', $storeIds)->where('status', 'pending')->sum('total_amount');
 
-        $totalDebt        += $totalPendingSales;
-        $totalPayments    += $totalPendingPayments + $totalPendingReturns;
-        $totalRemaining   += $totalPendingSales - $totalPendingPayments - $totalPendingReturns;
+        $totalOldDebt   = SalesInvoice::whereIn('store_id', $storeIds)->where('marketer_id', 0)->sum('total_amount');
+        $totalDebt      = SalesInvoice::whereIn('store_id', $storeIds)->whereIn('status', ['approved', 'pending'])->where('marketer_id', '!=', 0)->sum('total_amount');
+        $totalPayments  = StorePayment::whereIn('store_id', $storeIds)->where('status', 'approved')->sum('amount')
+                        + SalesReturn::whereIn('store_id', $storeIds)->where('status', 'approved')->sum('total_amount')
+                        + $totalPendingPayments + $totalPendingReturns;
+        $totalRemaining = $totalDebt + $totalOldDebt - $totalPayments;
 
-        return view('shared.stores.index', compact('stores', 'search', 'totalDebt', 'totalPayments', 'totalRemaining', 'allStoresForSearch'));
+        return view('shared.stores.index', compact('stores', 'search', 'totalDebt', 'totalPayments', 'totalRemaining', 'totalOldDebt', 'allStoresForSearch'));
     }
 
     public function show(Store $store)
@@ -221,15 +206,13 @@ class StoreController extends Controller
         $pendingReturns  = SalesReturn::where('store_id', $store->id)->where('status', 'pending')->sum('total_amount');
 
         $stats = [
-            'total_sales' => StoreDebtLedger::where('store_id', $store->id)
-                ->where('entry_type', 'sale')
-                ->sum('amount') + $pendingSales,
-            'total_returns' => abs(StoreDebtLedger::where('store_id', $store->id)
-                ->where('entry_type', 'return')
-                ->sum('amount')) + $pendingReturns,
-            'total_payments' => abs(StoreDebtLedger::where('store_id', $store->id)
-                ->where('entry_type', 'payment')
-                ->sum('amount')) + $pendingPayments,
+            'total_sales' => SalesInvoice::where('store_id', $store->id)->where('status', 'approved')->sum('total_amount')
+                           + SalesInvoice::where('store_id', $store->id)->where('marketer_id', 0)->sum('total_amount')
+                           + $pendingSales,
+            'total_returns' => SalesReturn::where('store_id', $store->id)->where('status', 'approved')->sum('total_amount')
+                             + $pendingReturns,
+            'total_payments' => StorePayment::where('store_id', $store->id)->where('status', 'approved')->sum('amount')
+                              + $pendingPayments,
             'pending_sales'    => $pendingSales,
             'pending_payments' => $pendingPayments,
             'pending_returns'  => $pendingReturns,
@@ -240,8 +223,10 @@ class StoreController extends Controller
 
     private function calculateDebt($storeId)
     {
-        return StoreDebtLedger::where('store_id', $storeId)
-            ->latest('id')
-            ->value('balance_after') ?? 0;
+        $sales    = SalesInvoice::where('store_id', $storeId)->whereIn('status', ['approved', 'pending'])->sum('total_amount');
+        $payments = StorePayment::where('store_id', $storeId)->where('status', 'approved')->sum('amount');
+        $returns  = SalesReturn::where('store_id', $storeId)->where('status', 'approved')->sum('total_amount');
+
+        return $sales - $payments - $returns;
     }
 }
