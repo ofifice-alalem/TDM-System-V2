@@ -157,7 +157,7 @@
 </div>
 
 @foreach($entries as $entry)
-<div style="{{ !$loop->first ? 'page-break-before: always;' : '' }}">
+<div style="page-break-inside: avoid;">
 <table style="margin-bottom:0; border-collapse:collapse; width:100%;">
     <tr class="client-head">
         <td style="background:#{{ $entry['color'] }}; padding:6px 10px; text-align:right;">

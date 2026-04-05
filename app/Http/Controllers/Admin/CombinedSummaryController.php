@@ -47,7 +47,7 @@ class CombinedSummaryController extends Controller
                 return $this->exportClientsExcel($clientsData, $fromDate, $toDate, $productId, $sortBy, $entityType, $storeName, $customerName, $staffId);
             }
             if ($request->has('pdf')) {
-                return $this->exportClientsPdf($clientsData, $fromDate, $toDate, $productId, $entityType, $storeName, $customerName, $staffId);
+                return $this->exportClientsPdf($clientsData, $fromDate, $toDate, $productId, $sortBy, $entityType, $storeName, $customerName, $staffId);
             }
 
             usort($clientsData, function($a, $b) use ($sortBy) {
@@ -209,8 +209,12 @@ class CombinedSummaryController extends Controller
         return $result;
     }
 
-    private function exportClientsPdf(array $clientsData, string $fromDate, string $toDate, ?string $productId, string $entityType = 'all', ?string $storeName = null, ?string $customerName = null, $staffId = null)
+    private function exportClientsPdf(array $clientsData, string $fromDate, string $toDate, ?string $productId, string $sortBy = 'amount', string $entityType = 'all', ?string $storeName = null, ?string $customerName = null, $staffId = null)
     {
+        usort($clientsData, fn($a, $b) => $sortBy === 'qty'
+            ? $b['total_qty'] <=> $a['total_qty']
+            : $b['total_amount'] <=> $a['total_amount']
+        );
         $arabic = new \ArPHP\I18N\Arabic();
         $g  = fn($text) => $arabic->utf8Glyphs($text);
         $en = fn($str)  => str_replace(
@@ -248,7 +252,7 @@ class CombinedSummaryController extends Controller
         $grandAmount = array_sum(array_column($clientsData, 'total_amount'));
 
         $labels = [
-            'title'             => $g('الملخص الشامل لكل زبون'),
+            'title'             => $g('الملخص الشامل لحركة البضاعة للزبائن'),
             'product'           => $g('المنتج'),
             'price'             => $g('السعر'),
             'avg'               => $g('متوسط:'),
