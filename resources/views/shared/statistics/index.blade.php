@@ -19,7 +19,7 @@
 
         {{-- Filters --}}
         <div class="bg-white dark:bg-dark-card rounded-2xl p-6 border border-gray-200 dark:border-dark-border shadow-lg mb-6">
-            <form method="GET" action="{{ route('admin.statistics.index') }}" class="space-y-4">
+            <form method="GET" action="{{ route('admin.statistics.index') }}" class="space-y-4" id="stats-form">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div class="md:col-span-2 lg:col-span-3">
                         <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">نوع الإحصاء</label>
@@ -222,7 +222,7 @@
                             تصدير Excel
                         </button>
                         @if($featureExportPdf)
-                        <button type="submit" name="pdf" value="1" class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
+                        <button type="button" onclick="submitPdfNewTab(this)" class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2">
                             <i data-lucide="file-text" class="w-4 h-4"></i>
                             تصدير PDF
                         </button>
@@ -1311,6 +1311,20 @@ function renderChunks() {
 }
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeInvoiceModal(); closeBulkModal(); } });
+
+function submitPdfNewTab() {
+    const form = document.getElementById('stats-form');
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'pdf';
+    input.value = '1';
+    form.appendChild(input);
+    const prev = form.target;
+    form.target = '_blank';
+    form.submit();
+    form.target = prev;
+    form.removeChild(input);
+}
 </script>
 @endpush
 @endsection

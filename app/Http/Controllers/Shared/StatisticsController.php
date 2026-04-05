@@ -1264,6 +1264,8 @@ class StatisticsController extends Controller
             'status'           => $g('الحالة'),
             'dateFrom'         => $request->from_date,
             'dateTo'           => $request->to_date,
+            'labelFrom'        => $g('من'),
+            'labelTo'          => $g('إلى'),
             'grandTotal'       => $g('الإجمالي'),
             'summary'          => $g('ملخص'),
             'filterInfo'       => $g('معلومات التقرير'),

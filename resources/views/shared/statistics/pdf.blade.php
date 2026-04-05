@@ -70,6 +70,60 @@
     </div>
 </div>
 
+{{-- Cover Page --}}
+<div style="page-break-after: always; min-height: 700px; text-align: center; padding: 60px 40px;">
+
+    <div style="margin-bottom: 30px;">
+        <img src="{{ public_path('images/company.png') }}" style="max-height:180px; max-width:350px;">
+    </div>
+
+    <div style="border-bottom: 3px solid #0f172a; padding-bottom: 16px; margin-bottom: 30px; width: 100%;">
+        <div style="font-size: 22px; font-weight: bold; color: #0f172a; margin-bottom: 10px; text-align:center;">{{ $labels['title'] }}</div>
+        <table style="width: auto; border-collapse: collapse; direction: rtl; margin: 0 auto;">
+            <tr>
+                <td style="border: none; padding: 4px 16px; text-align: center;">
+                    <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 3px;">{{ $labels['labelTo'] ?? '' }}</div>
+                    <div style="font-size: 16px; font-weight: bold; color: #0f172a; border: 1px solid #e2e8f0; padding: 6px 14px;">{{ $labels['dateTo'] }}</div>
+                </td>
+                <td style="border: none; padding: 4px 8px; font-size: 18px; color: #64748b; text-align: center;">&#8592;</td>
+                <td style="border: none; padding: 4px 16px; text-align: center;">
+                    <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 3px;">{{ $labels['labelFrom'] ?? '' }}</div>
+                    <div style="font-size: 16px; font-weight: bold; color: #0f172a; border: 1px solid #e2e8f0; padding: 6px 14px;">{{ $labels['dateFrom'] }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <table style="width: 80%; border-collapse: collapse; direction: rtl; margin: 0 auto; border: 2px solid #0f172a;">
+        <tr style="background: #f8fafc; border-bottom: 2px solid #0f172a;">
+            <td colspan="2" style="padding: 8px 12px; font-size: 10px; font-weight: bold; color: #64748b; text-align: center; border: none; letter-spacing: 1px;">&#x2014; {{ $labels['filterInfo'] }} &#x2014;</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #94a3b8;">
+            <td style="padding: 10px 16px; font-size: 13px; font-weight: bold; color: #0f172a; text-align: right; border: none; border-left: 2px solid #0f172a;">{{ $labels['operationName'] }}</td>
+            <td style="padding: 10px 16px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; width: 35%; border: none;">{{ $labels['operation'] }}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #94a3b8;">
+            <td style="padding: 10px 16px; font-size: 13px; font-weight: bold; color: #0f172a; text-align: right; border: none; border-left: 2px solid #0f172a;">{{ $labels['entityName'] }}</td>
+            <td style="padding: 10px 16px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; border: none;">{{ $labels['entityLabel'] }}</td>
+        </tr>
+        @if(!empty($labels['storeName']))
+        <tr style="border-bottom: 1px solid #94a3b8;">
+            <td style="padding: 10px 16px; font-size: 13px; font-weight: bold; color: #0f172a; text-align: right; border: none; border-left: 2px solid #0f172a;">{{ $labels['storeName'] }}</td>
+            <td style="padding: 10px 16px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; border: none;">{{ $labels['store'] }}</td>
+        </tr>
+        @endif
+        @if(!empty($labels['statusName']))
+        <tr style="border-bottom: 1px solid #94a3b8;">
+            <td style="padding: 10px 16px; font-size: 13px; font-weight: bold; color: #0f172a; text-align: right; border: none; border-left: 2px solid #0f172a;">{{ $labels['statusName'] }}</td>
+            <td style="padding: 10px 16px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; border: none;">{{ $labels['status'] }}</td>
+        </tr>
+        @endif
+    </table>
+
+    <div style="margin-top: 40px; font-size: 9px; color: #94a3b8;">{{ now()->format('Y-m-d H:i') }}</div>
+
+</div>
+
 @php
     $n = fn($v) => str_replace(
         ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'],
@@ -276,9 +330,9 @@
             <th style="width:12%">{{ $labels['amount'] }}</th>
             @endif
             @if($labels['hasStatus'])
-            <th style="width:10%">{{ $labels['status'] }}</th>
+            <th style="width:8%">{{ $labels['status'] }}</th>
             @endif
-            <th style="width:12%">{{ $labels['date'] }}</th>
+            <th style="width:9%">{{ $labels['date'] }}</th>
             @if($labels['hasPaymentMethod'])
             @if($labels['hasCommission'])
             <th style="width:10%">{{ $labels['commAmount'] }}</th>
@@ -286,12 +340,12 @@
             @endif
             <th style="width:10%">{{ $labels['payMethod'] }}</th>
             @endif
-            <th>{{ $labels['invoiceNum'] }}</th>
+            <th style="width:20%">{{ $labels['invoiceNum'] }}</th>
             @if($labels['hasStore'] ?? false)
-            <th style="width:28%">{{ $labels['store'] }}</th>
+            <th style="width:20%">{{ $labels['store'] }}</th>
             @endif
             @if($labels['hasMarketer'] ?? false)
-            <th style="width:28%">{{ $labels['marketer'] }}</th>
+            <th style="width:20%">{{ $labels['marketer'] }}</th>
             @endif
             <th style="width:4%; text-align:center">#</th>
         </tr>
