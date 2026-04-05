@@ -120,6 +120,30 @@
         @endif
     </table>
 
+    @if(isset($data['status_totals']) && $data['status_totals'])
+    <div style="margin-top: 30px; width: 80%; margin-left: auto; margin-right: auto;">
+        <table style="width: 100%; border-collapse: collapse; direction: rtl; border: 2px solid #0f172a;">
+            <tr style="background: #f8fafc; border-bottom: 2px solid #0f172a;">
+                <td colspan="3" style="padding: 8px 12px; font-size: 10px; font-weight: bold; color: #64748b; text-align: center; border: none; letter-spacing: 1px;">&#x2014; {{ $labels['summary'] }} &#x2014;</td>
+            </tr>
+            <tr>
+                <td style="padding: 14px 8px; text-align: center; border-left: 2px solid #0f172a; background: #f8fafc;">
+                    <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px;">{{ $labels['pending'] }}</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #0f172a;">{{ number_format($data['status_totals']['pending'] ?? 0, 2) }}</div>
+                </td>
+                <td style="padding: 14px 8px; text-align: center; border-left: 2px solid #0f172a; background: #f8fafc;">
+                    <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px;">{{ $labels['approved'] }}</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #0f172a;">{{ number_format($data['status_totals']['approved'] ?? 0, 2) }}</div>
+                </td>
+                <td style="padding: 14px 8px; text-align: center; background: #f8fafc;">
+                    <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px;">{{ $labels['total'] }}</div>
+                    <div style="font-size: 20px; font-weight: bold; color: #0f172a;">{{ number_format($data['total'] ?? 0, 2) }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    @endif
+
     @if(isset($data['payment_method_totals']) && $data['payment_method_totals'])
     <div style="margin-top: 30px; width: 80%; margin-left: auto; margin-right: auto;">
         <table style="width: 100%; border-collapse: collapse; direction: rtl; border: 2px solid #0f172a;">
