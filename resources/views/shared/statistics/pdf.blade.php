@@ -120,7 +120,35 @@
         @endif
     </table>
 
-    <div style="margin-top: 40px; font-size: 9px; color: #94a3b8;">{{ now()->format('Y-m-d H:i') }}</div>
+    @if(isset($data['payment_method_totals']) && $data['payment_method_totals'])
+    <div style="margin-top: 30px; width: 80%; margin-left: auto; margin-right: auto;">
+        <table style="width: 100%; border-collapse: collapse; direction: rtl; border: 2px solid #0f172a;">
+            <tr style="background: #f8fafc; border-bottom: 2px solid #0f172a;">
+                <td colspan="4" style="padding: 8px 12px; font-size: 10px; font-weight: bold; color: #64748b; text-align: center; border: none; letter-spacing: 1px;">&#x2014; {{ $labels['grandTotal'] }} &#x2014;</td>
+            </tr>
+            <tr>
+                <td style="padding: 14px 8px; text-align: center; border-left: 2px solid #0f172a; background: #f8fafc;">
+                    <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px;">{{ $labels['check'] }}</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #0f172a;">{{ number_format($data['payment_method_totals']['check'] ?? 0, 2) }}</div>
+                </td>
+                <td style="padding: 14px 8px; text-align: center; border-left: 2px solid #0f172a; background: #f8fafc;">
+                    <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px;">{{ $labels['transfer'] }}</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #0f172a;">{{ number_format($data['payment_method_totals']['transfer'] ?? 0, 2) }}</div>
+                </td>
+                <td style="padding: 14px 8px; text-align: center; border-left: 2px solid #0f172a; background: #f8fafc;">
+                    <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px;">{{ $labels['cash'] }}</div>
+                    <div style="font-size: 18px; font-weight: bold; color: #0f172a;">{{ number_format($data['payment_method_totals']['cash'] ?? 0, 2) }}</div>
+                </td>
+                <td style="padding: 14px 8px; text-align: center; background: #f8fafc;">
+                    <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px;">{{ $labels['total'] }}</div>
+                    <div style="font-size: 20px; font-weight: bold; color: #0f172a;">{{ number_format($data['total'] ?? 0, 2) }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    @endif
+
+    <div style="margin-top: 30px; font-size: 9px; color: #94a3b8;">{{ now()->format('Y-m-d H:i') }}</div>
 
 </div>
 
@@ -287,7 +315,7 @@
                     @if(isset($data['payment_method_totals']))
                     <tr><td class="cv">{{ $n($data['payment_method_totals']['cash'] ?? 0) }}</td><td class="cl">{{ $labels['cash'] }}</td></tr>
                     <tr><td class="cv">{{ $n($data['payment_method_totals']['transfer'] ?? 0) }}</td><td class="cl">{{ $labels['transfer'] }}</td></tr>
-                    <tr><td class="cv">{{ $n($data['payment_method_totals']['certified_check'] ?? 0) }}</td><td class="cl">{{ $labels['check'] }}</td></tr>
+                    <tr><td class="cv">{{ $n($data['payment_method_totals']['check'] ?? 0) }}</td><td class="cl">{{ $labels['check'] }}</td></tr>
                     @endif
                 </table>
             </div>
@@ -384,7 +412,7 @@
             <td class="num" style="font-size:7.5px;">{{ $n($item->commission->commission_amount ?? 0) }}</td>
             <td class="num" style="font-size:7.5px;">{{ ($item->commission->commission_rate ?? '-') }}%</td>
             @endif
-            <td style="font-size:7.5px;">{{ $g(match($item->payment_method ?? '') { 'cash' => 'كاش', 'transfer' => 'حوالة', 'certified_check' => 'شيك مصدق', default => '-' }) }}</td>
+            <td style="font-size:7.5px;">{{ $g(match($item->payment_method ?? '') { 'cash' => 'نقدي', 'transfer' => 'تحويل', 'check' => 'شيك', 'certified_check' => 'شيك مصدق', default => '-' }) }}</td>
             @endif
             <td style="font-size:7.5px; font-weight:bold; color:#0f172a;">{{ $en($num) }}</td>
             @if($labels['hasStore'] ?? false)

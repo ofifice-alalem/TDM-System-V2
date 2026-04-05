@@ -163,10 +163,12 @@ class StatisticsController extends Controller
             $statusTotals['total'] = $statusTotals['approved'] + $statusTotals['cancelled'];
 
             if ($operation === 'payments') {
+                $status = $request->filled('status') ? $request->status : 'completed';
+                $pmBase = (clone $baseCountQuery)->where('status', $status);
                 $paymentMethodTotals = [
-                    'cash'            => (clone $baseCountQuery)->where('payment_method', 'cash')->sum('amount'),
-                    'transfer'        => (clone $baseCountQuery)->where('payment_method', 'transfer')->sum('amount'),
-                    'certified_check' => (clone $baseCountQuery)->where('payment_method', 'check')->sum('amount'),
+                    'cash'     => (clone $pmBase)->where('payment_method', 'cash')->sum('amount'),
+                    'transfer' => (clone $pmBase)->where('payment_method', 'transfer')->sum('amount'),
+                    'check'    => (clone $pmBase)->where('payment_method', 'check')->sum('amount'),
                 ];
             }
         }
