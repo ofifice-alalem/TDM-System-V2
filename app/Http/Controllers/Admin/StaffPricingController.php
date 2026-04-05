@@ -93,6 +93,9 @@ class StaffPricingController extends Controller
             ];
         }, $rawEntries);
 
+        $grandQty    = array_sum(array_column($entries, 'total_qty'));
+        $grandAmount = array_sum(array_column($entries, 'total_amount'));
+
         $labels = [
             'title'        => $g('معدل الموظفين'),
             'product'      => $g('المنتج'),
@@ -102,10 +105,17 @@ class StaffPricingController extends Controller
             'qty'          => $g('الكمية'),
             'amount'       => $g('المبلغ'),
             'total'        => $g('الإجمالي'),
-            'from'         => $g('من'),
-            'to'           => $g('إلى'),
+            'labelFrom'    => $g('من'),
+            'labelTo'      => $g('إلى'),
             'filterProd'   => $productId ? $en($g(Product::find($productId)?->name ?? '')) : null,
-            'filterSort'   => ($mode === 'compare' && $sortBy) ? $g($sortBy === 'qty' ? 'ترتيب: الكمية' : 'ترتيب: المبلغ') : null,
+            'filterProdLabel' => $g('المنتج'),
+            'allProducts'     => $g('كل المنتجات'),
+            'filterSort'      => ($mode === 'compare' && $sortBy) ? $g($sortBy === 'qty' ? 'ترتيب: الكمية' : 'ترتيب: المبلغ') : null,
+            'filterSortLabel' => $g('ترتيب'),
+            'staffLabel'      => $g('الموظف'),
+            'allStaff'        => $g('الكل'),
+            'grandQty'     => $grandQty,
+            'grandAmount'  => $grandAmount,
             'dateFrom'     => $fromDate,
             'dateTo'       => $toDate,
             'totalPages'   => 1,

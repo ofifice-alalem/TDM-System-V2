@@ -79,6 +79,79 @@
 
 @php $n = fn($v) => number_format((float)$v, 2); $ni = fn($v) => number_format((int)$v); @endphp
 
+{{-- Cover Page --}}
+<div style="page-break-after: always; min-height: 700px; text-align: center; padding: 60px 40px;">
+
+    <div style="margin-bottom: 30px;">
+        <img src="{{ public_path('images/company.png') }}" style="max-height:180px; max-width:350px;">
+    </div>
+
+    <div style="border-bottom: 3px solid #0f172a; padding-bottom: 16px; margin-bottom: 30px; width: 100%;">
+        <div style="font-size: 22px; font-weight: bold; color: #0f172a; margin-bottom: 10px; text-align:center;">{{ $labels['title'] }}</div>
+        <table style="width: auto; border-collapse: collapse; direction: rtl; margin: 0 auto;">
+            <tr>
+                <td style="border: none; padding: 4px 16px; text-align: center;">
+                    <div style="font-size: 9px; color: #94a3b8; font-weight: bold; margin-bottom: 3px;">{{ $labels['labelTo'] }}</div>
+                    <div style="font-size: 16px; font-weight: bold; color: #0f172a; background: #f1f5f9; padding: 6px 14px; border-radius: 4px;">{{ $labels['dateTo'] }}</div>
+                </td>
+                <td style="border: none; padding: 4px 8px; font-size: 18px; color: #94a3b8; text-align: center;">&#8592;</td>
+                <td style="border: none; padding: 4px 16px; text-align: center;">
+                    <div style="font-size: 9px; color: #94a3b8; font-weight: bold; margin-bottom: 3px;">{{ $labels['labelFrom'] }}</div>
+                    <div style="font-size: 16px; font-weight: bold; color: #0f172a; background: #f1f5f9; padding: 6px 14px; border-radius: 4px;">{{ $labels['dateFrom'] }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <table style="width: 80%; border-collapse: collapse; direction: rtl; margin: 0 auto;">
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 12px; font-size: 12px; font-weight: bold; color: #0f172a; text-align: right; border: none;">
+                @if(count($entries) === 1)
+                    {{ $entries[0]['name'] }}
+                @else
+                    {{ $labels['allStaff'] }}
+                @endif
+            </td>
+            <td style="padding: 10px 12px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; width: 40%; border: none;">{{ $labels['staffLabel'] }}</td>
+        </tr>
+        @if(!empty($labels['filterProd']))
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 12px; font-size: 12px; font-weight: bold; color: #0f172a; text-align: right; border: none;">{{ $labels['filterProd'] }}</td>
+            <td style="padding: 10px 12px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; border: none;">{{ $labels['filterProdLabel'] }}</td>
+        </tr>
+        @else
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 12px; font-size: 12px; font-weight: bold; color: #0f172a; text-align: right; border: none;">{{ $labels['allProducts'] }}</td>
+            <td style="padding: 10px 12px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; border: none;">{{ $labels['filterProdLabel'] }}</td>
+        </tr>
+        @endif
+        @if(!empty($labels['filterSort']))
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 10px 12px; font-size: 12px; font-weight: bold; color: #0f172a; text-align: right; border: none;">{{ $labels['filterSort'] }}</td>
+            <td style="padding: 10px 12px; font-size: 11px; font-weight: bold; color: #64748b; text-align: right; border: none;">{{ $labels['filterSortLabel'] }}</td>
+        </tr>
+        @endif
+    </table>
+
+    <div style="margin-top: 40px; width: 90%; border-top: 2px solid #0f172a; padding-top: 20px; margin-left: auto; margin-right: auto;">
+        <table style="width: 60%; border-collapse: collapse; direction: rtl; margin: 0 auto;">
+            <tr>
+                <td style="padding: 12px 8px; text-align: center; border: 1px solid #e2e8f0; background: #f0fdf4;">
+                    <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px;">{{ $labels['amount'] }}</div>
+                    <div style="font-size: 15px; font-weight: bold; color: #16a34a;">{{ $n($labels['grandAmount']) }}</div>
+                </td>
+                <td style="padding: 12px 8px; text-align: center; border: 1px solid #e2e8f0; background: #f8fafc;">
+                    <div style="font-size: 9px; color: #64748b; font-weight: bold; margin-bottom: 6px;">{{ $labels['qty'] }}</div>
+                    <div style="font-size: 15px; font-weight: bold; color: #0f172a;">{{ $ni($labels['grandQty']) }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="margin-top: 40px; font-size: 9px; color: #94a3b8;">{{ now()->format('Y-m-d H:i') }}</div>
+
+</div>
+
 @foreach($entries as $entry)
 <div style="{{ !$loop->first ? 'page-break-before: always;' : '' }}">
 {{-- Staff header - separate table --}}
