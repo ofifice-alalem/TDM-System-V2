@@ -71,12 +71,12 @@
 
                 {{-- فلتر النوع --}}
                 <div x-data="{
-                    type: '{{ $storeId ? 'store' : ($customerId ? 'customer' : 'all') }}',
-                    storeSearch: '{{ optional($stores->firstWhere('id', $storeId))->name ?? '' }}',
+                    type: '{{ $storeId ? 'store' : ($customerId ? 'customer' : (request('entity_type') === 'store' ? 'store' : (request('entity_type') === 'customer' ? 'customer' : 'all'))) }}',
+                    storeSearch: '{{ optional($stores->firstWhere('id', $storeId))->name ?? request('store_name', '') }}',
                     storeValue: '{{ $storeId ?? '' }}',
                     storeItems: {{ Js::from($stores->map(fn($s) => ['id' => $s->id, 'name' => $s->name])) }},
                     storeOpen: false,
-                    customerSearch: '{{ optional($customers->firstWhere('id', $customerId))->name ?? '' }}',
+                    customerSearch: '{{ optional($customers->firstWhere('id', $customerId))->name ?? request('customer_name', '') }}',
                     customerValue: '{{ $customerId ?? '' }}',
                     customerItems: {{ Js::from($customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name])) }},
                     customerOpen: false,
@@ -106,9 +106,11 @@
                     {{-- دروبداون المتجر --}}
                     <div x-show="type === 'store'" class="relative">
                         <input type="text" x-model="storeSearch" @focus="storeOpen=true" @click.outside="storeOpen=false" autocomplete="off"
+                            @input="storeValue=''"
                             placeholder="ابحث عن متجر..."
                             class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                         <input type="hidden" name="store_id" :value="type === 'store' ? storeValue : ''">
+                        <input type="hidden" name="store_name" :value="type === 'store' && !storeValue ? storeSearch.trim() : ''">
                         <div x-show="storeOpen" class="absolute z-50 mt-1 w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-52 overflow-y-auto">
                             <div @click="storeSearch=''; storeValue=''; storeOpen=false" class="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer text-sm text-gray-500">الكل</div>
                             <template x-for="item in storeFiltered" :key="item.id">
@@ -122,9 +124,11 @@
                     {{-- دروبداون العميل --}}
                     <div x-show="type === 'customer'" class="relative">
                         <input type="text" x-model="customerSearch" @focus="customerOpen=true" @click.outside="customerOpen=false" autocomplete="off"
+                            @input="customerValue=''"
                             placeholder="ابحث عن عميل..."
                             class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                         <input type="hidden" name="customer_id" :value="type === 'customer' ? customerValue : ''">
+                        <input type="hidden" name="customer_name" :value="type === 'customer' && !customerValue ? customerSearch.trim() : ''">
                         <div x-show="customerOpen" class="absolute z-50 mt-1 w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-52 overflow-y-auto">
                             <div @click="customerSearch=''; customerValue=''; customerOpen=false" class="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer text-sm text-gray-500">الكل</div>
                             <template x-for="item in customerFiltered" :key="item.id">

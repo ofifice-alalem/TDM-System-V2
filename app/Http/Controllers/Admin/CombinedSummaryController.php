@@ -25,14 +25,16 @@ class CombinedSummaryController extends Controller
         $fromDate   = $request->input('from_date', now()->startOfMonth()->format('Y-m-d'));
         $toDate     = $request->input('to_date', now()->format('Y-m-d'));
         $storeId      = $request->input('entity_type') === 'store'    ? $request->input('store_id')    : null;
+        $storeName    = $request->input('entity_type') === 'store'    ? $request->input('store_name')   : null;
         $customerId   = $request->input('entity_type') === 'customer'  ? $request->input('customer_id') : null;
+        $customerName = $request->input('entity_type') === 'customer'  ? $request->input('customer_name') : null;
         $staffId      = $request->input('staff_id');
         $entityType   = $request->input('entity_type', 'all'); // all | store | customer
         $includeOldDebt = $request->hasAny(['from_date', 'to_date', 'export', 'pdf'])
             ? (bool) $request->input('include_old_debt', 0)
             : true;
 
-        $rows = $this->buildRows($fromDate, $toDate, $storeId, $customerId, $staffId, $includeOldDebt, $entityType);
+        $rows = $this->buildRows($fromDate, $toDate, $storeId, $customerId, $staffId, $includeOldDebt, $entityType, $storeName, $customerName);
 
         if ($request->has('export')) {
             return $this->export($rows, $fromDate, $toDate, $storeId, $customerId, $staffId, $includeOldDebt, $entityType);
@@ -91,7 +93,7 @@ class CombinedSummaryController extends Controller
         ));
     }
 
-    private function buildRows($fromDate, $toDate, $storeId = null, $customerId = null, $staffId = null, $includeOldDebt = true, $entityType = 'all')
+    private function buildRows($fromDate, $toDate, $storeId = null, $customerId = null, $staffId = null, $includeOldDebt = true, $entityType = 'all', $storeName = null, $customerName = null)
     {
         $rows = collect();
 
@@ -99,6 +101,7 @@ class CombinedSummaryController extends Controller
         if ($entityType !== 'customer') {
             $storeQuery = Store::orderBy('name');
             if ($storeId) $storeQuery->where('id', $storeId);
+            elseif ($storeName) $storeQuery->where('name', 'like', '%' . $storeName . '%');
 
             foreach ($storeQuery->get() as $store) {
                 $invoices = SalesInvoice::where('store_id', $store->id)
@@ -136,6 +139,7 @@ class CombinedSummaryController extends Controller
         if ($entityType !== 'store' && !$staffIsMarketer) {
             $customerQuery = Customer::orderBy('name');
             if ($customerId) $customerQuery->where('id', $customerId);
+            elseif ($customerName) $customerQuery->where('name', 'like', '%' . $customerName . '%');
 
             foreach ($customerQuery->get() as $customer) {
                 $invoices = CustomerInvoice::where('customer_id', $customer->id)
