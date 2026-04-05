@@ -259,6 +259,7 @@ class StatisticsController extends Controller
             ]);
             $row++;
             
+            $rowIndex = 1;
             foreach ($results['stores_data'] as $storeData) {
                 $rowData = [
                     $storeData['store_name'],
@@ -268,7 +269,7 @@ class StatisticsController extends Controller
                     number_format($storeData['balance'], 2)
                 ];
                 $sheet->fromArray($rowData, null, 'B' . $row);
-            $sheet->setCellValue('A' . $row, $rowIndex++);
+                $sheet->setCellValue('A' . $row, $rowIndex++);
                 $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
                     'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
                 ]);
