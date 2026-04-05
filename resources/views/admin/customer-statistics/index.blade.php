@@ -316,10 +316,23 @@
                                 @endphp
                                 <tr class="hover:bg-primary-50/30 dark:hover:bg-primary-900/10 transition-all duration-200 {{ $index % 2 === 0 ? 'bg-white dark:bg-dark-card' : 'bg-gray-50/50 dark:bg-dark-bg/50' }}">
                                     <td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">
-                                        @if($results['operation'] == 'invoices') {{ $item->invoice_number }}
-                                        @elseif($results['operation'] == 'payments') {{ $item->payment_number }}
-                                        @elseif($results['operation'] == 'returns') {{ $item->return_number }}
-                                        @endif
+                                        @php
+                                            $showUrl = match($results['operation']) {
+                                                'invoices' => route('sales.invoices.show', $item->id),
+                                                'payments' => route('sales.payments.show', $item->id),
+                                                'returns'  => route('sales.returns.show', $item->id),
+                                                default    => null,
+                                            };
+                                            $refNum = match($results['operation']) {
+                                                'invoices' => $item->invoice_number,
+                                                'payments' => $item->payment_number,
+                                                'returns'  => $item->return_number,
+                                                default    => '-',
+                                            };
+                                        @endphp
+                                        <a href="{{ $showUrl }}" target="_blank" class="text-primary-600 dark:text-primary-400 hover:underline">
+                                            {{ $refNum }}
+                                        </a>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->customer->name ?? '-' }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $item->salesUser->full_name ?? '-' }}</td>

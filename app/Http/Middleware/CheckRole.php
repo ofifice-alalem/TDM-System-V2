@@ -30,6 +30,11 @@ class CheckRole
             default       => null,
         };
 
+        // الأدمن يملك صلاحية الوصول لكل الأدوار (للعرض فقط)
+        if ($userRoleId === 1 && in_array($role, ['warehouse', 'marketer', 'sales'])) {
+            return $next($request);
+        }
+
         if ($userRoleId !== $allowedRoleId) {
             abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
         }
