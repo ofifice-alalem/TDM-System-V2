@@ -524,6 +524,7 @@ class CombinedSummaryController extends Controller
         $grandInvoices = $rows->sum('total_invoices');
         $grandPayments = $rows->sum('total_payments');
         $grandReturns  = $rows->sum('total_returns');
+        $grandOldDebt  = $rows->sum('old_debt');
         $grandDebt     = $rows->sum('total_debt');
 
         $processedRows = $rows->map(fn($row) => (object)[
@@ -567,18 +568,20 @@ class CombinedSummaryController extends Controller
             'filterStaffLabel'    => $g('الموظف'),
             'filterStoreLabel'    => $g('المتجر'),
             'filterCustomerLabel' => $g('العميل'),
-            'filterOldDebt'       => $staffId ? ($includeOldDebt ? $g('مضمنة') : $g('غير مضمنة')) : null,
+            'filterOldDebt'       => $includeOldDebt ? $g('مضمنة') : $g('غير مضمنة'),
             'filterOldDebtLabel'  => $g('الديون السابقة'),
             'filterEntity'        => match($entityType) {
                 'store'    => $g('المتاجر فقط'),
                 'customer' => $g('العملاء فقط'),
-                default    => null,
+                default    => $g('الكل'),
             },
             'filterEntityLabel'   => $g('عرض'),
+            'showAll'             => $g('الكل'),
+            'includedLabel'       => $g('مضمنة'),
             'showOldDebt'         => $includeOldDebt,
         ];
 
-        $viewData = compact('processedRows', 'fromDate', 'toDate', 'grandInvoices', 'grandPayments', 'grandReturns', 'grandDebt', 'labels', 'rows');
+        $viewData = compact('processedRows', 'fromDate', 'toDate', 'grandInvoices', 'grandPayments', 'grandReturns', 'grandDebt', 'grandOldDebt', 'labels', 'rows');
 
         $options = ['isRemoteEnabled' => false, 'isHtml5ParserEnabled' => true, 'isFontSubsettingEnabled' => true, 'compress' => 1, 'dpi' => 96];
 
