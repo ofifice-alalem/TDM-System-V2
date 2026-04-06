@@ -97,7 +97,8 @@ class StaffPricingController extends Controller
         $grandAmount = array_sum(array_column($entries, 'total_amount'));
 
         $labels = [
-            'title'        => $g('معدل الموظفين'),
+            'title'        => $g($mode === 'compare' ? 'تفصيل المنتجات والأسعار التي بيعت بها' : 'تفصيل المنتجات والأسعار التي بيعت بها'),
+            'titleSub'     => $mode === 'compare' ? $g('من قبل الموظفين') : null,
             'product'      => $g('المنتج'),
             'price'        => $g('السعر'),
             'avg'          => $g('متوسط:'),

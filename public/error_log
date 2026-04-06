@@ -8,3 +8,5 @@
 [02-Apr-2026 23:47:07 Africa/Tripoli] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 24576 bytes) in /home/motafwi1/etc/tdm.motafwiqon.com.ly/vendor/dompdf/dompdf/lib/Cpdf.php on line 3966
 [02-Apr-2026 23:47:56 Africa/Tripoli] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 24576 bytes) in /home/motafwi1/etc/tdm.motafwiqon.com.ly/vendor/dompdf/dompdf/lib/Cpdf.php on line 3966
 [03-Apr-2026 12:09:26 Africa/Tripoli] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 24576 bytes) in /home/motafwi1/etc/tdm.motafwiqon.com.ly/vendor/dompdf/dompdf/lib/Cpdf.php on line 3966
+[06-Apr-2026 10:39:33 Africa/Tripoli] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 53650264 bytes) in /home/motafwi1/etc/tdm.motafwiqon.com.ly/vendor/symfony/http-foundation/Request.php on line 548
+[06-Apr-2026 10:40:38 Africa/Tripoli] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 53650264 bytes) in /home/motafwi1/etc/tdm.motafwiqon.com.ly/vendor/symfony/http-foundation/Request.php on line 548

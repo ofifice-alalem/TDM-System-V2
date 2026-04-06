@@ -88,6 +88,9 @@
 
     <div style="border-bottom: 3px solid #0f172a; padding-bottom: 16px; margin-bottom: 30px; width: 100%;">
         <div style="font-size: 22px; font-weight: bold; color: #0f172a; margin-bottom: 10px; text-align:center;">{{ $labels['title'] }}</div>
+        @if(!empty($labels['titleSub']))
+        <div style="font-size: 15px; font-weight: bold; color: #475569; margin-bottom: 10px; text-align:center;">{{ $labels['titleSub'] }}</div>
+        @endif
         <table style="width: auto; border-collapse: collapse; direction: rtl; margin: 0 auto;">
             <tr>
                 <td style="border: none; padding: 4px 16px; text-align: center;">
@@ -149,7 +152,7 @@
 </div>
 
 @foreach($entries as $entry)
-<div style="{{ !$loop->first ? 'page-break-before: always;' : '' }}">
+<div style="page-break-inside: avoid;">
 {{-- Staff header - separate table --}}
 <table style="margin-bottom:0; border-collapse:collapse; width:100%;">
     <tr class="staff-head">
