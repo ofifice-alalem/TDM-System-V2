@@ -45,12 +45,13 @@
                         </div>
                         <div class="flex-1">
                             <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">المسوق</label>
-                            <input list="marketers-list" name="marketer_id" value="{{ request('marketer_id') ? $marketers->firstWhere('id', request('marketer_id'))?->full_name : '' }}" placeholder="ابحث عن مسوق..." class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <datalist id="marketers-list">
-                                @foreach($marketers as $marketer)
-                                    <option value="{{ $marketer->full_name }}" data-id="{{ $marketer->id }}">
-                                @endforeach
-                            </datalist>
+                            <input type="hidden" id="marketer-id-input" name="marketer_id" value="{{ request('marketer_id') ?? '' }}">
+                            <div class="relative" id="marketer-wrapper">
+                                <input type="text" id="marketer-search" placeholder="ابحث عن مسوق..." autocomplete="off"
+                                    value="{{ request('marketer_id') ? $marketers->firstWhere('id', request('marketer_id'))?->full_name : '' }}"
+                                    class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                <div id="marketer-dropdown" class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-lg max-h-48 overflow-y-auto"></div>
+                            </div>
                         </div>
                         <div class="flex gap-2 items-end">
                             <button type="submit" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all text-sm flex items-center gap-2 justify-center">
@@ -116,6 +117,45 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
+
+        const marketers = @json($marketers->map(fn($m) => ['id' => $m->id, 'name' => $m->full_name]));
+        const input    = document.getElementById('marketer-search');
+        const hidden   = document.getElementById('marketer-id-input');
+        const dropdown = document.getElementById('marketer-dropdown');
+        const wrapper  = document.getElementById('marketer-wrapper');
+
+        input.addEventListener('input', function () {
+            const q = this.value.trim();
+            hidden.value = '';
+
+            if (!q) { dropdown.classList.add('hidden'); return; }
+
+            const results = marketers.filter(m => m.name.includes(q)).slice(0, 10);
+
+            if (!results.length) {
+                dropdown.innerHTML = '<div class="px-4 py-2.5 text-sm text-gray-500 dark:text-gray-400">لا توجد نتائج</div>';
+                dropdown.classList.remove('hidden');
+                return;
+            }
+
+            dropdown.innerHTML = results.map(m =>
+                `<div class="px-4 py-2.5 text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer border-b border-gray-100 dark:border-dark-border last:border-0" data-id="${m.id}" data-name="${m.name}">${m.name}</div>`
+            ).join('');
+
+            dropdown.querySelectorAll('[data-id]').forEach(el => {
+                el.addEventListener('click', function () {
+                    hidden.value = this.dataset.id;
+                    input.value  = this.dataset.name;
+                    dropdown.classList.add('hidden');
+                });
+            });
+
+            dropdown.classList.remove('hidden');
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!wrapper.contains(e.target)) dropdown.classList.add('hidden');
+        });
     });
 </script>
 @endpush

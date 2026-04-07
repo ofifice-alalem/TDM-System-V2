@@ -48,10 +48,7 @@ class WarehouseReturnController extends Controller
         }
 
         if ($request->filled('marketer_id')) {
-            $marketerName = $request->marketer_id;
-            $query->whereHas('marketer', function($q) use ($marketerName) {
-                $q->where('full_name', 'like', '%' . $marketerName . '%');
-            });
+            $query->where('marketer_id', $request->marketer_id);
         }
 
         // ترتيب: الأقدم للمعلقة، الأحدث للباقي
@@ -63,12 +60,7 @@ class WarehouseReturnController extends Controller
         }
 
         $requests = $query->paginate(20)->withQueryString();
-        $marketers = \App\Models\MarketerReturnRequest::with('marketer')
-            ->select('marketer_id')
-            ->distinct()
-            ->get()
-            ->pluck('marketer')
-            ->unique('id');
+        $marketers = \App\Models\User::where('role_id', 3)->where('is_active', true)->get();
 
         return view('warehouse.returns.index', compact('requests', 'marketers'));
     }
