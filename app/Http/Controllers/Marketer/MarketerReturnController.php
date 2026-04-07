@@ -65,6 +65,7 @@ class MarketerReturnController extends Controller
     public function create()
     {
         $stock = MarketerActualStock::where('marketer_id', auth()->id())
+            ->where('quantity', '>', 0)
             ->with('product')
             ->get();
 

@@ -702,6 +702,18 @@
         // init on load — لا نمسح الاختيار
         if (operation.value) updateStatus(operation.value, false);
 
+        // تعيين التواريخ الافتراضية: من بداية السنة إلى اليوم
+        const fromInput = document.querySelector('input[name="from_date"]');
+        const toInput   = document.querySelector('input[name="to_date"]');
+        if (fromInput && !fromInput.value) {
+            const now = new Date();
+            fromInput.value = now.getFullYear() + '-01-01';
+        }
+        if (toInput && !toInput.value) {
+            const now = new Date();
+            toInput.value = now.toISOString().slice(0, 10);
+        }
+
         // Store dropdown
         const statStoresData = [
             @foreach($stores as $store)

@@ -64,7 +64,8 @@ class MarketerRequestController extends Controller
     public function create()
     {
         $products = Product::where('is_active', true)
-            ->leftJoin('main_stock', 'products.id', '=', 'main_stock.product_id')
+            ->join('main_stock', 'products.id', '=', 'main_stock.product_id')
+            ->where('main_stock.quantity', '>', 0)
             ->select('products.*', 'main_stock.quantity as stock')
             ->get();
         return view('marketer.requests.create', compact('products'));

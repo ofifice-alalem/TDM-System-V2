@@ -216,7 +216,7 @@
 
                 {{-- Financial Summary Card --}}
                 @php
-                    $totalDebt = $debt + $stats['pending_sales'] - $stats['pending_payments'] - $stats['pending_returns'];
+                    $totalDebt = $debt;
                     $hasPending = $stats['pending_sales'] > 0 || $stats['pending_payments'] > 0 || $stats['pending_returns'] > 0;
                 @endphp
                 <div class="bg-white dark:bg-dark-card rounded-3xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up overflow-hidden" style="animation-delay: 0.1s">
@@ -319,7 +319,7 @@
                                 <div class="mt-3 pt-3 border-t border-white/20 grid grid-cols-2 gap-2 text-xs">
                                     <div class="bg-white/10 rounded-lg px-3 py-2">
                                         <div class="text-white/60 mb-0.5">معتمد</div>
-                                        <div class="text-white font-black">{{ number_format($debt, 2) }} دينار</div>
+                                        <div class="text-white font-black">{{ number_format($confirmedDebt, 2) }} دينار</div>
                                     </div>
                                     <div class="bg-white/10 rounded-lg px-3 py-2">
                                         <div class="text-white/60 mb-0.5">معلق</div>
