@@ -21,7 +21,7 @@ class WarehouseSalesReturnController extends Controller
         $query = SalesReturn::with(['store', 'marketer', 'salesInvoice', 'items.product'])
             ->latest();
 
-        $hasFilter = $request->filled('return_number') || $request->filled('from_date') || $request->filled('to_date') || $request->filled('search');
+        $hasFilter = $request->filled('return_number') || $request->filled('from_date') || $request->filled('to_date') || $request->filled('marketer_id') || $request->filled('store_id');
 
         if (!$hasFilter && $request->has('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
@@ -49,20 +49,19 @@ class WarehouseSalesReturnController extends Controller
             } catch (\Exception $e) {}
         }
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->whereHas('marketer', function($q) use ($search) {
-                    $q->where('full_name', 'like', '%' . $search . '%');
-                })->orWhereHas('store', function($q) use ($search) {
-                    $q->where('name', 'like', '%' . $search . '%');
-                });
-            });
+        if ($request->filled('marketer_id')) {
+            $query->where('marketer_id', $request->marketer_id);
         }
 
-        $returns = $query->paginate(10);
+        if ($request->filled('store_id')) {
+            $query->where('store_id', $request->store_id);
+        }
 
-        return view('warehouse.sales-returns.index', compact('returns'));
+        $returns   = $query->paginate(10)->withQueryString();
+        $marketers = \App\Models\User::where('role_id', 3)->where('is_active', true)->get();
+        $stores    = \App\Models\Store::orderBy('name')->get(['id', 'name']);
+
+        return view('warehouse.sales-returns.index', compact('returns', 'marketers', 'stores'));
     }
 
     public function show(SalesReturn $salesReturn)
