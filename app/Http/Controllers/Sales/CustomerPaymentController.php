@@ -58,7 +58,9 @@ class CustomerPaymentController extends Controller
 
         $payments = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
-        return view('sales.payments.index', compact('payments'));
+        $customers = Customer::where('is_active', true)->get(['name', 'phone']);
+
+        return view('sales.payments.index', compact('payments', 'customers'));
     }
 
     public function create()
