@@ -50,7 +50,7 @@
             <div class="lg:col-span-8">
 
                 {{-- Filters --}}
-                <details class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6 animate-slide-up">
+                <details class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6 animate-slide-up" style="position: relative; z-index: 100; overflow: visible;">
                     <summary class="px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-bg/50 transition-colors rounded-2xl flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <i data-lucide="filter" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i>
@@ -70,7 +70,7 @@
                                     <input type="text" x-model="query" @input="search()" @focus="open = true" @click.outside="open = false"
                                         placeholder="ابحث باسم أو هاتف..."
                                         class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm">
-                                    <ul x-show="open && results.length" class="absolute z-30 w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-lg mt-1 max-h-48 overflow-y-auto">
+                                    <ul x-show="open && results.length" class="absolute z-[9999] w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl mt-1 max-h-52 overflow-y-auto">
                                         <li @click="select(null, '')"
                                             class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-bg cursor-pointer">الكل</li>
                                         <template x-for="c in results" :key="c.id">

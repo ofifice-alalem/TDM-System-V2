@@ -50,7 +50,7 @@
             <div class="lg:col-span-8">
 
                 {{-- Filters --}}
-                <details class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6 animate-slide-up">
+                <details class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border mb-6 animate-slide-up" style="position: relative; z-index: 100; overflow: visible;">
                     <summary class="px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-bg/50 transition-colors rounded-2xl flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <i data-lucide="filter" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i>
@@ -65,12 +65,12 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">المتجر</label>
-                                <select name="store_id" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm">
-                                    <option value="">الكل</option>
-                                    @foreach($stores as $store)
-                                        <option value="{{ $store->id }}" {{ request('store_id') == $store->id ? 'selected' : '' }}>{{ $store->name }}</option>
-                                    @endforeach
-                                </select>
+                                <div style="position: relative; z-index: 1000;" id="store-filter-wrapper">
+                                    <input type="text" id="store-filter-search" autocomplete="off" placeholder="ابحث عن متجر..." value="{{ request('store_id') ? $stores->firstWhere('id', request('store_id'))?->name : '' }}"
+                                        class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all text-sm">
+                                    <input type="hidden" name="store_id" id="store-filter-value" value="{{ request('store_id') }}">
+                                    <div id="store-filter-dropdown" class="hidden absolute z-[9999] w-full mt-1 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-52 overflow-y-auto"></div>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">من تاريخ</label>
@@ -266,9 +266,58 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        lucide.createIcons();
+const storesData = [
+    @foreach($stores as $store)
+    { id: {{ $store->id }}, name: @json($store->name) },
+    @endforeach
+];
+
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+
+    const search   = document.getElementById('store-filter-search');
+    const value    = document.getElementById('store-filter-value');
+    const dropdown = document.getElementById('store-filter-dropdown');
+    const wrapper  = document.getElementById('store-filter-wrapper');
+
+    if (!search) return;
+
+    search.addEventListener('input', function () {
+        const q = this.value.trim().toLowerCase();
+        if (!q) {
+            value.value = '';
+            dropdown.classList.add('hidden');
+            return;
+        }
+
+        const results = storesData.filter(s => s.name.toLowerCase().includes(q)).slice(0, 8);
+
+        if (!results.length) {
+            dropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">لا توجد نتائج</div>';
+            dropdown.classList.remove('hidden');
+            return;
+        }
+
+        dropdown.innerHTML = results.map(s => `
+            <div class="store-option px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-dark-bg cursor-pointer border-b border-gray-100 dark:border-dark-border last:border-0" data-id="${s.id}" data-name="${s.name}">
+                <div class="font-bold text-sm text-gray-900 dark:text-white">${s.name}</div>
+            </div>
+        `).join('');
+        dropdown.classList.remove('hidden');
+
+        dropdown.querySelectorAll('.store-option').forEach(opt => {
+            opt.addEventListener('click', function () {
+                search.value = this.dataset.name;
+                value.value  = this.dataset.id;
+                dropdown.classList.add('hidden');
+            });
+        });
     });
+
+    document.addEventListener('click', function (e) {
+        if (!wrapper.contains(e.target)) dropdown.classList.add('hidden');
+    });
+});
 </script>
 @endpush
 @endsection
