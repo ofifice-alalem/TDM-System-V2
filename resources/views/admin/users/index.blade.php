@@ -10,50 +10,53 @@
         {{-- Header --}}
         <div class="animate-fade-in-down">
             <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-3">
-                    <span class="bg-primary-100 dark:bg-primary-600/20 text-primary-600 dark:text-primary-400 px-3 py-1 rounded-lg text-xs font-bold border border-primary-100 dark:border-primary-600/30">
-                        إدارة المستخدمين
-                    </span>
-                </div>
-                <a href="{{ route('admin.users.create') }}" class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2">
-                    <i data-lucide="plus" class="w-5 h-5"></i>
-                    إضافة مستخدم جديد
+                <span class="bg-primary-100 dark:bg-primary-600/20 text-primary-600 dark:text-primary-400 px-3 py-1 rounded-lg text-xs font-bold border border-primary-100 dark:border-primary-600/30">
+                    إدارة المستخدمين
+                </span>
+                <a href="{{ route('admin.users.create') }}" class="px-4 sm:px-6 py-2.5 sm:py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2 text-sm sm:text-base">
+                    <i data-lucide="plus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                    <span class="hidden sm:inline">إضافة مستخدم جديد</span>
+                    <span class="sm:hidden">إضافة</span>
                 </a>
             </div>
-            <h1 class="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
+            <h1 class="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
                 المستخدمين
             </h1>
         </div>
 
         {{-- Search & Filter Bar --}}
         <div class="animate-fade-in">
-            <form method="GET" action="{{ route('admin.users.index') }}" class="flex flex-col md:flex-row gap-4">
-                <div class="relative flex-1">
-                    <input 
-                        type="text" 
-                        name="search" 
+            <form method="GET" action="{{ route('admin.users.index') }}" class="flex flex-col gap-3">
+                {{-- Search row --}}
+                <div class="relative">
+                    <input
+                        type="text"
+                        name="search"
                         value="{{ $search ?? '' }}"
-                        placeholder="ابحث عن مستخدم..." 
+                        placeholder="ابحث عن مستخدم..."
                         class="w-full px-6 py-4 pr-14 bg-white dark:bg-dark-card border-2 border-gray-200 dark:border-dark-border rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-primary-500 dark:focus:border-primary-500 focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all shadow-sm"
                     >
                     <button type="submit" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-primary-50 dark:bg-primary-500/10 rounded-xl flex items-center justify-center text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-500/20 transition-all">
                         <i data-lucide="search" class="w-5 h-5"></i>
                     </button>
                 </div>
-                <select name="role" onchange="this.form.submit()" class="px-6 py-4 bg-white dark:bg-dark-card border-2 border-gray-200 dark:border-dark-border rounded-2xl text-gray-900 dark:text-white focus:border-primary-500 dark:focus:border-primary-500 focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all shadow-sm">
-                    <option value="">كل الأدوار</option>
-                    @foreach($roles as $role)
-                        <option value="{{ $role->id }}" {{ $roleFilter == $role->id ? 'selected' : '' }}>{{ $role->display_name }}</option>
-                    @endforeach
-                </select>
-                <label class="flex items-center gap-3 px-6 py-4 bg-white dark:bg-dark-card border-2 border-gray-200 dark:border-dark-border rounded-2xl cursor-pointer hover:border-red-500 transition-all">
-                    <input type="checkbox" name="show_deleted" value="1" {{ request('show_deleted') ? 'checked' : '' }} onchange="this.form.submit()" class="w-5 h-5 text-red-600 rounded focus:ring-red-500">
-                    <span class="text-gray-900 dark:text-white font-bold">المحذوفين</span>
-                </label>
-                <button type="button" onclick="toggleView()" class="px-6 py-4 bg-white dark:bg-dark-card border-2 border-gray-200 dark:border-dark-border rounded-2xl text-gray-900 dark:text-white hover:border-primary-500 transition-all flex items-center gap-2">
-                    <i data-lucide="table" class="w-5 h-5" id="viewIcon"></i>
-                    <span id="viewText">شبكة</span>
-                </button>
+                {{-- Controls row --}}
+                <div class="flex gap-3">
+                    <select name="role" onchange="this.form.submit()" class="flex-1 px-4 py-3 bg-white dark:bg-dark-card border-2 border-gray-200 dark:border-dark-border rounded-2xl text-gray-900 dark:text-white focus:border-primary-500 dark:focus:border-primary-500 focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all shadow-sm text-sm">
+                        <option value="">كل الأدوار</option>
+                        @foreach($roles as $role)
+                            <option value="{{ $role->id }}" {{ $roleFilter == $role->id ? 'selected' : '' }}>{{ $role->display_name }}</option>
+                        @endforeach
+                    </select>
+                    <label class="flex items-center gap-2 px-4 py-3 bg-white dark:bg-dark-card border-2 border-gray-200 dark:border-dark-border rounded-2xl cursor-pointer hover:border-red-500 transition-all shrink-0">
+                        <input type="checkbox" name="show_deleted" value="1" {{ request('show_deleted') ? 'checked' : '' }} onchange="this.form.submit()" class="w-4 h-4 text-red-600 rounded focus:ring-red-500">
+                        <span class="text-gray-900 dark:text-white font-bold text-sm">المحذوفين</span>
+                    </label>
+                    <button type="button" onclick="toggleView()" class="px-4 py-3 bg-white dark:bg-dark-card border-2 border-gray-200 dark:border-dark-border rounded-2xl text-gray-900 dark:text-white hover:border-primary-500 transition-all flex items-center gap-2 shrink-0">
+                        <i data-lucide="table" class="w-5 h-5" id="viewIcon"></i>
+                        <span id="viewText" class="hidden sm:inline text-sm font-bold">شبكة</span>
+                    </button>
+                </div>
             </form>
         </div>
 
@@ -464,26 +467,44 @@
         }
     }
 
-    function toggleView() {
+    function setView(view) {
         const gridView = document.getElementById('gridView');
         const tableView = document.getElementById('tableView');
         const viewIcon = document.getElementById('viewIcon');
         const viewText = document.getElementById('viewText');
-        
-        if (tableView.classList.contains('hidden')) {
-            gridView.classList.add('hidden');
-            gridView.classList.remove('grid');
-            tableView.classList.remove('hidden');
-            viewIcon.setAttribute('data-lucide', 'table');
-            viewText.textContent = 'شبكة';
-        } else {
+
+        if (view === 'grid') {
             gridView.classList.remove('hidden');
             gridView.classList.add('grid');
             tableView.classList.add('hidden');
             viewIcon.setAttribute('data-lucide', 'layout-grid');
-            viewText.textContent = 'جدول';
+            if (viewText) viewText.textContent = 'جدول';
+        } else {
+            gridView.classList.add('hidden');
+            gridView.classList.remove('grid');
+            tableView.classList.remove('hidden');
+            viewIcon.setAttribute('data-lucide', 'table');
+            if (viewText) viewText.textContent = 'شبكة';
         }
         lucide.createIcons();
+    }
+
+    function toggleView() {
+        const tableView = document.getElementById('tableView');
+        const isTable = !tableView.classList.contains('hidden');
+        const newView = isTable ? 'grid' : 'table';
+        localStorage.setItem('usersView', newView);
+        setView(newView);
+    }
+
+    // على الموبايل الافتراضي grid، على الشاشات الكبيرة table
+    const savedView = localStorage.getItem('usersView');
+    if (savedView) {
+        setView(savedView);
+    } else if (window.innerWidth < 768) {
+        setView('grid');
+    } else {
+        setView('table');
     }
 </script>
 @endpush
