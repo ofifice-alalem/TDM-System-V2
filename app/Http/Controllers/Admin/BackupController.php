@@ -294,87 +294,57 @@ class BackupController extends Controller
     
     private function restoreLargeSQL($sqlFile)
     {
-        // Disable foreign key checks + allow id=0
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
         DB::statement('SET SESSION sql_mode="NO_AUTO_VALUE_ON_ZERO"');
-        
-        $handle = fopen($sqlFile, 'r');
-        if (!$handle) {
-            throw new \Exception('Cannot open SQL file');
-        }
-        
-        $currentTable = '';
-        $insertValues = [];
-        $batchSize = 500;
-        
-        while (($line = fgets($handle)) !== false) {
-            $line = trim($line);
-            
-            if (empty($line) || strpos($line, '--') === 0 || strpos($line, '/*') === 0) {
-                continue;
-            }
-            
-            // Execute CREATE/DROP statements immediately
-            if (stripos($line, 'CREATE TABLE') !== false || stripos($line, 'DROP TABLE') !== false || stripos($line, 'SET ') !== false) {
-                $this->flushInserts($currentTable, $insertValues);
-                $insertValues = [];
-                $currentTable = '';
-                
-                $statement = $line;
-                while (substr(rtrim($statement), -1) !== ';') {
-                    $statement .= ' ' . trim(fgets($handle));
+
+        $pdo = DB::getPdo();
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
+
+        $sql = file_get_contents($sqlFile);
+
+        // تقسيم الـ SQL إلى statements منفصلة بشكل صحيح
+        $statements = [];
+        $current = '';
+        $inString = false;
+        $stringChar = '';
+        $len = strlen($sql);
+
+        for ($i = 0; $i < $len; $i++) {
+            $char = $sql[$i];
+
+            if ($inString) {
+                $current .= $char;
+                if ($char === $stringChar && ($i === 0 || $sql[$i - 1] !== '\\')) {
+                    $inString = false;
                 }
-                DB::unprepared($statement);
-                continue;
-            }
-            
-            // Handle INSERT statements
-            if (stripos($line, 'INSERT INTO') !== false) {
-                preg_match('/INSERT INTO `([^`]+)`/i', $line, $matches);
-                $tableName = $matches[1] ?? '';
-                
-                if ($tableName !== $currentTable && !empty($insertValues)) {
-                    $this->flushInserts($currentTable, $insertValues);
-                    $insertValues = [];
+            } elseif ($char === "'" || $char === '"') {
+                $inString = true;
+                $stringChar = $char;
+                $current .= $char;
+            } elseif ($char === ';') {
+                $current = trim($current);
+                if ($current !== '') {
+                    $statements[] = $current;
                 }
-                
-                $currentTable = $tableName;
-                
-                // Extract VALUES (...)
-                preg_match('/VALUES \((.+)\);/i', $line, $valueMatches);
-                if (isset($valueMatches[1])) {
-                    $insertValues[] = '(' . $valueMatches[1] . ')';
-                }
-                
-                if (count($insertValues) >= $batchSize) {
-                    $this->flushInserts($currentTable, $insertValues);
-                    $insertValues = [];
-                }
+                $current = '';
+            } else {
+                $current .= $char;
             }
         }
-        
-        // Flush remaining inserts
-        if (!empty($insertValues)) {
-            $this->flushInserts($currentTable, $insertValues);
+
+        if (trim($current) !== '') {
+            $statements[] = trim($current);
         }
-        
-        fclose($handle);
-        
-        // Re-enable foreign key checks
+
+        foreach ($statements as $statement) {
+            if (empty(trim($statement))) continue;
+            try {
+                $pdo->exec($statement);
+            } catch (\Exception $e) {
+                \Log::error('Restore SQL error: ' . $e->getMessage() . ' | Statement: ' . substr($statement, 0, 200));
+            }
+        }
+
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
-    }
-    
-    private function flushInserts($table, $values)
-    {
-        if (empty($table) || empty($values)) {
-            return;
-        }
-        
-        try {
-            $sql = "INSERT INTO `{$table}` VALUES " . implode(',', $values) . ';';
-            DB::unprepared($sql);
-        } catch (\Exception $e) {
-            // Continue on error
-        }
     }
 }
