@@ -381,24 +381,24 @@
                                 <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
                             @endif
                         </a>
-                        <a href="{{ route('admin.customer-merge.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.customer-merge.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }} {{ ($features['admin.customer-merge'] ?? true) ? '' : 'opacity-40 pointer-events-none' }}">
+                        @if(($features['admin.customer-merge'] ?? true))
+                        <a href="{{ route('admin.customer-merge.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.customer-merge.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                             <i data-lucide="git-merge" class="w-4 h-4"></i>
                             <span>دمج العملاء</span>
-                            @if(!($features['admin.customer-merge'] ?? true))
-                                <i data-lucide="lock" class="w-3 h-3 mr-auto"></i>
-                            @elseif(request()->routeIs('admin.customer-merge.*'))
+                            @if(request()->routeIs('admin.customer-merge.*'))
                                 <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
                             @endif
                         </a>
-                        <a href="{{ route('admin.store-merge.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.store-merge.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }} {{ ($features['admin.store-merge'] ?? true) ? '' : 'opacity-40 pointer-events-none' }}">
+                        @endif
+                        @if(($features['admin.store-merge'] ?? true))
+                        <a href="{{ route('admin.store-merge.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.store-merge.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                             <i data-lucide="git-merge" class="w-4 h-4"></i>
                             <span>دمج المتاجر</span>
-                            @if(!($features['admin.store-merge'] ?? true))
-                                <i data-lucide="lock" class="w-3 h-3 mr-auto"></i>
-                            @elseif(request()->routeIs('admin.store-merge.*'))
+                            @if(request()->routeIs('admin.store-merge.*'))
                                 <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
                             @endif
                         </a>
+                        @endif
                     </div>
                 </div>
 
@@ -451,21 +451,27 @@
                         <i data-lucide="users" class="w-4 h-4"></i>
                         <span>العملاء</span>
                     </a>
-                    <a href="{{ route('admin.combined-summary.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.combined-summary.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }} {{ ($features['admin.combined-summary'] ?? true) ? '' : 'opacity-40 pointer-events-none' }}">
+                    @if(($features['admin.combined-summary'] ?? true))
+                    <a href="{{ route('admin.combined-summary.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.combined-summary.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                         <i data-lucide="layout-list" class="w-4 h-4"></i>
                         <span>الملخص الشامل</span>
-                        @if(!($features['admin.combined-summary'] ?? true))<i data-lucide="lock" class="w-3 h-3 mr-auto"></i>@endif
+                        @if(request()->routeIs('admin.combined-summary.*'))<div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>@endif
                     </a>
-                    <a href="{{ route('admin.products-pricing.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.products-pricing.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }} {{ ($features['admin.products-pricing'] ?? true) ? '' : 'opacity-40 pointer-events-none' }}">
+                    @endif
+                    @if(($features['admin.products-pricing'] ?? true))
+                    <a href="{{ route('admin.products-pricing.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.products-pricing.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                         <i data-lucide="tag" class="w-4 h-4"></i>
                         <span>تسعير المنتجات</span>
-                        @if(!($features['admin.products-pricing'] ?? true))<i data-lucide="lock" class="w-3 h-3 mr-auto"></i>@endif
+                        @if(request()->routeIs('admin.products-pricing.*'))<div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>@endif
                     </a>
-                    <a href="{{ route('admin.staff-pricing.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.staff-pricing.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }} {{ ($features['admin.staff-pricing'] ?? true) ? '' : 'opacity-40 pointer-events-none' }}">
+                    @endif
+                    @if(($features['admin.staff-pricing'] ?? true))
+                    <a href="{{ route('admin.staff-pricing.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.staff-pricing.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                         <i data-lucide="user-check" class="w-4 h-4"></i>
                         <span>معدل الموظفين</span>
-                        @if(!($features['admin.staff-pricing'] ?? true))<i data-lucide="lock" class="w-3 h-3 mr-auto"></i>@endif
+                        @if(request()->routeIs('admin.staff-pricing.*'))<div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>@endif
                     </a>
+                    @endif
                 </div>
             </div>
             @endif
