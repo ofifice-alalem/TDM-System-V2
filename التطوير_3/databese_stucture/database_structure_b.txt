@@ -1,0 +1,198 @@
+========================================
+B. عملية: طلب بضاعة من المسوق
+========================================
+
+========================================
+11. جدول: marketer_requests
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • invoice_number
+    النوع: varchar(50)
+    المفتاح: UNIQUE
+    القيمة الافتراضية: —
+
+  • marketer_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • status
+    النوع: enum('pending','approved','rejected','cancelled','documented')
+    القيمة الافتراضية: 'pending'
+
+  • notes
+    النوع: text
+    القيمة الافتراضية: NULL
+
+  • approved_by
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: NULL
+
+  • approved_at
+    النوع: timestamp
+    القيمة الافتراضية: NULL
+
+  • rejected_by
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: NULL
+
+  • rejected_at
+    النوع: timestamp
+    القيمة الافتراضية: NULL
+
+  • documented_by
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: NULL
+
+  • documented_at
+    النوع: timestamp
+    القيمة الافتراضية: NULL
+
+  • stamped_image
+    النوع: varchar(255)
+    القيمة الافتراضية: NULL
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+========================================
+12. جدول: marketer_request_items
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • request_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: marketer_requests.id
+    القيمة الافتراضية: —
+
+  • product_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: products.id
+    القيمة الافتراضية: —
+
+  • quantity
+    النوع: int
+    القيمة الافتراضية: —
+
+========================================
+13. جدول: marketer_reserved_stock
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • marketer_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • product_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: products.id
+    القيمة الافتراضية: —
+
+  • quantity
+    النوع: int
+    القيمة الافتراضية: 0
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+========================================
+14. جدول: marketer_actual_stock
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • marketer_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • product_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: products.id
+    القيمة الافتراضية: —
+
+  • quantity
+    النوع: int
+    القيمة الافتراضية: 0
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+========================================
+15. جدول: warehouse_stock_logs
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • invoice_type
+    النوع: enum('factory','marketer_request','marketer_return','sales_return')
+    القيمة الافتراضية: —
+
+  • invoice_id
+    النوع: int
+    القيمة الافتراضية: —
+
+  • keeper_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • action
+    النوع: enum('add','withdraw','return')
+    القيمة الافتراضية: —
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+ملاحظة: يستخدم لتوثيق حركات الفواتير فقط، التتبع التفصيلي في inventory_movements
+

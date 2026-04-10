@@ -1,0 +1,436 @@
+===========================================
+        تخطيطات الصفحات - Layouts
+===========================================
+
+## 📐 التخطيط الأساسي (Base Layout)
+
+### هيكل الصفحة الرئيسي
+```
+┌─────────────────────────────────────────────────────┐
+│                    Navbar (ثابت)                    │
+├──────────────┬──────────────────────────────────────┤
+│              │                                      │
+│   Sidebar    │         Main Content                │
+│   (ثابت)     │         (قابل للتمرير)              │
+│              │                                      │
+│              │                                      │
+└──────────────┴──────────────────────────────────────┘
+```
+
+### الكود الأساسي
+```html
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TDM System V2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="bg-gray-100 font-cairo">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-md fixed top-0 left-0 right-0 z-30">
+        <!-- محتوى Navbar -->
+    </nav>
+    
+    <div class="flex pt-16"> <!-- pt-16 لتجنب تداخل Navbar -->
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-800 text-white fixed right-0 top-16 bottom-0 overflow-y-auto">
+            <!-- محتوى Sidebar -->
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="flex-1 mr-64 p-6"> <!-- mr-64 لتجنب تداخل Sidebar -->
+            @yield('content')
+        </main>
+    </div>
+</body>
+</html>
+```
+
+## 🔝 شريط التنقل (Navbar)
+
+### Navbar كامل
+```html
+<nav class="bg-white shadow-md fixed top-0 left-0 right-0 z-30 h-16">
+    <div class="max-w-full mx-auto px-6 h-full">
+        <div class="flex items-center justify-between h-full">
+            <!-- اليمين: اللوجو والعنوان -->
+            <div class="flex items-center gap-4">
+                <img src="/images/logo.png" alt="Logo" class="h-10 w-10">
+                <h1 class="text-xl font-bold text-gray-900">نظام TDM</h1>
+            </div>
+            
+            <!-- الوسط: البحث (اختياري) -->
+            <div class="flex-1 max-w-xl mx-8">
+                <div class="relative">
+                    <input type="text" 
+                           placeholder="بحث..."
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg">
+                    <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-400">
+                        <!-- search icon -->
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- اليسار: الإشعارات والمستخدم -->
+            <div class="flex items-center gap-4">
+                <!-- الإشعارات -->
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" class="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full">
+                        <svg class="w-6 h-6"><!-- bell icon --></svg>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    
+                    <!-- قائمة الإشعارات -->
+                    <div x-show="open" 
+                         @click.away="open = false"
+                         x-cloak
+                         class="absolute left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border">
+                        <!-- محتوى الإشعارات -->
+                    </div>
+                </div>
+                
+                <!-- المستخدم -->
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" class="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg">
+                        <img src="/images/avatar.png" alt="User" class="w-8 h-8 rounded-full">
+                        <span class="text-sm font-medium">{{ auth()->user()->name }}</span>
+                        <svg class="w-4 h-4"><!-- chevron --></svg>
+                    </button>
+                    
+                    <!-- قائمة المستخدم -->
+                    <div x-show="open" 
+                         @click.away="open = false"
+                         x-cloak
+                         class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-xl border">
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-50">الملف الشخصي</a>
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-50">الإعدادات</a>
+                        <hr class="my-1">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full text-right px-4 py-2 text-red-600 hover:bg-red-50">
+                                تسجيل الخروج
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+```
+
+## 📱 القائمة الجانبية (Sidebar)
+
+### Sidebar كامل
+```html
+<aside class="w-64 bg-gray-800 text-white fixed right-0 top-16 bottom-0 overflow-y-auto">
+    <div class="p-4">
+        <!-- قسم المستخدم -->
+        <div class="mb-6 pb-4 border-b border-gray-700">
+            <div class="flex items-center gap-3">
+                <img src="/images/avatar.png" alt="User" class="w-12 h-12 rounded-full">
+                <div>
+                    <p class="font-semibold">{{ auth()->user()->name }}</p>
+                    <p class="text-sm text-gray-400">{{ auth()->user()->role->name }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- قائمة التنقل -->
+        <nav class="space-y-1">
+            <!-- عنصر نشط -->
+            <a href="#" class="flex items-center gap-3 px-4 py-3 bg-blue-600 rounded-lg">
+                <svg class="w-5 h-5"><!-- icon --></svg>
+                <span>لوحة التحكم</span>
+            </a>
+            
+            <!-- عنصر عادي -->
+            <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-700 rounded-lg transition-colors">
+                <svg class="w-5 h-5"><!-- icon --></svg>
+                <span>الطلبات</span>
+            </a>
+            
+            <!-- عنصر مع عداد -->
+            <a href="#" class="flex items-center justify-between px-4 py-3 hover:bg-gray-700 rounded-lg">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5"><!-- icon --></svg>
+                    <span>الإشعارات</span>
+                </div>
+                <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">5</span>
+            </a>
+            
+            <!-- قائمة منسدلة -->
+            <div x-data="{ open: false }">
+                <button @click="open = !open" 
+                        class="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-700 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5"><!-- icon --></svg>
+                        <span>المخزون</span>
+                    </div>
+                    <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': open }">
+                        <!-- chevron -->
+                    </svg>
+                </button>
+                
+                <div x-show="open" x-cloak class="mr-8 mt-1 space-y-1">
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-700 rounded-lg text-sm">
+                        المخزون الرئيسي
+                    </a>
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-700 rounded-lg text-sm">
+                        مخزون المسوقين
+                    </a>
+                </div>
+            </div>
+            
+            <!-- فاصل -->
+            <hr class="my-4 border-gray-700">
+            
+            <!-- المزيد من العناصر -->
+        </nav>
+    </div>
+</aside>
+```
+
+## 📄 المحتوى الرئيسي (Main Content)
+
+### تخطيط صفحة قائمة
+```html
+<main class="flex-1 mr-64 p-6">
+    <!-- رأس الصفحة -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">عنوان الصفحة</h1>
+                <p class="text-gray-600 mt-1">وصف قصير للصفحة</p>
+            </div>
+            <button class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                <svg class="w-5 h-5"><!-- plus icon --></svg>
+                <span>إضافة جديد</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- البحث والتصفية -->
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <input type="text" placeholder="بحث..." class="px-4 py-2 border rounded-lg">
+            <select class="px-4 py-2 border rounded-lg">
+                <option>الحالة</option>
+            </select>
+            <input type="date" class="px-4 py-2 border rounded-lg">
+            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg">بحث</button>
+        </div>
+    </div>
+    
+    <!-- الجدول -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <table class="min-w-full">
+            <!-- محتوى الجدول -->
+        </table>
+    </div>
+    
+    <!-- الترقيم -->
+    <div class="mt-6">
+        {{ $items->links() }}
+    </div>
+</main>
+```
+
+### تخطيط صفحة نموذج
+```html
+<main class="flex-1 mr-64 p-6">
+    <!-- رأس الصفحة -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">إضافة جديد</h1>
+        <p class="text-gray-600 mt-1">املأ النموذج أدناه</p>
+    </div>
+    
+    <!-- النموذج -->
+    <form method="POST" action="#">
+        @csrf
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">المعلومات الأساسية</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- حقول النموذج -->
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">معلومات إضافية</h2>
+            
+            <div class="space-y-4">
+                <!-- حقول إضافية -->
+            </div>
+        </div>
+        
+        <!-- أزرار الإجراء -->
+        <div class="flex items-center justify-end gap-3 mt-6">
+            <a href="#" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg">
+                إلغاء
+            </a>
+            <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                حفظ
+            </button>
+        </div>
+    </form>
+</main>
+```
+
+### تخطيط صفحة عرض
+```html
+<main class="flex-1 mr-64 p-6">
+    <!-- رأس الصفحة -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">تفاصيل الطلب #1234</h1>
+                <p class="text-gray-600 mt-1">تاريخ الإنشاء: 2024-01-15</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg">طباعة</button>
+                <button class="px-4 py-2 bg-green-600 text-white rounded-lg">تصدير</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- البطاقات -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <p class="text-sm text-gray-600">الحالة</p>
+            <p class="text-2xl font-bold text-green-600 mt-2">موثق</p>
+        </div>
+        <!-- المزيد من البطاقات -->
+    </div>
+    
+    <!-- التفاصيل -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">المعلومات الأساسية</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- عرض البيانات -->
+        </div>
+    </div>
+    
+    <!-- الجدول -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">الأصناف</h2>
+        <table class="min-w-full">
+            <!-- محتوى الجدول -->
+        </table>
+    </div>
+</main>
+```
+
+## 📊 تخطيط لوحة التحكم (Dashboard)
+
+```html
+<main class="flex-1 mr-64 p-6">
+    <!-- رأس الصفحة -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">لوحة التحكم</h1>
+        <p class="text-gray-600 mt-1">مرحباً بك، {{ auth()->user()->name }}</p>
+    </div>
+    
+    <!-- بطاقات الإحصائيات -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <!-- بطاقة إحصائية -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">إجمالي الطلبات</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-2">1,234</p>
+                    <p class="text-sm text-green-600 mt-1">+12% من الشهر الماضي</p>
+                </div>
+                <div class="p-3 bg-blue-100 rounded-full">
+                    <svg class="w-8 h-8 text-blue-600"><!-- icon --></svg>
+                </div>
+            </div>
+        </div>
+        <!-- المزيد من البطاقات -->
+    </div>
+    
+    <!-- الرسوم البيانية -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">المبيعات الشهرية</h2>
+            <!-- رسم بياني -->
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">توزيع الحالات</h2>
+            <!-- رسم بياني -->
+        </div>
+    </div>
+    
+    <!-- الجداول -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">آخر الطلبات</h2>
+            <table class="min-w-full">
+                <!-- محتوى الجدول -->
+            </table>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">الإشعارات الأخيرة</h2>
+            <div class="space-y-3">
+                <!-- قائمة الإشعارات -->
+            </div>
+        </div>
+    </div>
+</main>
+```
+
+## 📱 التصميم المتجاوب (Responsive)
+
+### Sidebar متجاوب
+```html
+<!-- Sidebar للشاشات الكبيرة -->
+<aside class="hidden lg:block w-64 bg-gray-800 fixed right-0 top-16 bottom-0">
+    <!-- محتوى Sidebar -->
+</aside>
+
+<!-- زر القائمة للشاشات الصغيرة -->
+<button @click="sidebarOpen = true" class="lg:hidden fixed top-4 right-4 z-40 p-2 bg-white rounded-lg shadow">
+    <svg class="w-6 h-6"><!-- menu icon --></svg>
+</button>
+
+<!-- Sidebar منبثق للشاشات الصغيرة -->
+<div x-show="sidebarOpen" 
+     x-cloak
+     class="lg:hidden fixed inset-0 z-50">
+    <div class="absolute inset-0 bg-gray-900 bg-opacity-50" @click="sidebarOpen = false"></div>
+    <aside class="absolute right-0 top-0 bottom-0 w-64 bg-gray-800">
+        <!-- محتوى Sidebar -->
+    </aside>
+</div>
+
+<!-- Main Content متجاوب -->
+<main class="flex-1 lg:mr-64 p-4 lg:p-6">
+    <!-- المحتوى -->
+</main>
+```
+
+### Grid متجاوب
+```html
+<!-- بطاقات متجاوبة -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+    <!-- البطاقات -->
+</div>
+
+<!-- نموذج متجاوب -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+    <!-- الحقول -->
+</div>
+```
+
+## 💡 أفضل الممارسات
+
+1. **الاتساق**: استخدم نفس التخطيط في الصفحات المتشابهة
+2. **المسافات**: استخدم `p-6` للبطاقات و `gap-6` للشبكات
+3. **الظلال**: استخدم `shadow-md` للبطاقات و `shadow-xl` للـ Modals
+4. **الألوان**: خلفية الصفحة `bg-gray-100` والبطاقات `bg-white`
+5. **RTL**: جميع التخطيطات تدعم RTL تلقائياً
+6. **Responsive**: اختبر على جميع أحجام الشاشات

@@ -1,0 +1,608 @@
+================================================================================
+                    المسارات والـControllers - إدارة خصومات الفواتير
+================================================================================
+
+📋 نظرة عامة:
+--------------
+هذا الملف يوثق المسارات والـControllers والـServices لإدارة خصومات الفواتير.
+✅ الصلاحيات: الإدارة (Admin) فقط
+✅ Controller واحد للإدارة
+
+================================================================================
+                        🛣️ المسارات (Routes)
+================================================================================
+
+📁 الملف: routes/admin.php
+🔒 Middleware: ['auth', 'role:admin']
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ المسارات                                                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+    
+    // Resource Routes (بدون edit/update)
+    Route::resource('discount-tiers', DiscountTierController::class)
+        ->except(['edit', 'update']);
+    
+    // Custom Actions
+    Route::post('discount-tiers/{tier}/toggle', [DiscountTierController::class, 'toggle'])
+        ->name('discount-tiers.toggle');
+    
+    Route::get('discount-tiers/statistics', [DiscountTierController::class, 'statistics'])
+        ->name('discount-tiers.statistics');
+});
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ جدول المسارات                                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+GET     /admin/discount-tiers
+        الاسم: discount-tiers.index
+        الصلاحية: @can('viewAny', InvoiceDiscountTier::class)
+        الغرض: عرض قائمة قواعد الخصم
+
+GET     /admin/discount-tiers/create
+        الاسم: discount-tiers.create
+        الصلاحية: @can('create', InvoiceDiscountTier::class)
+        الغرض: عرض صفحة إنشاء قاعدة جديدة
+
+POST    /admin/discount-tiers
+        الاسم: discount-tiers.store
+        الصلاحية: @can('create', InvoiceDiscountTier::class)
+        الغرض: حفظ قاعدة جديدة
+
+GET     /admin/discount-tiers/{tier}
+        الاسم: discount-tiers.show
+        الصلاحية: @can('view', $tier)
+        الغرض: عرض تفاصيل قاعدة معينة
+
+DELETE  /admin/discount-tiers/{tier}
+        الاسم: discount-tiers.destroy
+        الصلاحية: @can('delete', $tier)
+        الغرض: حذف قاعدة (soft delete)
+
+POST    /admin/discount-tiers/{tier}/toggle
+        الاسم: discount-tiers.toggle
+        الصلاحية: @can('update', $tier)
+        الغرض: تفعيل/تعطيل قاعدة
+
+GET     /admin/discount-tiers/statistics
+        الاسم: discount-tiers.statistics
+        الصلاحية: @can('viewAny', InvoiceDiscountTier::class)
+        الغرض: عرض إحصائيات الخصومات
+
+
+================================================================================
+                        🎮 Controller
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ DiscountTierController                                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Controllers/Admin/DiscountTierController.php
+🎯 المسؤولية: إدارة قواعد خصومات الفواتير
+
+📋 الـMethods:
+
+1️⃣ index(Request $request)
+   - الغرض: عرض قائمة قواعد الخصم
+   - الصلاحية: $this->authorize('viewAny', InvoiceDiscountTier::class)
+   - المعاملات:
+     • status (optional): all / active / inactive
+     • type (optional): percentage / fixed
+     • period (optional): current / upcoming / expired
+   
+   - المنطق:
+     ```php
+     $query = InvoiceDiscountTier::withCount('invoices')
+         ->with('creator');
+     
+     // فلتر الحالة
+     if ($request->status === 'active') {
+         $query->where('is_active', true);
+     } elseif ($request->status === 'inactive') {
+         $query->where('is_active', false);
+     }
+     
+     // فلتر النوع
+     if ($request->filled('type')) {
+         $query->where('discount_type', $request->type);
+     }
+     
+     // فلتر الفترة
+     if ($request->period === 'current') {
+         $query->where('start_date', '<=', now())
+               ->where('end_date', '>=', now());
+     } elseif ($request->period === 'upcoming') {
+         $query->where('start_date', '>', now());
+     } elseif ($request->period === 'expired') {
+         $query->where('end_date', '<', now());
+     }
+     
+     // الترتيب
+     $query->orderBy('is_active', 'desc')
+           ->orderBy('min_amount', 'asc');
+     
+     $tiers = $query->paginate(20);
+     
+     return view('admin.discount-tiers.index', compact('tiers'));
+     ```
+   
+   - الـView: admin/discount-tiers/index.blade.php
+
+2️⃣ create()
+   - الغرض: عرض صفحة إنشاء قاعدة جديدة
+   - الصلاحية: $this->authorize('create', InvoiceDiscountTier::class)
+   - الـView: admin/discount-tiers/create.blade.php
+
+3️⃣ store(StoreDiscountTierRequest $request)
+   - الغرض: حفظ قاعدة جديدة
+   - الـForm Request: StoreDiscountTierRequest
+   - المنطق:
+     ```php
+     $data = $request->validated();
+     $data['created_by'] = auth()->id();
+     
+     // التأكد من تعبئة الحقل الصحيح فقط
+     if ($data['discount_type'] === 'percentage') {
+         $data['discount_amount'] = null;
+     } else {
+         $data['discount_percentage'] = null;
+     }
+     
+     $tier = InvoiceDiscountTier::create($data);
+     
+     return redirect()
+         ->route('discount-tiers.show', $tier)
+         ->with('success', 'تم إنشاء قاعدة الخصم بنجاح');
+     ```
+
+4️⃣ show(InvoiceDiscountTier $tier)
+   - الغرض: عرض تفاصيل قاعدة معينة
+   - الصلاحية: $this->authorize('view', $tier)
+   - الـEager Loading:
+     ```php
+     $tier->load([
+         'creator',
+         'invoices' => function($query) {
+             $query->latest()->limit(10);
+         }
+     ]);
+     
+     // إحصائيات
+     $statistics = [
+         'total_invoices' => $tier->invoices()->count(),
+         'total_discounts' => $tier->invoices()->sum('invoice_discount_amount'),
+         'avg_invoice_amount' => $tier->invoices()->avg('total_amount'),
+         'last_used' => $tier->invoices()->latest()->first()?->created_at,
+     ];
+     
+     return view('admin.discount-tiers.show', compact('tier', 'statistics'));
+     ```
+
+5️⃣ toggle(InvoiceDiscountTier $tier)
+   - الغرض: تفعيل/تعطيل قاعدة
+   - الصلاحية: $this->authorize('update', $tier)
+   - المنطق:
+     ```php
+     $tier->update([
+         'is_active' => !$tier->is_active
+     ]);
+     
+     $message = $tier->is_active 
+         ? 'تم تفعيل القاعدة بنجاح' 
+         : 'تم تعطيل القاعدة بنجاح';
+     
+     return redirect()
+         ->back()
+         ->with('success', $message);
+     ```
+
+6️⃣ destroy(InvoiceDiscountTier $tier)
+   - الغرض: حذف قاعدة (soft delete)
+   - الصلاحية: $this->authorize('delete', $tier)
+   - التحقق:
+     ```php
+     if ($tier->invoices()->count() > 0) {
+         return redirect()
+             ->back()
+             ->with('error', 'لا يمكن حذف قاعدة مستخدمة في فواتير');
+     }
+     
+     $tier->update(['is_active' => false]);
+     
+     return redirect()
+         ->route('discount-tiers.index')
+         ->with('success', 'تم حذف القاعدة بنجاح');
+     ```
+
+7️⃣ statistics()
+   - الغرض: عرض إحصائيات شاملة
+   - الصلاحية: $this->authorize('viewAny', InvoiceDiscountTier::class)
+   - المنطق:
+     ```php
+     $stats = [
+         'active_tiers' => InvoiceDiscountTier::where('is_active', true)->count(),
+         'inactive_tiers' => InvoiceDiscountTier::where('is_active', false)->count(),
+         'total_discounts_monthly' => SalesInvoice::whereMonth('created_at', now()->month)
+             ->sum('invoice_discount_amount'),
+         'total_discounts_yearly' => SalesInvoice::whereYear('created_at', now()->year)
+             ->sum('invoice_discount_amount'),
+         'avg_discount' => SalesInvoice::whereNotNull('invoice_discount_amount')
+             ->avg('invoice_discount_amount'),
+     ];
+     
+     // أكثر القواعد استخداماً
+     $topTiers = InvoiceDiscountTier::withCount('invoices')
+         ->orderBy('invoices_count', 'desc')
+         ->limit(10)
+         ->get();
+     
+     // استخدام عبر الزمن (آخر 12 شهر)
+     $monthlyUsage = SalesInvoice::selectRaw('
+             DATE_FORMAT(created_at, "%Y-%m") as month,
+             COUNT(*) as count,
+             SUM(invoice_discount_amount) as total_discount
+         ')
+         ->whereNotNull('invoice_discount_tier_id')
+         ->where('created_at', '>=', now()->subMonths(12))
+         ->groupBy('month')
+         ->orderBy('month')
+         ->get();
+     
+     return view('admin.discount-tiers.statistics', compact(
+         'stats', 'topTiers', 'monthlyUsage'
+     ));
+     ```
+
+
+================================================================================
+                        ⚙️ Service
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ DiscountTierService                                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Services/DiscountTierService.php
+🎯 المسؤولية: منطق تطبيق الخصومات على الفواتير
+
+📋 الـMethods:
+
+1️⃣ getApplicableTier($subtotal, $date = null)
+   - الغرض: البحث عن قاعدة خصم مناسبة
+   - المعاملات:
+     • $subtotal: قيمة الفاتورة
+     • $date: التاريخ (افتراضي: اليوم)
+   - المنطق:
+     ```php
+     public function getApplicableTier($subtotal, $date = null)
+     {
+         $date = $date ?? now();
+         
+         return InvoiceDiscountTier::where('is_active', true)
+             ->where('min_amount', '<=', $subtotal)
+             ->where('start_date', '<=', $date)
+             ->where('end_date', '>=', $date)
+             ->orderBy('min_amount', 'desc')
+             ->first();
+     }
+     ```
+   - الإرجاع: InvoiceDiscountTier|null
+
+2️⃣ calculateDiscount($tier, $subtotal)
+   - الغرض: حساب قيمة الخصم
+   - المعاملات:
+     • $tier: قاعدة الخصم
+     • $subtotal: قيمة الفاتورة
+   - المنطق:
+     ```php
+     public function calculateDiscount($tier, $subtotal)
+     {
+         if (!$tier) {
+             return [
+                 'type' => null,
+                 'value' => null,
+                 'amount' => 0,
+                 'tier_id' => null,
+             ];
+         }
+         
+         $amount = 0;
+         
+         if ($tier->discount_type === 'percentage') {
+             $amount = $subtotal * ($tier->discount_percentage / 100);
+         } else {
+             $amount = $tier->discount_amount;
+         }
+         
+         return [
+             'type' => $tier->discount_type,
+             'value' => $tier->discount_type === 'percentage' 
+                 ? $tier->discount_percentage 
+                 : $tier->discount_amount,
+             'amount' => round($amount, 2),
+             'tier_id' => $tier->id,
+         ];
+     }
+     ```
+   - الإرجاع: array
+
+3️⃣ applyDiscountToInvoice($subtotal, $date = null)
+   - الغرض: تطبيق الخصم على فاتورة (دمج الوظيفتين)
+   - المنطق:
+     ```php
+     public function applyDiscountToInvoice($subtotal, $date = null)
+     {
+         $tier = $this->getApplicableTier($subtotal, $date);
+         return $this->calculateDiscount($tier, $subtotal);
+     }
+     ```
+   - الاستخدام في SalesInvoiceService:
+     ```php
+     // في createInvoice()
+     $discountService = new DiscountTierService();
+     $discount = $discountService->applyDiscountToInvoice($subtotal);
+     
+     $invoiceData = [
+         // ... باقي البيانات
+         'invoice_discount_type' => $discount['type'],
+         'invoice_discount_value' => $discount['value'],
+         'invoice_discount_amount' => $discount['amount'],
+         'invoice_discount_tier_id' => $discount['tier_id'],
+         'total_amount' => $subtotal - $productDiscount - $discount['amount'],
+     ];
+     ```
+
+
+================================================================================
+                        🔐 Policy
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ InvoiceDiscountTierPolicy                                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Policies/InvoiceDiscountTierPolicy.php
+
+```php
+class InvoiceDiscountTierPolicy
+{
+    public function viewAny(User $user): bool
+    {
+        return $user->role_id === 1; // Admin only
+    }
+    
+    public function view(User $user, InvoiceDiscountTier $tier): bool
+    {
+        return $user->role_id === 1;
+    }
+    
+    public function create(User $user): bool
+    {
+        return $user->role_id === 1;
+    }
+    
+    public function update(User $user, InvoiceDiscountTier $tier): bool
+    {
+        // تفعيل/تعطيل فقط
+        return $user->role_id === 1;
+    }
+    
+    public function delete(User $user, InvoiceDiscountTier $tier): bool
+    {
+        // Admin + غير مستخدمة
+        return $user->role_id === 1 && $tier->invoices_count === 0;
+    }
+}
+```
+
+
+================================================================================
+                        📦 Models & Enums
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ DiscountType Enum                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Enums/DiscountType.php
+
+```php
+enum DiscountType: string
+{
+    case PERCENTAGE = 'percentage';
+    case FIXED = 'fixed';
+    
+    public function label(): string
+    {
+        return match($this) {
+            self::PERCENTAGE => 'نسبة مئوية',
+            self::FIXED => 'مبلغ ثابت',
+        };
+    }
+    
+    public function icon(): string
+    {
+        return match($this) {
+            self::PERCENTAGE => '📊',
+            self::FIXED => '💰',
+        };
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ InvoiceDiscountTier Model                                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Models/InvoiceDiscountTier.php
+
+📋 الـCasts:
+```php
+protected $casts = [
+    'discount_type' => DiscountType::class,
+    'min_amount' => 'decimal:2',
+    'discount_percentage' => 'decimal:2',
+    'discount_amount' => 'decimal:2',
+    'start_date' => 'date',
+    'end_date' => 'date',
+    'is_active' => 'boolean',
+];
+```
+
+📋 الـFillable:
+- min_amount, discount_type
+- discount_percentage, discount_amount
+- start_date, end_date
+- is_active, created_by
+
+📋 الـRelationships:
+```php
+public function creator()
+{
+    return $this->belongsTo(User::class, 'created_by');
+}
+
+public function invoices()
+{
+    return $this->hasMany(SalesInvoice::class, 'invoice_discount_tier_id');
+}
+```
+
+📋 الـAccessors:
+```php
+public function getStatusAttribute(): string
+{
+    if (!$this->is_active) {
+        return 'معطل';
+    }
+    
+    if (now()->lt($this->start_date)) {
+        return 'قادم';
+    }
+    
+    if (now()->gt($this->end_date)) {
+        return 'منتهي';
+    }
+    
+    return 'نشط';
+}
+
+public function getStatusColorAttribute(): string
+{
+    return match($this->status) {
+        'نشط' => 'green',
+        'قادم' => 'blue',
+        'منتهي' => 'orange',
+        'معطل' => 'gray',
+    };
+}
+```
+
+
+================================================================================
+                        📝 Form Requests
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ StoreDiscountTierRequest                                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/StoreDiscountTierRequest.php
+
+```php
+class StoreDiscountTierRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('create', InvoiceDiscountTier::class);
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'min_amount' => 'required|numeric|min:0',
+            'discount_type' => 'required|in:percentage,fixed',
+            'discount_percentage' => 'required_if:discount_type,percentage|nullable|numeric|min:0.01|max:100',
+            'discount_amount' => 'required_if:discount_type,fixed|nullable|numeric|min:0.01',
+            'start_date' => 'required|date|after_or_equal:today',
+            'end_date' => 'required|date|after:start_date',
+            'is_active' => 'boolean',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'min_amount.required' => 'يجب تحديد الحد الأدنى للمبلغ',
+            'discount_type.required' => 'يجب تحديد نوع الخصم',
+            'discount_percentage.required_if' => 'يجب تحديد نسبة الخصم',
+            'discount_amount.required_if' => 'يجب تحديد مبلغ الخصم',
+            'start_date.after_or_equal' => 'تاريخ البداية يجب أن يكون اليوم أو بعده',
+            'end_date.after' => 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية',
+        ];
+    }
+}
+```
+
+
+================================================================================
+                        📊 Database Queries
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ استعلامات مفيدة                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+1️⃣ القواعد النشطة حالياً:
+```php
+InvoiceDiscountTier::where('is_active', true)
+    ->where('start_date', '<=', now())
+    ->where('end_date', '>=', now())
+    ->orderBy('min_amount', 'asc')
+    ->get();
+```
+
+2️⃣ أكثر القواعد استخداماً:
+```php
+InvoiceDiscountTier::withCount('invoices')
+    ->orderBy('invoices_count', 'desc')
+    ->limit(10)
+    ->get();
+```
+
+3️⃣ إجمالي الخصومات لقاعدة معينة:
+```php
+$tier->invoices()->sum('invoice_discount_amount');
+```
+
+4️⃣ الفواتير المستفيدة من قاعدة معينة:
+```php
+SalesInvoice::where('invoice_discount_tier_id', $tierId)
+    ->with('marketer', 'store')
+    ->latest()
+    ->paginate(20);
+```
+
+
+================================================================================
+                        ✅ مزايا البنية
+================================================================================
+
+1. ✅ فصل واضح بين العرض والمنطق
+2. ✅ Service مستقل لتطبيق الخصومات
+3. ✅ Policy واضحة للصلاحيات
+4. ✅ Enum لأنواع الخصومات
+5. ✅ منع التعديل بعد الإنشاء
+6. ✅ Soft delete للحفاظ على التتبع
+7. ✅ إحصائيات شاملة
+
+
+================================================================================
+انتهى التوثيق
+================================================================================
