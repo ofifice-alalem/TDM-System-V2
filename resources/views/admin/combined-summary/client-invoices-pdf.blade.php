@@ -154,46 +154,65 @@
 </div>
 
 @foreach($entries as $entry)
-<div style="page-break-inside: avoid;">
+<div style="page-break-inside: avoid; margin-bottom: 16px;">
+
+{{-- رأس الزبون --}}
 <table style="margin-bottom:0; border-collapse:collapse; width:100%;">
-    <tr class="client-head">
-        <td style="background:#{{ $entry['color'] }}; padding:6px 10px; text-align:right;">
-            {{ $entry['name'] }} &nbsp;({{ $entry['type'] }}) &nbsp;&#8212;&nbsp; {{ $entry['invoice_count'] }} {{ $labels['invoices_label'] }} &nbsp;&#8212;&nbsp; {{ $n($entry['total_amount']) }}
+    <tr>
+        <td style="background:#{{ $entry['color'] }}; padding:7px 12px; text-align:right; color:#fff; font-weight:bold; font-size:10px; border-radius:0;">
+            {{ $entry['name'] }}
+        </td>
+        <td style="background:#{{ $entry['color'] }}; padding:7px 12px; text-align:center; color:rgba(255,255,255,0.85); font-size:8.5px; width:22%; white-space:nowrap;">
+            {{ $entry['invoice_count'] }} {{ $labels['invoices_label'] }}
+        </td>
+        <td style="background:#{{ $entry['color'] }}; padding:7px 12px; text-align:left; color:#fff; font-weight:bold; font-size:10px; width:22%; white-space:nowrap;">
+            {{ $n($entry['total_amount']) }}
         </td>
     </tr>
 </table>
 
 @foreach($entry['invoices'] as $inv)
-<table style="margin-bottom:0;">
-    <tr class="inv-head">
-        <td style="width:40%; text-align:right; padding-right:10px;">{{ $inv['invoice_number'] }}</td>
-        <td style="width:30%; text-align:center; color:#475569;">{{ $inv['date'] }}</td>
-        <td style="width:30%; text-align:center; font-weight:bold; color:#1e40af;">{{ $n($inv['total_amount']) }}</td>
+{{-- رأس الفاتورة --}}
+<table style="margin-bottom:0; border-collapse:collapse; width:100%;">
+    <tr style="background:#e8edf5; border-top:2px solid #94a3b8;">
+        <td style="padding:5px 10px; text-align:right; font-weight:bold; font-size:8.5px; color:#1e40af; width:45%;">
+            {{ $inv['invoice_number'] }}
+        </td>
+        <td style="padding:5px 10px; text-align:center; font-size:8px; color:#475569; width:30%;">
+            {{ $inv['date'] }}
+        </td>
+        <td style="padding:5px 10px; text-align:left; font-weight:bold; font-size:9px; color:#0f172a; width:25%;">
+            {{ $n($inv['total_amount']) }}
+        </td>
     </tr>
+</table>
+{{-- أعمدة المنتجات --}}
+<table style="margin-bottom:0; border-collapse:collapse; width:100%;">
     <tr class="col-head">
-        <th style="width:25%; text-align:center">{{ $labels['amount'] }}</th>
-        <th style="width:15%; text-align:center">{{ $labels['price'] }}</th>
-        <th style="width:15%; text-align:center">{{ $labels['qty'] }}</th>
-        <th style="width:45%; text-align:right">{{ $labels['product'] }}</th>
+        <th style="width:50%; text-align:right; padding-right:12px;">{{ $labels['product'] }}</th>
+        <th style="width:15%; text-align:center;">{{ $labels['qty'] }}</th>
+        <th style="width:17%; text-align:center;">{{ $labels['price'] }}</th>
+        <th style="width:18%; text-align:center;">{{ $labels['amount'] }}</th>
     </tr>
     @foreach($inv['items'] as $i => $item)
     <tr class="{{ $i % 2 !== 0 ? 'item-row-even' : 'item-row' }}">
-        <td class="num">{{ $n($item['quantity'] * $item['unit_price']) }}</td>
-        <td class="price-val">{{ $n($item['unit_price']) }}</td>
-        <td class="num">{{ $ni($item['quantity']) }}</td>
-        <td>{{ $item['product_name'] }}</td>
+        <td style="text-align:right; padding-right:12px; font-size:8px;">{{ $item['product_name'] }}</td>
+        <td class="num" style="font-size:8px;">{{ $ni($item['quantity']) }}</td>
+        <td class="price-val" style="font-size:8px;">{{ $n($item['unit_price']) }}</td>
+        <td class="num" style="font-size:8px;">{{ $n($item['quantity'] * $item['unit_price']) }}</td>
     </tr>
     @endforeach
 </table>
 @endforeach
 
-<table style="margin-bottom:0;">
+{{-- إجمالي الزبون --}}
+<table style="margin-bottom:0; border-collapse:collapse; width:100%;">
     <tr class="client-total">
-        <td class="num" style="width:25%;">{{ $n($entry['total_amount']) }}</td>
-        <td style="width:75%; color:#475569; text-align:right; padding-right:10px;">{{ $labels['total'] }}</td>
+        <td style="text-align:right; padding-right:12px; width:82%; color:#475569;">{{ $labels['total'] }}</td>
+        <td class="num" style="width:18%; font-size:9px;">{{ $n($entry['total_amount']) }}</td>
     </tr>
 </table>
-<div class="spacer"></div>
+
 </div>
 @endforeach
 
