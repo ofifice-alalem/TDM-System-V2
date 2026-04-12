@@ -39,6 +39,41 @@ class CombinedSummaryController extends Controller
             ? (bool) $request->input('include_old_debt', 0)
             : true;
 
+        // تاب فواتير كل زبون
+        if ($tab === 'invoices') {
+            $invoicesData = $this->buildClientInvoicesData($fromDate, $toDate, $storeId, $customerId, $productId, $entityType, $storeName, $customerName, $staffId);
+
+            if ($request->has('export')) {
+                return $this->exportInvoicesExcel($invoicesData, $fromDate, $toDate, $productId, $sortBy, $entityType, $storeName, $customerName, $staffId);
+            }
+            if ($request->has('pdf')) {
+                return $this->exportInvoicesPdf($invoicesData, $fromDate, $toDate, $productId, $sortBy, $entityType, $storeName, $customerName, $staffId);
+            }
+
+            usort($invoicesData, function($a, $b) use ($sortBy) {
+                return $sortBy === 'qty'
+                    ? $b['total_qty'] <=> $a['total_qty']
+                    : $b['total_amount'] <=> $a['total_amount'];
+            });
+
+            $products  = Product::orderBy('name')->get(['id', 'name']);
+            $stores    = Store::orderBy('name')->get(['id', 'name']);
+            $customers = Customer::orderBy('name')->get(['id', 'name']);
+            $staff     = \App\Models\User::whereIn('role_id', [3, 4])->where('is_active', true)->orderBy('full_name')->get(['id', 'full_name', 'role_id']);
+
+            return view('admin.combined-summary.index', compact(
+                'tab', 'fromDate', 'toDate', 'entityType', 'storeId', 'customerId', 'productId', 'sortBy',
+                'stores', 'customers', 'staff', 'products', 'staffId', 'includeOldDebt'
+            ) + [
+                'invoicesData' => $invoicesData,
+                'clientsData'  => null,
+                'rows' => collect(), 'grandInvoices' => 0, 'grandPayments' => 0,
+                'grandReturns' => 0, 'grandOldDebt' => 0, 'grandDebt' => 0,
+                'storeSummary' => ['invoices'=>0,'payments'=>0,'returns'=>0,'old_debt'=>0,'debt'=>0,'pending_invoices'=>0,'pending_payments'=>0,'pending_returns'=>0,'approved_debt'=>0],
+                'customerSummary' => ['invoices'=>0,'payments'=>0,'returns'=>0,'old_debt'=>0,'debt'=>0],
+            ]);
+        }
+
         // تاب الملخص الشامل لكل زبون
         if ($tab === 'clients') {
             $clientsData = $this->buildClientProductData($fromDate, $toDate, $storeId, $customerId, $productId, $entityType, $storeName, $customerName, $staffId);
@@ -64,9 +99,9 @@ class CombinedSummaryController extends Controller
             return view('admin.combined-summary.index', compact(
                 'tab', 'fromDate', 'toDate', 'entityType', 'storeId', 'customerId', 'productId', 'sortBy',
                 'clientsData', 'stores', 'customers', 'staff', 'products',
-                // dummy vars for financial tab (not used)
                 'staffId', 'includeOldDebt'
             ) + [
+                'invoicesData' => null,
                 'rows' => collect(), 'grandInvoices' => 0, 'grandPayments' => 0,
                 'grandReturns' => 0, 'grandOldDebt' => 0, 'grandDebt' => 0,
                 'storeSummary' => ['invoices'=>0,'payments'=>0,'returns'=>0,'old_debt'=>0,'debt'=>0,'pending_invoices'=>0,'pending_payments'=>0,'pending_returns'=>0,'approved_debt'=>0],
@@ -131,7 +166,7 @@ class CombinedSummaryController extends Controller
             'grandInvoices', 'grandPayments', 'grandReturns', 'grandOldDebt', 'grandDebt',
             'storeSummary', 'customerSummary',
             'stores', 'customers', 'staff', 'products', 'entityType', 'productId', 'sortBy'
-        ) + ['clientsData' => null]);
+        ) + ['clientsData' => null, 'invoicesData' => null]);
     }
 
     private function buildClientProductData(
@@ -207,6 +242,299 @@ class CombinedSummaryController extends Controller
         }
 
         return $result;
+    }
+
+    private function buildClientInvoicesData(
+        string $fromDate, string $toDate,
+        ?int $storeId = null, ?int $customerId = null, ?string $productId = null,
+        string $entityType = 'all', ?string $storeName = null, ?string $customerName = null, $staffId = null
+    ): array {
+        $result = [];
+
+        if ($entityType !== 'customer') {
+            $storeQuery = Store::orderBy('name');
+            if ($storeId) $storeQuery->where('id', $storeId);
+            elseif ($storeName) $storeQuery->where('name', 'like', '%' . $storeName . '%');
+
+            foreach ($storeQuery->get() as $store) {
+                $invoices = DB::table('sales_invoices as inv')
+                    ->whereIn('inv.status', ['approved', 'pending'])
+                    ->where('inv.store_id', $store->id)
+                    ->when($staffId, fn($q) => $q->where('inv.marketer_id', $staffId))
+                    ->whereDate('inv.created_at', '>=', $fromDate)
+                    ->whereDate('inv.created_at', '<=', $toDate)
+                    ->select('inv.id', 'inv.invoice_number', 'inv.total_amount', 'inv.status', 'inv.created_at')
+                    ->orderBy('inv.created_at')
+                    ->get();
+
+                if ($invoices->isEmpty()) continue;
+
+                $invoicesList = [];
+                foreach ($invoices as $inv) {
+                    $items = DB::table('sales_invoice_items as i')
+                        ->join('products as p', 'p.id', '=', 'i.product_id')
+                        ->where('i.invoice_id', $inv->id)
+                        ->when($productId, fn($q) => $q->where('i.product_id', $productId))
+                        ->select('p.name as product_name', 'i.quantity', 'i.unit_price')
+                        ->get();
+                    if ($productId && $items->isEmpty()) continue;
+                    $invoicesList[] = [
+                        'id'             => $inv->id,
+                        'invoice_number' => $inv->invoice_number,
+                        'total_amount'   => $inv->total_amount,
+                        'status'         => $inv->status,
+                        'date'           => $inv->created_at,
+                        'items'          => $items->toArray(),
+                    ];
+                }
+
+                if (empty($invoicesList)) continue;
+
+                $result[] = [
+                    'id'           => $store->id,
+                    'name'         => $store->name,
+                    'type'         => 'متجر',
+                    'invoices'     => $invoicesList,
+                    'invoice_count'=> count($invoicesList),
+                    'total_qty'    => array_sum(array_map(fn($inv) => array_sum(array_column($inv['items'], 'quantity')), $invoicesList)),
+                    'total_amount' => round(array_sum(array_column($invoicesList, 'total_amount')), 2),
+                ];
+            }
+        }
+
+        if ($entityType !== 'store') {
+            $customerQuery = Customer::orderBy('name');
+            if ($customerId) $customerQuery->where('id', $customerId);
+            elseif ($customerName) $customerQuery->where('name', 'like', '%' . $customerName . '%');
+
+            $staffIsMarketer = $staffId && \App\Models\User::where('id', $staffId)->value('role_id') == 3;
+            if (!$staffIsMarketer) {
+                foreach ($customerQuery->get() as $customer) {
+                    $invoices = DB::table('customer_invoices as inv')
+                        ->where('inv.status', 'completed')
+                        ->where('inv.customer_id', $customer->id)
+                        ->when($staffId, fn($q) => $q->where('inv.sales_user_id', $staffId))
+                        ->whereDate('inv.created_at', '>=', $fromDate)
+                        ->whereDate('inv.created_at', '<=', $toDate)
+                        ->select('inv.id', 'inv.invoice_number', 'inv.total_amount', 'inv.status', 'inv.created_at')
+                        ->orderBy('inv.created_at')
+                        ->get();
+
+                    if ($invoices->isEmpty()) continue;
+
+                    $invoicesList = [];
+                    foreach ($invoices as $inv) {
+                        $items = DB::table('customer_invoice_items as i')
+                            ->join('products as p', 'p.id', '=', 'i.product_id')
+                            ->where('i.invoice_id', $inv->id)
+                            ->when($productId, fn($q) => $q->where('i.product_id', $productId))
+                            ->select('p.name as product_name', 'i.quantity', 'i.unit_price')
+                            ->get();
+                        if ($productId && $items->isEmpty()) continue;
+                        $invoicesList[] = [
+                            'id'             => $inv->id,
+                            'invoice_number' => $inv->invoice_number,
+                            'total_amount'   => $inv->total_amount,
+                            'status'         => $inv->status,
+                            'date'           => $inv->created_at,
+                            'items'          => $items->toArray(),
+                        ];
+                    }
+
+                    if (empty($invoicesList)) continue;
+
+                    $result[] = [
+                        'id'           => $customer->id,
+                        'name'         => $customer->name,
+                        'type'         => 'عميل',
+                        'invoices'     => $invoicesList,
+                        'invoice_count'=> count($invoicesList),
+                        'total_qty'    => array_sum(array_map(fn($inv) => array_sum(array_column($inv['items'], 'quantity')), $invoicesList)),
+                        'total_amount' => round(array_sum(array_column($invoicesList, 'total_amount')), 2),
+                    ];
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    private function exportInvoicesExcel(array $data, string $fromDate, string $toDate, ?string $productId, string $sortBy, string $entityType = 'all', ?string $storeName = null, ?string $customerName = null, $staffId = null)
+    {
+        usort($data, fn($a, $b) => $sortBy === 'qty' ? $b['total_qty'] <=> $a['total_qty'] : $b['total_amount'] <=> $a['total_amount']);
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setRightToLeft(true);
+
+        $row = 1;
+        $infoRows = [['من تاريخ', $fromDate], ['إلى تاريخ', $toDate]];
+        $infoRows[] = ['عرض', match($entityType) { 'store' => 'المتاجر فقط', 'customer' => 'العملاء فقط', default => 'الكل' }];
+        if ($staffId)      $infoRows[] = ['الموظف', \App\Models\User::find($staffId)?->full_name ?? ''];
+        if ($storeName)    $infoRows[] = ['بحث (متجر)', $storeName];
+        if ($customerName) $infoRows[] = ['بحث (عميل)', $customerName];
+        if ($productId)    $infoRows[] = ['المنتج', Product::find($productId)?->name ?? $productId];
+
+        foreach ($infoRows as $info) {
+            $sheet->setCellValue('A' . $row, $info[0]);
+            $sheet->setCellValue('B' . $row, $info[1]);
+            $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+                'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E3F2FD']],
+                'font'    => ['bold' => true, 'size' => 11],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
+            $row++;
+        }
+        $row++;
+
+        foreach ($data as $entry) {
+            $isStore = $entry['type'] === 'متجر';
+            $color   = $isStore ? '1565C0' : '6A1B9A';
+            $bgHead  = $isStore ? 'BBDEFB' : 'E1BEE7';
+
+            // رأس الزبون
+            $sheet->setCellValue('A' . $row, $entry['name'] . ' — ' . $entry['type'] . ' — ' . $entry['invoice_count'] . ' فاتورة — ' . number_format($entry['total_amount'], 2));
+            $sheet->mergeCells('A' . $row . ':F' . $row);
+            $sheet->getStyle('A' . $row)->applyFromArray([
+                'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $color]],
+                'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
+                'borders'   => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            ]);
+            $row++;
+
+            foreach ($entry['invoices'] as $inv) {
+                // رأس الفاتورة
+                $sheet->setCellValue('A' . $row, $inv['invoice_number']);
+                $sheet->setCellValue('B' . $row, substr($inv['date'], 0, 10));
+                $sheet->setCellValue('C' . $row, number_format($inv['total_amount'], 2));
+                $sheet->mergeCells('D' . $row . ':F' . $row);
+                $sheet->getStyle('A' . $row . ':F' . $row)->applyFromArray([
+                    'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $bgHead]],
+                    'font'    => ['bold' => true],
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                ]);
+                $row++;
+
+                // رؤوس أعمدة المنتجات
+                $sheet->fromArray(['المنتج', 'الكمية', 'السعر', 'المبلغ'], null, 'B' . $row);
+                $sheet->getStyle('B' . $row . ':E' . $row)->applyFromArray([
+                    'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F5F5F5']],
+                    'font'    => ['bold' => true],
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
+                $row++;
+
+                foreach ($inv['items'] as $item) {
+                    $item = (array) $item;
+                    $sheet->fromArray([
+                        '', $item['product_name'],
+                        number_format($item['quantity']),
+                        number_format($item['unit_price'], 2),
+                        number_format($item['quantity'] * $item['unit_price'], 2),
+                    ], null, 'A' . $row);
+                    $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+                        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                    ]);
+                    $row++;
+                }
+            }
+
+            // إجمالي الزبون
+            $sheet->fromArray(['الإجمالي', '', '', '', number_format($entry['total_amount'], 2)], null, 'A' . $row);
+            $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+                'fill'    => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E8EAF6']],
+                'font'    => ['bold' => true, 'size' => 11],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
+            $row += 2;
+        }
+
+        foreach (range('A', 'F') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $filename = 'فواتير_الزبائن_' . $fromDate . '_' . $toDate . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        (new Xlsx($spreadsheet))->save('php://output');
+        exit;
+    }
+
+    private function exportInvoicesPdf(array $data, string $fromDate, string $toDate, ?string $productId, string $sortBy = 'amount', string $entityType = 'all', ?string $storeName = null, ?string $customerName = null, $staffId = null)
+    {
+        usort($data, fn($a, $b) => $sortBy === 'qty' ? $b['total_qty'] <=> $a['total_qty'] : $b['total_amount'] <=> $a['total_amount']);
+
+        $arabic = new \ArPHP\I18N\Arabic();
+        $g  = fn($text) => $arabic->utf8Glyphs($text);
+        $en = fn($str)  => str_replace(['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'], ['0','1','2','3','4','5','6','7','8','9'], $str);
+
+        $entries = array_map(function($entry) use ($g, $en) {
+            return [
+                'name'          => $en($g($entry['name'])),
+                'type'          => $g($entry['type']),
+                'color'         => $entry['type'] === 'متجر' ? '1565C0' : '6A1B9A',
+                'invoice_count' => $entry['invoice_count'],
+                'total_amount'  => $entry['total_amount'],
+                'total_qty'     => $entry['total_qty'],
+                'invoices'      => array_map(function($inv) use ($g, $en) {
+                    return [
+                        'invoice_number' => $en($g($inv['invoice_number'])),
+                        'date'           => substr($inv['date'], 0, 10),
+                        'total_amount'   => $inv['total_amount'],
+                        'items'          => array_map(fn($i) => [
+                            'product_name' => $en($g(is_array($i) ? $i['product_name'] : $i->product_name)),
+                            'quantity'     => is_array($i) ? $i['quantity'] : $i->quantity,
+                            'unit_price'   => is_array($i) ? $i['unit_price'] : $i->unit_price,
+                        ], $inv['items']),
+                    ];
+                }, $entry['invoices']),
+            ];
+        }, $data);
+
+        $grandAmount = array_sum(array_column($data, 'total_amount'));
+        $grandCount  = array_sum(array_column($data, 'invoice_count'));
+
+        $labels = [
+            'title'             => $g('فواتير الزبائن التفصيلية'),
+            'dateFrom'          => $fromDate,
+            'dateTo'            => $toDate,
+            'labelFrom'         => $g('من'),
+            'labelTo'           => $g('إلى'),
+            'filterEntity'      => match($entityType) { 'store' => $g('المتاجر فقط'), 'customer' => $g('العملاء فقط'), default => $g('الكل') },
+            'filterEntityLabel' => $g('عرض'),
+            'filterSearch'      => $storeName ? $en($g($storeName)) : ($customerName ? $en($g($customerName)) : null),
+            'filterSearchLabel' => $g('بحث'),
+            'filterStaff'       => $staffId ? $en($g(\App\Models\User::find($staffId)?->full_name ?? '')) : null,
+            'filterStaffLabel'  => $g('الموظف'),
+            'filterProd'        => $productId ? $en($g(Product::find($productId)?->name ?? '')) : null,
+            'filterProdLabel'   => $g('المنتج'),
+            'filterLabel'       => $g('تفاصيل التقرير'),
+            'grandAmount'       => $grandAmount,
+            'grandCount'        => $grandCount,
+            'product'           => $g('المنتج'),
+            'qty'               => $g('الكمية'),
+            'price'             => $g('السعر'),
+            'amount'            => $g('المبلغ'),
+            'total'             => $g('الإجمالي'),
+            'invoices_label'    => $g('فاتورة'),
+            'date_label'        => $g('التاريخ'),
+            'totalPages'        => 1,
+        ];
+
+        $options = ['isRemoteEnabled' => false, 'isHtml5ParserEnabled' => true, 'isFontSubsettingEnabled' => true, 'compress' => 1, 'dpi' => 96];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.combined-summary.client-invoices-pdf', compact('entries', 'labels'))->setPaper('a4');
+        foreach ($options as $k => $v) $pdf->setOption($k, $v);
+        $pdf->render();
+        $labels['totalPages'] = $pdf->getDomPDF()->getCanvas()->get_page_count();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.combined-summary.client-invoices-pdf', compact('entries', 'labels'))->setPaper('a4');
+        foreach ($options as $k => $v) $pdf->setOption($k, $v);
+
+        return $pdf->stream('client-invoices-' . $fromDate . '-' . $toDate . '.pdf');
     }
 
     private function exportClientsPdf(array $clientsData, string $fromDate, string $toDate, ?string $productId, string $sortBy = 'amount', string $entityType = 'all', ?string $storeName = null, ?string $customerName = null, $staffId = null)

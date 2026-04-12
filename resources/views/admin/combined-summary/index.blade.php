@@ -28,6 +28,12 @@
                 <i data-lucide="package" class="w-4 h-4"></i>
                 الملخص الشامل لكل زبون
             </a>
+            <a href="{{ request()->fullUrlWithQuery(['tab' => 'invoices']) }}"
+               class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2
+                   {{ $tab === 'invoices' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white dark:bg-dark-card text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-bg' }}">
+                <i data-lucide="file-text" class="w-4 h-4"></i>
+                فواتير كل زبون
+            </a>
         </div>
 
         {{-- Filter --}}
@@ -161,8 +167,8 @@
                 </div>
             </div>
 
-            {{-- فلتر المنتج (تاب الزبائن فقط) --}}
-            @if($tab === 'clients')
+            {{-- فلتر المنتج (تاب الزبائن والفواتير فقط) --}}
+            @if($tab === 'clients' || $tab === 'invoices')
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 border-t border-gray-100 dark:border-dark-border pt-4"
                  x-data="{
                     search: '{{ $products->firstWhere('id', $productId)?->name ?? '' }}',
@@ -347,6 +353,128 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @else
+        <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border p-16 text-center shadow-sm">
+            <i data-lucide="inbox" class="w-12 h-12 text-gray-300 mx-auto mb-3"></i>
+            <p class="text-gray-500 dark:text-gray-400 font-bold">لا توجد بيانات في هذه الفترة</p>
+        </div>
+        @endif
+
+        @elseif($tab === 'invoices')
+        {{-- ===== تاب فواتير كل زبون ===== --}}
+
+        @if($invoicesData && count($invoicesData) > 0)
+        @php
+            $grandInvCount  = array_sum(array_column($invoicesData, 'invoice_count'));
+            $grandInvAmount = array_sum(array_column($invoicesData, 'total_amount'));
+        @endphp
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-white dark:bg-dark-card rounded-2xl p-4 border border-gray-200 dark:border-dark-border shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl flex items-center justify-center shrink-0">
+                    <i data-lucide="file-text" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 font-bold">عدد الفواتير</p>
+                    <p class="text-xl font-black text-gray-900 dark:text-white">{{ number_format($grandInvCount) }}</p>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-dark-card rounded-2xl p-4 border border-gray-200 dark:border-dark-border shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl flex items-center justify-center shrink-0">
+                    <i data-lucide="banknote" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 font-bold">إجمالي المبلغ</p>
+                    <p class="text-xl font-black text-indigo-600 dark:text-indigo-400">{{ number_format($grandInvAmount, 0) }} <span class="text-xs font-normal text-gray-500">د</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-gray-100 dark:border-dark-border">
+                <h3 class="font-black text-gray-900 dark:text-white flex items-center gap-2">
+                    <i data-lucide="users" class="w-5 h-5 text-indigo-500"></i>
+                    الزبائن
+                    <span class="text-xs font-bold text-gray-400 dark:text-gray-500 mr-1">— مرتب حسب {{ ($sortBy ?? 'amount') === 'qty' ? 'الكمية' : 'المبلغ' }}</span>
+                </h3>
+            </div>
+            <div class="divide-y divide-gray-100 dark:divide-dark-border">
+                @foreach($invoicesData as $index => $entry)
+                @php $isStore = $entry['type'] === 'متجر'; @endphp
+                <div x-data="{ open: false }">
+                    {{-- رأس الزبون --}}
+                    <button @click="open = !open"
+                        class="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 dark:hover:bg-dark-bg/60 transition-colors text-right">
+                        <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0
+                            {{ $index === 0 ? 'bg-amber-400 text-white' : ($index === 1 ? 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200' : ($index === 2 ? 'bg-orange-300 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400')) }}">
+                            {{ $index + 1 }}
+                        </span>
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 {{ $isStore ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30' }}">
+                            <i data-lucide="{{ $isStore ? 'store' : 'user' }}" class="w-4 h-4 {{ $isStore ? 'text-blue-600 dark:text-blue-400' : 'text-purple-600 dark:text-purple-400' }}"></i>
+                        </div>
+                        <div class="flex-1 min-w-0 text-right">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-black text-gray-900 dark:text-white text-sm">{{ $entry['name'] }}</span>
+                                <span class="px-2 py-0.5 rounded-lg text-xs font-black {{ $isStore ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' }}">
+                                    {{ $entry['type'] }}
+                                </span>
+                                <span class="px-2 py-0.5 rounded-lg text-xs font-bold bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400">
+                                    {{ $entry['invoice_count'] }} فاتورة
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 shrink-0">
+                            <div class="text-center">
+                                <p class="text-xs text-gray-400 dark:text-gray-500">مبلغ</p>
+                                <p class="text-sm font-black text-indigo-600 dark:text-indigo-400">{{ number_format($entry['total_amount'], 0) }}</p>
+                            </div>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''"></i>
+                        </div>
+                    </button>
+
+                    {{-- قائمة الفواتير --}}
+                    <div x-show="open" x-collapse class="border-t border-gray-100 dark:border-dark-border bg-gray-50/50 dark:bg-dark-bg/30 divide-y divide-gray-100 dark:divide-dark-border">
+                        @foreach($entry['invoices'] as $inv)
+                        <div x-data="{ invOpen: false }" class="px-4 py-0">
+                            <button @click="invOpen = !invOpen"
+                                class="w-full flex items-center gap-3 py-3 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-colors text-right">
+                                <i data-lucide="file-text" class="w-4 h-4 text-indigo-400 shrink-0"></i>
+                                <span class="font-black text-indigo-700 dark:text-indigo-300 text-xs flex-1">{{ $inv['invoice_number'] }}</span>
+                                <span class="text-xs text-gray-400 dark:text-gray-500">{{ \Carbon\Carbon::parse($inv['date'])->format('Y-m-d') }}</span>
+                                <span class="text-xs font-black text-gray-700 dark:text-gray-300 mr-3">{{ number_format($inv['total_amount'], 0) }} د</span>
+                                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0" :class="invOpen ? 'rotate-180' : ''"></i>
+                            </button>
+                            <div x-show="invOpen" x-collapse>
+                                <table class="w-full mb-3">
+                                    <thead>
+                                        <tr class="bg-gray-100 dark:bg-gray-800">
+                                            <th class="px-4 py-2 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المنتج</th>
+                                            <th class="px-4 py-2 text-center text-xs font-bold text-gray-600 dark:text-gray-400">الكمية</th>
+                                            <th class="px-4 py-2 text-center text-xs font-bold text-gray-600 dark:text-gray-400">السعر</th>
+                                            <th class="px-4 py-2 text-center text-xs font-bold text-gray-600 dark:text-gray-400">المبلغ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($inv['items'] as $item)
+                                        @php $item = (array) $item; @endphp
+                                        <tr class="border-t border-gray-100 dark:border-dark-border hover:bg-white dark:hover:bg-dark-card">
+                                            <td class="px-4 py-2 text-xs font-bold text-gray-800 dark:text-gray-200">{{ $item['product_name'] }}</td>
+                                            <td class="px-4 py-2 text-center text-xs font-black text-teal-600 dark:text-teal-400">{{ number_format($item['quantity']) }}</td>
+                                            <td class="px-4 py-2 text-center">
+                                                <span class="inline-flex items-center justify-center px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-black">{{ number_format($item['unit_price'], 2) }}</span>
+                                            </td>
+                                            <td class="px-4 py-2 text-center text-xs font-black text-gray-700 dark:text-gray-300">{{ number_format($item['quantity'] * $item['unit_price'], 0) }}</td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        @endforeach
                     </div>
                 </div>
                 @endforeach
