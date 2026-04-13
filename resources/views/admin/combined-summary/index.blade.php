@@ -394,18 +394,23 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-sm overflow-hidden">
-            <div class="p-4 border-b border-gray-100 dark:border-dark-border">
+        <div x-data="{ allOpen: false }" class="bg-white dark:bg-dark-card rounded-2xl border border-gray-200 dark:border-dark-border shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-gray-100 dark:border-dark-border flex items-center justify-between">
                 <h3 class="font-black text-gray-900 dark:text-white flex items-center gap-2">
                     <i data-lucide="users" class="w-5 h-5 text-indigo-500"></i>
                     الزبائن
                     <span class="text-xs font-bold text-gray-400 dark:text-gray-500 mr-1">— مرتب حسب {{ ($sortBy ?? 'amount') === 'qty' ? 'الكمية' : 'المبلغ' }}</span>
                 </h3>
+                <button @click="allOpen = !allOpen; $dispatch('toggle-all', { open: allOpen })"
+                    class="px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors"
+                    :class="allOpen ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-dark-bg text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-50'">
+                    <span x-text="allOpen ? 'طي الكل' : 'فتح الكل'"></span>
+                </button>
             </div>
             <div class="divide-y divide-gray-100 dark:divide-dark-border">
                 @foreach($invoicesData as $index => $entry)
                 @php $isStore = $entry['type'] === 'متجر'; @endphp
-                <div x-data="{ open: false }" class="border-b border-gray-100 dark:border-dark-border last:border-0">
+                <div x-data="{ open: false, allInvOpen: false }" @toggle-all.window="open = $event.detail.open" class="border-b border-gray-100 dark:border-dark-border last:border-0">
                     {{-- رأس الزبون --}}
                     <div class="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 dark:hover:bg-dark-bg/60 transition-colors">
                         <button @click="open = !open" class="flex items-center gap-3 flex-1 min-w-0 text-right">
@@ -441,12 +446,18 @@
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
                             PDF
                         </button>
+                        <button type="button"
+                            @click="allInvOpen = !allInvOpen"
+                            class="px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors shrink-0"
+                            :class="allInvOpen ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-dark-bg text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-50'">
+                            <span x-text="allInvOpen ? 'طي' : 'فتح'"></span>
+                        </button>
                     </div>
 
                     {{-- قائمة الفواتير --}}
                     <div x-show="open" style="display:none" class="border-t border-gray-100 dark:border-dark-border bg-gray-50/50 dark:bg-dark-bg/30 divide-y divide-gray-100 dark:divide-dark-border">
                         @foreach($entry['invoices'] as $inv)
-                        <div x-data="{ invOpen: false }" class="px-4">
+                        <div x-data="{ invOpen: false }" @watch-inv.window="invOpen = allInvOpen" x-effect="invOpen = allInvOpen" class="px-4">
                             <button @click="invOpen = !invOpen"
                                 class="w-full flex items-center gap-3 py-3 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-colors text-right">
                                 <i data-lucide="file-text" class="w-4 h-4 text-indigo-400 shrink-0"></i>
