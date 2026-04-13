@@ -36,9 +36,9 @@
 
         .client-head td { font-weight: bold; font-size: 9px; color: #fff; border: none; }
         .inv-head td { font-weight: bold; font-size: 8.5px; background: #f1f5f9; border-top: 2px solid #94a3b8; }
-        .col-head th { background: #dce4ee; color: #0f172a; }
-        .item-row td { background: #dce4ee; }
-        .item-row-even td { background: #dce4ee; }
+        .col-head th { background: #fff; color: #0f172a; }
+        .item-row td { background: #fff; }
+        .item-row-even td { background: #fff; }
         .client-total td { background: #e8eaf6; font-weight: bold; border-top: 2px solid #0f172a; }
 
         td.num { text-align: center; font-weight: bold; color: #0f172a; }
@@ -163,7 +163,7 @@
             {{ $n($entry['total_amount']) }}
         </td>
         <td style="background:#{{ $entry['color'] }}; padding:7px 12px; text-align:center; color:#fff; font-size:10.5px; font-weight:bold; width:22%; white-space:nowrap;">
-            {{ $entry['invoice_count'] }} {{ $labels['invoices_label'] }}
+            ( {{ $entry['invoice_count'] }} ) {{ $labels['invoices_label'] }}
         </td>
         <td style="background:#{{ $entry['color'] }}; padding:7px 12px; text-align:right; color:#fff; font-weight:bold; font-size:11px;">
             {{ $entry['name'] }}
@@ -175,13 +175,13 @@
 {{-- رأس الفاتورة --}}
 <table style="margin-bottom:0; border-collapse:collapse; width:100%;">
     <tr style="background:#dce4ee; border-top:2px solid #94a3b8;">
-        <td style="padding:5px 10px; text-align:left; font-weight:bold; font-size:10px; color:#0f172a; width:25%;">
+        <td style="padding:5px 10px; text-align:left; font-weight:bold; font-size:10px; color:#0f172a; width:25%; background:#dce4ee;">
             {{ $n($inv['total_amount']) }}
         </td>
-        <td style="padding:5px 10px; text-align:center; font-size:10px; font-weight:bold; color:#1e293b; width:30%;">
+        <td style="padding:5px 10px; text-align:center; font-size:10px; font-weight:bold; color:#1e293b; width:30%; background:#dce4ee;">
             {{ $inv['date'] }}
         </td>
-        <td style="padding:5px 10px; text-align:right; font-weight:bold; font-size:9.5px; color:#1e40af; width:45%;">
+        <td style="padding:5px 10px; text-align:right; font-weight:bold; font-size:9.5px; color:#1e40af; width:45%; background:#dce4ee;">
             {{ $inv['invoice_number'] }}
         </td>
     </tr>

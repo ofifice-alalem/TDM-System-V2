@@ -519,7 +519,7 @@ class CombinedSummaryController extends Controller
             'price'             => $g('السعر'),
             'amount'            => $g('المبلغ'),
             'total'             => $g('الإجمالي'),
-            'invoices_label'    => $g('فاتورة'),
+            'invoices_label'    => $g('عدد الفواتير'),
             'date_label'        => $g('التاريخ'),
             'totalPages'        => 1,
         ];
