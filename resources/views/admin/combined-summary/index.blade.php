@@ -406,6 +406,11 @@
                     :class="allOpen ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-dark-bg text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-50'">
                     <span x-text="allOpen ? 'طي الكل' : 'فتح الكل'"></span>
                 </button>
+                <button type="button" onclick="openAllBulkModal()"
+                    class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold flex items-center gap-1">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    تحميل كل الفواتير PDF
+                </button>
             </div>
             <div class="divide-y divide-gray-100 dark:divide-dark-border">
                 @foreach($invoicesData as $index => $entry)
@@ -851,6 +856,10 @@
 
     @if($tab === 'invoices')
     let _clientBulkBaseUrl, _clientBulkCount, _clientChunksOpen = false;
+
+    function openAllBulkModal() {
+        openClientBulkModal('all', 0, 'جميع الزبائن');
+    }
 
     function openClientBulkModal(type, clientId, clientName) {
         const modal = document.getElementById('clientBulkModal');

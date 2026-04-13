@@ -246,106 +246,70 @@ class CombinedSummaryController extends Controller
 
     public function clientBulkCount(Request $request)
     {
-        $type       = $request->input('client_type'); // store | customer
-        $clientId   = (int) $request->input('client_id');
-        $fromDate   = $request->input('from_date', now()->startOfMonth()->format('Y-m-d'));
-        $toDate     = $request->input('to_date', now()->format('Y-m-d'));
-        $staffId    = $request->input('staff_id');
-        $productId  = $request->input('product_id');
+        $type         = $request->input('client_type');
+        $clientId     = (int) $request->input('client_id');
+        $fromDate     = $request->input('from_date', now()->startOfMonth()->format('Y-m-d'));
+        $toDate       = $request->input('to_date', now()->format('Y-m-d'));
+        $staffId      = $request->input('staff_id');
+        $productId    = $request->input('product_id');
+        $storeName    = $request->input('store_name');
+        $customerName = $request->input('customer_name');
+        $storeId      = $request->input('store_id') ? (int) $request->input('store_id') : null;
+        $customerId   = $request->input('customer_id') ? (int) $request->input('customer_id') : null;
 
-        $count = $this->getClientInvoiceIds($type, $clientId, $fromDate, $toDate, $staffId, $productId)->count();
-        return response()->json(['count' => $count]);
+        $entityType = $request->input('entity_type', 'all');
+        $ids = $this->getClientInvoiceIds($type, $clientId, $fromDate, $toDate, $staffId, $productId, $storeName, $customerName, $storeId, $customerId, $entityType);
+        return response()->json(['count' => $ids->count()]);
     }
 
     public function clientBulkPdf(Request $request)
     {
-        $type      = $request->input('client_type');
-        $clientId  = (int) $request->input('client_id');
-        $fromDate  = $request->input('from_date', now()->startOfMonth()->format('Y-m-d'));
-        $toDate    = $request->input('to_date', now()->format('Y-m-d'));
-        $staffId   = $request->input('staff_id');
-        $productId = $request->input('product_id');
-        $offset    = max(0, (int) $request->input('offset', 0));
-        $limit     = min(70, max(50, (int) $request->input('limit', 0))) ?: null;
+        $type         = $request->input('client_type');
+        $clientId     = (int) $request->input('client_id');
+        $fromDate     = $request->input('from_date', now()->startOfMonth()->format('Y-m-d'));
+        $toDate       = $request->input('to_date', now()->format('Y-m-d'));
+        $staffId      = $request->input('staff_id');
+        $productId    = $request->input('product_id');
+        $storeName    = $request->input('store_name');
+        $customerName = $request->input('customer_name');
+        $storeId      = $request->input('store_id') ? (int) $request->input('store_id') : null;
+        $customerId   = $request->input('customer_id') ? (int) $request->input('customer_id') : null;
+        $offset       = max(0, (int) $request->input('offset', 0));
+        $limit        = min(70, max(50, (int) $request->input('limit', 0))) ?: null;
 
-        $ids = $this->getClientInvoiceIds($type, $clientId, $fromDate, $toDate, $staffId, $productId);
+        $entityType = $request->input('entity_type', 'all');
+        $ids = $this->getClientInvoiceIds($type, $clientId, $fromDate, $toDate, $staffId, $productId, $storeName, $customerName, $storeId, $customerId, $entityType);
         if ($ids->isEmpty()) abort(404, 'لا توجد بيانات');
         if ($limit) $ids = $ids->slice($offset, $limit)->values();
 
-        $arabic = new \ArPHP\I18N\Arabic();
-        $g = fn($t) => $arabic->utf8Glyphs($t);
-        $logoPath   = public_path('images/company.png');
-        $logoBase64 = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : null;
+        $arabic      = new \ArPHP\I18N\Arabic();
+        $g           = fn($t) => $arabic->utf8Glyphs($t);
+        $logoPath    = public_path('images/company.png');
+        $logoBase64  = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : null;
         $companyName = $g('شركة المتفوقون الأوائل للصناعات البلاستيكية');
 
-        if ($type === 'store') {
-            $items = \App\Models\SalesInvoice::with(['items.product', 'store', 'marketer'])
-                ->whereIn('id', $ids)->orderBy('created_at')->get();
-            $invoices = $items->map(fn($item) => (object)[
-                'operation'      => 'sales',
-                'status'         => $g($item->status === 'approved' ? 'معتمد' : 'معلق'),
-                'statusValue'    => $item->status,
-                'isInvalid'      => false,
-                'date'           => $item->created_at->format('Y-m-d H:i'),
-                'logoBase64'     => $logoBase64,
-                'companyName'    => $companyName,
-                'invoiceNumber'  => $item->invoice_number,
-                'title'          => $g('فاتورة مبيعات'),
-                'storeName'      => $g($item->store->name ?? '-'),
-                'storePhone'     => $item->store->phone ?? '-',
-                'marketerName'   => $g($item->marketer->full_name ?? '-'),
-                'keeperName'     => null,
-                'rejectedByName' => null,
-                'confirmedDate'  => null,
-                'rejectedDate'   => null,
-                'subtotal'       => number_format($item->subtotal ?? $item->total_amount, 2),
-                'productDiscount'=> 0,
-                'invoiceDiscount'=> number_format($item->discount_amount ?? 0, 2),
-                'totalAmount'    => number_format($item->total_amount, 2),
-                'totalProducts'  => $item->items->sum('quantity'),
-                'items'          => $item->items->map(fn($i) => (object)[
-                    'name'          => $g($i->product->name ?? '-'),
-                    'quantity'      => $i->quantity,
-                    'freeQuantity'  => 0,
-                    'totalQuantity' => $i->quantity,
-                    'unitPrice'     => number_format($i->unit_price, 2),
-                    'totalPrice'    => number_format($i->unit_price * $i->quantity, 2),
-                ]),
-            ]);
+        if ($type === 'all') {
+            $invoices = collect();
+            $storeIds    = collect($ids)->where('type', 'store')->pluck('id');
+            $customerIds = collect($ids)->where('type', 'customer')->pluck('id');
+            if ($storeIds->isNotEmpty()) {
+                \App\Models\SalesInvoice::with(['items.product', 'store', 'marketer'])
+                    ->whereIn('id', $storeIds)->orderBy('created_at')->get()
+                    ->each(fn($item) => $invoices->push($this->mapStoreInvoice($item, $g, $logoBase64, $companyName)));
+            }
+            if ($customerIds->isNotEmpty()) {
+                \App\Models\CustomerInvoice::with(['items.product', 'customer', 'salesUser'])
+                    ->whereIn('id', $customerIds)->orderBy('created_at')->get()
+                    ->each(fn($item) => $invoices->push($this->mapCustomerInvoice($item, $g, $logoBase64, $companyName)));
+            }
+        } elseif ($type === 'store') {
+            $invoices = \App\Models\SalesInvoice::with(['items.product', 'store', 'marketer'])
+                ->whereIn('id', $ids)->orderBy('created_at')->get()
+                ->map(fn($item) => $this->mapStoreInvoice($item, $g, $logoBase64, $companyName));
         } else {
-            $items = \App\Models\CustomerInvoice::with(['items.product', 'customer', 'salesUser'])
-                ->whereIn('id', $ids)->orderBy('created_at')->get();
-            $invoices = $items->map(fn($item) => (object)[
-                'operation'      => 'sales',
-                'status'         => $g('مكتمل'),
-                'statusValue'    => 'approved',
-                'isInvalid'      => false,
-                'date'           => $item->created_at->format('Y-m-d H:i'),
-                'logoBase64'     => $logoBase64,
-                'companyName'    => $companyName,
-                'invoiceNumber'  => $item->invoice_number,
-                'title'          => $g('فاتورة مبيعات'),
-                'storeName'      => $g($item->customer->name ?? '-'),
-                'storePhone'     => $item->customer->phone ?? '-',
-                'marketerName'   => $g($item->salesUser->full_name ?? '-'),
-                'keeperName'     => null,
-                'rejectedByName' => null,
-                'confirmedDate'  => null,
-                'rejectedDate'   => null,
-                'subtotal'       => number_format($item->subtotal ?? $item->total_amount, 2),
-                'productDiscount'=> 0,
-                'invoiceDiscount'=> number_format($item->discount_amount ?? 0, 2),
-                'totalAmount'    => number_format($item->total_amount, 2),
-                'totalProducts'  => $item->items->sum('quantity'),
-                'items'          => $item->items->map(fn($i) => (object)[
-                    'name'          => $g($i->product->name ?? '-'),
-                    'quantity'      => $i->quantity,
-                    'freeQuantity'  => 0,
-                    'totalQuantity' => $i->quantity,
-                    'unitPrice'     => number_format($i->unit_price, 2),
-                    'totalPrice'    => number_format($i->unit_price * $i->quantity, 2),
-                ]),
-            ]);
+            $invoices = \App\Models\CustomerInvoice::with(['items.product', 'customer', 'salesUser'])
+                ->whereIn('id', $ids)->orderBy('created_at')->get()
+                ->map(fn($item) => $this->mapCustomerInvoice($item, $g, $logoBase64, $companyName));
         }
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('shared.statistics.bulk-invoices-pdf', [
@@ -361,11 +325,125 @@ class CombinedSummaryController extends Controller
           ->setOption('isFontSubsettingEnabled', true);
 
         $suffix = $limit ? ('-' . ($offset + 1) . '-' . ($offset + count($invoices))) : '';
-        return $pdf->stream('invoices-' . $clientId . '-' . $fromDate . $suffix . '.pdf');
+        return $pdf->stream('invoices-' . $type . '-' . $fromDate . $suffix . '.pdf');
     }
 
-    private function getClientInvoiceIds(string $type, int $clientId, string $fromDate, string $toDate, $staffId, $productId): \Illuminate\Support\Collection
+    private function mapStoreInvoice($item, $g, $logoBase64, $companyName): object
     {
+        return (object)[
+            'operation'      => 'sales',
+            'status'         => $g($item->status === 'approved' ? 'معتمد' : 'معلق'),
+            'statusValue'    => $item->status,
+            'isInvalid'      => false,
+            'date'           => $item->created_at->format('Y-m-d H:i'),
+            'logoBase64'     => $logoBase64,
+            'companyName'    => $companyName,
+            'invoiceNumber'  => $item->invoice_number,
+            'title'          => $g('فاتورة مبيعات'),
+            'storeName'      => $g($item->store->name ?? '-'),
+            'storePhone'     => $item->store->phone ?? '-',
+            'marketerName'   => $g($item->marketer->full_name ?? '-'),
+            'keeperName'     => null,
+            'rejectedByName' => null,
+            'confirmedDate'  => null,
+            'rejectedDate'   => null,
+            'subtotal'       => number_format($item->subtotal ?? $item->total_amount, 2),
+            'productDiscount'=> 0,
+            'invoiceDiscount'=> number_format($item->discount_amount ?? 0, 2),
+            'totalAmount'    => number_format($item->total_amount, 2),
+            'totalProducts'  => $item->items->sum('quantity'),
+            'items'          => $item->items->map(fn($i) => (object)[
+                'name'          => $g($i->product->name ?? '-'),
+                'quantity'      => $i->quantity,
+                'freeQuantity'  => 0,
+                'totalQuantity' => $i->quantity,
+                'unitPrice'     => number_format($i->unit_price, 2),
+                'totalPrice'    => number_format($i->unit_price * $i->quantity, 2),
+            ]),
+        ];
+    }
+
+    private function mapCustomerInvoice($item, $g, $logoBase64, $companyName): object
+    {
+        return (object)[
+            'operation'      => 'sales',
+            'status'         => $g('مكتمل'),
+            'statusValue'    => 'approved',
+            'isInvalid'      => false,
+            'date'           => $item->created_at->format('Y-m-d H:i'),
+            'logoBase64'     => $logoBase64,
+            'companyName'    => $companyName,
+            'invoiceNumber'  => $item->invoice_number,
+            'title'          => $g('فاتورة مبيعات'),
+            'storeName'      => $g($item->customer->name ?? '-'),
+            'storePhone'     => $item->customer->phone ?? '-',
+            'marketerName'   => $g($item->salesUser->full_name ?? '-'),
+            'keeperName'     => null,
+            'rejectedByName' => null,
+            'confirmedDate'  => null,
+            'rejectedDate'   => null,
+            'subtotal'       => number_format($item->subtotal ?? $item->total_amount, 2),
+            'productDiscount'=> 0,
+            'invoiceDiscount'=> number_format($item->discount_amount ?? 0, 2),
+            'totalAmount'    => number_format($item->total_amount, 2),
+            'totalProducts'  => $item->items->sum('quantity'),
+            'items'          => $item->items->map(fn($i) => (object)[
+                'name'          => $g($i->product->name ?? '-'),
+                'quantity'      => $i->quantity,
+                'freeQuantity'  => 0,
+                'totalQuantity' => $i->quantity,
+                'unitPrice'     => number_format($i->unit_price, 2),
+                'totalPrice'    => number_format($i->unit_price * $i->quantity, 2),
+            ]),
+        ];
+    }
+
+
+    private function getClientInvoiceIds(string $type, int $clientId, string $fromDate, string $toDate, $staffId, $productId, ?string $storeName = null, ?string $customerName = null, ?int $storeId = null, ?int $customerId = null, string $entityType = 'all'): \Illuminate\Support\Collection
+    {
+        if ($type === 'all') {
+            $staffIsMarketer = $staffId && \App\Models\User::where('id', $staffId)->value('role_id') == 3;
+
+            $storeInvIds = collect();
+            if ($entityType !== 'customer') {
+                $filteredStoreIds = Store::when($storeId, fn($q) => $q->where('id', $storeId))
+                    ->when($storeName, fn($q) => $q->where('name', 'like', '%' . $storeName . '%'))
+                    ->pluck('id');
+                $q1 = DB::table('sales_invoices as inv')
+                    ->whereIn('inv.status', ['approved', 'pending'])
+                    ->whereIn('inv.store_id', $filteredStoreIds)
+                    ->whereDate('inv.created_at', '>=', $fromDate)
+                    ->whereDate('inv.created_at', '<=', $toDate)
+                    ->when($staffId, fn($q) => $q->where('inv.marketer_id', $staffId));
+                if ($productId) {
+                    $q1->whereExists(fn($q) => $q->from('sales_invoice_items')->whereColumn('invoice_id', 'inv.id')->where('product_id', $productId));
+                }
+                $storeInvIds = $q1->orderBy('inv.created_at')->pluck('inv.id');
+            }
+
+            if ($staffIsMarketer || $entityType === 'store') {
+                return $storeInvIds->map(fn($id) => ['id' => $id, 'type' => 'store'])->values();
+            }
+
+            $filteredCustIds = Customer::when($customerId, fn($q) => $q->where('id', $customerId))
+                ->when($customerName, fn($q) => $q->where('name', 'like', '%' . $customerName . '%'))
+                ->pluck('id');
+            $q2 = DB::table('customer_invoices as inv')
+                ->where('inv.status', 'completed')
+                ->whereIn('inv.customer_id', $filteredCustIds)
+                ->whereDate('inv.created_at', '>=', $fromDate)
+                ->whereDate('inv.created_at', '<=', $toDate)
+                ->when($staffId, fn($q) => $q->where('inv.sales_user_id', $staffId));
+            if ($productId) {
+                $q2->whereExists(fn($q) => $q->from('customer_invoice_items')->whereColumn('invoice_id', 'inv.id')->where('product_id', $productId));
+            }
+            $custInvIds = $q2->orderBy('inv.created_at')->pluck('inv.id');
+
+            return $storeInvIds->map(fn($id) => ['id' => $id, 'type' => 'store'])
+                ->concat($custInvIds->map(fn($id) => ['id' => $id, 'type' => 'customer']))
+                ->values();
+        }
+
         if ($type === 'store') {
             $query = DB::table('sales_invoices as inv')
                 ->whereIn('inv.status', ['approved', 'pending'])
