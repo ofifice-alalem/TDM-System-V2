@@ -405,10 +405,10 @@
             <div class="divide-y divide-gray-100 dark:divide-dark-border">
                 @foreach($invoicesData as $index => $entry)
                 @php $isStore = $entry['type'] === 'متجر'; @endphp
-                <div x-data="{ open: false }">
+                <div x-data="{ open: false }" class="border-b border-gray-100 dark:border-dark-border last:border-0">
                     {{-- رأس الزبون --}}
-                    <button @click="open = !open"
-                        class="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 dark:hover:bg-dark-bg/60 transition-colors text-right">
+                    <div class="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 dark:hover:bg-dark-bg/60 transition-colors">
+                        <button @click="open = !open" class="flex items-center gap-3 flex-1 min-w-0 text-right">
                         <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0
                             {{ $index === 0 ? 'bg-amber-400 text-white' : ($index === 1 ? 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200' : ($index === 2 ? 'bg-orange-300 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400')) }}">
                             {{ $index + 1 }}
@@ -416,7 +416,7 @@
                         <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 {{ $isStore ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-purple-100 dark:bg-purple-900/30' }}">
                             <i data-lucide="{{ $isStore ? 'store' : 'user' }}" class="w-4 h-4 {{ $isStore ? 'text-blue-600 dark:text-blue-400' : 'text-purple-600 dark:text-purple-400' }}"></i>
                         </div>
-                        <div class="flex-1 min-w-0 text-right">
+                        <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="font-black text-gray-900 dark:text-white text-sm">{{ $entry['name'] }}</span>
                                 <span class="px-2 py-0.5 rounded-lg text-xs font-black {{ $isStore ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' }}">
@@ -427,25 +427,26 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="flex items-center gap-4 shrink-0">
+                        <div class="flex items-center gap-3 shrink-0">
                             <div class="text-center">
                                 <p class="text-xs text-gray-400 dark:text-gray-500">مبلغ</p>
                                 <p class="text-sm font-black text-indigo-600 dark:text-indigo-400">{{ number_format($entry['total_amount'], 0) }}</p>
                             </div>
-                            <button type="button"
-                                @click.stop="openClientBulkModal('{{ $isStore ? 'store' : 'customer' }}', {{ $entry['id'] }}, '{{ addslashes($entry['name']) }}')"
-                                class="px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shrink-0">
-                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                PDF
-                            </button>
                             <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''"></i>
                         </div>
-                    </button>
+                        </button>
+                        <button type="button"
+                            onclick="openClientBulkModal('{{ $isStore ? 'store' : 'customer' }}', {{ $entry['id'] }}, '{{ addslashes($entry['name']) }}')"
+                            class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shrink-0">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            PDF
+                        </button>
+                    </div>
 
                     {{-- قائمة الفواتير --}}
-                    <div x-show="open" x-collapse class="border-t border-gray-100 dark:border-dark-border bg-gray-50/50 dark:bg-dark-bg/30 divide-y divide-gray-100 dark:divide-dark-border">
+                    <div x-show="open" style="display:none" class="border-t border-gray-100 dark:border-dark-border bg-gray-50/50 dark:bg-dark-bg/30 divide-y divide-gray-100 dark:divide-dark-border">
                         @foreach($entry['invoices'] as $inv)
-                        <div x-data="{ invOpen: false }" class="px-4 py-0">
+                        <div x-data="{ invOpen: false }" class="px-4">
                             <button @click="invOpen = !invOpen"
                                 class="w-full flex items-center gap-3 py-3 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-colors text-right">
                                 <i data-lucide="file-text" class="w-4 h-4 text-indigo-400 shrink-0"></i>
@@ -454,8 +455,9 @@
                                 <span class="text-xs font-black text-gray-700 dark:text-gray-300 mr-3">{{ number_format($inv['total_amount'], 0) }} د</span>
                                 <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0" :class="invOpen ? 'rotate-180' : ''"></i>
                             </button>
-                            <div x-show="invOpen" x-collapse>
-                                <table class="w-full mb-3">
+                            <div x-show="invOpen" style="display:none">
+                                <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-dark-border mb-3">
+                                <table class="w-full">
                                     <thead>
                                         <tr class="bg-gray-100 dark:bg-gray-800">
                                             <th class="px-4 py-2 text-right text-xs font-bold text-gray-600 dark:text-gray-400">المنتج</th>
@@ -464,10 +466,10 @@
                                             <th class="px-4 py-2 text-center text-xs font-bold text-gray-600 dark:text-gray-400">المبلغ</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody class="divide-y divide-gray-100 dark:divide-dark-border">
                                         @foreach($inv['items'] as $item)
                                         @php $item = (array) $item; @endphp
-                                        <tr class="border-t border-gray-100 dark:border-dark-border hover:bg-white dark:hover:bg-dark-card">
+                                        <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg/50 transition-colors">
                                             <td class="px-4 py-2 text-xs font-bold text-gray-800 dark:text-gray-200">{{ $item['product_name'] }}</td>
                                             <td class="px-4 py-2 text-center text-xs font-black text-teal-600 dark:text-teal-400">{{ number_format($item['quantity']) }}</td>
                                             <td class="px-4 py-2 text-center">
@@ -478,6 +480,7 @@
                                         @endforeach
                                     </tbody>
                                 </table>
+                                </div>
                             </div>
                         </div>
                         @endforeach
