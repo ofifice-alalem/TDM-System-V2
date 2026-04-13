@@ -1,0 +1,697 @@
+================================================================================
+                    المسارات والـControllers - إرجاع بضاعة من المسوق
+                              (البنية المشتركة المثالية)
+================================================================================
+
+📋 نظرة عامة:
+--------------
+هذا الملف يوثق البنية المثالية للمسارات والـControllers باستخدام نهج مشترك
+لتقليل التكرار مع الحفاظ على الأمان والوضوح.
+
+✅ فلسفة التصميم:
+- Controller واحد مشترك
+- Policies للتحكم بالصلاحيات
+- Middleware للمصادقة فقط
+- Views مشتركة
+
+================================================================================
+                        🛣️ المسارات (Routes)
+================================================================================
+
+📁 الملف: routes/web.php
+🔒 Middleware: ['auth']
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ المسارات المشتركة                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Route::middleware('auth')->group(function () {
+    
+    // Resource Routes
+    Route::resource('returns', ReturnController::class)
+        ->except(['edit', 'update', 'destroy']);
+    
+    // Custom Actions
+    Route::post('returns/{return}/approve', [ReturnController::class, 'approve'])
+        ->name('returns.approve')
+        ->can('approve', 'return');
+    
+    Route::post('returns/{return}/reject', [ReturnController::class, 'reject'])
+        ->name('returns.reject')
+        ->can('reject', 'return');
+    
+    Route::post('returns/{return}/document', [ReturnController::class, 'document'])
+        ->name('returns.document')
+        ->can('document', 'return');
+    
+    Route::post('returns/{return}/cancel', [ReturnController::class, 'cancel'])
+        ->name('returns.cancel')
+        ->can('cancel', 'return');
+    
+    // Additional Routes
+    Route::get('returns/{return}/pdf', [ReturnController::class, 'pdf'])
+        ->name('returns.pdf');
+    
+    Route::get('returns/{return}/documentation', [ReturnController::class, 'viewDocumentation'])
+        ->name('returns.documentation');
+});
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ جدول المسارات                                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+GET     /returns
+        الاسم: returns.index
+        الصلاحية: @can('viewAny', MarketerReturnRequest::class)
+        الغرض: عرض قائمة طلبات الإرجاع (حسب الدور)
+
+GET     /returns/create
+        الاسم: returns.create
+        الصلاحية: @can('create', MarketerReturnRequest::class)
+        الغرض: عرض صفحة إنشاء طلب إرجاع (للمسوق فقط)
+
+POST    /returns
+        الاسم: returns.store
+        الصلاحية: @can('create', MarketerReturnRequest::class)
+        الغرض: حفظ طلب إرجاع جديد
+
+GET     /returns/{return}
+        الاسم: returns.show
+        الصلاحية: @can('view', $return)
+        الغرض: عرض تفاصيل طلب إرجاع معين
+
+POST    /returns/{return}/approve
+        الاسم: returns.approve
+        الصلاحية: @can('approve', $return)
+        الغرض: الموافقة على طلب إرجاع (لأمين المخزن)
+
+POST    /returns/{return}/reject
+        الاسم: returns.reject
+        الصلاحية: @can('reject', $return)
+        الغرض: رفض طلب إرجاع (لأمين المخزن)
+
+POST    /returns/{return}/document
+        الاسم: returns.document
+        الصلاحية: @can('document', $return)
+        الغرض: توثيق طلب إرجاع (لأمين المخزن)
+
+POST    /returns/{return}/cancel
+        الاسم: returns.cancel
+        الصلاحية: @can('cancel', $return)
+        الغرض: إلغاء طلب إرجاع (للمسوق)
+
+GET     /returns/{return}/pdf
+        الاسم: returns.pdf
+        الصلاحية: @can('view', $return)
+        الغرض: طباعة PDF
+
+GET     /returns/{return}/documentation
+        الاسم: returns.documentation
+        الصلاحية: @can('view', $return)
+        الغرض: عرض صورة الفاتورة المختومة
+
+
+================================================================================
+                        🎮 Controller
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ReturnController (مشترك)                                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Controllers/ReturnController.php
+🎯 المسؤولية: إدارة جميع عمليات طلبات الإرجاع لجميع الأدوار
+
+📋 الـMethods:
+
+1️⃣ index(Request $request)
+   - الغرض: عرض قائمة طلبات الإرجاع حسب صلاحيات المستخدم
+   - الصلاحية: $this->authorize('viewAny', MarketerReturnRequest::class)
+   - المعاملات:
+     • status (optional): الفلترة حسب الحالة
+     • marketer_id (optional): الفلترة حسب المسوق (لأمين المخزن)
+     • invoice_number (optional): البحث برقم الفاتورة
+     • from_date, to_date (optional): الفلترة حسب التاريخ
+   
+   - المنطق:
+     ```php
+     $query = MarketerReturnRequest::with('items.product', 'marketer');
+     
+     // الفرق الوحيد بين الأدوار
+     if (auth()->user()->isMarketer()) {
+         $query->where('marketer_id', auth()->id());
+     }
+     
+     // باقي الفلاتر مشتركة
+     $this->applyFilters($query, $request);
+     
+     // البيانات الإضافية
+     $marketers = auth()->user()->isWarehouse() 
+         ? User::where('role_id', 3)->where('is_active', true)->get() 
+         : null;
+     
+     return view('shared.returns.index', [
+         'returns' => $query->paginate(20),
+         'marketers' => $marketers
+     ]);
+     ```
+   
+   - الـView: shared/returns/index.blade.php
+
+2️⃣ create()
+   - الغرض: عرض صفحة إنشاء طلب إرجاع جديد
+   - الصلاحية: $this->authorize('create', MarketerReturnRequest::class)
+   - البيانات المرسلة:
+     • products: المنتجات الموجودة في مخزون المسوق الفعلي
+     ```php
+     $products = Product::whereHas('marketerActualStock', function($q) {
+             $q->where('marketer_id', auth()->id())
+               ->where('quantity', '>', 0);
+         })
+         ->with(['marketerActualStock' => function($q) {
+             $q->where('marketer_id', auth()->id());
+         }])
+         ->get();
+     ```
+   - الـView: marketer/returns/create.blade.php
+
+3️⃣ store(StoreReturnRequest $request)
+   - الغرض: حفظ طلب إرجاع جديد
+   - الـForm Request: StoreReturnRequest (يحتوي على validation + authorization)
+   - الـService: ReturnService::createReturn()
+   - الإرجاع: redirect()->route('returns.show', $return)
+
+4️⃣ show(MarketerReturnRequest $return)
+   - الغرض: عرض تفاصيل طلب إرجاع معين
+   - الصلاحية: $this->authorize('view', $return)
+   - الـEager Loading: items.product, marketer, approver, rejecter, documenter
+   - البيانات الإضافية:
+     ```php
+     $stockAvailability = auth()->user()->isWarehouse() && $return->status === 'pending'
+         ? $this->checkStockAvailability($return)
+         : null;
+     ```
+   - الـView: shared/returns/show.blade.php
+
+5️⃣ approve(MarketerReturnRequest $return)
+   - الغرض: الموافقة على طلب إرجاع معلق
+   - الصلاحية: $this->authorize('approve', $return)
+   - الـService: ReturnService::approveReturn($return->id, auth()->id())
+   - الإرجاع: redirect()->back()->with('success', 'تمت الموافقة على طلب الإرجاع بنجاح')
+
+6️⃣ reject(RejectReturnRequest $request, MarketerReturnRequest $return)
+   - الغرض: رفض طلب إرجاع
+   - الـForm Request: RejectReturnRequest
+   - الـService: ReturnService::rejectReturn($return->id, auth()->id(), $request->notes)
+   - الإرجاع: redirect()->back()->with('success', 'تم رفض طلب الإرجاع بنجاح')
+
+7️⃣ document(DocumentReturnRequest $request, MarketerReturnRequest $return)
+   - الغرض: توثيق طلب إرجاع موافق عليه
+   - الـForm Request: DocumentReturnRequest
+   - رفع الملف:
+     ```php
+     $path = $request->file('stamped_image')
+         ->store('marketer_returns', 'public');
+     ```
+   - الـService: ReturnService::documentReturn($return->id, auth()->id(), $path)
+   - الإرجاع: redirect()->back()->with('success', 'تم توثيق طلب الإرجاع بنجاح')
+
+8️⃣ cancel(CancelReturnRequest $request, MarketerReturnRequest $return)
+   - الغرض: إلغاء طلب إرجاع
+   - الـForm Request: CancelReturnRequest
+   - الـService: ReturnService::cancelReturn($return->id, auth()->id(), $request->notes)
+   - الإرجاع: redirect()->route('returns.index')->with('success', 'تم إلغاء طلب الإرجاع بنجاح')
+
+9️⃣ pdf(MarketerReturnRequest $return)
+   - الغرض: طباعة PDF لطلب الإرجاع
+   - الصلاحية: $this->authorize('view', $return)
+   - الـService: InvoiceService::generateReturnPdf($return)
+   - الإرجاع: PDF file
+
+🔟 viewDocumentation(MarketerReturnRequest $return)
+   - الغرض: عرض صورة الفاتورة المختومة
+   - الصلاحية: $this->authorize('view', $return)
+   - التحقق:
+     • status === 'documented'
+     • stamped_image exists
+   - الإرجاع: response()->file(storage_path('app/public/' . $return->stamped_image))
+
+1️⃣1️⃣ applyFilters($query, $request) - private
+   - الغرض: تطبيق الفلاتر المشتركة
+   - المنطق:
+     ```php
+     if ($request->filled('invoice_number')) {
+         $query->where('invoice_number', 'like', '%' . $request->invoice_number . '%');
+     }
+     
+     if ($request->filled('status')) {
+         $query->where('status', $request->status);
+     }
+     
+     if ($request->filled('marketer_id') && auth()->user()->isWarehouse()) {
+         $query->where('marketer_id', $request->marketer_id);
+     }
+     
+     if ($request->filled('from_date')) {
+         $query->whereDate('created_at', '>=', $request->from_date);
+     }
+     
+     if ($request->filled('to_date')) {
+         $query->whereDate('created_at', '<=', $request->to_date);
+     }
+     
+     // الترتيب
+     if (in_array($request->status ?? 'pending', ['pending', 'approved'])) {
+         $query->oldest('updated_at');
+     } else {
+         $query->latest('updated_at');
+     }
+     ```
+
+1️⃣2️⃣ checkStockAvailability($return) - private
+   - الغرض: فحص توفر الكميات في مخزون المسوق
+   - الإرجاع: array of products with availability status
+
+
+================================================================================
+                        ⚙️ Service
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ReturnService (مشترك)                                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Services/ReturnService.php
+🎯 المسؤولية: منطق الأعمال لجميع عمليات طلبات الإرجاع
+
+📋 الـMethods:
+
+1️⃣ createReturn($marketerId, array $items, $notes)
+   - الغرض: إنشاء طلب إرجاع جديد
+   - التحقق: الكمية لا تتجاوز marketer_actual_stock
+   - الخطوات:
+     1. إنشاء سجل في marketer_return_requests
+     2. إنشاء سجلات في marketer_return_items
+     3. إرسال إشعار لجميع أمناء المخزن
+   - الإرجاع: MarketerReturnRequest
+   - الـTransaction: DB::transaction()
+
+2️⃣ approveReturn($returnId, $keeperId)
+   - الغرض: الموافقة على طلب إرجاع معلق
+   - التحقق: status === 'pending'
+   - الخطوات:
+     1. checkStockAvailability()
+     2. تحديث marketer_return_requests
+     3. إرسال إشعار للمسوق
+   - الإرجاع: MarketerReturnRequest
+   - الـTransaction: DB::transaction()
+
+3️⃣ rejectReturn($returnId, $keeperId, $notes)
+   - الغرض: رفض طلب إرجاع
+   - التحقق: status in ['pending', 'approved']
+   - الخطوات:
+     1. تحديث marketer_return_requests
+     2. إرسال إشعار للمسوق
+   - الإرجاع: MarketerReturnRequest
+   - الـTransaction: DB::transaction()
+
+4️⃣ documentReturn($returnId, $keeperId, $stampedImage)
+   - الغرض: توثيق طلب إرجاع موافق عليه
+   - التحقق: status === 'approved'
+   - الخطوات:
+     1. moveStockToMain()
+     2. تحديث marketer_return_requests
+     3. إنشاء warehouse_stock_log
+     4. إرسال إشعار للمسوق
+   - الإرجاع: MarketerReturnRequest
+   - الـTransaction: DB::transaction()
+
+5️⃣ cancelReturn($returnId, $marketerId, $notes)
+   - الغرض: إلغاء طلب إرجاع
+   - التحقق: 
+     • marketer_id === $marketerId
+     • status in ['pending', 'approved']
+   - الخطوات:
+     1. تحديث marketer_return_requests
+   - الإرجاع: MarketerReturnRequest
+   - الـTransaction: DB::transaction()
+
+6️⃣ checkStockAvailability($return) - private
+   - الغرض: فحص توفر الكميات في marketer_actual_stock
+   - الاستثناءات: Exception إذا غير متوفر
+
+7️⃣ moveStockToMain($return) - private
+   - الغرض: نقل من مخزون المسوق إلى المخزن الرئيسي
+   - الخطوات:
+     • decrement marketer_actual_stock
+     • increment main_stock
+
+
+================================================================================
+                        🔐 Policy
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ MarketerReturnRequestPolicy                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Policies/MarketerReturnRequestPolicy.php
+🎯 المسؤولية: التحكم بالصلاحيات لجميع الأدوار
+
+📋 الـMethods:
+
+viewAny(User $user): bool
+   - الجميع يمكنهم رؤية القائمة
+   - return true;
+
+viewAll(User $user): bool
+   - أمين المخزن فقط يرى جميع طلبات الإرجاع
+   - return $user->role_id === 2;
+
+view(User $user, MarketerReturnRequest $return): bool
+   - المسوق يرى طلبات الإرجاع الخاصة به فقط
+   - أمين المخزن يرى الكل
+   - return $user->role_id === 2 || $user->id === $return->marketer_id;
+
+create(User $user): bool
+   - المسوق فقط ينشئ طلبات إرجاع
+   - return $user->role_id === 3;
+
+approve(User $user, MarketerReturnRequest $return): bool
+   - أمين المخزن فقط + الحالة pending
+   - return $user->role_id === 2 && $return->status === ReturnStatus::PENDING;
+
+reject(User $user, MarketerReturnRequest $return): bool
+   - أمين المخزن فقط + الحالة pending أو approved
+   - return $user->role_id === 2 
+       && in_array($return->status, [ReturnStatus::PENDING, ReturnStatus::APPROVED]);
+
+document(User $user, MarketerReturnRequest $return): bool
+   - أمين المخزن فقط + الحالة approved
+   - return $user->role_id === 2 && $return->status === ReturnStatus::APPROVED;
+
+cancel(User $user, MarketerReturnRequest $return): bool
+   - المسوق صاحب الطلب فقط + الحالة pending أو approved
+   - return $user->id === $return->marketer_id 
+       && in_array($return->status, [ReturnStatus::PENDING, ReturnStatus::APPROVED]);
+
+
+================================================================================
+                        📦 Models & Enums
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ReturnStatus Enum                                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Enums/ReturnStatus.php
+
+```php
+enum ReturnStatus: string
+{
+    case PENDING = 'pending';
+    case APPROVED = 'approved';
+    case REJECTED = 'rejected';
+    case CANCELLED = 'cancelled';
+    case DOCUMENTED = 'documented';
+    
+    public function label(): string
+    {
+        return match($this) {
+            self::PENDING => 'معلق',
+            self::APPROVED => 'موافق عليه',
+            self::REJECTED => 'مرفوض',
+            self::CANCELLED => 'ملغي',
+            self::DOCUMENTED => 'موثق',
+        };
+    }
+    
+    public function color(): string
+    {
+        return match($this) {
+            self::PENDING => 'orange',
+            self::APPROVED => 'blue',
+            self::REJECTED => 'red',
+            self::CANCELLED => 'gray',
+            self::DOCUMENTED => 'green',
+        };
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ MarketerReturnRequest Model                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Models/MarketerReturnRequest.php
+
+📋 الـCasts:
+```php
+protected $casts = [
+    'status' => ReturnStatus::class,
+    'approved_at' => 'datetime',
+    'rejected_at' => 'datetime',
+    'documented_at' => 'datetime',
+];
+```
+
+📋 الاستخدام:
+```php
+// إنشاء
+$return->status = ReturnStatus::PENDING;
+
+// مقارنة
+if ($return->status === ReturnStatus::APPROVED) { ... }
+
+// عرض التسمية
+{{ $return->status->label() }}
+
+// عرض اللون
+<span class="badge-{{ $return->status->color() }}">
+    {{ $return->status->label() }}
+</span>
+```
+
+
+================================================================================
+                        📝 Form Requests
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1️⃣ StoreReturnRequest                                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/StoreReturnRequest.php
+
+```php
+class StoreReturnRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('create', MarketerReturnRequest::class);
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'notes' => 'required|string|max:1000',
+        ];
+    }
+    
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            foreach ($this->items as $index => $item) {
+                $stock = MarketerActualStock::where('marketer_id', $this->user()->id)
+                    ->where('product_id', $item['product_id'])
+                    ->value('quantity') ?? 0;
+                    
+                if ($item['quantity'] > $stock) {
+                    $validator->errors()->add(
+                        "items.{$index}.quantity",
+                        'الكمية أكبر من المتاح في مخزونك'
+                    );
+                }
+            }
+        });
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'items.required' => 'يجب اختيار منتج واحد على الأقل',
+            'notes.required' => 'يجب كتابة سبب الإرجاع',
+        ];
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2️⃣ RejectReturnRequest                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/RejectReturnRequest.php
+
+```php
+class RejectReturnRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('reject', $this->route('return'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'notes' => 'required|string|max:1000',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'notes.required' => 'يجب كتابة سبب الرفض',
+        ];
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3️⃣ DocumentReturnRequest                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/DocumentReturnRequest.php
+
+```php
+class DocumentReturnRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('document', $this->route('return'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'stamped_image' => 'required|image|mimes:jpg,jpeg,png,pdf|max:5120',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'stamped_image.required' => 'يجب رفع صورة الفاتورة المختومة',
+            'stamped_image.max' => 'حجم الملف يجب ألا يتجاوز 5MB',
+        ];
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 4️⃣ CancelReturnRequest                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/CancelReturnRequest.php
+
+```php
+class CancelReturnRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('cancel', $this->route('return'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'notes' => 'required|string|max:1000',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'notes.required' => 'يجب كتابة سبب الإلغاء',
+        ];
+    }
+}
+```
+
+
+================================================================================
+                        📦 Models
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ MarketerReturnRequest                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Models/MarketerReturnRequest.php
+
+📋 الـRelationships:
+- marketer(): belongsTo(User::class, 'marketer_id')
+- items(): hasMany(MarketerReturnItem::class, 'return_request_id')
+- approver(): belongsTo(User::class, 'approved_by')
+- rejecter(): belongsTo(User::class, 'rejected_by')
+- documenter(): belongsTo(User::class, 'documented_by')
+
+📋 الـCasts:
+```php
+protected $casts = [
+    'status' => ReturnStatus::class,
+    'approved_at' => 'datetime',
+    'rejected_at' => 'datetime',
+    'documented_at' => 'datetime',
+];
+```
+
+📋 الـFillable:
+- invoice_number, marketer_id, notes
+- approved_by, approved_at
+- rejected_by, rejected_at
+- documented_by, documented_at, stamped_image
+
+⚠️ ملاحظة: status يتم تعيينه باستخدام ReturnStatus Enum
+
+
+================================================================================
+                        📝 Validation Rules
+================================================================================
+
+إنشاء طلب إرجاع (store):
+- items: required|array|min:1
+- items.*.product_id: required|exists:products,id
+- items.*.quantity: required|integer|min:1
+- notes: required|string
+
+رفض/إلغاء (reject/cancel):
+- notes: required|string
+
+توثيق (document):
+- stamped_image: required|image|mimes:jpg,jpeg,png,pdf|max:5120
+
+
+================================================================================
+                        ✅ مزايا البنية المشتركة
+================================================================================
+
+1. ✅ Controller واحد بدلاً من اثنين
+2. ✅ لا تكرار في الكود (DRY)
+3. ✅ Policies واضحة ومركزية
+4. ✅ صيانة أسهل
+5. ✅ Views مشتركة
+6. ✅ Routes أقل وأوضح
+7. ✅ سهولة إضافة أدوار جديدة
+
+
+================================================================================
+انتهى التوثيق
+================================================================================

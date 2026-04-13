@@ -8,13 +8,6 @@ use Illuminate\Support\Facades\DB;
 
 class MarketerStockController extends Controller
 {
-    public function __construct()
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(3);
-        }
-    }
-
     public function index()
     {
         $marketerId = auth()->id();

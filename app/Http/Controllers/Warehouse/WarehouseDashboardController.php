@@ -14,12 +14,6 @@ use Illuminate\Support\Facades\Auth;
 
 class WarehouseDashboardController extends Controller
 {
-    public function __construct()
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(2);
-        }
-    }
 
     public function index(Request $request)
     {

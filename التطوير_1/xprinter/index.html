@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق الطباعة عبر البلوتوث - BLT</title>
+    <!-- استدعاء المكتبة محلياً للعمل بدون إنترنت -->
+    <script src="html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;500;700&display=swap');
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #invoice-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            width: 350px;
+        }
+
+        /* تنسيق الفاتورة المرئية */
+        #invoice-to-print {
+            width: 272px;
+            /* 80mm approx */
+            margin: 0 auto;
+            background: #fff;
+            color: #000;
+        }
+
+        .inv-header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .inv-title {
+            background: #000;
+            color: #fff;
+            padding: 5px;
+            display: inline-block;
+        }
+
+        .inv-line {
+            border-top: 1px dotted #000;
+            margin: 10px 0;
+        }
+
+        .inv-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin: 3px 0;
+        }
+
+        .inv-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .inv-table th {
+            border-bottom: 1px solid #000;
+            font-size: 12px;
+            padding-bottom: 5px;
+        }
+
+        .inv-table td {
+            font-size: 14px;
+            padding: 5px 0;
+        }
+
+        /* منطقة الرندرة المخفية الخاصة بالفاتورة الفعلية للطباعة الواضحة */
+        #bluetooth-render-area {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 576px;
+            /* 576 بكسل تعادل بالضبط 72mm مساحة قابلة للطباعة */
+            box-sizing: border-box;
+            /* لضمان أن الحواف لا تزيد العرض الكلي عن 576 */
+            background: white;
+            color: black;
+            padding: 15px;
+            /* هوامش آمنة من الجانبين */
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        #bluetooth-render-area .bt-company {
+            font-size: 40px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        #bluetooth-render-area .bt-title-box {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        #bluetooth-render-area .bt-title {
+            background: #000;
+            color: #fff;
+            padding: 10px 40px;
+            font-size: 32px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        #bluetooth-render-area .bt-info {
+            font-size: 26px;
+            text-align: center;
+            margin: 8px 0;
+        }
+
+        #bluetooth-render-area .bt-dot-line {
+            border-top: 3px dashed #000;
+            margin: 20px 0;
+        }
+
+        #bluetooth-render-area .bt-solid-line {
+            border-top: 4px solid #000;
+            margin: 20px 0;
+        }
+
+        #bluetooth-render-area .bt-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        #bluetooth-render-area .bt-table th {
+            font-size: 28px;
+            font-weight: bold;
+            padding-bottom: 15px;
+            text-align: right;
+        }
+
+        #bluetooth-render-area .bt-table td {
+            font-size: 30px;
+            padding: 15px 0;
+            font-weight: 600;
+        }
+
+        #bluetooth-render-area .bt-total-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        #bluetooth-render-area .bt-total-label {
+            font-size: 32px;
+        }
+
+        #bluetooth-render-area .bt-total-val {
+            font-size: 42px;
+            font-weight: bold;
+        }
+
+        #bluetooth-render-area .bt-footer {
+            text-align: center;
+            font-size: 26px;
+            margin-top: 40px;
+            line-height: 1.6;
+        }
+
+        .btn-bluetooth {
+            margin-top: 25px;
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 6px rgba(14, 165, 233, 0.2);
+        }
+
+        .btn-bluetooth:hover {
+            background: #0284c7;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(14, 165, 233, 0.3);
+        }
+
+        #bt-status {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>تطبيق طباعة البلوتوث المباشرة</h1>
+        <p style="color:#64748b;">هذا التطبيق يعمل مستقلاً ولا يحتاج سيرفر أو تعريف طابعة</p>
+    </div>
+
+    <div id="invoice-container">
+        <!-- الفاتورة المعروضة في الموقع للعميل/المستخدم -->
+        <div id="invoice-to-print">
+            <div class="inv-header">
+                <h3>شركة المتفوقون الأوائل</h3>
+                <div class="inv-title">فاتورة مبيعات</div>
+                <p style="font-size:12px">INV-2026/0050<br>2026-02-28</p>
+            </div>
+
+            <div class="inv-line"></div>
+
+            <table class="inv-table">
+                <thead>
+                    <tr>
+                        <th style="text-align:right">المنتج</th>
+                        <th>كمية</th>
+                        <th style="text-align:left">إجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align:right">سماعة رأس لاسلكية</td>
+                        <td style="text-align:center">1</td>
+                        <td style="text-align:left">45.00</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:right">كابل شحن سريع</td>
+                        <td style="text-align:center">2</td>
+                        <td style="text-align:left">10.00</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:right">شاحن حائط ذكي</td>
+                        <td style="text-align:center">1</td>
+                        <td style="text-align:left">25.00</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="inv-line"></div>
+
+            <div class="inv-row">
+                <span>المجموع النهائي:</span>
+                <span style="font-weight:bold; font-size:16px;">80.00 د.ل</span>
+            </div>
+
+            <div class="inv-header" style="margin-top:20px;">
+                <p style="font-size:11px;">شكراً لتسوقكم معنا<br>فرع العاصمة</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- منطقة الرندرة المخفية للبلوتوث بدقة عالية -->
+    <div id="bluetooth-render-area"></div>
+
+    <button class="btn-bluetooth" onclick="printViaBluetooth()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m7 7 10 10-5 5V2l5 5L7 17" />
+        </svg>
+        طباعة عن طريق البلوتوث
+    </button>
+    <div id="bt-status">حالة الاتصال: غير متصل</div>
+
+    <script>
+        let bluetoothDevice = null;
+        let bluetoothCharacteristic = null;
+
+        async function printViaBluetooth() {
+            const btn = document.querySelector('.btn-bluetooth');
+            const statusText = document.getElementById('bt-status');
+            const originalText = btn.innerHTML;
+
+            btn.innerHTML = '⏳ جاري المعالجة...';
+            btn.disabled = true;
+
+            try {
+                if (!navigator.bluetooth) {
+                    alert('❌ متصفحك أو جهازك لا يدعم تقنية Web Bluetooth.');
+                    throw new Error('Web Bluetooth API not supported');
+                }
+
+                statusText.innerText = '⚡ بناء الفاتورة للطباعة...';
+
+                // 1. بناء فاتورة البلوتوث ديناميكياً في المنطقة المخفية عالية الدقة
+                const renderArea = document.getElementById('bluetooth-render-area');
+                const originalInv = document.getElementById('invoice-to-print');
+
+                renderArea.innerHTML = `
+                    <div class="bt-company">${originalInv.querySelector('h3').innerText}</div>
+                    <div class="bt-title-box"><div class="bt-title">${originalInv.querySelector('.inv-title').innerText}</div></div>
+                    <div class="bt-info">رقم: ${originalInv.querySelector('.inv-header p').innerHTML.split('<br>')[0]}</div>
+                    <div class="bt-info">تاريخ: ${originalInv.querySelector('.inv-header p').innerHTML.split('<br>')[1]}</div>
+                    <div class="bt-dot-line"></div>
+                    <table class="bt-table">
+                        <thead>
+                            <tr><th style="text-align:right">المنتج</th><th style="text-align:center">كمية</th><th style="text-align:left">السعر</th></tr>
+                        </thead>
+                    </table>
+                    <div class="bt-solid-line"></div>
+                    <table class="bt-table">
+                        <tbody>
+                            ${Array.from(originalInv.querySelectorAll('.inv-table tbody tr')).map(tr => `
+                                <tr>
+                                    <td style="text-align:right; width:50%">${tr.cells[0].innerText}</td>
+                                    <td style="text-align:center; width:20%">${tr.cells[1].innerText}</td>
+                                    <td style="text-align:left; width:30%">${tr.cells[2].innerText}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <div class="bt-dot-line"></div>
+                    <div class="bt-total-section">
+                        <span class="bt-total-label">المجموع:</span>
+                        <span class="bt-total-val">${originalInv.querySelector('.inv-row span:last-child').innerText}</span>
+                    </div>
+                    <div class="bt-footer">
+                        ${originalInv.querySelectorAll('.inv-header p')[1].innerHTML}
+                    </div>
+                `;
+
+                // 2. التقاط الصورة
+                const canvas = await html2canvas(renderArea, {
+                    scale: 1,
+                    backgroundColor: '#ffffff'
+                });
+
+                statusText.innerText = '⚡ تحويل الصورة لبيانات الطابعة...';
+                const rasterData = canvasToRaster(canvas);
+
+                // 3. الاتصال بالبلوتوث (يتم طلبه مرة واحدة إذا لم يكن متصلاً)
+                if (!bluetoothDevice || !bluetoothDevice.gatt.connected) {
+                    statusText.innerText = '📡 يرجى اختيار طابعة البلوتوث...';
+                    btn.innerHTML = '📡 بانتظار اختيار الطابعة...';
+                    bluetoothDevice = await navigator.bluetooth.requestDevice({
+                        filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }],
+                        optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
+                    });
+
+                    bluetoothDevice.addEventListener('gattserverdisconnected', () => {
+                        document.getElementById('bt-status').innerText = 'حالة الاتصال: غير متصل ❌';
+                        bluetoothDevice = null;
+                        bluetoothCharacteristic = null;
+                    });
+
+                    statusText.innerText = '🔌 جاري الاتصال بالطابعة...';
+                    const server = await bluetoothDevice.gatt.connect();
+                    const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                    bluetoothCharacteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+                }
+
+                // 4. إرسال البيانات
+                statusText.innerText = '🖨️ جاري الطباعة...';
+                btn.innerHTML = '🖨️ جاري النقل للطابعة...';
+                await sendInChunks(bluetoothCharacteristic, rasterData, statusText);
+
+                statusText.innerText = '✅ اكتملت الطباعة بنجاح! متصل بالطابعة.';
+                alert('✅ تم إرسال الفاتورة للطابعة');
+
+            } catch (error) {
+                console.error(error);
+                statusText.innerText = '❌ فشلت العملية: ' + error.message;
+                if (error.name === 'NotFoundError') {
+                    // المستخدم ألغى الاختيار
+                    statusText.innerText = 'حالة الاتصال: تم الإلغاء';
+                }
+                bluetoothDevice = null;
+                bluetoothCharacteristic = null;
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function canvasToRaster(canvas) {
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const imageData = ctx.getImageData(0, 0, width, height).data;
+
+            // تحديد آخر سطر مستخدم لتقليل المساحة الفارغة
+            let lastUsedRow = height;
+            for (let y = height - 1; y >= 0; y--) {
+                let hasData = false;
+                for (let x = 0; x < width; x++) {
+                    const idx = (y * width + x) * 4;
+                    if (imageData[idx + 3] > 0 && imageData[idx] < 220) { hasData = true; break; }
+                }
+                if (hasData) { lastUsedRow = y + 20; break; } // +20 بكسل هامش أمان بنهاية الفاتورة
+            }
+            if (lastUsedRow > height) lastUsedRow = height;
+
+            const widthBytes = Math.ceil(width / 8);
+            const raster = [];
+
+            // تهيئة الطابعة للرسم
+            raster.push(0x1B, 0x40); // Reset
+            raster.push(0x1D, 0x76, 0x30, 0x00);
+            raster.push(widthBytes & 0xFF, (widthBytes >> 8) & 0xFF);
+            raster.push(lastUsedRow & 0xFF, (lastUsedRow >> 8) & 0xFF);
+
+            for (let y = 0; y < lastUsedRow; y++) {
+                for (let x = 0; x < widthBytes; x++) {
+                    let byte = 0;
+                    for (let bit = 0; bit < 8; bit++) {
+                        const xPos = x * 8 + bit;
+                        if (xPos < width) {
+                            const idx = (y * width + xPos) * 4;
+                            const br = (imageData[idx] * 0.299 + imageData[idx + 1] * 0.587 + imageData[idx + 2] * 0.114);
+                            if (imageData[idx + 3] > 128 && br < 185) { byte |= (0x80 >> bit); }
+                        }
+                    }
+                    raster.push(byte);
+                }
+            }
+
+            // إضافة مسافة قليلة قبل القص لضمان عدم قص آخر سطر
+            // 0x1B 0x4A 0x20 : طباعة وتغذية الورق بـ 32 وحدة
+            // ثم أمر القص الكامل
+            raster.push(0x1B, 0x4A, 0x20, 0x1B, 0x64, 0x05, 0x1D, 0x56, 0x00);
+
+            return new Uint8Array(raster);
+        }
+
+        async function sendInChunks(characteristic, data, statusText) {
+            const CHUNK_SIZE = 180; // الحجم الأمثل لاستقرار البلوتوث للطابعات
+            const total = data.length;
+
+            for (let i = 0; i < total; i += CHUNK_SIZE) {
+                const chunk = data.slice(i, i + CHUNK_SIZE);
+
+                if (characteristic.writeValueWithoutResponse) {
+                    await characteristic.writeValueWithoutResponse(chunk);
+                } else {
+                    await characteristic.writeValue(chunk);
+                }
+
+                if (i % (CHUNK_SIZE * 5) === 0) {
+                    const percent = Math.round((i / total) * 100);
+                    statusText.innerText = `🖨️ جاري الإرسال للطابعة: ${percent}%`;
+                }
+
+                // تأخير بسيط لمنع امتلاء مخزن (Buffer) الطابعة
+                await new Promise(r => setTimeout(r, 2));
+            }
+        }
+    </script>
+</body>
+
+</html>

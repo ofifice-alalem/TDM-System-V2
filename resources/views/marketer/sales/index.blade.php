@@ -29,9 +29,9 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-8">
-                {{-- Filters --}}
-                <div class="animate-fade-in mb-6">
-                    <details class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border overflow-hidden">
+
+                <div class="animate-fade-in mb-6" style="z-index: 1000; position: relative;">
+                    <details class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
                         <summary class="px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors flex items-center justify-between">
                             <div class="flex items-center gap-3">
                                 <i data-lucide="filter" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i>
@@ -59,9 +59,12 @@
                                     <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">إلى تاريخ</label>
                                     <input type="date" name="to_date" value="{{ request('to_date') }}" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all dark:[color-scheme:dark]">
                                 </div>
-                                <div>
+                                <div class="relative" id="filter-store-wrapper" style="z-index: 1000 !important; position: relative;">
                                     <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">المتجر</label>
-                                    <input type="text" name="store" value="{{ request('store') }}" placeholder="ابحث..." class="w-full px-4 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all">
+                                    <input type="text" id="filter-store-search" autocomplete="off" placeholder="ابحث..." value="{{ request('store') }}"
+                                        class="w-full px-4 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all">
+                                    <input type="hidden" name="store" id="filter-store-value" value="{{ request('store') }}">
+                                    <div id="filter-store-dropdown" class="hidden absolute z-[9999] w-full mt-1 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-52 overflow-y-auto"></div>
                                 </div>
                             </div>
                             <div class="flex gap-2 mt-6">
@@ -121,9 +124,59 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        lucide.createIcons();
-    });
+const storesFilterData = [
+    @foreach($stores as $store)
+    { name: @json($store->name), owner: @json($store->owner_name) },
+    @endforeach
+];
+
+document.addEventListener('DOMContentLoaded', function () {
+    lucide.createIcons();
+
+    // Store filter dropdown
+    const storeSearch   = document.getElementById('filter-store-search');
+    const storeValue    = document.getElementById('filter-store-value');
+    const storeDropdown = document.getElementById('filter-store-dropdown');
+    const storeWrapper  = document.getElementById('filter-store-wrapper');
+
+    if (storeSearch) {
+        storeSearch.addEventListener('input', function () {
+            const q = this.value.trim().toLowerCase();
+            storeValue.value = this.value;
+            if (!q) { storeDropdown.classList.add('hidden'); return; }
+
+            const results = storesFilterData.filter(s =>
+                s.name.toLowerCase().includes(q) || s.owner.toLowerCase().includes(q)
+            ).slice(0, 8);
+
+            if (!results.length) {
+                storeDropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">لا توجد نتائج</div>';
+                storeDropdown.classList.remove('hidden');
+                return;
+            }
+
+            storeDropdown.innerHTML = results.map(s => `
+                <div class="store-filter-option px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-dark-bg cursor-pointer border-b border-gray-100 dark:border-dark-border last:border-0" data-name="${s.name}">
+                    <div class="font-bold text-sm text-gray-900 dark:text-white">${s.name}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">${s.owner}</div>
+                </div>
+            `).join('');
+            storeDropdown.classList.remove('hidden');
+
+            storeDropdown.querySelectorAll('.store-filter-option').forEach(opt => {
+                opt.addEventListener('click', function () {
+                    storeSearch.value = this.dataset.name;
+                    storeValue.value  = this.dataset.name;
+                    storeDropdown.classList.add('hidden');
+                });
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!storeWrapper.contains(e.target)) storeDropdown.classList.add('hidden');
+        });
+    }
+});
 </script>
 @endpush
 @endsection

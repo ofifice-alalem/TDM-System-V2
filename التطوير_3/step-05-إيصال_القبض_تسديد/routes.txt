@@ -1,0 +1,605 @@
+================================================================================
+                    المسارات والـControllers - إيصال القبض (تسديد)
+                              (البنية المشتركة المثالية)
+================================================================================
+
+📋 نظرة عامة:
+--------------
+هذا الملف يوثق البنية المثالية للمسارات والـControllers باستخدام نهج مشترك
+لتقليل التكرار مع الحفاظ على الأمان والوضوح.
+
+✅ فلسفة التصميم:
+- Controller واحد مشترك
+- Policies للتحكم بالصلاحيات
+- Middleware للمصادقة فقط
+- Views مشتركة
+
+================================================================================
+                        🛣️ المسارات (Routes)
+================================================================================
+
+📁 الملف: routes/web.php
+🔒 Middleware: ['auth']
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ المسارات المشتركة                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Route::middleware('auth')->group(function () {
+    
+    // Resource Routes
+    Route::resource('payments', PaymentController::class)
+        ->except(['edit', 'update', 'destroy']);
+    
+    // Custom Actions
+    Route::post('payments/{payment}/approve', [PaymentController::class, 'approve'])
+        ->name('payments.approve')
+        ->can('approve', 'payment');
+    
+    Route::post('payments/{payment}/reject', [PaymentController::class, 'reject'])
+        ->name('payments.reject')
+        ->can('reject', 'payment');
+    
+    Route::post('payments/{payment}/cancel', [PaymentController::class, 'cancel'])
+        ->name('payments.cancel')
+        ->can('cancel', 'payment');
+    
+    // Additional Routes
+    Route::get('payments/{payment}/pdf', [PaymentController::class, 'pdf'])
+        ->name('payments.pdf');
+    
+    Route::get('payments/{payment}/receipt', [PaymentController::class, 'viewReceipt'])
+        ->name('payments.receipt');
+});
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ جدول المسارات                                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+GET     /payments
+        الاسم: payments.index
+        الصلاحية: @can('viewAny', StorePayment::class)
+        الغرض: عرض قائمة الإيصالات (حسب الدور)
+
+GET     /payments/create
+        الاسم: payments.create
+        الصلاحية: @can('create', StorePayment::class)
+        الغرض: عرض صفحة إنشاء إيصال (للمسوق فقط)
+
+POST    /payments
+        الاسم: payments.store
+        الصلاحية: @can('create', StorePayment::class)
+        الغرض: حفظ إيصال جديد
+
+GET     /payments/{payment}
+        الاسم: payments.show
+        الصلاحية: @can('view', $payment)
+        الغرض: عرض تفاصيل إيصال معين
+
+POST    /payments/{payment}/approve
+        الاسم: payments.approve
+        الصلاحية: @can('approve', $payment)
+        الغرض: توثيق إيصال (لأمين المخزن)
+
+POST    /payments/{payment}/reject
+        الاسم: payments.reject
+        الصلاحية: @can('reject', $payment)
+        الغرض: رفض إيصال (لأمين المخزن)
+
+POST    /payments/{payment}/cancel
+        الاسم: payments.cancel
+        الصلاحية: @can('cancel', $payment)
+        الغرض: إلغاء إيصال (للمسوق)
+
+GET     /payments/{payment}/pdf
+        الاسم: payments.pdf
+        الصلاحية: @can('view', $payment)
+        الغرض: طباعة PDF
+
+GET     /payments/{payment}/receipt
+        الاسم: payments.receipt
+        الصلاحية: @can('view', $payment)
+        الغرض: عرض صورة إيصال القبض المختوم
+
+
+================================================================================
+                        🎮 Controller
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ PaymentController (مشترك)                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Controllers/PaymentController.php
+🎯 المسؤولية: إدارة جميع عمليات إيصالات القبض لجميع الأدوار
+
+📋 الـMethods:
+
+1️⃣ index(Request $request)
+   - الغرض: عرض قائمة الإيصالات حسب صلاحيات المستخدم
+   - الصلاحية: $this->authorize('viewAny', StorePayment::class)
+   - المعاملات:
+     • status (optional): الفلترة حسب الحالة
+     • marketer_id (optional): الفلترة حسب المسوق (لأمين المخزن)
+     • store_id (optional): الفلترة حسب المتجر
+     • payment_number (optional): البحث برقم الإيصال
+     • payment_method (optional): الفلترة حسب طريقة الدفع
+     • from_date, to_date (optional): الفلترة حسب التاريخ
+   
+   - المنطق:
+     ```php
+     $query = StorePayment::with('marketer', 'store', 'keeper');
+     
+     // الفرق الوحيد بين الأدوار
+     if (auth()->user()->isMarketer()) {
+         $query->where('marketer_id', auth()->id());
+     }
+     
+     // باقي الفلاتر مشتركة
+     $this->applyFilters($query, $request);
+     
+     // البيانات الإضافية
+     $marketers = auth()->user()->isWarehouse() 
+         ? User::where('role_id', 3)->where('is_active', true)->get() 
+         : null;
+     
+     $stores = Store::where('is_active', true)->get();
+     
+     return view('shared.payments.index', [
+         'payments' => $query->paginate(20),
+         'marketers' => $marketers,
+         'stores' => $stores
+     ]);
+     ```
+   
+   - الـView: shared/payments/index.blade.php
+
+2️⃣ create()
+   - الغرض: عرض صفحة إنشاء إيصال قبض جديد
+   - الصلاحية: $this->authorize('create', StorePayment::class)
+   - البيانات المرسلة:
+     • stores: المتاجر التي عليها ديون
+     ```php
+     $stores = Store::whereHas('debtLedger', function($q) {
+             $q->selectRaw('store_id, SUM(amount) as total_debt')
+               ->groupBy('store_id')
+               ->havingRaw('SUM(amount) > 0');
+         })
+         ->where('is_active', true)
+         ->get();
+     
+     // إضافة الدين لكل متجر
+     foreach ($stores as $store) {
+         $store->current_debt = $store->debtLedger()->sum('amount');
+     }
+     ```
+   - الـView: marketer/payments/create.blade.php
+
+3️⃣ store(StorePaymentRequest $request)
+   - الغرض: حفظ إيصال قبض جديد
+   - الـForm Request: StorePaymentRequest (يحتوي على validation + authorization)
+   - الـService: PaymentService::createPayment()
+   - الإرجاع: redirect()->route('payments.show', $payment)
+
+4️⃣ show(StorePayment $payment)
+   - الغرض: عرض تفاصيل إيصال معين
+   - الصلاحية: $this->authorize('view', $payment)
+   - الـEager Loading: marketer, store, keeper, commission
+   - البيانات الإضافية:
+     ```php
+     $currentDebt = $payment->store->debtLedger()->sum('amount');
+     $debtAfterPayment = $payment->status === 'approved' 
+         ? $currentDebt 
+         : $currentDebt - $payment->amount;
+     ```
+   - الـView: shared/payments/show.blade.php
+
+5️⃣ approve(ApprovePaymentRequest $request, StorePayment $payment)
+   - الغرض: توثيق إيصال معلق
+   - الـForm Request: ApprovePaymentRequest
+   - رفع الملف:
+     ```php
+     $path = $request->file('receipt_image')
+         ->store('payments', 'public');
+     ```
+   - الـService: PaymentService::approvePayment($payment->id, $path)
+   - الإرجاع: redirect()->back()->with('success', 'تم توثيق إيصال القبض بنجاح')
+
+6️⃣ reject(RejectPaymentRequest $request, StorePayment $payment)
+   - الغرض: رفض إيصال
+   - الـForm Request: RejectPaymentRequest
+   - الـService: PaymentService::rejectPayment($payment->id, $request->notes)
+   - الإرجاع: redirect()->back()->with('success', 'تم رفض إيصال القبض بنجاح')
+
+7️⃣ cancel(CancelPaymentRequest $request, StorePayment $payment)
+   - الغرض: إلغاء إيصال
+   - الـForm Request: CancelPaymentRequest
+   - الـService: PaymentService::cancelPayment($payment->id, $request->notes)
+   - الإرجاع: redirect()->route('payments.index')->with('success', 'تم إلغاء إيصال القبض بنجاح')
+
+8️⃣ pdf(StorePayment $payment)
+   - الغرض: طباعة PDF للإيصال
+   - الصلاحية: $this->authorize('view', $payment)
+   - الـService: InvoiceService::generatePaymentPdf($payment)
+   - الإرجاع: PDF file
+
+9️⃣ viewReceipt(StorePayment $payment)
+   - الغرض: عرض صورة إيصال القبض المختوم
+   - الصلاحية: $this->authorize('view', $payment)
+   - التحقق:
+     • status === 'approved'
+     • receipt_image exists
+   - الإرجاع: response()->file(storage_path('app/public/' . $payment->receipt_image))
+
+🔟 applyFilters($query, $request) - private
+   - الغرض: تطبيق الفلاتر المشتركة
+   - المنطق:
+     ```php
+     if ($request->filled('payment_number')) {
+         $query->where('payment_number', 'like', '%' . $request->payment_number . '%');
+     }
+     
+     if ($request->filled('status')) {
+         $query->where('status', $request->status);
+     }
+     
+     if ($request->filled('store_id')) {
+         $query->where('store_id', $request->store_id);
+     }
+     
+     if ($request->filled('payment_method')) {
+         $query->where('payment_method', $request->payment_method);
+     }
+     
+     if ($request->filled('marketer_id') && auth()->user()->isWarehouse()) {
+         $query->where('marketer_id', $request->marketer_id);
+     }
+     
+     if ($request->filled('from_date')) {
+         $query->whereDate('created_at', '>=', $request->from_date);
+     }
+     
+     if ($request->filled('to_date')) {
+         $query->whereDate('created_at', '<=', $request->to_date);
+     }
+     
+     // الترتيب
+     if ($request->status === 'pending') {
+         $query->oldest('created_at');
+     } else {
+         $query->latest('created_at');
+     }
+     ```
+
+
+================================================================================
+                        ⚙️ Service
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ PaymentService (مشترك)                                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Services/PaymentService.php
+🎯 المسؤولية: منطق الأعمال لجميع عمليات إيصالات القبض
+
+📋 الـMethods:
+
+1️⃣ createPayment($marketerId, $storeId, $amount, $paymentMethod, $notes = null)
+   - الغرض: إنشاء إيصال قبض جديد
+   - التحقق: 
+     • المبلغ لا يتجاوز الدين الحالي
+   - الخطوات:
+     1. إنشاء سجل في store_payments
+     2. إرسال إشعار لجميع أمناء المخزن
+   - الإرجاع: StorePayment
+   - الـTransaction: DB::transaction()
+
+2️⃣ approvePayment($paymentId, $receiptImage)
+   - الغرض: توثيق إيصال معلق
+   - التحقق: status === 'pending'
+   - الخطوات:
+     1. reduceStoreDebt()
+     2. recordCommission()
+     3. تحديث store_payments
+     4. إرسال إشعار للمسوق
+   - الإرجاع: StorePayment
+   - الـTransaction: DB::transaction()
+
+3️⃣ rejectPayment($paymentId, $notes)
+   - الغرض: رفض إيصال
+   - التحقق: status === 'pending'
+   - الخطوات:
+     1. تحديث store_payments
+     2. إرسال إشعار للمسوق
+   - الإرجاع: StorePayment
+   - الـTransaction: DB::transaction()
+
+4️⃣ cancelPayment($paymentId, $notes)
+   - الغرض: إلغاء إيصال
+   - التحقق: status === 'pending'
+   - الخطوات:
+     1. تحديث store_payments
+   - الإرجاع: StorePayment
+   - الـTransaction: DB::transaction()
+
+5️⃣ reduceStoreDebt($payment) - private
+   - الغرض: خصم المبلغ من دين المتجر
+   - الخطوات:
+     • insert into store_debt_ledger
+     • entry_type = 'payment'
+     • amount = سالب (payment amount)
+
+6️⃣ recordCommission($payment) - private
+   - الغرض: تسجيل عمولة المسوق
+   - الخطوات:
+     • الحصول على نسبة العمولة من users.commission_rate
+     • حساب مبلغ العمولة
+     • insert into marketer_commissions (إذا كانت النسبة > 0)
+
+
+================================================================================
+                        🔐 Policy
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ StorePaymentPolicy                                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Policies/StorePaymentPolicy.php
+🎯 المسؤولية: التحكم بالصلاحيات لجميع الأدوار
+
+📋 الـMethods:
+
+viewAny(User $user): bool
+   - الجميع يمكنهم رؤية القائمة
+   - return true;
+
+viewAll(User $user): bool
+   - أمين المخزن فقط يرى جميع الإيصالات
+   - return $user->role_id === 2;
+
+view(User $user, StorePayment $payment): bool
+   - المسوق يرى إيصالاته فقط
+   - أمين المخزن يرى الكل
+   - return $user->role_id === 2 || $user->id === $payment->marketer_id;
+
+create(User $user): bool
+   - المسوق فقط ينشئ إيصالات
+   - return $user->role_id === 3;
+
+approve(User $user, StorePayment $payment): bool
+   - أمين المخزن فقط + الحالة pending
+   - return $user->role_id === 2 && $payment->status === PaymentStatus::PENDING;
+
+reject(User $user, StorePayment $payment): bool
+   - أمين المخزن فقط + الحالة pending
+   - return $user->role_id === 2 && $payment->status === PaymentStatus::PENDING;
+
+cancel(User $user, StorePayment $payment): bool
+   - المسوق صاحب الإيصال فقط + الحالة pending
+   - return $user->id === $payment->marketer_id 
+       && $payment->status === PaymentStatus::PENDING;
+
+
+================================================================================
+                        📦 Models & Enums
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ PaymentStatus Enum                                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Enums/PaymentStatus.php
+
+```php
+enum PaymentStatus: string
+{
+    case PENDING = 'pending';
+    case APPROVED = 'approved';
+    case REJECTED = 'rejected';
+    case CANCELLED = 'cancelled';
+    
+    public function label(): string
+    {
+        return match($this) {
+            self::PENDING => 'معلق',
+            self::APPROVED => 'موثق',
+            self::REJECTED => 'مرفوض',
+            self::CANCELLED => 'ملغي',
+        };
+    }
+    
+    public function color(): string
+    {
+        return match($this) {
+            self::PENDING => 'orange',
+            self::APPROVED => 'green',
+            self::REJECTED => 'red',
+            self::CANCELLED => 'gray',
+        };
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ StorePayment Model                                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Models/StorePayment.php
+
+📋 الـRelationships:
+- marketer(): belongsTo(User::class, 'marketer_id')
+- store(): belongsTo(Store::class, 'store_id')
+- keeper(): belongsTo(User::class, 'keeper_id')
+- commission(): hasOne(MarketerCommission::class, 'payment_id')
+
+📋 الـCasts:
+```php
+protected $casts = [
+    'status' => PaymentStatus::class,
+    'confirmed_at' => 'datetime',
+    'amount' => 'decimal:2',
+];
+```
+
+📋 الـFillable:
+- payment_number, store_id, marketer_id, keeper_id, amount
+- payment_method, receipt_image, confirmed_at, notes
+
+
+================================================================================
+                        📝 Form Requests
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1️⃣ StorePaymentRequest                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/StorePaymentRequest.php
+
+```php
+class StorePaymentRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('create', StorePayment::class);
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'store_id' => 'required|exists:stores,id',
+            'amount' => 'required|numeric|min:0.01',
+            'payment_method' => 'required|in:cash,transfer,certified_check',
+            'notes' => 'nullable|string|max:1000',
+        ];
+    }
+    
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $currentDebt = StoreDebtLedger::where('store_id', $this->store_id)
+                ->sum('amount');
+            
+            if ($this->amount > $currentDebt) {
+                $validator->errors()->add('amount', 'المبلغ أكبر من الدين الحالي');
+            }
+        });
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2️⃣ ApprovePaymentRequest                                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/ApprovePaymentRequest.php
+
+```php
+class ApprovePaymentRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('approve', $this->route('payment'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'receipt_image' => 'required|image|mimes:jpg,jpeg,png,pdf|max:5120',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'receipt_image.required' => 'يجب رفع صورة إيصال القبض المختوم',
+            'receipt_image.max' => 'حجم الملف يجب ألا يتجاوز 5MB',
+        ];
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3️⃣ RejectPaymentRequest                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/RejectPaymentRequest.php
+
+```php
+class RejectPaymentRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('reject', $this->route('payment'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'notes' => 'required|string|max:1000',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'notes.required' => 'يجب كتابة سبب الرفض',
+        ];
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 4️⃣ CancelPaymentRequest                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/CancelPaymentRequest.php
+
+```php
+class CancelPaymentRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('cancel', $this->route('payment'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'notes' => 'required|string|max:1000',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'notes.required' => 'يجب كتابة سبب الإلغاء',
+        ];
+    }
+}
+```
+
+
+================================================================================
+                        ✅ مزايا البنية المشتركة
+================================================================================
+
+1. ✅ Controller واحد بدلاً من اثنين
+2. ✅ لا تكرار في الكود (DRY)
+3. ✅ Policies واضحة ومركزية
+4. ✅ صيانة أسهل
+5. ✅ Views مشتركة
+6. ✅ Routes أقل وأوضح
+7. ✅ سهولة إضافة أدوار جديدة
+
+
+================================================================================
+انتهى التوثيق
+================================================================================

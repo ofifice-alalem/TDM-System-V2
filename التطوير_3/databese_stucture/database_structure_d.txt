@@ -1,0 +1,417 @@
+========================================
+D. عملية: بيع بضاعة للمتجر
+========================================
+
+========================================
+18. جدول: product_promotions
+========================================
+
+وظيفته:
+يحتوي على العروض الترويجية للمنتجات (اشتري X واحصل على Y مجاناً).
+⚠️ ملاحظة مهمة: لا يمكن تعديل شروط العرض بعد الإنشاء (للحفاظ على التتبع التاريخي).
+للتغيير: قم بتعطيل العرض القديم (is_active = false) وأنشئ عرض جديد.
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • product_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: products.id
+    القيمة الافتراضية: —
+    ملاحظة: ❌ لا يمكن تعديله بعد الإنشاء
+
+  • min_quantity
+    النوع: int
+    القيمة الافتراضية: —
+    ملاحظة: ❌ لا يمكن تعديله بعد الإنشاء
+
+  • free_quantity
+    النوع: int
+    القيمة الافتراضية: —
+    ملاحظة: ❌ لا يمكن تعديله بعد الإنشاء
+
+  • start_date
+    النوع: date
+    القيمة الافتراضية: —
+    ملاحظة: ❌ لا يمكن تعديله بعد الإنشاء
+
+  • end_date
+    النوع: date
+    القيمة الافتراضية: —
+    ملاحظة: ❌ لا يمكن تعديله بعد الإنشاء
+
+  • is_active
+    النوع: tinyint(1)
+    القيمة الافتراضية: 1
+    ملاحظة: ✅ يمكن تعديله (تفعيل/تعطيل)
+
+  • apply_to_all
+    النوع: tinyint(1)
+    القيمة الافتراضية: 1
+    ملاحظة: ✅ يمكن تعديله - هل يطبق على جميع المتاجر؟
+    ملاحظة: إذا كان false، يطبق على متاجر محددة في discount_promotion_stores
+
+  • created_by
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+========================================
+19. جدول: invoice_discount_tiers
+========================================
+
+وظيفته:
+يحتوي على قواعد الخصم التلقائية للفواتير.
+⚠️ ملاحظة مهمة: لا يمكن تعديل قيم الخصم بعد الإنشاء (للحفاظ على التتبع التاريخي).
+للتغيير: قم بتعطيل القاعدة القديمة (is_active = false) وأنشئ قاعدة جديدة.
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • min_amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+    ملاحظة: ❌ لا يمكن تعديله بعد الإنشاء
+
+  • discount_type
+    النوع: enum('percentage','fixed')
+    القيمة الافتراضية: —
+    ملاحظة: ❌ لا يمكن تعديله بعد الإنشاء
+
+  • discount_percentage
+    النوع: decimal(5,2)
+    القيمة الافتراضية: NULL
+    ملاحظة: ❌ لا يمكن تعديله بعد الإنشاء
+
+  • discount_amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: NULL
+    ملاحظة: ❌ لا يمكن تعديله بعد الإنشاء
+
+  • start_date
+    النوع: date
+    القيمة الافتراضية: —
+    ملاحظة: ❌ لا يمكن تعديله بعد الإنشاء
+
+  • end_date
+    النوع: date
+    القيمة الافتراضية: —
+    ملاحظة: ❌ لا يمكن تعديله بعد الإنشاء
+
+  • is_active
+    النوع: tinyint(1)
+    القيمة الافتراضية: 1
+    ملاحظة: ✅ يمكن تعديله (تفعيل/تعطيل)
+
+  • apply_to_all
+    النوع: tinyint(1)
+    القيمة الافتراضية: 1
+    ملاحظة: ✅ يمكن تعديله - هل يطبق على جميع المتاجر؟
+    ملاحظة: إذا كان false، يطبق على متاجر محددة في discount_promotion_stores
+
+  • created_by
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+========================================
+20. جدول: sales_invoices
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • invoice_number
+    النوع: varchar(50)
+    المفتاح: UNIQUE
+    القيمة الافتراضية: —
+
+  • marketer_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • store_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: stores.id
+    القيمة الافتراضية: —
+
+  • total_amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • subtotal
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • product_discount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: 0.00
+
+  • invoice_discount_type
+    النوع: enum('percentage','fixed')
+    القيمة الافتراضية: NULL
+
+  • invoice_discount_value
+    النوع: decimal(10,2)
+    القيمة الافتراضية: NULL
+
+  • invoice_discount_amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: 0.00
+
+  • invoice_discount_tier_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: invoice_discount_tiers.id
+    القيمة الافتراضية: NULL
+
+  • status
+    النوع: enum('pending','approved','rejected','cancelled')
+    القيمة الافتراضية: 'pending'
+
+  • keeper_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: NULL
+    ملاحظة: يسجل من قام بالموافقة أو الرفض (حسب status)
+
+  • stamped_invoice_image
+    النوع: varchar(255)
+    القيمة الافتراضية: NULL
+
+  • notes
+    النوع: text
+    القيمة الافتراضية: NULL
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+========================================
+21. جدول: sales_invoice_items
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • invoice_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: sales_invoices.id
+    القيمة الافتراضية: —
+
+  • product_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: products.id
+    القيمة الافتراضية: —
+
+  • quantity
+    النوع: int
+    القيمة الافتراضية: —
+
+  • free_quantity
+    النوع: int
+    القيمة الافتراضية: 0
+
+  • unit_price
+    النوع: decimal(10,2)
+    القيمة الافتراضية: —
+
+  • total_price
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • promotion_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: product_promotions.id
+    القيمة الافتراضية: NULL
+
+========================================
+22. جدول: store_pending_stock
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • store_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: stores.id
+    القيمة الافتراضية: —
+
+  • sales_invoice_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: sales_invoices.id
+    القيمة الافتراضية: —
+
+  • product_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: products.id
+    القيمة الافتراضية: —
+
+  • quantity
+    النوع: int
+    القيمة الافتراضية: —
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+========================================
+23. جدول: store_actual_stock
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • store_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: stores.id
+    القيمة الافتراضية: —
+
+  • product_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: products.id
+    القيمة الافتراضية: —
+
+  • quantity
+    النوع: int
+    القيمة الافتراضية: 0
+
+========================================
+24. جدول: company_debt_ledger (جديد في V3 - بديل store_debt_ledger)
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • company_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: companies.id
+    القيمة الافتراضية: —
+
+  • store_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: stores.id
+    القيمة الافتراضية: NULL
+    ملاحظة: NULL في حالة الدفع (لأن الدفع على مستوى الشركة)
+
+  • reference_type
+    النوع: enum('sales_invoice','sales_return','company_payment','opening_balance')
+    المفتاح: INDEX
+    القيمة الافتراضية: —
+
+  • reference_id
+    النوع: bigint unsigned
+    القيمة الافتراضية: NULL
+
+  • amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • balance_after
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+    ملاحظة: رصيد الشركة الإجمالي بعد كل حركة
+
+  • notes
+    النوع: text
+    القيمة الافتراضية: NULL
+
+  • created_at
+    النوع: timestamp
+    المفتاح: INDEX
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+ملاحظة: ✅ تتبع حركات الدين على مستوى الشركة
+ملاحظة: ✅ store_id يكون NULL عند الدفع، ويحتوي على رقم الفرع عند البيع/الإرجاع
+ملاحظة: ✅ balance_after يعكس رصيد الشركة الإجمالي (مجموع كل الفروع)
+ملاحظة: ✅ تم استبدال store_payment بـ company_payment في reference_type
+
+========================================
+25. جدول: discount_promotion_stores (جديد في V3)
+========================================
+
+وظيفته:
+يحدد المتاجر التي يطبق عليها الخصم أو العرض الترويجي.
+يستخدم لكل من invoice_discount_tiers و product_promotions.
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • reference_type
+    النوع: enum('invoice_discount','product_promotion')
+    المفتاح: INDEX
+    القيمة الافتراضية: —
+
+  • reference_id
+    النوع: bigint unsigned
+    المفتاح: INDEX
+    القيمة الافتراضية: —
+    ملاحظة: invoice_discount_tiers.id أو product_promotions.id
+
+  • store_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: stores.id
+    القيمة الافتراضية: —
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+ملاحظة: ✅ يستخدم فقط عندما apply_to_all = false
+ملاحظة: ✅ جدول مشترك لتحديد المتاجر المستهدفة

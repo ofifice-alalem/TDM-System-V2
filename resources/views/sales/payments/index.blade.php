@@ -38,7 +38,7 @@
 
         {{-- Filter --}}
         <div class="animate-fade-in">
-            <details class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border overflow-hidden">
+            <details class="bg-white dark:bg-dark-card rounded-2xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border" style="z-index: 1000; position: relative;">
                 <summary class="px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <i data-lucide="filter" class="w-5 h-5 text-primary-600 dark:text-primary-400"></i>
@@ -57,7 +57,12 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">العميل</label>
-                            <input type="text" name="customer" value="{{ request('customer') }}" placeholder="ابحث..." class="w-full px-4 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all">
+                            <div style="z-index: 1000; position: relative;" id="customer-filter-wrapper">
+                                <input type="text" id="customer-filter-search" autocomplete="off" placeholder="ابحث..." value="{{ request('customer') }}"
+                                    class="w-full px-4 py-2.5 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all">
+                                <input type="hidden" name="customer" id="customer-filter-value" value="{{ request('customer') }}">
+                                <div id="customer-filter-dropdown" class="hidden absolute z-[9999] w-full mt-1 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-52 overflow-y-auto"></div>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">من تاريخ</label>
@@ -114,11 +119,11 @@
             @forelse($payments as $payment)
                 <div class="bg-gradient-to-br from-white to-gray-50 dark:from-dark-bg dark:to-dark-card rounded-2xl p-6 mb-4 border-2 border-gray-200 dark:border-dark-border hover:shadow-2xl hover:border-primary-300 dark:hover:border-primary-600/50 transition-all duration-300 group">
                     <div class="flex items-start gap-4 mb-5">
-                        <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 rounded-2xl flex items-center justify-center shadow-lg shadow-green-200 dark:shadow-green-900/30 group-hover:scale-110 transition-transform">
+                        <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 rounded-2xl flex items-center justify-center shadow-lg shadow-green-200 dark:shadow-green-900/30 group-hover:scale-110 transition-transform cursor-pointer" onclick="copyPaymentNumber('{{ $payment->payment_number }}')" title="انقر للنسخ">
                             <i data-lucide="banknote" class="w-7 h-7 text-white"></i>
                         </div>
                         <div class="flex-1">
-                            <h3 class="text-xl font-black text-gray-900 dark:text-white mb-2">#{{ $payment->payment_number }}</h3>
+                            <h3 class="text-xl font-black text-gray-900 dark:text-white mb-2 cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition-colors" onclick="copyPaymentNumber('{{ $payment->payment_number }}')" title="انقر للنسخ">#{{ $payment->payment_number }}</h3>
                             <div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                 <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                                     <i data-lucide="user" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i>
@@ -210,10 +215,10 @@
                     <tr class="hover:bg-gray-50 dark:hover:bg-dark-bg transition-colors">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-green-100 dark:bg-green-600/20 rounded-lg flex items-center justify-center">
+                                <div class="w-10 h-10 bg-green-100 dark:bg-green-600/20 rounded-lg flex items-center justify-center cursor-pointer hover:bg-green-200 dark:hover:bg-green-600/30 transition-colors" onclick="copyPaymentNumber('{{ $payment->payment_number }}')" title="انقر للنسخ">
                                     <i data-lucide="banknote" class="w-5 h-5 text-green-600 dark:text-green-400"></i>
                                 </div>
-                                <span class="font-bold text-gray-900 dark:text-white">#{{ $payment->payment_number }}</span>
+                                <span class="font-bold text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition-colors" onclick="copyPaymentNumber('{{ $payment->payment_number }}')" title="انقر للنسخ">#{{ $payment->payment_number }}</span>
                             </div>
                         </td>
                         <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ $payment->customer->name }}</td>
@@ -261,12 +266,59 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        lucide.createIcons();
-        
-        const view = localStorage.getItem('paymentsView') || 'card';
-        setPaymentView(view);
+const customersData = [
+    @foreach($customers as $customer)
+    { name: @json($customer->name), phone: @json($customer->phone ?? '') },
+    @endforeach
+];
+
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+
+    const search   = document.getElementById('customer-filter-search');
+    const value    = document.getElementById('customer-filter-value');
+    const dropdown = document.getElementById('customer-filter-dropdown');
+    const wrapper  = document.getElementById('customer-filter-wrapper');
+
+    search.addEventListener('input', function () {
+        const q = this.value.trim().toLowerCase();
+        value.value = this.value;
+        if (!q) { dropdown.classList.add('hidden'); return; }
+
+        const results = customersData.filter(c =>
+            c.name.toLowerCase().includes(q) || c.phone.includes(q)
+        ).slice(0, 8);
+
+        if (!results.length) {
+            dropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">لا توجد نتائج</div>';
+            dropdown.classList.remove('hidden');
+            return;
+        }
+
+        dropdown.innerHTML = results.map(c => `
+            <div class="customer-option px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-dark-bg cursor-pointer border-b border-gray-100 dark:border-dark-border last:border-0" data-name="${c.name}">
+                <div class="font-bold text-sm text-gray-900 dark:text-white">${c.name}</div>
+                ${c.phone ? `<div class="text-xs text-gray-500 dark:text-gray-400">${c.phone}</div>` : ''}
+            </div>
+        `).join('');
+        dropdown.classList.remove('hidden');
+
+        dropdown.querySelectorAll('.customer-option').forEach(opt => {
+            opt.addEventListener('click', function () {
+                search.value = this.dataset.name;
+                value.value  = this.dataset.name;
+                dropdown.classList.add('hidden');
+            });
+        });
     });
+
+    document.addEventListener('click', function (e) {
+        if (!wrapper.contains(e.target)) dropdown.classList.add('hidden');
+    });
+
+    const view = localStorage.getItem('paymentsView') || 'card';
+    setPaymentView(view);
+});
     
     function setPaymentView(view) {
         const cardView = document.getElementById('cardView');
@@ -292,6 +344,27 @@
         
         localStorage.setItem('paymentsView', view);
         lucide.createIcons();
+    }
+    
+    function copyPaymentNumber(paymentNumber) {
+        navigator.clipboard.writeText(paymentNumber).then(function() {
+            // إنشاء إشعار مؤقت
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2 animate-fade-in-down';
+            notification.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5"></i><span class="font-bold">تم نسخ رقم الدفعة: ' + paymentNumber + '</span>';
+            document.body.appendChild(notification);
+            lucide.createIcons();
+            
+            setTimeout(function() {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s';
+                setTimeout(function() {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 2000);
+        }).catch(function(err) {
+            console.error('فشل النسخ:', err);
+        });
     }
 </script>
 @endpush

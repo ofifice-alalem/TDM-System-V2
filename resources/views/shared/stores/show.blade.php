@@ -215,37 +215,122 @@
                 </div>
 
                 {{-- Financial Summary Card --}}
-                <div class="bg-white dark:bg-dark-card rounded-3xl p-6 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up" style="animation-delay: 0.1s">
-                    <div class="flex items-center gap-3 mb-6">
+                @php
+                    $totalDebt = $debt;
+                    $hasPending = $stats['pending_sales'] > 0 || $stats['pending_payments'] > 0 || $stats['pending_returns'] > 0;
+                @endphp
+                <div class="bg-white dark:bg-dark-card rounded-3xl shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up overflow-hidden" style="animation-delay: 0.1s">
+
+                    {{-- Header --}}
+                    <div class="px-6 pt-6 pb-4 flex items-center gap-3 border-b border-gray-100 dark:border-dark-border">
                         <div class="w-10 h-10 bg-primary-50 dark:bg-primary-500/10 rounded-xl flex items-center justify-center text-primary-600 dark:text-primary-400">
                             <i data-lucide="wallet" class="w-5 h-5"></i>
                         </div>
                         <h2 class="text-xl font-black text-gray-900 dark:text-white">الملخص المالي</h2>
                     </div>
 
-                    <div class="space-y-3">
-                        <div class="bg-blue-50 dark:bg-blue-500/10 rounded-2xl p-4">
-                            <div class="text-xs text-blue-600 dark:text-blue-400 mb-1">إجمالي المبيعات</div>
-                            <div class="text-xl font-black text-blue-700 dark:text-blue-300">{{ number_format($stats['total_sales'], 2) }} دينار</div>
+                    {{-- Stats Grid --}}
+                    <div class="grid grid-cols-3 divide-x divide-x-reverse divide-gray-100 dark:divide-dark-border border-b border-gray-100 dark:border-dark-border">
+                        <div class="p-4 text-center">
+                            <div class="w-8 h-8 bg-blue-50 dark:bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-500 dark:text-blue-400 mx-auto mb-2">
+                                <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">المبيعات</div>
+                            <div class="text-sm font-black text-blue-600 dark:text-blue-400">{{ number_format($stats['total_sales'], 2) }}</div>
                         </div>
-
-                        <div class="bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl p-4">
-                            <div class="text-xs text-emerald-600 dark:text-emerald-400 mb-1">إجمالي المدفوعات</div>
-                            <div class="text-xl font-black text-emerald-700 dark:text-emerald-300">{{ number_format($stats['total_payments'], 2) }} دينار</div>
+                        <div class="p-4 text-center">
+                            <div class="w-8 h-8 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-500 dark:text-emerald-400 mx-auto mb-2">
+                                <i data-lucide="banknote" class="w-4 h-4"></i>
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">المدفوعات</div>
+                            <div class="text-sm font-black text-emerald-600 dark:text-emerald-400">{{ number_format($stats['total_payments'], 2) }}</div>
                         </div>
-
-                        <div class="bg-orange-50 dark:bg-orange-500/10 rounded-2xl p-4">
-                            <div class="text-xs text-orange-600 dark:text-orange-400 mb-1">إجمالي المرتجعات</div>
-                            <div class="text-xl font-black text-orange-700 dark:text-orange-300">{{ number_format($stats['total_returns'], 2) }} دينار</div>
+                        <div class="p-4 text-center">
+                            <div class="w-8 h-8 bg-orange-50 dark:bg-orange-500/10 rounded-lg flex items-center justify-center text-orange-500 dark:text-orange-400 mx-auto mb-2">
+                                <i data-lucide="package-x" class="w-4 h-4"></i>
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">المرتجعات</div>
+                            <div class="text-sm font-black text-orange-600 dark:text-orange-400">{{ number_format($stats['total_returns'], 2) }}</div>
                         </div>
+                    </div>
 
-                        <div class="bg-gradient-to-br from-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-100 to-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-200 dark:from-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-900/40 dark:to-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-800/40 rounded-2xl p-5 border-2 border-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-200 dark:border-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-700">
-                            <div class="text-xs text-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-700 dark:text-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-300 mb-1 font-bold">الدين</div>
-                            <div class="text-2xl font-black text-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-800 dark:text-{{ $debt > 0 ? 'red' : ($debt < 0 ? 'emerald' : 'gray') }}-200">
-                                {{ $debt > 0 ? '-' : ($debt < 0 ? '+' : '') }}{{ number_format(abs($debt), 2) }} دينار
+                    {{-- Pending Items --}}
+                    @if($hasPending)
+                    <div class="px-4 pt-4 space-y-2">
+                        @if($stats['pending_sales'] > 0)
+                        <div class="flex items-center justify-between bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-xl px-4 py-2.5">
+                            <div class="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                <span class="text-xs font-bold">فواتير معلقة</span>
+                            </div>
+                            <span class="text-xs font-black text-blue-700 dark:text-blue-300">+ {{ number_format($stats['pending_sales'], 2) }} دينار</span>
+                        </div>
+                        @endif
+                        @if($stats['pending_payments'] > 0)
+                        <div class="flex items-center justify-between bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-xl px-4 py-2.5">
+                            <div class="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
+                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                <span class="text-xs font-bold">إيصالات معلقة</span>
+                            </div>
+                            <span class="text-xs font-black text-emerald-700 dark:text-emerald-300">- {{ number_format($stats['pending_payments'], 2) }} دينار</span>
+                        </div>
+                        @endif
+                        @if($stats['pending_returns'] > 0)
+                        <div class="flex items-center justify-between bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/30 rounded-xl px-4 py-2.5">
+                            <div class="flex items-center gap-2 text-orange-700 dark:text-orange-400">
+                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                <span class="text-xs font-bold">مرتجعات معلقة</span>
+                            </div>
+                            <span class="text-xs font-black text-orange-700 dark:text-orange-300">- {{ number_format($stats['pending_returns'], 2) }} دينار</span>
+                        </div>
+                        @endif
+                    </div>
+                    @endif
+
+                    {{-- Total Debt --}}
+                    <div class="p-4">
+                        <div class="relative rounded-2xl overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-br from-orange-700 to-orange-900"></div>
+                            <div class="absolute inset-0 opacity-10">
+                                <div class="absolute -top-4 -left-4 w-24 h-24 bg-white rounded-full"></div>
+                                <div class="absolute -bottom-6 -right-6 w-32 h-32 bg-white rounded-full"></div>
+                            </div>
+                            <div class="relative p-5">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-white/90 text-xs font-bold tracking-wide uppercase">إجمالي الدين</span>
+                                    <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                                        <i data-lucide="trending-up" class="w-4 h-4 text-white"></i>
+                                    </div>
+                                </div>
+                                <div class="text-3xl font-black text-white tracking-tight">
+                                    {{ number_format(abs($totalDebt), 2) }}
+                                    <span class="text-base font-bold text-white/80">دينار</span>
+                                </div>
+                                <div class="mt-3">
+                                    @if($totalDebt > 0)
+                                        <span class="bg-red-500 text-white px-4 py-1.5 rounded-xl text-sm font-black">مدين</span>
+                                    @elseif($totalDebt < 0)
+                                        <span class="bg-emerald-500 text-white px-4 py-1.5 rounded-xl text-sm font-black">دائن</span>
+                                    @else
+                                        <span class="bg-white/20 text-white px-4 py-1.5 rounded-xl text-sm font-black">--</span>
+                                    @endif
+                                </div>
+                                @if($hasPending)
+                                <div class="mt-3 pt-3 border-t border-white/20 grid grid-cols-2 gap-2 text-xs">
+                                    <div class="bg-white/10 rounded-lg px-3 py-2">
+                                        <div class="text-white/60 mb-0.5">معتمد</div>
+                                        <div class="text-white font-black">{{ number_format($confirmedDebt, 2) }} دينار</div>
+                                    </div>
+                                    <div class="bg-white/10 rounded-lg px-3 py-2">
+                                        <div class="text-white/60 mb-0.5">معلق</div>
+                                        <div class="text-white font-black">{{ number_format($stats['pending_sales'] - $stats['pending_payments'] - $stats['pending_returns'], 2) }} دينار</div>
+                                    </div>
+                                </div>
+                                @endif
                             </div>
                         </div>
                     </div>
+
                 </div>
 
             </div>

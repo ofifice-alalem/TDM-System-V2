@@ -1,0 +1,606 @@
+================================================================================
+                    المسارات والـControllers - سحب أرباح المسوق
+                              (البنية المشتركة المثالية)
+================================================================================
+
+📋 نظرة عامة:
+--------------
+هذا الملف يوثق البنية المثالية للمسارات والـControllers باستخدام نهج مشترك
+لتقليل التكرار مع الحفاظ على الأمان والوضوح.
+
+✅ فلسفة التصميم:
+- Controller واحد مشترك
+- Policies للتحكم بالصلاحيات
+- Middleware للمصادقة فقط
+- Views مشتركة
+
+================================================================================
+                        🛣️ المسارات (Routes)
+================================================================================
+
+📁 الملف: routes/web.php
+🔒 Middleware: ['auth']
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ المسارات المشتركة                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Route::middleware('auth')->group(function () {
+    
+    // Resource Routes
+    Route::resource('withdrawals', WithdrawalController::class)
+        ->except(['edit', 'update', 'destroy']);
+    
+    // Custom Actions
+    Route::post('withdrawals/{withdrawal}/approve', [WithdrawalController::class, 'approve'])
+        ->name('withdrawals.approve')
+        ->can('approve', 'withdrawal');
+    
+    Route::post('withdrawals/{withdrawal}/reject', [WithdrawalController::class, 'reject'])
+        ->name('withdrawals.reject')
+        ->can('reject', 'withdrawal');
+    
+    Route::post('withdrawals/{withdrawal}/cancel', [WithdrawalController::class, 'cancel'])
+        ->name('withdrawals.cancel')
+        ->can('cancel', 'withdrawal');
+    
+    // Additional Routes
+    Route::get('withdrawals/{withdrawal}/pdf', [WithdrawalController::class, 'pdf'])
+        ->name('withdrawals.pdf');
+    
+    Route::get('withdrawals/{withdrawal}/receipt', [WithdrawalController::class, 'viewReceipt'])
+        ->name('withdrawals.receipt');
+});
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ جدول المسارات                                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+GET     /withdrawals
+        الاسم: withdrawals.index
+        الصلاحية: @can('viewAny', MarketerWithdrawalRequest::class)
+        الغرض: عرض قائمة طلبات السحب (حسب الدور)
+
+GET     /withdrawals/create
+        الاسم: withdrawals.create
+        الصلاحية: @can('create', MarketerWithdrawalRequest::class)
+        الغرض: عرض صفحة إنشاء طلب سحب (للمسوق فقط)
+
+POST    /withdrawals
+        الاسم: withdrawals.store
+        الصلاحية: @can('create', MarketerWithdrawalRequest::class)
+        الغرض: حفظ طلب سحب جديد
+
+GET     /withdrawals/{withdrawal}
+        الاسم: withdrawals.show
+        الصلاحية: @can('view', $withdrawal)
+        الغرض: عرض تفاصيل طلب سحب معين
+
+POST    /withdrawals/{withdrawal}/approve
+        الاسم: withdrawals.approve
+        الصلاحية: @can('approve', $withdrawal)
+        الغرض: الموافقة على طلب سحب (للإدارة)
+
+POST    /withdrawals/{withdrawal}/reject
+        الاسم: withdrawals.reject
+        الصلاحية: @can('reject', $withdrawal)
+        الغرض: رفض طلب سحب (للإدارة)
+
+POST    /withdrawals/{withdrawal}/cancel
+        الاسم: withdrawals.cancel
+        الصلاحية: @can('cancel', $withdrawal)
+        الغرض: إلغاء طلب سحب (للمسوق)
+
+GET     /withdrawals/{withdrawal}/pdf
+        الاسم: withdrawals.pdf
+        الصلاحية: @can('view', $withdrawal)
+        الغرض: طباعة PDF
+
+GET     /withdrawals/{withdrawal}/receipt
+        الاسم: withdrawals.receipt
+        الصلاحية: @can('view', $withdrawal)
+        الغرض: عرض صورة إيصال الاستلام الموقع
+
+
+================================================================================
+                        🎮 Controller
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ WithdrawalController (مشترك)                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Controllers/WithdrawalController.php
+🎯 المسؤولية: إدارة جميع عمليات سحب الأرباح لجميع الأدوار
+
+📋 الـMethods:
+
+1️⃣ index(Request $request)
+   - الغرض: عرض قائمة طلبات السحب حسب صلاحيات المستخدم
+   - الصلاحية: $this->authorize('viewAny', MarketerWithdrawalRequest::class)
+   - المعاملات:
+     • status (optional): الفلترة حسب الحالة
+     • marketer_id (optional): الفلترة حسب المسوق (للإدارة)
+     • from_date, to_date (optional): الفلترة حسب التاريخ
+   
+   - المنطق:
+     ```php
+     $query = MarketerWithdrawalRequest::with('marketer');
+     
+     // الفرق الوحيد بين الأدوار
+     if (auth()->user()->isMarketer()) {
+         $query->where('marketer_id', auth()->id());
+     }
+     
+     // باقي الفلاتر مشتركة
+     $this->applyFilters($query, $request);
+     
+     // البيانات الإضافية
+     $marketers = auth()->user()->isAdmin() 
+         ? User::where('role_id', 3)->where('is_active', true)->get() 
+         : null;
+     
+     // حساب الرصيد المتاح (للمسوق فقط)
+     $availableBalance = auth()->user()->isMarketer()
+         ? $this->calculateAvailableBalance(auth()->id())
+         : null;
+     
+     return view('shared.withdrawals.index', [
+         'withdrawals' => $query->paginate(20),
+         'marketers' => $marketers,
+         'availableBalance' => $availableBalance
+     ]);
+     ```
+   
+   - الـView: shared/withdrawals/index.blade.php
+
+2️⃣ create()
+   - الغرض: عرض صفحة إنشاء طلب سحب جديد
+   - الصلاحية: $this->authorize('create', MarketerWithdrawalRequest::class)
+   - البيانات المرسلة:
+     • availableBalance: الرصيد المتاح للمسوق
+     ```php
+     $availableBalance = $this->calculateAvailableBalance(auth()->id());
+     ```
+   - الـView: marketer/withdrawals/create.blade.php
+
+3️⃣ store(StoreWithdrawalRequest $request)
+   - الغرض: حفظ طلب سحب جديد
+   - الـForm Request: StoreWithdrawalRequest (يحتوي على validation + authorization)
+   - الـService: WithdrawalService::createWithdrawal()
+   - الإرجاع: redirect()->route('withdrawals.show', $withdrawal)
+
+4️⃣ show(MarketerWithdrawalRequest $withdrawal)
+   - الغرض: عرض تفاصيل طلب سحب معين
+   - الصلاحية: $this->authorize('view', $withdrawal)
+   - الـEager Loading: marketer, approver, rejecter
+   - البيانات الإضافية:
+     ```php
+     $availableBalance = $this->calculateAvailableBalance($withdrawal->marketer_id);
+     ```
+   - الـView: shared/withdrawals/show.blade.php
+
+5️⃣ approve(ApproveWithdrawalRequest $request, MarketerWithdrawalRequest $withdrawal)
+   - الغرض: الموافقة على طلب سحب معلق
+   - الـForm Request: ApproveWithdrawalRequest
+   - رفع الملف:
+     ```php
+     $path = $request->file('signed_receipt_image')
+         ->store('withdrawal_receipts', 'public');
+     ```
+   - الـService: WithdrawalService::approveWithdrawal($withdrawal->id, auth()->id(), $path)
+   - الإرجاع: redirect()->back()->with('success', 'تمت الموافقة على طلب السحب بنجاح')
+
+6️⃣ reject(RejectWithdrawalRequest $request, MarketerWithdrawalRequest $withdrawal)
+   - الغرض: رفض طلب سحب
+   - الـForm Request: RejectWithdrawalRequest
+   - الـService: WithdrawalService::rejectWithdrawal($withdrawal->id, auth()->id(), $request->notes)
+   - الإرجاع: redirect()->back()->with('success', 'تم رفض طلب السحب بنجاح')
+
+7️⃣ cancel(CancelWithdrawalRequest $request, MarketerWithdrawalRequest $withdrawal)
+   - الغرض: إلغاء طلب سحب
+   - الـForm Request: CancelWithdrawalRequest
+   - الـService: WithdrawalService::cancelWithdrawal($withdrawal->id, $request->notes)
+   - الإرجاع: redirect()->route('withdrawals.index')->with('success', 'تم إلغاء طلب السحب بنجاح')
+
+8️⃣ pdf(MarketerWithdrawalRequest $withdrawal)
+   - الغرض: طباعة PDF لطلب السحب
+   - الصلاحية: $this->authorize('view', $withdrawal)
+   - الـService: InvoiceService::generateWithdrawalPdf($withdrawal)
+   - الإرجاع: PDF file
+
+9️⃣ viewReceipt(MarketerWithdrawalRequest $withdrawal)
+   - الغرض: عرض صورة إيصال الاستلام الموقع
+   - الصلاحية: $this->authorize('view', $withdrawal)
+   - التحقق:
+     • status === 'approved'
+     • signed_receipt_image exists
+   - الإرجاع: response()->file(storage_path('app/public/' . $withdrawal->signed_receipt_image))
+
+🔟 calculateAvailableBalance($marketerId) - private
+   - الغرض: حساب الرصيد المتاح للمسوق
+   - المنطق:
+     ```php
+     $totalCommissions = MarketerCommission::where('marketer_id', $marketerId)
+         ->sum('commission_amount');
+     
+     $totalWithdrawals = MarketerWithdrawalRequest::where('marketer_id', $marketerId)
+         ->where('status', 'approved')
+         ->sum('requested_amount');
+     
+     return $totalCommissions - $totalWithdrawals;
+     ```
+
+1️⃣1️⃣ applyFilters($query, $request) - private
+   - الغرض: تطبيق الفلاتر المشتركة
+   - المنطق:
+     ```php
+     if ($request->filled('status')) {
+         $query->where('status', $request->status);
+     }
+     
+     if ($request->filled('marketer_id') && auth()->user()->isAdmin()) {
+         $query->where('marketer_id', $request->marketer_id);
+     }
+     
+     if ($request->filled('from_date')) {
+         $query->whereDate('created_at', '>=', $request->from_date);
+     }
+     
+     if ($request->filled('to_date')) {
+         $query->whereDate('created_at', '<=', $request->to_date);
+     }
+     
+     // الترتيب
+     if ($request->status === 'pending') {
+         $query->oldest('created_at');
+     } else {
+         $query->latest('created_at');
+     }
+     ```
+
+
+================================================================================
+                        ⚙️ Service
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ WithdrawalService (مشترك)                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Services/WithdrawalService.php
+🎯 المسؤولية: منطق الأعمال لجميع عمليات سحب الأرباح
+
+📋 الـMethods:
+
+1️⃣ createWithdrawal($marketerId, $amount, $notes = null)
+   - الغرض: إنشاء طلب سحب جديد
+   - التحقق: checkAvailableBalance($marketerId, $amount)
+   - الخطوات:
+     1. إنشاء سجل في marketer_withdrawal_requests
+     2. إرسال إشعار لجميع الإدارة
+   - الإرجاع: MarketerWithdrawalRequest
+   - الـTransaction: DB::transaction()
+
+2️⃣ approveWithdrawal($withdrawalId, $adminId, $receiptImage)
+   - الغرض: الموافقة على طلب سحب معلق
+   - التحقق: status === 'pending'
+   - الخطوات:
+     1. تحديث marketer_withdrawal_requests
+     2. إرسال إشعار للمسوق
+   - الإرجاع: MarketerWithdrawalRequest
+   - الـTransaction: DB::transaction()
+
+3️⃣ rejectWithdrawal($withdrawalId, $adminId, $notes)
+   - الغرض: رفض طلب سحب
+   - التحقق: status === 'pending'
+   - الخطوات:
+     1. تحديث marketer_withdrawal_requests
+     2. إرسال إشعار للمسوق
+   - الإرجاع: MarketerWithdrawalRequest
+   - الـTransaction: DB::transaction()
+
+4️⃣ cancelWithdrawal($withdrawalId, $notes)
+   - الغرض: إلغاء طلب سحب
+   - التحقق: status === 'pending'
+   - الخطوات:
+     1. تحديث marketer_withdrawal_requests
+   - الإرجاع: MarketerWithdrawalRequest
+   - الـTransaction: DB::transaction()
+
+5️⃣ checkAvailableBalance($marketerId, $requestedAmount) - private
+   - الغرض: التحقق من كفاية الرصيد
+   - الاستثناءات: Exception إذا غير كافٍ
+
+
+================================================================================
+                        🔐 Policy
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ MarketerWithdrawalRequestPolicy                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Policies/MarketerWithdrawalRequestPolicy.php
+🎯 المسؤولية: التحكم بالصلاحيات لجميع الأدوار
+
+📋 الـMethods:
+
+viewAny(User $user): bool
+   - الجميع يمكنهم رؤية القائمة
+   - return true;
+
+viewAll(User $user): bool
+   - الإدارة فقط ترى جميع الطلبات
+   - return $user->role_id === 1;
+
+view(User $user, MarketerWithdrawalRequest $withdrawal): bool
+   - المسوق يرى طلباته فقط
+   - الإدارة ترى الكل
+   - return $user->role_id === 1 || $user->id === $withdrawal->marketer_id;
+
+create(User $user): bool
+   - المسوق فقط ينشئ طلبات
+   - return $user->role_id === 3;
+
+approve(User $user, MarketerWithdrawalRequest $withdrawal): bool
+   - الإدارة فقط + الحالة pending
+   - return $user->role_id === 1 && $withdrawal->status === WithdrawalStatus::PENDING;
+
+reject(User $user, MarketerWithdrawalRequest $withdrawal): bool
+   - الإدارة فقط + الحالة pending
+   - return $user->role_id === 1 && $withdrawal->status === WithdrawalStatus::PENDING;
+
+cancel(User $user, MarketerWithdrawalRequest $withdrawal): bool
+   - المسوق صاحب الطلب فقط + الحالة pending
+   - return $user->id === $withdrawal->marketer_id 
+       && $withdrawal->status === WithdrawalStatus::PENDING;
+
+
+================================================================================
+                        📦 Models & Enums
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ WithdrawalStatus Enum                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Enums/WithdrawalStatus.php
+
+```php
+enum WithdrawalStatus: string
+{
+    case PENDING = 'pending';
+    case APPROVED = 'approved';
+    case REJECTED = 'rejected';
+    case CANCELLED = 'cancelled';
+    
+    public function label(): string
+    {
+        return match($this) {
+            self::PENDING => 'معلق',
+            self::APPROVED => 'موافق عليه',
+            self::REJECTED => 'مرفوض',
+            self::CANCELLED => 'ملغي',
+        };
+    }
+    
+    public function color(): string
+    {
+        return match($this) {
+            self::PENDING => 'orange',
+            self::APPROVED => 'green',
+            self::REJECTED => 'red',
+            self::CANCELLED => 'gray',
+        };
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ MarketerWithdrawalRequest Model                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Models/MarketerWithdrawalRequest.php
+
+📋 الـRelationships:
+- marketer(): belongsTo(User::class, 'marketer_id')
+- approver(): belongsTo(User::class, 'approved_by')
+- rejecter(): belongsTo(User::class, 'rejected_by')
+
+📋 الـCasts:
+```php
+protected $casts = [
+    'status' => WithdrawalStatus::class,
+    'requested_amount' => 'decimal:2',
+    'approved_at' => 'datetime',
+    'rejected_at' => 'datetime',
+];
+```
+
+📋 الـFillable:
+- marketer_id, requested_amount, notes
+- approved_by, approved_at, signed_receipt_image
+- rejected_by, rejected_at
+
+
+================================================================================
+                        📝 Form Requests
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1️⃣ StoreWithdrawalRequest                                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/StoreWithdrawalRequest.php
+
+```php
+class StoreWithdrawalRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('create', MarketerWithdrawalRequest::class);
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'requested_amount' => 'required|numeric|min:1',
+            'notes' => 'nullable|string|max:1000',
+        ];
+    }
+    
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $availableBalance = $this->calculateAvailableBalance();
+            if ($this->requested_amount > $availableBalance) {
+                $validator->errors()->add('requested_amount', 
+                    'المبلغ المطلوب أكبر من الرصيد المتاح');
+            }
+        });
+    }
+    
+    private function calculateAvailableBalance()
+    {
+        $totalCommissions = MarketerCommission::where('marketer_id', auth()->id())
+            ->sum('commission_amount');
+        
+        $totalWithdrawals = MarketerWithdrawalRequest::where('marketer_id', auth()->id())
+            ->where('status', 'approved')
+            ->sum('requested_amount');
+        
+        return $totalCommissions - $totalWithdrawals;
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2️⃣ ApproveWithdrawalRequest                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/ApproveWithdrawalRequest.php
+
+```php
+class ApproveWithdrawalRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('approve', $this->route('withdrawal'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'signed_receipt_image' => 'required|image|mimes:jpg,jpeg,png,pdf|max:5120',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'signed_receipt_image.required' => 'يجب رفع صورة إيصال الاستلام الموقع',
+            'signed_receipt_image.max' => 'حجم الملف يجب ألا يتجاوز 5MB',
+        ];
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3️⃣ RejectWithdrawalRequest                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/RejectWithdrawalRequest.php
+
+```php
+class RejectWithdrawalRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('reject', $this->route('withdrawal'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'notes' => 'required|string|max:1000',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'notes.required' => 'يجب كتابة سبب الرفض',
+        ];
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 4️⃣ CancelWithdrawalRequest                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/CancelWithdrawalRequest.php
+
+```php
+class CancelWithdrawalRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('cancel', $this->route('withdrawal'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'notes' => 'required|string|max:1000',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'notes.required' => 'يجب كتابة سبب الإلغاء',
+        ];
+    }
+}
+```
+
+
+================================================================================
+                        📝 Validation Rules
+================================================================================
+
+إنشاء طلب سحب (store):
+- requested_amount: required|numeric|min:1
+- requested_amount: يجب ألا يتجاوز الرصيد المتاح
+- notes: nullable|string|max:1000
+
+موافقة (approve):
+- signed_receipt_image: required|image|mimes:jpg,jpeg,png,pdf|max:5120
+
+رفض/إلغاء (reject/cancel):
+- notes: required|string|max:1000
+
+
+================================================================================
+                        ✅ مزايا البنية المشتركة
+================================================================================
+
+1. ✅ Controller واحد بدلاً من اثنين
+2. ✅ لا تكرار في الكود (DRY)
+3. ✅ Policies واضحة ومركزية
+4. ✅ صيانة أسهل
+5. ✅ Views مشتركة
+6. ✅ Routes أقل وأوضح
+7. ✅ سهولة إضافة أدوار جديدة
+
+
+================================================================================
+انتهى التوثيق
+================================================================================

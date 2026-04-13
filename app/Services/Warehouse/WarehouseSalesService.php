@@ -29,11 +29,17 @@ class WarehouseSalesService
                 );
             }
 
+            $lastBalance = StoreDebtLedger::where('store_id', $invoice->store_id)
+                ->latest('id')
+                ->value('balance_after') ?? 0;
+
             StoreDebtLedger::create([
                 'store_id' => $invoice->store_id,
                 'entry_type' => 'sale',
                 'sales_invoice_id' => $invoice->id,
                 'amount' => $invoice->total_amount,
+                'balance_after' => $lastBalance + $invoice->total_amount,
+                'marketer_id' => $invoice->marketer_id,
                 'created_at' => now(),
             ]);
 

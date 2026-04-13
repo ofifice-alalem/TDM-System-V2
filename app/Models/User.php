@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'username',
@@ -30,12 +31,8 @@ class User extends Authenticatable
         return $this->password_hash;
     }
 
-    public function getAuthIdentifierName()
-    {
-        return 'username';
-    }
-
     protected $casts = [
+        'id' => 'integer',
         'role_id' => 'integer',
         'commission_rate' => 'decimal:2',
         'is_active' => 'boolean',

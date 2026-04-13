@@ -27,21 +27,18 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2">
-                <form action="{{ route('marketer.payments.store') }}" method="POST">
+                <form action="{{ route('marketer.payments.store') }}" method="POST" id="payment-form">
                     @csrf
                     
                     <div class="bg-white dark:bg-dark-card rounded-[2rem] p-6 md:p-8 shadow-xl shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border animate-slide-up space-y-6">
                         
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">المتجر</label>
-                            <select name="store_id" id="store-select" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all" required>
-                                <option value="">اختر المتجر</option>
-                                @foreach($stores as $store)
-                                    <option value="{{ $store->id }}" data-debt="{{ $store->debt }}">
-                                        {{ $store->name }} - الدين: {{ number_format($store->debt, 2) }} د.ل
-                                    </option>
-                                @endforeach
-                            </select>
+                            <div class="relative">
+                                <input type="text" id="store-search" autocomplete="off" placeholder="ابحث عن المتجر..." class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all" required>
+                                <input type="hidden" name="store_id" id="store-id" required>
+                                <div id="store-dropdown" class="hidden absolute z-50 w-full mt-2 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl shadow-xl max-h-60 overflow-y-auto"></div>
+                            </div>
                             <div id="debt-display" class="hidden mt-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-3">
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm font-bold text-amber-700 dark:text-amber-400">الدين الحالي:</span>
@@ -49,8 +46,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <input type="hidden" name="keeper_id" value="2">
 
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">المبلغ المسدد</label>
@@ -110,36 +105,148 @@
     </div>
 </div>
 
+{{-- Confirmation Modal --}}
+<div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+    <div class="bg-white dark:bg-dark-card rounded-2xl shadow-2xl p-6 w-full max-w-sm space-y-4">
+        <div class="flex items-center gap-3 text-amber-600 dark:text-amber-400">
+            <i data-lucide="alert-triangle" class="w-6 h-6 shrink-0"></i>
+            <h3 class="text-base font-black">تأكيد العملية</h3>
+        </div>
+        <p class="text-sm text-gray-700 dark:text-gray-300">
+            المبلغ المدخل <span id="confirm-amount" class="font-black text-gray-900 dark:text-white"></span> د.ل
+            أكبر من الدين الحالي <span id="confirm-debt" class="font-black text-gray-900 dark:text-white"></span> د.ل.
+            <br>هل تريد المتابعة على أي حال؟;
+        </p>
+        <div class="flex gap-3 pt-2">
+            <button id="confirm-btn" class="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold text-sm transition-colors">تأكيد</button>
+            <button id="cancel-btn" class="flex-1 py-2.5 bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-dark-border text-gray-700 dark:text-gray-300 rounded-xl font-bold text-sm transition-colors">إلغاء</button>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+const stores = [
+    @foreach($stores as $store)
+        { id: {{ $store->id }}, name: '{{ addslashes($store->name) }}', owner: '{{ addslashes($store->owner_name) }}', debt: {{ $store->debt }} },
+    @endforeach
+];
+
 document.addEventListener('DOMContentLoaded', function() {
     lucide.createIcons();
     
-    const storeSelect = document.getElementById('store-select');
+    const form = document.getElementById('payment-form');
+    const searchInput = document.getElementById('store-search');
+    const storeIdInput = document.getElementById('store-id');
+    const dropdown = document.getElementById('store-dropdown');
     const debtDisplay = document.getElementById('debt-display');
     const debtAmount = document.getElementById('debt-amount');
     const amountInput = document.getElementById('amount-input');
     
-    storeSelect.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        const debt = parseFloat(selectedOption.dataset.debt || 0);
+    // Prevent form submission if store not selected
+    form.addEventListener('submit', function(e) {
+        if (!storeIdInput.value) {
+            e.preventDefault();
+            alert('الرجاء اختيار المتجر');
+            return false;
+        }
+        const paymentMethod = form.querySelector('input[name="payment_method"]:checked');
+        if (!paymentMethod) {
+            e.preventDefault();
+            alert('الرجاء اختيار طريقة الدفع');
+            return false;
+        }
+        const amount = parseFloat(amountInput.value);
+        const debt   = parseFloat(debtAmount.dataset.value || 0);
+        if (debt > 0 && amount > debt && !form.dataset.confirmed) {
+            e.preventDefault();
+            document.getElementById('confirm-amount').textContent = amount.toFixed(2);
+            document.getElementById('confirm-debt').textContent   = debt.toFixed(2);
+            document.getElementById('confirm-modal').classList.remove('hidden');
+            return false;
+        }
+    });
+    
+    searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        storeIdInput.value = '';
+        debtDisplay.classList.add('hidden');
         
-        if (this.value && debt > 0) {
-            debtDisplay.classList.remove('hidden');
-            debtAmount.textContent = debt.toFixed(2) + ' د.ل';
-            amountInput.max = debt;
-        } else {
-            debtDisplay.classList.add('hidden');
-            amountInput.max = '';
+        if (query.length === 0) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+        
+        const filtered = stores.filter(store => 
+            store.name.toLowerCase().includes(query) || 
+            store.owner.toLowerCase().includes(query)
+        );
+        
+        if (filtered.length === 0) {
+            dropdown.innerHTML = '<div class="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">لا توجد نتائج</div>';
+            dropdown.classList.remove('hidden');
+            return;
+        }
+        
+        dropdown.innerHTML = filtered.map(store => {
+            const debtLabel = store.debt > 0 ? 'مدين' : (store.debt < 0 ? 'دائن' : 'لا يوجد دين');
+            const debtColor = store.debt > 0 ? 'text-red-600 dark:text-red-400' : (store.debt < 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500');
+            return `
+            <div class="store-option px-4 py-3 hover:bg-gray-100 dark:hover:bg-dark-bg cursor-pointer border-b border-gray-100 dark:border-dark-border last:border-0" data-id="${store.id}" data-name="${store.name} - ${store.owner}" data-debt="${store.debt}">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-gray-900 dark:text-white text-sm">${store.name}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">${store.owner}</div>
+                    </div>
+                    <div class="text-left">
+                        <div class="font-bold text-sm ${debtColor}">${Math.abs(store.debt).toFixed(2)} د.ل</div>
+                        <div class="text-xs font-bold ${debtColor}">${debtLabel}</div>
+                    </div>
+                </div>
+            </div>
+        `}).join('');
+        dropdown.classList.remove('hidden');
+        
+        document.querySelectorAll('.store-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const debt = parseFloat(this.dataset.debt);
+                storeIdInput.value = this.dataset.id;
+                searchInput.value = this.dataset.name;
+                dropdown.classList.add('hidden');
+                
+                if (debt > 0) {
+                    debtDisplay.classList.remove('hidden');
+                    debtAmount.textContent   = debt.toFixed(2) + ' د.ل (مدين)';
+                    debtAmount.dataset.value = debt;
+                } else if (debt < 0) {
+                    debtDisplay.classList.remove('hidden');
+                    debtAmount.textContent   = Math.abs(debt).toFixed(2) + ' د.ل (دائن)';
+                    debtAmount.dataset.value = debt;
+                } else {
+                    debtDisplay.classList.remove('hidden');
+                    debtAmount.textContent   = '0.00 د.ل (لا يوجد دين)';
+                    debtAmount.dataset.value = 0;
+                }
+            });
+        });
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
         }
     });
     
     amountInput.addEventListener('input', function() {
-        const max = parseFloat(this.max);
-        const value = parseFloat(this.value);
-        if (max && value > max) {
-            this.value = max;
-        }
+    });
+
+    document.getElementById('confirm-btn').addEventListener('click', function() {
+        form.dataset.confirmed = '1';
+        document.getElementById('confirm-modal').classList.add('hidden');
+        form.submit();
+    });
+    document.getElementById('cancel-btn').addEventListener('click', function() {
+        document.getElementById('confirm-modal').classList.add('hidden');
     });
 });
 </script>

@@ -33,8 +33,8 @@ class Product extends Model
     {
         return $this->hasOne(ProductPromotion::class)
             ->where('is_active', true)
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
+            ->whereDate('start_date', '<=', now())
+            ->whereDate('end_date', '>=', now())
             ->latest();
     }
 }

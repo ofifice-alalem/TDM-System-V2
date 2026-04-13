@@ -1,0 +1,136 @@
+========================================
+G. عملية: إرجاع بضاعة من المتجر إلى المسوق
+========================================
+
+========================================
+29. جدول: sales_returns
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • return_number
+    النوع: varchar(50)
+    المفتاح: UNIQUE
+    القيمة الافتراضية: —
+
+  • sales_invoice_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: sales_invoices.id
+    القيمة الافتراضية: —
+
+  • store_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: stores.id
+    القيمة الافتراضية: —
+
+  • marketer_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • total_amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • status
+    النوع: enum('pending','approved','rejected','cancelled')
+    القيمة الافتراضية: 'pending'
+
+  • keeper_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: NULL
+    ملاحظة: يسجل من قام بالموافقة أو الرفض (حسب status)
+
+  • stamped_image
+    النوع: varchar(255)
+    القيمة الافتراضية: NULL
+
+  • notes
+    النوع: text
+    القيمة الافتراضية: NULL
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+========================================
+30. جدول: sales_return_items
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • return_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: sales_returns.id
+    القيمة الافتراضية: —
+
+  • sales_invoice_item_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: sales_invoice_items.id
+    القيمة الافتراضية: —
+
+  • product_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: products.id
+    القيمة الافتراضية: —
+
+  • quantity
+    النوع: int
+    القيمة الافتراضية: —
+
+  • unit_price
+    النوع: decimal(10,2)
+    القيمة الافتراضية: —
+
+========================================
+31. جدول: store_return_pending_stock
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • return_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: sales_returns.id
+    القيمة الافتراضية: —
+
+  • store_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: stores.id
+    القيمة الافتراضية: —
+
+  • product_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: products.id
+    القيمة الافتراضية: —
+
+  • quantity
+    النوع: int
+    القيمة الافتراضية: —
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP

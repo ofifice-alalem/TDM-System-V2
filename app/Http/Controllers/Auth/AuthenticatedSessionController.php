@@ -28,7 +28,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // تحديد الصفحة بناءً على دور المستخدم
+        $user = Auth::user();
+        $redirectUrl = match($user->role_id) {
+            3 => route('marketer.stock.index'), // مسوق
+            default => route('dashboard')
+        };
+
+        return redirect()->intended($redirectUrl);
     }
 
     /**

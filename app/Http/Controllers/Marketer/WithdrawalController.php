@@ -11,11 +11,7 @@ use Illuminate\Support\Facades\Auth;
 class WithdrawalController extends Controller
 {
     public function __construct(private WithdrawalService $service)
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(3);
-        }
-    }
+    {}
 
     public function index(Request $request)
     {
@@ -88,7 +84,7 @@ class WithdrawalController extends Controller
 
     public function show(MarketerWithdrawalRequest $withdrawal)
     {
-        if ($withdrawal->marketer_id !== auth()->id()) {
+        if ($withdrawal->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         $withdrawal->load('marketer', 'approver', 'rejecter');
@@ -97,7 +93,7 @@ class WithdrawalController extends Controller
 
     public function cancel(MarketerWithdrawalRequest $withdrawal, Request $request)
     {
-        if ($withdrawal->marketer_id !== auth()->id()) {
+        if ($withdrawal->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         $validated = $request->validate([

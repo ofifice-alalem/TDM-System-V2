@@ -16,13 +16,24 @@ class CheckRole
 
         $userRoleId = auth()->user()->role_id;
 
+        // super_admin يملك صلاحية الوصول لكل الأدوار
+        if ($userRoleId === 5) {
+            return $next($request);
+        }
+
         $allowedRoleId = match($role) {
-            'marketer' => 3,
-            'warehouse' => 2,
-            'admin' => 1,
-            'sales' => 4,
-            default => null,
+            'marketer'    => 3,
+            'warehouse'   => 2,
+            'admin'       => 1,
+            'sales'       => 4,
+            'super_admin' => 5,
+            default       => null,
         };
+
+        // الأدمن يملك صلاحية الوصول لكل الأدوار (للعرض فقط)
+        if ($userRoleId === 1 && in_array($role, ['warehouse', 'marketer', 'sales'])) {
+            return $next($request);
+        }
 
         if ($userRoleId !== $allowedRoleId) {
             abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');

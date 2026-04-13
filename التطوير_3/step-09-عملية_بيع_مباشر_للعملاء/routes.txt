@@ -1,0 +1,687 @@
+================================================================================
+                    المسارات والـControllers - عملية بيع مباشر للعملاء
+================================================================================
+
+📋 نظرة عامة:
+--------------
+هذا الملف يوثق المسارات والـControllers والـServices لعملية البيع المباشر للعملاء.
+✅ الصلاحيات: مندوب المبيعات (Sales) فقط
+✅ Controllers متعددة حسب الوظيفة
+
+================================================================================
+                        🛣️ المسارات (Routes)
+================================================================================
+
+📁 الملف: routes/sales.php
+🔒 Middleware: ['auth', 'role:sales']
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ المسارات                                                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Route::middleware(['auth', 'role:sales'])->prefix('sales')->group(function () {
+    
+    // Dashboard
+    Route::get('/dashboard', [SalesDashboardController::class, 'index'])
+        ->name('sales.dashboard');
+    
+    // Customers Management
+    Route::resource('customers', CustomerController::class);
+    Route::post('customers/{customer}/toggle', [CustomerController::class, 'toggle'])
+        ->name('customers.toggle');
+    
+    // Customer Invoices
+    Route::resource('invoices', CustomerInvoiceController::class)
+        ->except(['edit', 'update']);
+    Route::get('invoices/{invoice}/pdf', [CustomerInvoiceController::class, 'pdf'])
+        ->name('invoices.pdf');
+    
+    // Customer Payments
+    Route::resource('payments', CustomerPaymentController::class)
+        ->except(['edit', 'update']);
+    Route::get('payments/{payment}/receipt', [CustomerPaymentController::class, 'receipt'])
+        ->name('payments.receipt');
+    
+    // Customer Returns
+    Route::resource('returns', CustomerReturnController::class)
+        ->except(['edit', 'update']);
+    Route::get('returns/{return}/pdf', [CustomerReturnController::class, 'pdf'])
+        ->name('returns.pdf');
+    
+    // AJAX Routes
+    Route::get('api/customers/search', [CustomerController::class, 'search'])
+        ->name('customers.search');
+    Route::get('api/customers/{customer}/balance', [CustomerController::class, 'balance'])
+        ->name('customers.balance');
+    Route::get('api/invoices/{invoice}/items', [CustomerInvoiceController::class, 'items'])
+        ->name('invoices.items');
+});
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ جدول المسارات التفصيلي                                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+=== Dashboard ===
+GET     /sales/dashboard
+        الاسم: sales.dashboard
+        الغرض: لوحة تحكم مندوب المبيعات
+
+=== Customers ===
+GET     /sales/customers
+        الاسم: customers.index
+        الغرض: قائمة العملاء
+
+GET     /sales/customers/create
+        الاسم: customers.create
+        الغرض: إضافة عميل جديد
+
+POST    /sales/customers
+        الاسم: customers.store
+        الغرض: حفظ عميل جديد
+
+GET     /sales/customers/{customer}
+        الاسم: customers.show
+        الغرض: تفاصيل العميل
+
+GET     /sales/customers/{customer}/edit
+        الاسم: customers.edit
+        الغرض: تعديل بيانات العميل
+
+PUT     /sales/customers/{customer}
+        الاسم: customers.update
+        الغرض: حفظ تعديلات العميل
+
+POST    /sales/customers/{customer}/toggle
+        الاسم: customers.toggle
+        الغرض: تفعيل/تعطيل العميل
+
+=== Customer Invoices ===
+GET     /sales/invoices
+        الاسم: invoices.index
+        الغرض: قائمة فواتير العملاء
+
+GET     /sales/invoices/create
+        الاسم: invoices.create
+        الغرض: إنشاء فاتورة جديدة
+
+POST    /sales/invoices
+        الاسم: invoices.store
+        الغرض: حفظ فاتورة جديدة
+
+GET     /sales/invoices/{invoice}
+        الاسم: invoices.show
+        الغرض: تفاصيل الفاتورة
+
+DELETE  /sales/invoices/{invoice}
+        الاسم: invoices.destroy
+        الغرض: إلغاء الفاتورة
+
+GET     /sales/invoices/{invoice}/pdf
+        الاسم: invoices.pdf
+        الغرض: طباعة PDF للفاتورة
+
+=== Customer Payments ===
+GET     /sales/payments
+        الاسم: payments.index
+        الغرض: قائمة المدفوعات
+
+GET     /sales/payments/create
+        الاسم: payments.create
+        الغرض: تسجيل دفعة جديدة
+
+POST    /sales/payments
+        الاسم: payments.store
+        الغرض: حفظ دفعة جديدة
+
+GET     /sales/payments/{payment}
+        الاسم: payments.show
+        الغرض: تفاصيل الدفعة
+
+DELETE  /sales/payments/{payment}
+        الاسم: payments.destroy
+        الغرض: إلغاء الدفعة
+
+GET     /sales/payments/{payment}/receipt
+        الاسم: payments.receipt
+        الغرض: طباعة إيصال الدفعة
+
+=== Customer Returns ===
+GET     /sales/returns
+        الاسم: returns.index
+        الغرض: قائمة الإرجاعات
+
+GET     /sales/returns/create
+        الاسم: returns.create
+        الغرض: إنشاء إرجاع جديد
+
+POST    /sales/returns
+        الاسم: returns.store
+        الغرض: حفظ إرجاع جديد
+
+GET     /sales/returns/{return}
+        الاسم: returns.show
+        الغرض: تفاصيل الإرجاع
+
+DELETE  /sales/returns/{return}
+        الاسم: returns.destroy
+        الغرض: إلغاء الإرجاع
+
+GET     /sales/returns/{return}/pdf
+        الاسم: returns.pdf
+        الغرض: طباعة PDF للإرجاع
+
+=== AJAX APIs ===
+GET     /sales/api/customers/search
+        الاسم: customers.search
+        الغرض: البحث في العملاء (للـSelect2)
+
+GET     /sales/api/customers/{customer}/balance
+        الاسم: customers.balance
+        الغرض: جلب رصيد العميل
+
+GET     /sales/api/invoices/{invoice}/items
+        الاسم: invoices.items
+        الغرض: جلب عناصر الفاتورة (للإرجاع)
+
+
+================================================================================
+                        🎮 Controllers
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1️⃣ SalesDashboardController                                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Controllers/Sales/SalesDashboardController.php
+
+📋 الـMethods:
+
+index()
+   - الغرض: عرض لوحة تحكم مندوب المبيعات
+   - المنطق:
+     ```php
+     $salesUserId = auth()->id();
+     
+     $stats = [
+         'active_customers' => Customer::where('is_active', true)->count(),
+         'today_invoices' => CustomerInvoice::where('sales_user_id', $salesUserId)
+             ->whereDate('created_at', today())->count(),
+         'monthly_sales' => CustomerInvoice::where('sales_user_id', $salesUserId)
+             ->whereMonth('created_at', now()->month)
+             ->sum('total_amount'),
+         'total_debts' => CustomerDebtLedger::whereHas('customer', function($q) use ($salesUserId) {
+                 $q->whereHas('invoices', function($q2) use ($salesUserId) {
+                     $q2->where('sales_user_id', $salesUserId);
+                 });
+             })
+             ->selectRaw('customer_id, SUM(CASE WHEN entry_type = "sale" THEN amount WHEN entry_type = "return" THEN -amount WHEN entry_type = "payment" THEN -amount END) as balance')
+             ->groupBy('customer_id')
+             ->havingRaw('balance > 0')
+             ->sum('balance'),
+     ];
+     
+     // آخر الفواتير
+     $recentInvoices = CustomerInvoice::where('sales_user_id', $salesUserId)
+         ->with('customer')
+         ->latest()
+         ->limit(5)
+         ->get();
+     
+     // العملاء الأكثر ديناً
+     $topDebtors = Customer::whereHas('invoices', function($q) use ($salesUserId) {
+             $q->where('sales_user_id', $salesUserId);
+         })
+         ->withSum('debtLedger', 'amount')
+         ->orderBy('debt_ledger_sum_amount', 'desc')
+         ->limit(5)
+         ->get();
+     
+     return view('sales.dashboard', compact('stats', 'recentInvoices', 'topDebtors'));
+     ```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2️⃣ CustomerController                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Controllers/Sales/CustomerController.php
+
+📋 الـMethods:
+
+index(Request $request)
+   - الغرض: عرض قائمة العملاء
+   - الفلاتر: البحث، الحالة، الديون
+   - المنطق:
+     ```php
+     $query = Customer::query();
+     
+     if ($request->filled('search')) {
+         $query->where(function($q) use ($request) {
+             $q->where('name', 'like', '%' . $request->search . '%')
+               ->orWhere('phone', 'like', '%' . $request->search . '%');
+         });
+     }
+     
+     if ($request->filled('status')) {
+         $query->where('is_active', $request->status === 'active');
+     }
+     
+     if ($request->status === 'debtor') {
+         $query->whereHas('debtLedger', function($q) {
+             $q->havingRaw('SUM(amount) > 0');
+         });
+     }
+     
+     $customers = $query->withSum('debtLedger', 'amount')
+         ->latest()
+         ->paginate(20);
+     
+     return view('sales.customers.index', compact('customers'));
+     ```
+
+store(StoreCustomerRequest $request)
+   - الغرض: حفظ عميل جديد
+   - الـService: CustomerService::createCustomer()
+
+show(Customer $customer)
+   - الغرض: عرض تفاصيل العميل
+   - المنطق:
+     ```php
+     $customer->load([
+         'invoices' => function($q) {
+             $q->latest()->limit(10);
+         },
+         'payments' => function($q) {
+             $q->latest()->limit(10);
+         }
+     ]);
+     
+     $debtSummary = [
+         'total_sales' => $customer->debtLedger()->where('entry_type', 'sale')->sum('amount'),
+         'total_payments' => $customer->debtLedger()->where('entry_type', 'payment')->sum('amount'),
+         'total_returns' => $customer->debtLedger()->where('entry_type', 'return')->sum('amount'),
+         'current_balance' => $customer->debtLedger()->sum('amount'),
+     ];
+     
+     return view('sales.customers.show', compact('customer', 'debtSummary'));
+     ```
+
+search(Request $request)
+   - الغرض: البحث في العملاء للـSelect2
+   - المنطق:
+     ```php
+     $customers = Customer::where('is_active', true)
+         ->where('name', 'like', '%' . $request->q . '%')
+         ->limit(20)
+         ->get(['id', 'name', 'phone']);
+     
+     return response()->json([
+         'results' => $customers->map(function($customer) {
+             return [
+                 'id' => $customer->id,
+                 'text' => $customer->name . ' (' . $customer->phone . ')'
+             ];
+         })
+     ]);
+     ```
+
+balance(Customer $customer)
+   - الغرض: جلب رصيد العميل
+   - المنطق:
+     ```php
+     $balance = $customer->debtLedger()->sum('amount');
+     
+     return response()->json([
+         'balance' => number_format($balance, 2),
+         'formatted' => number_format($balance, 2) . ' ريال'
+     ]);
+     ```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3️⃣ CustomerInvoiceController                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Controllers/Sales/CustomerInvoiceController.php
+
+📋 الـMethods:
+
+index(Request $request)
+   - الغرض: عرض قائمة فواتير العملاء
+   - الفلاتر: البحث، نوع الدفع، التاريخ، الحالة
+
+store(StoreCustomerInvoiceRequest $request)
+   - الغرض: حفظ فاتورة جديدة
+   - الـService: CustomerInvoiceService::createInvoice()
+   - المنطق:
+     ```php
+     $invoiceData = [
+         'customer_id' => $request->customer_id,
+         'sales_user_id' => auth()->id(),
+         'items' => $request->items,
+         'payment_type' => $request->payment_type,
+         'discount_amount' => $request->discount_amount ?? 0,
+         'notes' => $request->notes,
+     ];
+     
+     if ($request->payment_type === 'partial') {
+         $invoiceData['paid_amount'] = $request->paid_amount;
+         $invoiceData['payment_method'] = $request->payment_method;
+     }
+     
+     $invoice = CustomerInvoiceService::createInvoice($invoiceData);
+     
+     return redirect()
+         ->route('invoices.show', $invoice)
+         ->with('success', 'تم إنشاء الفاتورة بنجاح');
+     ```
+
+show(CustomerInvoice $invoice)
+   - الغرض: عرض تفاصيل الفاتورة
+   - التحقق: $invoice->sales_user_id === auth()->id()
+
+pdf(CustomerInvoice $invoice)
+   - الغرض: طباعة PDF للفاتورة
+   - الـService: InvoiceService::generateCustomerInvoicePdf()
+
+items(CustomerInvoice $invoice)
+   - الغرض: جلب عناصر الفاتورة (للإرجاع)
+   - المنطق:
+     ```php
+     $items = $invoice->items()->with('product')->get();
+     
+     return response()->json([
+         'items' => $items->map(function($item) {
+             return [
+                 'id' => $item->id,
+                 'product_id' => $item->product_id,
+                 'product_name' => $item->product->name,
+                 'quantity' => $item->quantity,
+                 'unit_price' => $item->unit_price,
+                 'total_price' => $item->total_price,
+             ];
+         })
+     ]);
+     ```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 4️⃣ CustomerPaymentController                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Controllers/Sales/CustomerPaymentController.php
+
+📋 الـMethods:
+
+store(StoreCustomerPaymentRequest $request)
+   - الغرض: حفظ دفعة جديدة
+   - الـService: CustomerPaymentService::createPayment()
+
+receipt(CustomerPayment $payment)
+   - الغرض: طباعة إيصال الدفعة
+   - الـService: InvoiceService::generatePaymentReceipt()
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 5️⃣ CustomerReturnController                                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Controllers/Sales/CustomerReturnController.php
+
+📋 الـMethods:
+
+store(StoreCustomerReturnRequest $request)
+   - الغرض: حفظ إرجاع جديد
+   - الـService: CustomerReturnService::createReturn()
+
+
+================================================================================
+                        ⚙️ Services
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ CustomerInvoiceService                                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Services/CustomerInvoiceService.php
+
+📋 الـMethods:
+
+createInvoice(array $data)
+   - الغرض: إنشاء فاتورة عميل جديدة
+   - المنطق:
+     ```php
+     DB::transaction(function() use ($data) {
+         // حساب المبالغ
+         $subtotal = collect($data['items'])->sum(function($item) {
+             return $item['quantity'] * $item['unit_price'];
+         });
+         
+         $totalAmount = $subtotal - $data['discount_amount'];
+         
+         // إنشاء الفاتورة
+         $invoice = CustomerInvoice::create([
+             'invoice_number' => $this->generateInvoiceNumber(),
+             'customer_id' => $data['customer_id'],
+             'sales_user_id' => $data['sales_user_id'],
+             'subtotal' => $subtotal,
+             'discount_amount' => $data['discount_amount'],
+             'total_amount' => $totalAmount,
+             'payment_type' => $data['payment_type'],
+             'notes' => $data['notes'],
+         ]);
+         
+         // إنشاء عناصر الفاتورة
+         foreach ($data['items'] as $item) {
+             $invoice->items()->create($item);
+         }
+         
+         // تسجيل في دفتر الديون
+         if ($data['payment_type'] === 'credit') {
+             // دين كامل
+             $this->recordDebt($invoice->customer_id, $totalAmount, $invoice->id);
+         } elseif ($data['payment_type'] === 'partial') {
+             // دفع جزئي
+             $debtAmount = $totalAmount - $data['paid_amount'];
+             if ($debtAmount > 0) {
+                 $this->recordDebt($invoice->customer_id, $debtAmount, $invoice->id);
+             }
+             // تسجيل الدفعة
+             $this->recordPayment($invoice, $data['paid_amount'], $data['payment_method']);
+         }
+         
+         return $invoice;
+     });
+     ```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ CustomerPaymentService                                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Services/CustomerPaymentService.php
+
+📋 الـMethods:
+
+createPayment(array $data)
+   - الغرض: إنشاء دفعة عميل جديدة
+   - المنطق:
+     ```php
+     DB::transaction(function() use ($data) {
+         // إنشاء الدفعة
+         $payment = CustomerPayment::create([
+             'payment_number' => $this->generatePaymentNumber(),
+             'customer_id' => $data['customer_id'],
+             'sales_user_id' => $data['sales_user_id'],
+             'amount' => $data['amount'],
+             'payment_method' => $data['payment_method'],
+             'notes' => $data['notes'],
+         ]);
+         
+         // تسجيل في دفتر الديون (خصم)
+         CustomerDebtLedger::create([
+             'customer_id' => $data['customer_id'],
+             'entry_type' => 'payment',
+             'payment_id' => $payment->id,
+             'amount' => -$data['amount'], // سالب لأنه خصم من الدين
+         ]);
+         
+         return $payment;
+     });
+     ```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ CustomerReturnService                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Services/CustomerReturnService.php
+
+📋 الـMethods:
+
+createReturn(array $data)
+   - الغرض: إنشاء إرجاع عميل جديد
+   - المنطق:
+     ```php
+     DB::transaction(function() use ($data) {
+         // حساب المبلغ الإجمالي
+         $totalAmount = collect($data['items'])->sum('total_price');
+         
+         // إنشاء الإرجاع
+         $return = CustomerReturn::create([
+             'return_number' => $this->generateReturnNumber(),
+             'invoice_id' => $data['invoice_id'],
+             'customer_id' => $data['customer_id'],
+             'sales_user_id' => $data['sales_user_id'],
+             'total_amount' => $totalAmount,
+             'notes' => $data['notes'],
+         ]);
+         
+         // إنشاء عناصر الإرجاع
+         foreach ($data['items'] as $item) {
+             $return->items()->create($item);
+         }
+         
+         // تسجيل في دفتر الديون (خصم من الدين)
+         CustomerDebtLedger::create([
+             'customer_id' => $data['customer_id'],
+             'entry_type' => 'return',
+             'return_id' => $return->id,
+             'amount' => -$totalAmount, // سالب لأنه خصم من الدين
+         ]);
+         
+         return $return;
+     });
+     ```
+
+
+================================================================================
+                        📝 Form Requests
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ StoreCustomerRequest                                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+```php
+public function rules(): array
+{
+    return [
+        'name' => 'required|string|min:3|max:100',
+        'phone' => 'required|string|unique:customers,phone',
+        'address' => 'nullable|string|max:200',
+        'id_number' => 'nullable|string|max:50',
+        'is_active' => 'boolean',
+    ];
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ StoreCustomerInvoiceRequest                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+```php
+public function rules(): array
+{
+    return [
+        'customer_id' => 'required|exists:customers,id',
+        'items' => 'required|array|min:1',
+        'items.*.product_id' => 'required|exists:products,id',
+        'items.*.quantity' => 'required|integer|min:1',
+        'items.*.unit_price' => 'required|numeric|min:0',
+        'payment_type' => 'required|in:cash,credit,partial',
+        'paid_amount' => 'required_if:payment_type,partial|numeric|min:0',
+        'payment_method' => 'required_if:payment_type,partial|in:cash,transfer,check',
+        'discount_amount' => 'nullable|numeric|min:0',
+        'notes' => 'nullable|string|max:1000',
+    ];
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ StoreCustomerPaymentRequest                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+```php
+public function rules(): array
+{
+    return [
+        'customer_id' => 'required|exists:customers,id',
+        'amount' => 'required|numeric|min:0.01',
+        'payment_method' => 'required|in:cash,transfer,check',
+        'notes' => 'nullable|string|max:1000',
+    ];
+}
+
+public function withValidator($validator)
+{
+    $validator->after(function ($validator) {
+        $customer = Customer::find($this->customer_id);
+        $currentDebt = $customer->debtLedger()->sum('amount');
+        
+        if ($this->amount > $currentDebt) {
+            $validator->errors()->add('amount', 'المبلغ يتجاوز دين العميل الحالي');
+        }
+    });
+}
+```
+
+
+================================================================================
+                        🔐 Policies
+================================================================================
+
+جميع العمليات مقتصرة على مندوب المبيعات (role_id = 4)
+
+```php
+public function viewAny(User $user): bool
+{
+    return $user->role_id === 4;
+}
+
+public function view(User $user, CustomerInvoice $invoice): bool
+{
+    return $user->role_id === 4 && $user->id === $invoice->sales_user_id;
+}
+```
+
+
+================================================================================
+                        ✅ مزايا البنية
+================================================================================
+
+1. ✅ فصل واضح بين Controllers حسب الوظيفة
+2. ✅ Services مستقلة لكل عملية
+3. ✅ AJAX APIs للتفاعل السريع
+4. ✅ Form Requests شاملة مع التحقق المخصص
+5. ✅ Policies واضحة للصلاحيات
+6. ✅ Transaction management للعمليات المعقدة
+7. ✅ PDF generation للفواتير والإيصالات
+
+
+================================================================================
+انتهى التوثيق
+================================================================================

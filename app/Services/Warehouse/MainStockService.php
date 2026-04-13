@@ -58,6 +58,41 @@ class MainStockService
         });
     }
 
+    public function forceCancelInvoice($invoiceId, $userId)
+    {
+        return DB::transaction(function () use ($invoiceId, $userId) {
+            $invoice = FactoryInvoice::where('id', $invoiceId)
+                ->where('status', 'documented')
+                ->firstOrFail();
+
+            // خصم الكميات من main_stock
+            foreach ($invoice->items as $item) {
+                DB::table('main_stock')
+                    ->where('product_id', $item->product_id)
+                    ->decrement('quantity', $item->quantity);
+            }
+
+            // تسجيل حركة المخزون
+            WarehouseStockLog::create([
+                'invoice_type' => 'factory',
+                'invoice_id'   => $invoice->id,
+                'keeper_id'    => $userId,
+                'action'       => 'withdraw',
+            ]);
+
+            $userName = \App\Models\User::find($userId)?->full_name ?? 'مستخدم';
+
+            $invoice->update([
+                'status'              => 'cancelled',
+                'cancelled_by'        => $userId,
+                'cancelled_at'        => now(),
+                'cancellation_reason' => 'تم إلغاء فاتورة موثقة بواسطة ' . $userName,
+            ]);
+
+            return $invoice;
+        });
+    }
+
     public function cancelInvoice($invoiceId, $userId, $reason)
     {
         return DB::transaction(function () use ($invoiceId, $userId, $reason) {

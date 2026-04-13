@@ -13,11 +13,7 @@ use Illuminate\Support\Facades\Auth;
 class PaymentController extends Controller
 {
     public function __construct(private PaymentService $service)
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(3);
-        }
-    }
+    {}
 
     public function index(Request $request)
     {
@@ -59,7 +55,9 @@ class PaymentController extends Controller
 
         $payments = $query->latest('id')->paginate(20)->withQueryString();
 
-        return view('marketer.payments.index', compact('payments'));
+        $stores = Store::where('marketer_id', auth()->id())->where('is_active', true)->get(['id', 'name', 'owner_name']);
+
+        return view('marketer.payments.index', compact('payments', 'stores'));
     }
 
     public function create()
@@ -67,10 +65,26 @@ class PaymentController extends Controller
         $stores = Store::where('is_active', true)
             ->get()
             ->map(function($store) {
-                $store->debt = StoreDebtLedger::where('store_id', $store->id)->sum('amount');
+                $approved = StoreDebtLedger::where('store_id', $store->id)
+                    ->latest('id')
+                    ->value('balance_after') ?? 0;
+
+                $pendingSales = \App\Models\SalesInvoice::where('store_id', $store->id)
+                    ->where('status', 'pending')
+                    ->sum('total_amount');
+
+                $pendingPayments = \App\Models\StorePayment::where('store_id', $store->id)
+                    ->where('status', 'pending')
+                    ->sum('amount');
+
+                $pendingReturns = \App\Models\SalesReturn::where('store_id', $store->id)
+                    ->where('status', 'pending')
+                    ->sum('total_amount');
+
+                $store->debt = $approved + $pendingSales - $pendingPayments - $pendingReturns;
                 return $store;
             })
-            ->filter(fn($store) => $store->debt > 0);
+            ->filter(fn($store) => true);
 
         return view('marketer.payments.create', compact('stores'));
     }
@@ -79,7 +93,6 @@ class PaymentController extends Controller
     {
         $validated = $request->validate([
             'store_id' => 'required|exists:stores,id',
-            'keeper_id' => 'required|exists:users,id',
             'amount' => 'required|numeric|min:0.01',
             'payment_method' => 'required|in:cash,transfer,certified_check',
             'notes' => 'nullable|string|max:500',
@@ -89,7 +102,6 @@ class PaymentController extends Controller
             $payment = $this->service->createPayment(
                 auth()->id(),
                 $validated['store_id'],
-                $validated['keeper_id'],
                 $validated['amount'],
                 $validated['payment_method'],
                 $validated['notes'] ?? null
@@ -104,16 +116,39 @@ class PaymentController extends Controller
 
     public function show(StorePayment $payment)
     {
-        if ($payment->marketer_id !== auth()->id()) {
+        if ($payment->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الإيصال');
         }
         $payment->load('store', 'marketer', 'keeper');
         return view('marketer.payments.show', compact('payment'));
     }
 
+    public function adjust(StorePayment $payment, Request $request)
+    {
+        if ($payment->marketer_id != auth()->id()) {
+            abort(403, 'غير مصرح لك بالوصول لهذا الإيصال');
+        }
+        if ($payment->status === 'cancelled' || $payment->status === 'rejected') {
+            return back()->with('error', 'لا يمكن تعديل إيصال ملغي أو مرفوض');
+        }
+
+        $validated = $request->validate([
+            'amount'         => 'required|numeric|min:0.01',
+            'payment_method' => 'required|in:cash,transfer,certified_check',
+            'notes'          => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $this->service->adjustPayment($payment->id, $validated['amount'], $validated['payment_method'], $validated['notes'] ?? null);
+            return back()->with('success', 'تم تعديل الإيصال بنجاح');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
     public function cancel(StorePayment $payment, Request $request)
     {
-        if ($payment->marketer_id !== auth()->id()) {
+        if ($payment->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الإيصال');
         }
         $validated = $request->validate([
@@ -133,7 +168,9 @@ class PaymentController extends Controller
 
     public function getStoreDebt($storeId)
     {
-        $debt = StoreDebtLedger::where('store_id', $storeId)->sum('amount');
+        $debt = StoreDebtLedger::where('store_id', $storeId)
+            ->latest('id')
+            ->value('balance_after') ?? 0;
         return response()->json(['debt' => max(0, $debt)]);
     }
 }

@@ -57,7 +57,7 @@
 
                     {{-- Price --}}
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">السعر (دينار)</label>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">سعر الجملة (دينار)</label>
                         <input type="number" step="0.01" name="current_price" value="{{ old('current_price', $product->current_price) }}" required class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                         @error('current_price')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -66,7 +66,7 @@
 
                     {{-- Customer Price --}}
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">سعر الزوار (دينار)</label>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">سعر جملة الجملة (دينار)</label>
                         <input type="number" step="0.01" name="customer_price" value="{{ old('customer_price', $product->customer_price) }}" class="w-full bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">سعر البيع للعملاء المباشرين (اختياري)</p>
                         @error('customer_price')

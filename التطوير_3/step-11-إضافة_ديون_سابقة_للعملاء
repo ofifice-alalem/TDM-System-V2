@@ -1,0 +1,81 @@
+# Step 11 — إضافة الديون السابقة للعملاء
+
+## الهدف
+السماح للـ Admin بتسجيل ديون العملاء المتراكمة من النظام القديم،
+بنفس آلية step-10 لكن للعملاء بدلاً من المتاجر.
+
+---
+
+## المستخدم الوهمي (id = 0)
+نفس المستخدم المُنشأ في step-10 — لا يلزم إنشاء مستخدم جديد.
+يُستخدم كـ `sales_user_id = 0` لجميع فواتير الديون السابقة للعملاء.
+الجداول تتحقق فقط من وجود الـ id في `users` وليس من الـ role.
+
+```sql
+SELECT * FROM customer_debt_ledger WHERE sales_user_id = 0;
+```
+
+---
+
+## تسلسل أرقام الفواتير
+```
+CI-OLD-{YYYYMMDD}-{XXXXX}
+```
+مثال: `CI-OLD-20260311-00001`
+
+الرقم التسلسلي يُحسب من عدد الفواتير التي تبدأ بـ `CI-OLD-` فقط.
+
+---
+
+## الجداول المتأثرة
+
+| الجدول | العملية |
+|--------|---------|
+| `customer_invoices` | إنشاء سجل بـ `status = approved` مباشرة، `sales_user_id = 0` |
+| `customer_debt_ledger` | إضافة سجل دين بـ `entry_type = sale`، `sales_user_id = 0` |
+
+> لا يوجد `customer_invoice_items` — الفاتورة بدون عناصر.
+
+---
+
+## سير العملية
+
+```
+Admin يختار العميل + يدخل المبلغ + ملاحظة اختيارية
+        ↓
+إنشاء سجل في customer_invoices
+  - invoice_number = CI-OLD-{YYYYMMDD}-{XXXXX}
+  - sales_user_id  = 0
+  - customer_id    = العميل المختار
+  - subtotal       = المبلغ
+  - total_amount   = المبلغ
+  - status         = approved
+  - confirmed_at   = now()
+        ↓
+إضافة سجل في customer_debt_ledger
+  - entry_type           = sale
+  - customer_invoice_id  = id الفاتورة المنشأة
+  - sales_user_id        = 0
+  - amount               = المبلغ
+  - balance_after        = آخر رصيد + المبلغ
+```
+
+---
+
+## الواجهة (Admin فقط)
+- صفحة إنشاء: بحث سريع للعميل + إدخال المبلغ + ملاحظة
+- صفحة قائمة: عرض جميع فواتير `CI-OLD-` مع فلترة بالعميل والتاريخ
+- تعديل وحذف عبر modal في نفس صفحة القائمة
+- لا يوجد زر موافقة/رفض — الفاتورة موثقة فور إنشائها
+
+---
+
+## الملفات المتوقع إنشاؤها
+
+```
+app/Services/Admin/OldCustomerDebtService.php
+app/Http/Controllers/Admin/OldCustomerDebtController.php
+resources/views/admin/old-customer-debts/index.blade.php
+resources/views/admin/old-customer-debts/create.blade.php
+routes/admin.php  ← إضافة مسارات جديدة
+```

@@ -8,6 +8,27 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
+    public function getRequestData(MarketerRequest $request)
+    {
+        $request->load('items.product', 'marketer');
+
+        $logoPath   = public_path('images/company.png');
+        $logoBase64 = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : null;
+
+        return response()->json([
+            'invoice_number' => $request->invoice_number,
+            'status'         => $request->status,
+            'date'           => $request->created_at->format('Y-m-d'),
+            'logo_base64'    => $logoBase64,
+            'marketer'       => $request->marketer->full_name ?? '---',
+            'marketer_phone' => $request->marketer->phone ?? '---',
+            'items'          => $request->items->map(fn($item) => [
+                'name'     => $item->product->name,
+                'quantity' => (int) $item->quantity,
+            ]),
+        ]);
+    }
+
     public function generateRequestPdf(MarketerRequest $request)
     {
         $request->load('items.product', 'marketer', 'approver', 'rejecter');

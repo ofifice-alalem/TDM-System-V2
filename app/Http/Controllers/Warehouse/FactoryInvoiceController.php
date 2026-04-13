@@ -12,11 +12,7 @@ use Illuminate\Support\Facades\Auth;
 class FactoryInvoiceController extends Controller
 {
     public function __construct(private MainStockService $service)
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(2);
-        }
-    }
+    {}
 
     public function index(Request $request)
     {

@@ -1,0 +1,319 @@
+========================================
+H. نظام العملاء (المبيعات المباشرة)
+========================================
+
+========================================
+32. جدول: customer_invoices
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • invoice_number
+    النوع: varchar(50)
+    المفتاح: UNIQUE
+    القيمة الافتراضية: —
+
+  • customer_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: customers.id
+    القيمة الافتراضية: —
+    ملاحظة: RESTRICT ON DELETE, CASCADE ON UPDATE
+
+  • sales_user_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+    ملاحظة: RESTRICT ON DELETE, CASCADE ON UPDATE
+
+  • subtotal
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • discount_amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: 0.00
+
+  • total_amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • status
+    النوع: enum('completed','cancelled')
+    المفتاح: INDEX
+    القيمة الافتراضية: 'completed'
+
+  • notes
+    النوع: text
+    القيمة الافتراضية: NULL
+
+  • created_at
+    النوع: timestamp
+    المفتاح: INDEX
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+========================================
+33. جدول: customer_invoice_items
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • invoice_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: customer_invoices.id
+    القيمة الافتراضية: —
+    ملاحظة: CASCADE ON DELETE, CASCADE ON UPDATE
+
+  • product_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: products.id
+    القيمة الافتراضية: —
+    ملاحظة: RESTRICT ON DELETE, CASCADE ON UPDATE
+
+  • quantity
+    النوع: int
+    القيمة الافتراضية: —
+
+  • unit_price
+    النوع: decimal(10,2)
+    القيمة الافتراضية: —
+
+  • total_price
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+========================================
+34. جدول: customer_payments
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • payment_number
+    النوع: varchar(50)
+    المفتاح: UNIQUE
+    القيمة الافتراضية: —
+
+  • customer_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: customers.id
+    القيمة الافتراضية: —
+    ملاحظة: RESTRICT ON DELETE, CASCADE ON UPDATE
+
+  • sales_user_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+    ملاحظة: RESTRICT ON DELETE, CASCADE ON UPDATE
+
+  • amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • payment_method
+    النوع: enum('cash','transfer','check')
+    القيمة الافتراضية: —
+
+  • status
+    النوع: enum('completed','cancelled')
+    القيمة الافتراضية: 'completed'
+
+  • notes
+    النوع: text
+    القيمة الافتراضية: NULL
+
+  • created_at
+    النوع: timestamp
+    المفتاح: INDEX
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+========================================
+35. جدول: customer_returns
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • return_number
+    النوع: varchar(50)
+    المفتاح: UNIQUE
+    القيمة الافتراضية: —
+
+  • invoice_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: customer_invoices.id
+    القيمة الافتراضية: —
+    ملاحظة: RESTRICT ON DELETE, CASCADE ON UPDATE
+
+  • customer_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: customers.id
+    القيمة الافتراضية: —
+    ملاحظة: RESTRICT ON DELETE, CASCADE ON UPDATE
+
+  • sales_user_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+    ملاحظة: RESTRICT ON DELETE, CASCADE ON UPDATE
+
+  • total_amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • status
+    النوع: enum('completed','cancelled')
+    المفتاح: INDEX
+    القيمة الافتراضية: 'completed'
+
+  • notes
+    النوع: text
+    القيمة الافتراضية: NULL
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+========================================
+36. جدول: customer_return_items
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • return_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: customer_returns.id
+    القيمة الافتراضية: —
+    ملاحظة: CASCADE ON DELETE, CASCADE ON UPDATE
+
+  • invoice_item_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: customer_invoice_items.id
+    القيمة الافتراضية: —
+    ملاحظة: RESTRICT ON DELETE, CASCADE ON UPDATE
+
+  • product_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: products.id
+    القيمة الافتراضية: —
+    ملاحظة: RESTRICT ON DELETE, CASCADE ON UPDATE
+
+  • quantity
+    النوع: int
+    القيمة الافتراضية: —
+
+  • unit_price
+    النوع: decimal(10,2)
+    القيمة الافتراضية: —
+
+  • total_price
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+========================================
+37. جدول: customer_debt_ledger (محدث في V3)
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • customer_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: customers.id
+    القيمة الافتراضية: —
+    ملاحظة: RESTRICT ON DELETE, CASCADE ON UPDATE
+
+  • reference_type
+    النوع: enum('customer_invoice','customer_return','customer_payment','opening_balance')
+    المفتاح: INDEX
+    القيمة الافتراضية: —
+
+  • reference_id
+    النوع: bigint unsigned
+    القيمة الافتراضية: NULL
+
+  • amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • balance_after
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • notes
+    النوع: text
+    القيمة الافتراضية: NULL
+
+  • created_at
+    النوع: timestamp
+    المفتاح: INDEX
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+ملاحظة: ✅ تم استبدال (invoice_id, return_id, payment_id) بـ (reference_type, reference_id)
+ملاحظة: ✅ تم حذف entry_type (مكرر مع reference_type)
+ملاحظة: ✅ تم إضافة balance_after لتتبع الرصيد بعد كل حركة
+ملاحظة: ✅ تم إضافة opening_balance لدعم الأرصدة الافتتاحية
+

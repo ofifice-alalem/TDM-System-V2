@@ -12,17 +12,13 @@ use Illuminate\Support\Facades\DB;
 class WarehouseSalesController extends Controller
 {
     public function __construct(private WarehouseSalesService $service)
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(2);
-        }
-    }
+    {}
 
     public function index(Request $request)
     {
         $query = SalesInvoice::with('marketer', 'store', 'items.product');
 
-        $hasFilter = $request->filled('invoice_number') || $request->filled('from_date') || $request->filled('to_date');
+        $hasFilter = $request->filled('invoice_number') || $request->filled('from_date') || $request->filled('to_date') || $request->filled('marketer_id') || $request->filled('store_id');
 
         if (!$hasFilter && $request->filled('status')) {
             $query->where('status', $request->status);
@@ -48,15 +44,12 @@ class WarehouseSalesController extends Controller
             } catch (\Exception $e) {}
         }
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->whereHas('marketer', function($mq) use ($search) {
-                    $mq->where('full_name', 'like', '%' . $search . '%');
-                })->orWhereHas('store', function($sq) use ($search) {
-                    $sq->where('name', 'like', '%' . $search . '%');
-                });
-            });
+        if ($request->filled('marketer_id')) {
+            $query->where('marketer_id', $request->marketer_id);
+        }
+
+        if ($request->filled('store_id')) {
+            $query->where('store_id', $request->store_id);
         }
 
         $status = $request->has('status') ? $request->status : ($hasFilter ? null : 'pending');
@@ -66,9 +59,11 @@ class WarehouseSalesController extends Controller
             $query->latest('updated_at');
         }
 
-        $invoices = $query->paginate(20)->withQueryString();
+        $invoices  = $query->paginate(20)->withQueryString();
+        $marketers = \App\Models\User::where('role_id', 3)->where('is_active', true)->get();
+        $stores    = \App\Models\Store::orderBy('name')->get(['id', 'name']);
 
-        return view('warehouse.sales.index', compact('invoices'));
+        return view('warehouse.sales.index', compact('invoices', 'marketers', 'stores'));
     }
 
     public function show($id)

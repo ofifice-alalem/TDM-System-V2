@@ -1,0 +1,172 @@
+========================================
+E. عملية: إيصال القبض (تسديد دين المتجر)
+========================================
+
+========================================
+25. جدول: company_payments
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • payment_number
+    النوع: varchar(50)
+    المفتاح: UNIQUE
+    القيمة الافتراضية: —
+
+  • company_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: companies.id
+    القيمة الافتراضية: —
+
+  • marketer_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • keeper_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • payment_method
+    النوع: enum('cash','transfer','certified_check')
+    القيمة الافتراضية: —
+
+  • status
+    النوع: enum('pending','approved','rejected','cancelled')
+    القيمة الافتراضية: 'pending'
+
+  • receipt_image
+    النوع: varchar(255)
+    القيمة الافتراضية: NULL
+
+  • notes
+    النوع: text
+    القيمة الافتراضية: NULL
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+  • updated_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+ملاحظة: ✅ تم تغيير الاسم من store_payments إلى company_payments
+ملاحظة: ✅ الدفع يتم على مستوى الشركة وليس الفرع
+
+========================================
+26. جدول: marketer_commissions
+========================================
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • marketer_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • store_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: stores.id
+    القيمة الافتراضية: —
+
+  • keeper_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • payment_amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • payment_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    يشير إلى: company_payments.id
+    القيمة الافتراضية: —
+
+  • commission_rate
+    النوع: decimal(5,2)
+    القيمة الافتراضية: —
+
+  • commission_amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • created_at
+    النوع: timestamp
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+========================================
+27. جدول: marketer_commission_ledger (جديد في V3)
+========================================
+
+وظيفته:
+تتبع رصيد عمولات المسوق بشكل تفصيلي (إضافة عمولة / سحب / رصيد افتتاحي).
+يسجل balance_after بعد كل حركة لسهولة حساب الرصيد الحالي.
+
+  • id
+    النوع: bigint unsigned
+    المفتاح: PRIMARY KEY
+    القيمة الافتراضية: AUTO_INCREMENT
+
+  • marketer_id
+    النوع: bigint unsigned
+    المفتاح: FOREIGN KEY
+    المفتاح: INDEX
+    يشير إلى: users.id
+    القيمة الافتراضية: —
+
+  • reference_type
+    النوع: enum('commission','withdrawal','opening_balance')
+    المفتاح: INDEX
+    القيمة الافتراضية: —
+
+  • reference_id
+    النوع: bigint unsigned
+    القيمة الافتراضية: NULL
+    ملاحظة: marketer_commissions.id أو marketer_withdrawal_requests.id
+
+  • amount
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • balance_after
+    النوع: decimal(12,2)
+    القيمة الافتراضية: —
+
+  • notes
+    النوع: text
+    القيمة الافتراضية: NULL
+
+  • created_at
+    النوع: timestamp
+    المفتاح: INDEX
+    القيمة الافتراضية: CURRENT_TIMESTAMP
+
+ملاحظة: ✅ commission = إضافة عمولة (موجب)
+ملاحظة: ✅ withdrawal = سحب عمولة (سالب)
+ملاحظة: ✅ opening_balance = رصيد افتتاحي
+
+المنطق:
+1. عند دفع متجر → تسجيل عمولة في marketer_commissions
+2. تسجيل العمولة في marketer_commission_ledger (reference_type='commission')
+3. عند سحب المسوق → تسجيل في marketer_commission_ledger (reference_type='withdrawal')
+4. balance_after = الرصيد المتبقي بعد كل عملية

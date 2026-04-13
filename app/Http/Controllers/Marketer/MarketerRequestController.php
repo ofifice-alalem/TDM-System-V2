@@ -15,12 +15,7 @@ class MarketerRequestController extends Controller
     public function __construct(
         private MarketerRequestService $service,
         private InvoiceController $invoiceController
-    ) {
-        // Temporary: Auto-login as marketer (ID=3)
-        if (!Auth::check()) {
-            Auth::loginUsingId(3);
-        }
-    }
+    ) {}
 
     public function index(Request $request)
     {
@@ -69,7 +64,8 @@ class MarketerRequestController extends Controller
     public function create()
     {
         $products = Product::where('is_active', true)
-            ->leftJoin('main_stock', 'products.id', '=', 'main_stock.product_id')
+            ->join('main_stock', 'products.id', '=', 'main_stock.product_id')
+            ->where('main_stock.quantity', '>', 0)
             ->select('products.*', 'main_stock.quantity as stock')
             ->get();
         return view('marketer.requests.create', compact('products'));
@@ -96,7 +92,7 @@ class MarketerRequestController extends Controller
 
     public function show(MarketerRequest $request)
     {
-        if ($request->marketer_id !== auth()->id()) {
+        if ($request->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         return view('marketer.requests.show', ['request' => $request->load('items.product', 'marketer', 'approver', 'rejecter', 'documenter')]);
@@ -104,7 +100,7 @@ class MarketerRequestController extends Controller
 
     public function cancel(Request $request, MarketerRequest $marketerRequest)
     {
-        if ($marketerRequest->marketer_id !== auth()->id()) {
+        if ($marketerRequest->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         $validated = $request->validate([
@@ -119,7 +115,7 @@ class MarketerRequestController extends Controller
 
     public function pdf(MarketerRequest $request)
     {
-        if ($request->marketer_id !== auth()->id()) {
+        if ($request->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         return $this->invoiceController->generateRequestPdf($request);
@@ -127,7 +123,7 @@ class MarketerRequestController extends Controller
 
     public function viewDocumentation(MarketerRequest $request)
     {
-        if ($request->marketer_id !== auth()->id()) {
+        if ($request->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         if (!$request->stamped_image || $request->status !== 'documented') {

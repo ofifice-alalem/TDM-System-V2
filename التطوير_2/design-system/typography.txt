@@ -1,0 +1,366 @@
+===========================================
+      الخطوط والنصوص - Typography
+===========================================
+
+## 🔤 عائلة الخطوط (Font Family)
+
+### الخط الأساسي: Cairo
+خط Cairo هو خط عربي حديث يدعم اللغتين العربية والإنجليزية بشكل ممتاز
+
+```css
+font-family: 'Cairo', sans-serif;
+```
+
+### التثبيت:
+
+#### 1. عبر Google Fonts
+```html
+<!-- في layout head -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+```
+
+#### 2. عبر Tailwind Config
+```javascript
+// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      fontFamily: {
+        'cairo': ['Cairo', 'sans-serif'],
+      }
+    }
+  }
+}
+```
+
+#### 3. في CSS
+```css
+body {
+    font-family: 'Cairo', sans-serif;
+    direction: rtl;
+    text-align: right;
+}
+```
+
+## 📏 أحجام الخطوط (Font Sizes)
+
+┌──────────────────────────────────────────────────────────────┐
+│ الاستخدام          │ Tailwind Class │ الحجم    │ Line Height│
+├──────────────────────────────────────────────────────────────┤
+│ نص صغير جداً       │ text-xs        │ 12px     │ 16px       │
+│ نص صغير            │ text-sm        │ 14px     │ 20px       │
+│ نص عادي (افتراضي)  │ text-base      │ 16px     │ 24px       │
+│ نص كبير            │ text-lg        │ 18px     │ 28px       │
+│ نص كبير جداً       │ text-xl        │ 20px     │ 28px       │
+│ عنوان صغير         │ text-2xl       │ 24px     │ 32px       │
+│ عنوان متوسط        │ text-3xl       │ 30px     │ 36px       │
+│ عنوان كبير         │ text-4xl       │ 36px     │ 40px       │
+│ عنوان رئيسي        │ text-5xl       │ 48px     │ 1          │
+└──────────────────────────────────────────────────────────────┘
+
+### الاستخدام:
+```html
+<!-- عنوان الصفحة -->
+<h1 class="text-3xl font-bold text-gray-900">عنوان الصفحة</h1>
+
+<!-- عنوان القسم -->
+<h2 class="text-2xl font-semibold text-gray-800">عنوان القسم</h2>
+
+<!-- نص عادي -->
+<p class="text-base text-gray-700">النص العادي</p>
+
+<!-- نص صغير -->
+<span class="text-sm text-gray-600">معلومات إضافية</span>
+```
+
+## ⚖️ أوزان الخطوط (Font Weights)
+
+┌──────────────────────────────────────────────────────────────┐
+│ الوزن              │ Tailwind Class │ القيمة   │ الاستخدام  │
+├──────────────────────────────────────────────────────────────┤
+│ خفيف               │ font-light     │ 300      │ نصوص ثانوية│
+│ عادي               │ font-normal    │ 400      │ نص أساسي   │
+│ متوسط              │ font-medium    │ 500      │ تمييز خفيف │
+│ نصف سميك           │ font-semibold  │ 600      │ عناوين فرعية│
+│ سميك               │ font-bold      │ 700      │ عناوين رئيسية│
+│ سميك جداً          │ font-extrabold │ 800      │ تأكيد قوي  │
+└──────────────────────────────────────────────────────────────┘
+
+### الاستخدام:
+```html
+<!-- عنوان سميك -->
+<h1 class="text-3xl font-bold">العنوان الرئيسي</h1>
+
+<!-- عنوان متوسط -->
+<h2 class="text-xl font-semibold">عنوان فرعي</h2>
+
+<!-- نص عادي -->
+<p class="font-normal">نص عادي</p>
+
+<!-- نص خفيف -->
+<span class="font-light text-gray-600">معلومات إضافية</span>
+```
+
+## 🎨 ألوان النصوص (Text Colors)
+
+```html
+<!-- نص أساسي -->
+<p class="text-gray-900">نص أساسي داكن</p>
+
+<!-- نص ثانوي -->
+<p class="text-gray-700">نص ثانوي</p>
+
+<!-- نص خفيف -->
+<p class="text-gray-600">نص خفيف</p>
+
+<!-- نص باهت -->
+<p class="text-gray-400">نص باهت جداً</p>
+
+<!-- نص على خلفية داكنة -->
+<p class="text-white">نص أبيض</p>
+
+<!-- نص ملون -->
+<p class="text-blue-600">نص أزرق</p>
+<p class="text-green-600">نص أخضر</p>
+<p class="text-red-600">نص أحمر</p>
+```
+
+## 📐 محاذاة النصوص (Text Alignment)
+
+```html
+<!-- محاذاة يمين (افتراضي في RTL) -->
+<p class="text-right">نص محاذ لليمين</p>
+
+<!-- محاذاة يسار -->
+<p class="text-left">نص محاذ لليسار</p>
+
+<!-- محاذاة وسط -->
+<p class="text-center">نص في الوسط</p>
+
+<!-- محاذاة ضبط -->
+<p class="text-justify">نص مضبوط</p>
+```
+
+## 📏 ارتفاع السطر (Line Height)
+
+```html
+<!-- ضيق -->
+<p class="leading-tight">نص بارتفاع سطر ضيق</p>
+
+<!-- عادي -->
+<p class="leading-normal">نص بارتفاع سطر عادي</p>
+
+<!-- واسع -->
+<p class="leading-relaxed">نص بارتفاع سطر واسع</p>
+
+<!-- واسع جداً -->
+<p class="leading-loose">نص بارتفاع سطر واسع جداً</p>
+```
+
+## 🔤 تحويل النص (Text Transform)
+
+```html
+<!-- أحرف كبيرة -->
+<p class="uppercase">UPPERCASE TEXT</p>
+
+<!-- أحرف صغيرة -->
+<p class="lowercase">lowercase text</p>
+
+<!-- أول حرف كبير -->
+<p class="capitalize">Capitalize Text</p>
+
+<!-- عادي -->
+<p class="normal-case">Normal Case</p>
+```
+
+## ✂️ قص النص (Text Truncation)
+
+```html
+<!-- قص سطر واحد -->
+<p class="truncate">نص طويل جداً سيتم قصه بنقاط...</p>
+
+<!-- قص عدة أسطر -->
+<p class="line-clamp-2">
+    نص طويل جداً سيتم قصه بعد سطرين...
+</p>
+
+<p class="line-clamp-3">
+    نص طويل جداً سيتم قصه بعد ثلاثة أسطر...
+</p>
+```
+
+## 🎯 أنماط النصوص الشائعة
+
+### 1. عنوان الصفحة
+```html
+<h1 class="text-3xl font-bold text-gray-900 mb-6">
+    عنوان الصفحة الرئيسي
+</h1>
+```
+
+### 2. عنوان القسم
+```html
+<h2 class="text-2xl font-semibold text-gray-800 mb-4">
+    عنوان القسم
+</h2>
+```
+
+### 3. عنوان البطاقة
+```html
+<h3 class="text-lg font-semibold text-gray-900 mb-3">
+    عنوان البطاقة
+</h3>
+```
+
+### 4. نص أساسي
+```html
+<p class="text-base text-gray-700 leading-relaxed">
+    النص الأساسي للمحتوى
+</p>
+```
+
+### 5. نص ثانوي
+```html
+<p class="text-sm text-gray-600">
+    معلومات إضافية أو ثانوية
+</p>
+```
+
+### 6. تسمية حقل
+```html
+<label class="block text-sm font-medium text-gray-700 mb-2">
+    اسم الحقل
+</label>
+```
+
+### 7. رسالة خطأ
+```html
+<p class="text-sm text-red-600 mt-1">
+    رسالة الخطأ
+</p>
+```
+
+### 8. رسالة نجاح
+```html
+<p class="text-sm text-green-600 mt-1">
+    رسالة النجاح
+</p>
+```
+
+### 9. نص مساعد
+```html
+<p class="text-xs text-gray-500 mt-1">
+    نص مساعد أو توضيحي
+</p>
+```
+
+### 10. رابط
+```html
+<a href="#" class="text-blue-600 hover:text-blue-800 hover:underline">
+    رابط نصي
+</a>
+```
+
+## 📊 أمثلة عملية
+
+### بطاقة معلومات
+```html
+<div class="bg-white rounded-lg shadow p-6">
+    <h3 class="text-xl font-semibold text-gray-900 mb-2">
+        عنوان البطاقة
+    </h3>
+    <p class="text-sm text-gray-600 mb-4">
+        وصف قصير للبطاقة
+    </p>
+    <p class="text-base text-gray-700 leading-relaxed">
+        المحتوى الأساسي للبطاقة مع نص أطول يشرح التفاصيل
+    </p>
+</div>
+```
+
+### نموذج إدخال
+```html
+<div class="mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-2">
+        اسم المنتج <span class="text-red-500">*</span>
+    </label>
+    <input type="text" 
+           class="w-full px-4 py-2 text-base border border-gray-300 rounded-lg">
+    <p class="text-xs text-gray-500 mt-1">
+        أدخل اسم المنتج بالعربية
+    </p>
+</div>
+```
+
+### جدول بيانات
+```html
+<table class="min-w-full">
+    <thead>
+        <tr>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">
+                العمود
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="px-6 py-4 text-sm text-gray-900">
+                البيانات
+            </td>
+        </tr>
+    </tbody>
+</table>
+```
+
+## 🌐 دعم RTL
+
+### إعدادات RTL الأساسية
+```html
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            direction: rtl;
+            text-align: right;
+        }
+    </style>
+</head>
+```
+
+### Tailwind RTL Plugin
+```javascript
+// tailwind.config.js
+module.exports = {
+  plugins: [
+    require('@tailwindcss/forms'),
+  ],
+  // RTL يعمل تلقائياً مع dir="rtl"
+}
+```
+
+## 💡 أفضل الممارسات
+
+1. **الاتساق**: استخدم نفس أحجام الخطوط للعناصر المتشابهة
+2. **التباين**: تأكد من وضوح النص على الخلفية (نسبة 4.5:1 على الأقل)
+3. **التسلسل الهرمي**: استخدم الأحجام والأوزان لإنشاء تسلسل واضح
+4. **القراءة**: استخدم `leading-relaxed` للنصوص الطويلة
+5. **الأرقام**: استخدم خط Cairo لدعم الأرقام العربية والإنجليزية
+6. **الأداء**: حمّل فقط الأوزان المستخدمة من خط Cairo
+
+## 📱 التصميم المتجاوب
+
+```html
+<!-- حجم خط متجاوب -->
+<h1 class="text-2xl md:text-3xl lg:text-4xl font-bold">
+    عنوان متجاوب
+</h1>
+
+<!-- وزن خط متجاوب -->
+<p class="font-normal md:font-medium lg:font-semibold">
+    نص بوزن متجاوب
+</p>
+```

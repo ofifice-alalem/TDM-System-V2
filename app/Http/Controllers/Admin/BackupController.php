@@ -11,6 +11,10 @@ class BackupController extends Controller
 {
     public function create(Request $request)
     {
+        $request->validate([
+            'note' => 'nullable|string|max:500'
+        ]);
+        
         set_time_limit(300);
         ini_set('memory_limit', '512M');
         
@@ -27,9 +31,14 @@ class BackupController extends Controller
         $zip = new ZipArchive;
         $zip->open($zipFile, ZipArchive::CREATE);
         
+        // Add note if provided
+        if ($request->filled('note')) {
+            $zip->addFromString('note.txt', $request->input('note'));
+        }
+        
         // Database backup
         if ($type === 'full' || $type === 'database') {
-            $sql = "SET FOREIGN_KEY_CHECKS=0;\n\n";
+            $sql = "SET FOREIGN_KEY_CHECKS=0;\nSET SESSION sql_mode='NO_AUTO_VALUE_ON_ZERO';\n\n";
             
             foreach (DB::select('SHOW TABLES') as $table) {
                 $tableName = array_values((array)$table)[0];
@@ -85,12 +94,23 @@ class BackupController extends Controller
             if (is_dir($dir)) {
                 $files = glob("{$dir}/*.zip");
                 foreach ($files as $file) {
+                    // Read note from zip if exists
+                    $note = null;
+                    $zip = new ZipArchive;
+                    if ($zip->open($file) === TRUE) {
+                        if ($zip->locateName('note.txt') !== false) {
+                            $note = $zip->getFromName('note.txt');
+                        }
+                        $zip->close();
+                    }
+                    
                     $backups->push([
                         'name' => basename($file),
                         'size' => $this->formatBytes(filesize($file)),
                         'date' => date('Y-m-d H:i:s', filemtime($file)),
                         'path' => $file,
-                        'type' => $type
+                        'type' => $type,
+                        'note' => $note
                     ]);
                 }
             }
@@ -138,7 +158,12 @@ class BackupController extends Controller
         // استعادة الملفات
         $storagePath = $extractPath . '/storage';
         if (is_dir($storagePath)) {
-            $this->copyDirectory($storagePath, storage_path('app/public'));
+            // مسح الملفات القديمة أولاً
+            $publicPath = storage_path('app/public');
+            if (is_dir($publicPath)) {
+                $this->deleteDirectory($publicPath);
+            }
+            $this->copyDirectory($storagePath, $publicPath);
         }
         
         // تنظيف
@@ -172,6 +197,33 @@ class BackupController extends Controller
         }
         
         return back()->with('error', 'الملف غير موجود');
+    }
+    
+    public function upload(Request $request)
+    {
+        $request->validate([
+            'backup_file' => 'required|file|mimes:zip|max:512000'
+        ]);
+        
+        $file = $request->file('backup_file');
+        $filename = $file->getClientOriginalName();
+        
+        // تحديد نوع النسخة من اسم الملف
+        $type = 'full';
+        if (str_contains($filename, '_database')) {
+            $type = 'database';
+        } elseif (str_contains($filename, '_files')) {
+            $type = 'files';
+        }
+        
+        $backupDir = storage_path("app/backups/{$type}");
+        if (!file_exists($backupDir)) {
+            mkdir($backupDir, 0755, true);
+        }
+        
+        $file->move($backupDir, $filename);
+        
+        return back()->with('success', 'تم رفع النسخة الاحتياطية بنجاح');
     }
     
     private function addDirectory($path, $zip, $base)
@@ -242,86 +294,57 @@ class BackupController extends Controller
     
     private function restoreLargeSQL($sqlFile)
     {
-        // Disable foreign key checks
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
-        
-        $handle = fopen($sqlFile, 'r');
-        if (!$handle) {
-            throw new \Exception('Cannot open SQL file');
-        }
-        
-        $currentTable = '';
-        $insertValues = [];
-        $batchSize = 500;
-        
-        while (($line = fgets($handle)) !== false) {
-            $line = trim($line);
-            
-            if (empty($line) || strpos($line, '--') === 0 || strpos($line, '/*') === 0) {
-                continue;
-            }
-            
-            // Execute CREATE/DROP statements immediately
-            if (stripos($line, 'CREATE TABLE') !== false || stripos($line, 'DROP TABLE') !== false || stripos($line, 'SET ') !== false) {
-                $this->flushInserts($currentTable, $insertValues);
-                $insertValues = [];
-                $currentTable = '';
-                
-                $statement = $line;
-                while (substr(rtrim($statement), -1) !== ';') {
-                    $statement .= ' ' . trim(fgets($handle));
+        DB::statement('SET SESSION sql_mode="NO_AUTO_VALUE_ON_ZERO"');
+
+        $pdo = DB::getPdo();
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
+
+        $sql = file_get_contents($sqlFile);
+
+        // تقسيم الـ SQL إلى statements منفصلة بشكل صحيح
+        $statements = [];
+        $current = '';
+        $inString = false;
+        $stringChar = '';
+        $len = strlen($sql);
+
+        for ($i = 0; $i < $len; $i++) {
+            $char = $sql[$i];
+
+            if ($inString) {
+                $current .= $char;
+                if ($char === $stringChar && ($i === 0 || $sql[$i - 1] !== '\\')) {
+                    $inString = false;
                 }
-                DB::unprepared($statement);
-                continue;
-            }
-            
-            // Handle INSERT statements
-            if (stripos($line, 'INSERT INTO') !== false) {
-                preg_match('/INSERT INTO `([^`]+)`/i', $line, $matches);
-                $tableName = $matches[1] ?? '';
-                
-                if ($tableName !== $currentTable && !empty($insertValues)) {
-                    $this->flushInserts($currentTable, $insertValues);
-                    $insertValues = [];
+            } elseif ($char === "'" || $char === '"') {
+                $inString = true;
+                $stringChar = $char;
+                $current .= $char;
+            } elseif ($char === ';') {
+                $current = trim($current);
+                if ($current !== '') {
+                    $statements[] = $current;
                 }
-                
-                $currentTable = $tableName;
-                
-                // Extract VALUES (...)
-                preg_match('/VALUES \((.+)\);/i', $line, $valueMatches);
-                if (isset($valueMatches[1])) {
-                    $insertValues[] = '(' . $valueMatches[1] . ')';
-                }
-                
-                if (count($insertValues) >= $batchSize) {
-                    $this->flushInserts($currentTable, $insertValues);
-                    $insertValues = [];
-                }
+                $current = '';
+            } else {
+                $current .= $char;
             }
         }
-        
-        // Flush remaining inserts
-        if (!empty($insertValues)) {
-            $this->flushInserts($currentTable, $insertValues);
+
+        if (trim($current) !== '') {
+            $statements[] = trim($current);
         }
-        
-        fclose($handle);
-        
-        // Re-enable foreign key checks
+
+        foreach ($statements as $statement) {
+            if (empty(trim($statement))) continue;
+            try {
+                $pdo->exec($statement);
+            } catch (\Exception $e) {
+                \Log::error('Restore SQL error: ' . $e->getMessage() . ' | Statement: ' . substr($statement, 0, 200));
+            }
+        }
+
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
-    }
-    
-    private function flushInserts($table, $values)
-    {
-        if (empty($table) || empty($values)) {
-            return;
-        }
-        
-        try {
-            $sql = "INSERT INTO `{$table}` VALUES " . implode(',', $values) . ';';
-            DB::unprepared($sql);
-        } catch (\Exception $e) {
-            // Continue on error
-        }
     }
 }

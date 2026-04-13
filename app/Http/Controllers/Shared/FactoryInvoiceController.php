@@ -56,6 +56,19 @@ class FactoryInvoiceController extends Controller
             ->with('success', 'تم توثيق الفاتورة وإضافة الكميات للمخزن');
     }
 
+    public function forceCancel(FactoryInvoice $factoryInvoice)
+    {
+        if (!in_array(auth()->user()->role_id, [1, 2])) {
+            abort(403);
+        }
+
+        $this->service->forceCancelInvoice($factoryInvoice->id, auth()->id());
+
+        $routePrefix = request()->routeIs('admin.*') ? 'admin' : 'warehouse';
+        return redirect()->route($routePrefix . '.factory-invoices.index')
+            ->with('success', 'تم إلغاء الفاتورة الموثقة وخصم الكميات من المخزن');
+    }
+
     public function cancel(Request $request, FactoryInvoice $factoryInvoice)
     {
         $validated = $request->validate([

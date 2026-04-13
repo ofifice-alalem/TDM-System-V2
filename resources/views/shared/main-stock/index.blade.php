@@ -85,8 +85,8 @@
                         <tr>
                             <th class="px-6 py-4 text-right text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">المنتج</th>
                             <th class="px-6 py-4 text-right text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">الباركود</th>
-                            <th class="px-6 py-4 text-right text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">السعر</th>
                             <th class="px-6 py-4 text-right text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">سعر الجملة</th>
+                            <th class="px-6 py-4 text-right text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">سعر جملة الجملة</th>
                             <th class="px-6 py-4 text-center text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">الكمية المتوفرة</th>
                             <th class="px-6 py-4 text-center text-xs font-black text-gray-600 dark:text-gray-400 uppercase tracking-wider">آخر تحديث</th>
                             @if(request()->routeIs('admin.*'))
@@ -183,7 +183,7 @@
                             <p class="font-mono text-gray-900 dark:text-white text-base">{{ $product->barcode ?? '-' }}</p>
                         </div>
                         <div>
-                            <span class="text-gray-500 dark:text-gray-400 text-sm">السعر</span>
+                            <span class="text-gray-500 dark:text-gray-400 text-sm">سعر الجملة</span>
                             <p class="font-black text-gray-900 dark:text-white text-xl">{{ number_format($product->current_price, 2) }} د</p>
                         </div>
                     </div>

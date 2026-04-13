@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\CustomerInvoice;
 use App\Models\CustomerPayment;
 use App\Models\CustomerReturn;
+use App\Models\User;
 use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -16,37 +17,276 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class StatisticsController extends Controller
 {
+    protected function viewPrefix(): string { return 'sales.statistics'; }
+
     public function index(Request $request)
     {
         $customers = Customer::where('is_active', true)->get();
+        $salesUsers = User::where('role_id', 4)->where('is_active', true)->orderBy('full_name')->get();
         $results = null;
 
-        if ($request->filled(['customer_id', 'operation', 'from_date', 'to_date'])) {
-            $results = $this->getStatistics($request, $request->has('export'));
-            
+        if ($request->filled(['operation', 'from_date', 'to_date']) &&
+            ($request->filled('customer_id') || $request->filled('customer_name'))) {
+            $results = $this->getStatistics($request, $request->has('export') || $request->has('pdf'));
+
             if ($results && $request->has('export')) {
                 return $this->exportToExcel($results, $request);
             }
+
+            if ($results && $request->has('pdf')) {
+                return $this->exportPdf($results, $request);
+            }
         }
 
-        return view('sales.statistics.index', compact('customers', 'results'));
+        return view($this->viewPrefix() . '.index', compact('customers', 'salesUsers', 'results'));
     }
 
-    private function getStatistics($request, $forExport = false)
+    protected function exportPdf($results, $request)
+    {
+        // إعادة جلب البيانات كاملة بدون pagination
+        $fullResults = $this->getStatistics($request, true);
+        if (!$fullResults) return back();
+
+        $arabic = new \ArPHP\I18N\Arabic();
+        $g  = fn($t) => $arabic->utf8Glyphs($t);
+        $en = fn($s) => str_replace(['\u0660','\u0661','\u0662','\u0663','\u0664','\u0665','\u0666','\u0667','\u0668','\u0669'],['0','1','2','3','4','5','6','7','8','9'], $s);
+
+        $operation = $fullResults['operation'];
+        $operationName = match($operation) {
+            'invoices' => 'فواتير العملاء',
+            'payments' => 'إيصالات القبض',
+            'returns'  => 'مرتجعات العملاء',
+            default    => $operation,
+        };
+
+        $customer = ($request->filled('customer_id') && $request->customer_id !== 'all')
+            ? Customer::find($request->customer_id)
+            : null;
+
+        if ($customer) {
+            $entityName = $customer->name;
+        } elseif ($request->filled('customer_name')) {
+            $entityName = $request->customer_name;
+        } elseif ($operation === 'summary') {
+            $entityName = 'الكل';
+        } else {
+            // إذا كانت النتائج لعميل واحد فقط نعرض اسمه، وإلا الكل
+            $uniqueCustomers = $fullResults['data']->pluck('customer_id')->unique();
+            $entityName = $uniqueCustomers->count() === 1
+                ? ($fullResults['data']->first()?->customer->name ?? 'الكل')
+                : 'الكل';
+        }
+
+        $statusNames = [];
+        if ($request->filled('status')) {
+            $map = ['completed' => 'مكتمل', 'cancelled' => 'ملغي'];
+            $statusNames = [$map[$request->status] ?? $request->status];
+        }
+
+        $labels = [
+            'title'         => $g('إحصائيات العملاء - ' . $entityName),
+            'entityName'    => $g($entityName),
+            'entityLabel'   => $g('العميل'),
+            'operationName' => $g(match($operation) {
+                'invoices' => 'فواتير العملاء',
+                'payments' => 'إيصالات القبض',
+                'returns'  => 'مرتجعات العملاء',
+                'summary'  => 'الملخص المالي',
+                default    => $operation,
+            }),
+            'operation'     => $g('العملية'),
+            'storeName'     => '',
+            'store'         => $g('العميل'),
+            'marketer'      => $g('الموظف'),
+            'statusName'    => $statusNames ? $g(implode(' ، ', $statusNames)) : '',
+            'status'        => $g('الحالة'),
+            'dateFrom'      => $request->from_date,
+            'dateTo'        => $request->to_date,
+            'grandTotal'    => $g('الإجمالي'),
+            'summary'       => $g('ملخص'),
+            'filterInfo'    => $g('معلومات التقرير'),
+            'sales'         => $g('المبيعات'),
+            'payments'      => $g('المدفوعات'),
+            'returns'       => $g('المرتجعات'),
+            'debt'          => $g('الدين'),
+            'salesStatus'   => $g('حالة المبيعات'),
+            'paymentsStatus'=> $g('حالة المدفوعات'),
+            'pending'       => $g('معلق'),
+            'approved'      => $g('موثق'),
+            'total'         => $g('الإجمالي'),
+            'invoiceNum'    => $g('رقم الفاتورة'),
+            'date'          => $g('التاريخ'),
+            'amount'        => $g('المبلغ'),
+            'payMethod'     => $g('طريقة الدفع'),
+            'commRate'      => $g('نسبة العمولة'),
+            'commAmount'    => $g('المستحق'),
+            'cash'          => $g('نقدي'),
+            'transfer'      => $g('تحويل'),
+            'check'         => $g('شيك'),
+            'hasStore'      => true,
+            'hasMarketer'   => false,
+            'hasPaymentMethod' => $operation === 'payments',
+            'hasCommission' => false,
+            'hasAmount'     => true,
+            'hasStatus'     => true,
+        ];
+
+        $pdfOperation = match($operation) {
+            'invoices' => 'sales',
+            'returns'  => 'sales_returns',
+            default    => $operation,
+        };
+
+        // للملخص نبني البيانات بالشكل الذي يتوقعه الـ view
+        if ($operation === 'summary') {
+            $summaryRows = $fullResults['data'];
+            $viewData = [
+                'type'      => 'summary',
+                'data'      => [
+                    'is_marketer_summary' => false,
+                    'total_sales'    => $fullResults['total'],
+                    'total_payments' => $fullResults['grand_payments'],
+                    'total_returns'  => $fullResults['grand_returns'],
+                    'current_balance'=> $fullResults['grand_debt'],
+                    'stores_data'    => $summaryRows->map(fn($r) => [
+                        'store_name' => $r->customer->name ?? '-',
+                        'sales'      => $r->total_invoices,
+                        'payments'   => $r->total_payments,
+                        'returns'    => $r->total_returns,
+                        'balance'    => $r->total_debt,
+                    ])->values()->toArray(),
+                ],
+                'labels'    => $labels,
+                'g'         => $g,
+                'en'        => $en,
+                'operation' => 'summary',
+                'statType'  => 'stores',
+                'rows'      => collect(),
+            ];
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('shared.statistics.pdf', $viewData)
+                ->setPaper('a4')
+                ->setOption('isHtml5ParserEnabled', true)
+                ->setOption('isFontSubsettingEnabled', true);
+
+            $pdf->render();
+            $labels['totalPages'] = $pdf->getDomPDF()->getCanvas()->get_page_count();
+            $viewData['labels'] = $labels;
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('shared.statistics.pdf', $viewData)
+                ->setPaper('a4')
+                ->setOption('isHtml5ParserEnabled', true)
+                ->setOption('isFontSubsettingEnabled', true);
+
+            return $pdf->stream('customer-statistics-summary-' . $request->from_date . '.pdf');
+        }
+
+        // حساب status_totals للملخص في الـ PDF
+        $baseCountQuery = match($operation) {
+            'invoices' => CustomerInvoice::query(),
+            'payments' => CustomerPayment::query(),
+            'returns'  => CustomerReturn::query(),
+            default    => null,
+        };
+        $statusTotals = null;
+        $paymentMethodTotals = null;
+        if ($baseCountQuery) {
+            if ($request->filled('customer_id') && $request->customer_id !== 'all') {
+                $baseCountQuery->where('customer_id', $request->customer_id);
+            } elseif ($request->filled('customer_name')) {
+                $baseCountQuery->whereHas('customer', fn($q) => $q->where('name', 'like', '%' . $request->customer_name . '%'));
+            }
+            if ($request->filled('sales_user_id')) $baseCountQuery->where('sales_user_id', $request->sales_user_id);
+            $baseCountQuery->whereDate('created_at', '>=', $request->from_date)
+                           ->whereDate('created_at', '<=', $request->to_date);
+
+            $amountCol = $operation === 'payments' ? 'amount' : 'total_amount';
+            $byStatus  = (clone $baseCountQuery)->selectRaw("status, SUM({$amountCol}) as total")
+                ->groupBy('status')->pluck('total', 'status');
+
+            // تحويل completed -> approved للـ view
+            $statusTotals = [
+                'pending'  => 0,
+                'approved' => ($byStatus['completed'] ?? 0) + ($byStatus['approved'] ?? 0),
+                'cancelled'=> $byStatus['cancelled'] ?? 0,
+                'rejected' => 0,
+                'total'    => 0,
+            ];
+            $statusTotals['total'] = $statusTotals['approved'] + $statusTotals['cancelled'];
+
+            if ($operation === 'payments') {
+                $status = $request->filled('status') ? $request->status : 'completed';
+                $pmBase = (clone $baseCountQuery)->where('status', $status);
+                $paymentMethodTotals = [
+                    'cash'     => (clone $pmBase)->where('payment_method', 'cash')->sum('amount'),
+                    'transfer' => (clone $pmBase)->where('payment_method', 'transfer')->sum('amount'),
+                    'check'    => (clone $pmBase)->where('payment_method', 'check')->sum('amount'),
+                ];
+            }
+        }
+
+        $fullResults['status_totals']         = $statusTotals;
+        $fullResults['payment_method_totals'] = $paymentMethodTotals;
+
+        // تحويل status completed إلى approved وإضافة virtual attributes لتوافق الـ view
+        $rows = $operation === 'summary' ? collect() : $fullResults['data']->map(function($item) {
+            $item->status = $item->status === 'completed' ? 'approved' : $item->status;
+            // الـ view يستخدم store->name و marketer->full_name
+            $item->store    = (object)['name' => $item->customer->name ?? '-'];
+            $item->marketer = (object)['full_name' => $item->salesUser->full_name ?? '-'];
+            return $item;
+        });
+
+        $viewData = [
+            'type'      => 'detail',
+            'data'      => $fullResults,
+            'labels'    => $labels,
+            'g'         => $g,
+            'en'        => $en,
+            'operation' => $pdfOperation,
+            'statType'  => 'stores',
+            'rows'      => $rows,
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('shared.statistics.pdf', $viewData)
+            ->setPaper('a4')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isFontSubsettingEnabled', true);
+
+        $pdf->render();
+        $labels['totalPages'] = $pdf->getDomPDF()->getCanvas()->get_page_count();
+        $viewData['labels'] = $labels;
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('shared.statistics.pdf', $viewData)
+            ->setPaper('a4')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isFontSubsettingEnabled', true);
+
+        return $pdf->stream('customer-statistics-' . $operation . '-' . $request->from_date . '.pdf');
+    }
+
+    protected function getStatistics($request, $forExport = false)
     {
         $query = match($request->operation) {
             'invoices' => CustomerInvoice::with(['customer', 'salesUser', 'returns' => function($q) {
                 $q->where('status', '!=', 'cancelled');
             }]),
             'payments' => CustomerPayment::with('customer', 'salesUser'),
-            'returns' => CustomerReturn::with('customer', 'salesUser'),
-            default => null
+            'returns'  => CustomerReturn::with('customer', 'salesUser'),
+            'summary'  => CustomerInvoice::with(['customer', 'salesUser']),
+            default    => null
         };
 
         if (!$query) return null;
 
-        if ($request->customer_id && $request->customer_id !== 'all') {
+        if ($request->filled('customer_id') && $request->customer_id !== 'all') {
             $query->where('customer_id', $request->customer_id);
+        } elseif ($request->filled('customer_name') && $request->customer_id !== 'all') {
+            $query->whereHas('customer', fn($q) => $q->where('name', 'like', '%' . $request->customer_name . '%'));
+        }
+
+        if ($request->filled('sales_user_id')) {
+            $query->where('sales_user_id', $request->sales_user_id);
         }
 
         if ($request->filled('status')) {
@@ -55,6 +295,53 @@ class StatisticsController extends Controller
 
         $query->whereDate('created_at', '>=', $request->from_date)
               ->whereDate('created_at', '<=', $request->to_date);
+
+        // للملخص المالي نعيد بيانات مجمّعة حسب العميل
+        if ($request->operation === 'summary') {
+            $allItems = $query->where('status', 'completed')->get();
+
+            $customerIds = $allItems->pluck('customer_id')->unique();
+
+            $payments = CustomerPayment::with('customer')
+                ->whereIn('customer_id', $customerIds)
+                ->where('status', 'completed')
+                ->when($request->filled('sales_user_id'), fn($q) => $q->where('sales_user_id', $request->sales_user_id))
+                ->whereDate('created_at', '>=', $request->from_date)
+                ->whereDate('created_at', '<=', $request->to_date)
+                ->get();
+
+            $returns = CustomerReturn::with('customer')
+                ->whereIn('customer_id', $customerIds)
+                ->where('status', 'completed')
+                ->when($request->filled('sales_user_id'), fn($q) => $q->where('sales_user_id', $request->sales_user_id))
+                ->whereDate('created_at', '>=', $request->from_date)
+                ->whereDate('created_at', '<=', $request->to_date)
+                ->get();
+
+            $summaryData = $customerIds->map(function($cid) use ($allItems, $payments, $returns) {
+                $customer       = $allItems->firstWhere('customer_id', $cid)?->customer;
+                $totalInvoices  = $allItems->where('customer_id', $cid)->sum('total_amount');
+                $totalPayments  = $payments->where('customer_id', $cid)->sum('amount');
+                $totalReturns   = $returns->where('customer_id', $cid)->sum('total_amount');
+                return (object)[
+                    'customer'       => $customer,
+                    'total_invoices' => $totalInvoices,
+                    'total_payments' => $totalPayments,
+                    'total_returns'  => $totalReturns,
+                    'total_debt'     => $totalInvoices - $totalPayments - $totalReturns,
+                ];
+            })->sortByDesc('total_debt')->values();
+
+            return [
+                'operation'          => 'summary',
+                'data'               => $summaryData,
+                'total'              => $summaryData->sum('total_invoices'),
+                'grand_payments'     => $summaryData->sum('total_payments'),
+                'grand_returns'      => $summaryData->sum('total_returns'),
+                'grand_debt'         => $summaryData->sum('total_debt'),
+                'paymentMethodTotals'=> null,
+            ];
+        }
 
         $data = $forExport ? $query->latest()->get() : $query->latest()->paginate(50);
         
@@ -65,8 +352,14 @@ class StatisticsController extends Controller
             default => null
         };
         
-        if ($request->customer_id && $request->customer_id !== 'all') {
+        if ($request->filled('customer_id') && $request->customer_id !== 'all') {
             $totalQuery->where('customer_id', $request->customer_id);
+        } elseif ($request->filled('customer_name') && $request->customer_id !== 'all') {
+            $totalQuery->whereHas('customer', fn($q) => $q->where('name', 'like', '%' . $request->customer_name . '%'));
+        }
+
+        if ($request->filled('sales_user_id')) {
+            $totalQuery->where('sales_user_id', $request->sales_user_id);
         }
         
         $totalQuery->where('status', $request->filled('status') ? $request->status : 'completed')
@@ -87,8 +380,14 @@ class StatisticsController extends Controller
                 ->whereDate('created_at', '>=', $request->from_date)
                 ->whereDate('created_at', '<=', $request->to_date);
             
-            if ($request->customer_id && $request->customer_id !== 'all') {
+            if ($request->filled('customer_id') && $request->customer_id !== 'all') {
                 $pmQuery->where('customer_id', $request->customer_id);
+            } elseif ($request->filled('customer_name') && $request->customer_id !== 'all') {
+                $pmQuery->whereHas('customer', fn($q) => $q->where('name', 'like', '%' . $request->customer_name . '%'));
+            }
+
+            if ($request->filled('sales_user_id')) {
+                $pmQuery->where('sales_user_id', $request->sales_user_id);
             }
             
             $paymentMethodTotals = [
@@ -112,25 +411,28 @@ class StatisticsController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setRightToLeft(true);
         
-        $customer = $request->customer_id === 'all' ? null : Customer::find($request->customer_id);
+        $customer = ($request->customer_id && $request->customer_id !== 'all') 
+            ? Customer::find($request->customer_id) 
+            : null;
+
+        $customerLabel = $customer 
+            ? $customer->name 
+            : ($request->filled('customer_name') && $request->customer_id !== 'all' 
+                ? $request->customer_name . ' (بحث)'
+                : 'الكل');
         
         $operationName = match($request->operation) {
             'invoices' => 'الفواتير',
             'payments' => 'المدفوعات',
-            'returns' => 'المرتجعات',
-            default => ''
-        };
-        
-        $statusName = match($request->status) {
-            'completed' => 'مكتمل',
-            'cancelled' => 'ملغي',
-            default => 'الكل'
+            'returns'  => 'المرتجعات',
+            'summary'  => 'الملخص المالي',
+            default    => ''
         };
         
         $row = 1;
         
         $infoData = [
-            ['اسم العميل', $customer ? $customer->name : 'الكل'],
+            ['اسم العميل', $customerLabel],
         ];
         
         if ($customer) {
@@ -139,16 +441,26 @@ class StatisticsController extends Controller
         
         $infoData = array_merge($infoData, [
             ['العملية', $operationName],
+            ['الموظف', $request->filled('sales_user_id') ? (User::find($request->sales_user_id)?->full_name ?? '') : 'الكل'],
             ['من تاريخ', $request->from_date],
             ['إلى تاريخ', $request->to_date],
-            ['الحالة', $statusName],
         ]);
         
-        if (!$request->filled('status')) {
-            $infoData[] = ['ملاحظة', 'يتم احتساب العمليات المكتملة فقط'];
+        if ($results['operation'] !== 'summary') {
+            $statusName = match($request->status ?? '') {
+                'completed' => 'مكتمل',
+                'cancelled' => 'ملغي',
+                default     => 'الكل'
+            };
+            $infoData[] = ['الحالة', $statusName];
+            if (!$request->filled('status')) {
+                $infoData[] = ['ملاحظة', 'يتم احتساب العمليات المكتملة فقط'];
+            }
         }
         
-        $infoData[] = ['الإجمالي', number_format($results['total'], 2) . ' دينار'];
+        if ($results['operation'] !== 'summary') {
+            $infoData[] = ['الإجمالي', number_format($results['total'], 2) . ' دينار'];
+        }
         
         foreach ($infoData as $info) {
             $sheet->setCellValue('A' . $row, $info[0]);
@@ -183,16 +495,41 @@ class StatisticsController extends Controller
         }
         
         $row++;
+
+        if ($results['operation'] == 'summary') {
+            $grandDebtColor = $results['grand_debt'] > 0 ? 'FFCDD2' : ($results['grand_debt'] < 0 ? 'C8E6C9' : 'F5F5F5');
+            $sheet->fromArray(['إجمالي الفواتير', 'إجمالي المدفوعات', 'إجمالي المرتجعات', 'الدين'], null, 'A' . $row);
+            $sheet->getStyle('A' . $row . ':D' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E8EAF6']],
+                'font' => ['bold' => true, 'size' => 11],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            ]);
+            $row++;
+            $sheet->fromArray([number_format($results['total'], 2), number_format($results['grand_payments'], 2), number_format($results['grand_returns'], 2), number_format($results['grand_debt'], 2)], null, 'A' . $row);
+            $sheet->getStyle('A' . $row . ':D' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F3F4FF']],
+                'font' => ['bold' => true, 'size' => 12],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            ]);
+            $sheet->getStyle('D' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $grandDebtColor]],
+            ]);
+            $row += 2;
+        }
         
         $headers = $results['operation'] == 'invoices' 
             ? ['الرقم', 'العميل', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ', 'المرتجعات']
             : ($results['operation'] == 'payments' 
                 ? ['الرقم', 'العميل', 'الموظف', 'التاريخ', 'الحالة', 'طريقة الدفع', 'المبلغ']
-                : ['الرقم', 'العميل', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ']);
+                : ($results['operation'] == 'summary'
+                    ? ['العميل', 'إجمالي الفواتير', 'إجمالي المدفوعات', 'إجمالي المرتجعات', 'الدين الحالي']
+                    : ['الرقم', 'العميل', 'الموظف', 'التاريخ', 'الحالة', 'المبلغ']));
         
         $sheet->fromArray($headers, null, 'A' . $row);
         
-        $lastCol = $results['operation'] == 'invoices' ? 'G' : ($results['operation'] == 'payments' ? 'G' : 'F');
+        $lastCol = $results['operation'] == 'invoices' ? 'G' : ($results['operation'] == 'payments' ? 'G' : ($results['operation'] == 'summary' ? 'E' : 'F'));
         $sheet->getStyle('A' . $row . ':' . $lastCol . $row)->applyFromArray([
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4CAF50']],
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 12],
@@ -202,6 +539,27 @@ class StatisticsController extends Controller
         $row++;
         
         foreach ($results['data'] as $item) {
+            if ($results['operation'] == 'summary') {
+                $rowData = [
+                    $item->customer->name ?? '',
+                    number_format($item->total_invoices, 2),
+                    number_format($item->total_payments, 2),
+                    number_format($item->total_returns, 2),
+                    number_format($item->total_debt, 2),
+                ];
+                $sheet->fromArray($rowData, null, 'A' . $row);
+                $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray([
+                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                ]);
+                $debtColor = $item->total_debt > 0 ? 'FFCDD2' : ($item->total_debt < 0 ? 'C8E6C9' : 'F5F5F5');
+                $sheet->getStyle('E' . $row)->applyFromArray([
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $debtColor]],
+                    'font' => ['bold' => true],
+                ]);
+                $row++;
+                continue;
+            }
+
             $number = match($results['operation']) {
                 'invoices' => $item->invoice_number,
                 'payments' => $item->payment_number,
@@ -281,7 +639,7 @@ class StatisticsController extends Controller
             ]);
             $row++;
         }
-        
+
         if ($results['operation'] == 'payments' && $results['paymentMethodTotals']) {
             $row++;
             $sheet->setCellValue('A' . $row, 'ملاحظات:');
@@ -317,11 +675,24 @@ class StatisticsController extends Controller
             ]);
         }
         
-        foreach (range('A', $results['operation'] == 'invoices' ? 'F' : 'E') as $col) {
+        $lastAutoCol = match($results['operation']) {
+            'invoices' => 'G',
+            'payments' => 'G',
+            'summary'  => 'E',
+            default    => 'F',
+        };
+        foreach (range('A', $lastAutoCol) as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        $filename = date('y_m_d') . '_' . ($customer ? $customer->name : 'الكل') . '_' . $operationName . '.xlsx';
+        $filenameOp = match($results['operation']) {
+            'invoices' => 'invoices',
+            'payments' => 'payments',
+            'returns'  => 'returns',
+            'summary'  => 'summary',
+            default    => 'export',
+        };
+        $filename = date('y_m_d') . '_' . $filenameOp . '.xlsx';
         
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
@@ -364,7 +735,7 @@ class StatisticsController extends Controller
             return $this->exportQuickInvoices($customers, $totalInvoices, $totalAmount);
         }
 
-        return view('sales.statistics.quick-invoices', compact('customers', 'totalInvoices', 'totalAmount', 'fromDate', 'toDate'));
+        return view($this->viewPrefix() . '.quick-invoices', compact('customers', 'totalInvoices', 'totalAmount', 'fromDate', 'toDate'));
     }
 
     public function quickPayments(Request $request)
@@ -414,7 +785,7 @@ class StatisticsController extends Controller
             return $this->exportQuickPayments($customers, $cashTotal, $transferTotal, $checkTotal, $totalAmount);
         }
 
-        return view('sales.statistics.quick-payments', compact('customers', 'cashTotal', 'transferTotal', 'checkTotal', 'totalAmount', 'fromDate', 'toDate'));
+        return view($this->viewPrefix() . '.quick-payments', compact('customers', 'cashTotal', 'transferTotal', 'checkTotal', 'totalAmount', 'fromDate', 'toDate'));
     }
 
     public function quickReturns(Request $request)
@@ -449,7 +820,7 @@ class StatisticsController extends Controller
             return $this->exportQuickReturns($customers, $totalReturns, $totalAmount);
         }
 
-        return view('sales.statistics.quick-returns', compact('customers', 'totalReturns', 'totalAmount', 'fromDate', 'toDate'));
+        return view($this->viewPrefix() . '.quick-returns', compact('customers', 'totalReturns', 'totalAmount', 'fromDate', 'toDate'));
     }
 
     public function quickSummary(Request $request)
@@ -491,7 +862,7 @@ class StatisticsController extends Controller
             return $this->exportQuickSummary($customers, $fromDate, $toDate);
         }
 
-        return view('sales.statistics.quick-summary', compact('customers', 'fromDate', 'toDate'));
+        return view($this->viewPrefix() . '.quick-summary', compact('customers', 'fromDate', 'toDate'));
     }
 
     private function exportQuickInvoices($customers, $totalInvoices, $totalAmount)
@@ -768,6 +1139,31 @@ class StatisticsController extends Controller
             'font' => ['bold' => true, 'size' => 12],
             'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
         ]);
+        $sumInvoices = $customers->sum('total_invoices');
+        $sumPayments = $customers->sum('total_payments');
+        $sumReturns  = $customers->sum('total_returns');
+        $sumDebt     = $customers->sum('total_debt');
+
+        $summaryData = [
+            ['إجمالي الفواتير', number_format($sumInvoices, 2) . ' دينار'],
+            ['إجمالي المدفوعات', number_format($sumPayments, 2) . ' دينار'],
+            ['إجمالي المرتجعات', number_format($sumReturns, 2) . ' دينار'],
+            ['إجمالي الدين', number_format($sumDebt, 2) . ' دينار'],
+        ];
+
+        $summaryColors = ['E3F2FD', 'E8F5E9', 'FFF3E0', $sumDebt > 0 ? 'FFCDD2' : ($sumDebt < 0 ? 'C8E6C9' : 'F5F5F5')];
+
+        foreach ($summaryData as $i => $summary) {
+            $sheet->setCellValue('A' . $row, $summary[0]);
+            $sheet->setCellValue('B' . $row, $summary[1]);
+            $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray([
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $summaryColors[$i]]],
+                'font' => ['bold' => true, 'size' => 12],
+                'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+            ]);
+            $row++;
+        }
+
         $row += 2;
 
         $sheet->fromArray(['العميل', 'إجمالي الفواتير', 'إجمالي المدفوعات', 'إجمالي المرتجعات', 'الدين الحالي'], null, 'A' . $row);

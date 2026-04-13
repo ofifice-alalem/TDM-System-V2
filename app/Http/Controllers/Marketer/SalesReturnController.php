@@ -60,7 +60,9 @@ class SalesReturnController extends Controller
 
         $returns = $query->paginate(10);
 
-        return view('marketer.sales-returns.index', compact('returns'));
+        $stores = \App\Models\Store::where('marketer_id', auth()->id())->where('is_active', true)->get(['id', 'name', 'owner_name']);
+
+        return view('marketer.sales-returns.index', compact('returns', 'stores'));
     }
 
     public function create()
@@ -111,7 +113,7 @@ class SalesReturnController extends Controller
 
     public function show(SalesReturn $salesReturn)
     {
-        if ($salesReturn->marketer_id !== auth()->id()) {
+        if ($salesReturn->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         $salesReturn->load(['store', 'salesInvoice', 'items.product', 'items.salesInvoiceItem', 'marketer', 'keeper']);
@@ -120,7 +122,7 @@ class SalesReturnController extends Controller
 
     public function cancel(Request $request, SalesReturn $salesReturn)
     {
-        if ($salesReturn->marketer_id !== auth()->id()) {
+        if ($salesReturn->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذا الطلب');
         }
         $request->validate([

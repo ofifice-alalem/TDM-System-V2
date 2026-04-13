@@ -1,0 +1,88 @@
+[27-Feb-2026 13:13:38 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/database.php:19
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/database.php on line 19
+[27-Feb-2026 13:13:39 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/mail.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/mail.php on line 17
+[27-Feb-2026 13:13:39 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/app.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/app.php on line 16
+[27-Feb-2026 13:13:39 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/services.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/services.php on line 18
+[27-Feb-2026 13:15:35 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/cache.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/cache.php on line 18
+[27-Feb-2026 13:20:47 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/auth.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/auth.php on line 17
+[27-Feb-2026 13:20:47 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/filesystems.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/filesystems.php on line 16
+[27-Feb-2026 13:20:48 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/queue.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/queue.php on line 16
+[27-Feb-2026 13:20:48 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/session.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/session.php on line 21
+[27-Feb-2026 13:20:48 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/logging.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/logging.php on line 21
+[28-Feb-2026 00:38:42 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/database.php:19
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/database.php on line 19
+[28-Feb-2026 00:38:42 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/mail.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/mail.php on line 17
+[28-Feb-2026 00:38:43 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/app.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/app.php on line 16
+[28-Feb-2026 00:38:43 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/services.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/services.php on line 18
+[28-Feb-2026 00:40:58 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/cache.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/cache.php on line 18
+[28-Feb-2026 00:46:30 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/auth.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/auth.php on line 17
+[28-Feb-2026 00:46:30 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/filesystems.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/filesystems.php on line 16
+[28-Feb-2026 00:46:30 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/queue.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/queue.php on line 16
+[28-Feb-2026 00:46:31 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/session.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/session.php on line 21
+[28-Feb-2026 00:46:31 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/logging.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/logging.php on line 21
+[04-Mar-2026 09:52:28 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/app.php:16
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/app.php on line 16
+[04-Mar-2026 09:53:25 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function env() in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/services.php:18
+Stack trace:
+#0 {main}
+  thrown in /home/motafwi1/etc/tdm.motafwiqon.com.ly/config/services.php on line 18

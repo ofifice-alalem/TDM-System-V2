@@ -41,20 +41,46 @@
                                 <span class="bg-primary-50 dark:bg-primary-900/20 p-2.5 rounded-xl text-primary-600 dark:text-primary-400 shadow-sm border border-primary-100 dark:border-primary-600/30">
                                     <i data-lucide="store" class="w-5 h-5"></i>
                                 </span>
-                                معلومات المتجر
+                                معلومات المرتجع
                             </h2>
                             <p class="text-sm text-gray-500 dark:text-dark-muted mt-2 mr-14 font-medium">بيانات المتجر والفاتورة الأصلية</p>
                         </div>
                     </div>
-                    <div class="bg-gray-50/50 dark:bg-dark-bg/60 rounded-2xl p-6 border border-gray-100 dark:border-dark-border">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <p class="text-xs text-gray-400 dark:text-dark-muted mb-2 font-bold uppercase tracking-wider">اسم المتجر</p>
-                                <p class="font-black text-gray-900 dark:text-white text-lg">{{ $salesReturn->store->name }}</p>
+                    <div class="bg-gray-50 dark:bg-dark-bg rounded-xl p-6 space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-gray-200 dark:border-dark-border">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="store" class="w-5 h-5 text-gray-400 dark:text-gray-500"></i>
+                                <div class="flex-1">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">اسم المتجر</p>
+                                    <p class="font-bold text-gray-900 dark:text-white">{{ $salesReturn->store->name }}</p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-400 dark:text-dark-muted mb-2 font-bold uppercase tracking-wider">الفاتورة الأصلية</p>
-                                <p class="font-black text-gray-900 dark:text-white text-lg">#{{ $salesReturn->salesInvoice->invoice_number }}</p>
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="phone" class="w-5 h-5 text-gray-400 dark:text-gray-500"></i>
+                                <div class="flex-1">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">رقم الهاتف</p>
+                                    @if($salesReturn->store->phone)
+                                        <a href="tel:{{ $salesReturn->store->phone }}" class="font-bold text-primary-600 dark:text-primary-400 hover:underline">{{ $salesReturn->store->phone }}</a>
+                                    @else
+                                        <p class="font-bold text-gray-900 dark:text-white">---</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="user" class="w-5 h-5 text-gray-400 dark:text-gray-500"></i>
+                                <div class="flex-1">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">المسوق</p>
+                                    <p class="font-bold text-gray-900 dark:text-white">{{ $salesReturn->marketer->full_name }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="file-text" class="w-5 h-5 text-gray-400 dark:text-gray-500"></i>
+                                <div class="flex-1">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">الفاتورة الأصلية</p>
+                                    <p class="font-bold text-gray-900 dark:text-white">#{{ $salesReturn->salesInvoice->invoice_number }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -182,10 +208,36 @@
                     </div>
 
                     <div class="mt-8 pt-6 border-t border-gray-200 dark:border-dark-border z-10 relative">
-                        <a href="{{ route('marketer.sales-returns.pdf', $salesReturn) }}" class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group">
-                            <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
-                            طباعة PDF
-                        </a>
+                        <div x-data="{ showPrintOptions: false }" class="relative">
+                            <button 
+                                @click="showPrintOptions = !showPrintOptions"
+                                class="w-full bg-gray-900 dark:bg-dark-bg text-white hover:bg-gray-800 dark:hover:bg-dark-card border border-transparent dark:border-dark-border py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-gray-200 dark:shadow-none flex items-center justify-center gap-2 group">
+                                <i data-lucide="printer" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                طباعة PDF
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform" :class="showPrintOptions ? 'rotate-180' : ''"></i>
+                            </button>
+
+                            <div 
+                                x-show="showPrintOptions"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 -translate-y-2"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                class="mt-3 space-y-2"
+                                style="display: none;">
+                                <a href="{{ route('marketer.sales-returns.pdf', $salesReturn) }}" target="_blank" class="w-full bg-white dark:bg-dark-card border-2 border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-bg py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group">
+                                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                                    A4 - النظام القديم
+                                </a>
+                                <button onclick="printThermalReturn()" type="button" class="w-full bg-white dark:bg-dark-card border-2 border-emerald-200 dark:border-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group">
+                                    <i data-lucide="receipt" class="w-5 h-5"></i>
+                                    80mm - X-Printer
+                                </button>
+                                <button onclick="previewThermalReturn()" type="button" class="w-full bg-white dark:bg-dark-card border-2 border-blue-200 dark:border-blue-900/30 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group">
+                                    <i data-lucide="eye" class="w-5 h-5"></i>
+                                    معاينة الفاتورة
+                                </button>
+                            </div>
+                        </div>
 
                         @if($salesReturn->status === 'pending')
                             <div x-data="{ showCancel: false }" class="mt-4">
@@ -320,16 +372,447 @@
 </div>
 
 @push('scripts')
+<style>
+@font-face {
+    font-family: 'Cairo';
+    src: url('{{ asset('fonts/Cairo-Bold.ttf') }}') format('truetype');
+    font-weight: bold;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Cairo';
+    src: url('{{ asset('fonts/Cairo-Regular.ttf') }}') format('truetype');
+    font-weight: normal;
+    font-display: swap;
+}
+</style>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         lucide.createIcons();
+        
+        const cairoRegular = new FontFace('Cairo', 'url({{ asset('fonts/Cairo-Regular.ttf') }})');
+        const cairoBold = new FontFace('Cairo', 'url({{ asset('fonts/Cairo-Bold.ttf') }})', { weight: 'bold' });
+        
+        Promise.all([cairoRegular.load(), cairoBold.load()]).then(fonts => {
+            fonts.forEach(font => document.fonts.add(font));
+            console.log('Cairo font loaded successfully');
+        }).catch(err => {
+            console.error('Failed to load Cairo font:', err);
+        });
     });
+
+    let bluetoothDevice = null;
+    let bluetoothCharacteristic = null;
+
+    async function previewThermalReturn() {
+        const statusText = document.createElement('div');
+        statusText.style.cssText = 'position:fixed;top:20px;right:20px;background:#667eea;color:white;padding:15px 25px;border-radius:10px;z-index:9999;font-weight:bold;box-shadow:0 4px 20px rgba(0,0,0,0.3)';
+        statusText.innerText = '⏳ جاري التحضير...';
+        document.body.appendChild(statusText);
+
+        try {
+            try {
+                await Promise.race([
+                    document.fonts.ready,
+                    new Promise((_, reject) => setTimeout(() => reject('timeout'), 3000))
+                ]);
+            } catch (e) {
+                console.log('Cairo font not loaded, using fallback');
+            }
+            
+            statusText.innerText = '📡 جاري تحميل بيانات الإرجاع...';
+            const response = await fetch('{{ route('marketer.sales-returns.return-data', $salesReturn) }}');
+            const data = await response.json();
+
+            statusText.innerText = '⚡ بناء الفاتورة...';
+            const canvas = await buildReturnCanvas(data);
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+            modal.innerHTML = `
+                <div style="background:white;border-radius:20px;padding:20px;max-width:90%;max-height:90%;overflow:auto;position:relative">
+                    <button onclick="this.closest('div').parentElement.remove()" style="position:absolute;top:10px;left:10px;background:#ef4444;color:white;border:none;border-radius:10px;padding:10px 20px;font-weight:bold;cursor:pointer;z-index:1">✕ إغلاق</button>
+                    <div style="text-align:center">
+                        <h2 style="margin-bottom:20px;color:#1f2937;font-size:24px;font-weight:bold">معاينة إرجاع البضاعة</h2>
+                        <img src="${canvas.toDataURL()}" style="max-width:100%;border:2px solid #e5e7eb;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.1)">
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            statusText.remove();
+
+        } catch (error) {
+            console.error(error);
+            alert('❌ فشلت المعاينة: ' + error.message);
+            statusText.remove();
+        }
+    }
+
+    async function printThermalReturn() {
+        const statusText = document.createElement('div');
+        statusText.style.cssText = 'position:fixed;top:20px;right:20px;background:#667eea;color:white;padding:15px 25px;border-radius:10px;z-index:9999;font-weight:bold;box-shadow:0 4px 20px rgba(0,0,0,0.3)';
+        statusText.innerText = '⏳ جاري التحضير...';
+        document.body.appendChild(statusText);
+
+        try {
+            if (!navigator.bluetooth) {
+                alert('❌ متصفحك لا يدعم البلوتوث');
+                statusText.remove();
+                return;
+            }
+
+            try {
+                await Promise.race([
+                    document.fonts.ready,
+                    new Promise((_, reject) => setTimeout(() => reject('timeout'), 3000))
+                ]);
+            } catch (e) {
+                console.log('Cairo font not loaded, using fallback');
+            }
+
+            statusText.innerText = '📡 جاري تحميل بيانات الإرجاع...';
+            const response = await fetch('{{ route('marketer.sales-returns.return-data', $salesReturn) }}');
+            const data = await response.json();
+
+            statusText.innerText = '⚡ بناء الفاتورة...';
+            const canvas = await buildReturnCanvas(data);
+            const rasterData = canvasToRaster(canvas);
+
+            if (bluetoothDevice && !bluetoothDevice.gatt.connected) {
+                try {
+                    statusText.innerText = '🔄 إعادة الاتصال...';
+                    await bluetoothDevice.gatt.disconnect();
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const server = await bluetoothDevice.gatt.connect();
+                    const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                    bluetoothCharacteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+                } catch (reconnectError) {
+                    console.log('Failed to reconnect, will request new device');
+                    bluetoothDevice = null;
+                    bluetoothCharacteristic = null;
+                }
+            }
+
+            if (!bluetoothDevice || !bluetoothDevice.gatt.connected) {
+                statusText.innerText = '📡 اختر الطابعة...';
+                bluetoothDevice = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }],
+                    optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
+                });
+
+                bluetoothDevice.addEventListener('gattserverdisconnected', () => {
+                    bluetoothDevice = null;
+                    bluetoothCharacteristic = null;
+                });
+
+                statusText.innerText = '🔌 جاري الاتصال...';
+                const server = await bluetoothDevice.gatt.connect();
+                const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                bluetoothCharacteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
+            }
+
+            statusText.innerText = '🖨️ جاري الطباعة...';
+            await sendInChunks(bluetoothCharacteristic, rasterData);
+
+            statusText.innerText = '✅ تمت الطباعة بنجاح!';
+            setTimeout(() => statusText.remove(), 2000);
+
+        } catch (error) {
+            console.error(error);
+            if (error.name !== 'NotFoundError') {
+                alert('❌ فشلت العملية: ' + error.message);
+            }
+            statusText.remove();
+        }
+    }
+
+    async function buildReturnCanvas(data) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 576;
+        
+        let estimatedHeight = 950;
+        data.items.forEach(item => {
+            const lines = wrapText(item.name, 300, '24px Arial');
+            estimatedHeight += Math.max(lines.length * 28, 40) + 16;
+        });
+        estimatedHeight += 200;
+        
+        canvas.height = estimatedHeight;
+        const ctx = canvas.getContext('2d');
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#000000';
+        ctx.textAlign = 'center';
+        
+        let y = 40;
+        
+        // إضافة الشعار
+        try {
+            const logo = new Image();
+            await new Promise((resolve, reject) => {
+                logo.onload = resolve;
+                logo.onerror = reject;
+                logo.src = '{{ asset('images/company_black_white.png') }}';
+                setTimeout(reject, 2000);
+            });
+            const logoWidth = 200;
+            const logoHeight = (logo.height / logo.width) * logoWidth;
+            
+            // تحويل الصورة للأبيض والأسود
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = logoWidth;
+            tempCanvas.height = logoHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(logo, 0, 0, logoWidth, logoHeight);
+            const imageData = tempCtx.getImageData(0, 0, logoWidth, logoHeight);
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+                data[i] = data[i + 1] = data[i + 2] = gray;
+            }
+            tempCtx.putImageData(imageData, 0, 0);
+            
+            ctx.drawImage(tempCanvas, (canvas.width - logoWidth) / 2, y, logoWidth, logoHeight);
+            y += logoHeight + 20;
+        } catch (e) {
+            console.log('Logo not loaded, skipping');
+        }
+        
+        ctx.font = 'bold 32px Cairo, Arial';
+        ctx.fillText('شركة المتفوقون الأوائل', 288, y);
+        
+        y += 50;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(180, y, 216, 40);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 26px Cairo, Arial';
+        ctx.fillText('إرجاع بضاعة', 288, y + 28);
+        
+        y += 60;
+        ctx.fillStyle = '#000000';
+        ctx.font = '20px Cairo, Arial';
+        ctx.fillText('رقم: ' + data.return_number, 288, y);
+        y += 28;
+        ctx.fillText('تاريخ: ' + data.date, 288, y);
+        y += 28;
+        ctx.fillText('الفاتورة الأصلية: ' + data.invoice_number, 288, y);
+        
+        y += 40;
+        ctx.beginPath();
+        ctx.setLineDash([10, 5]);
+        ctx.moveTo(30, y);
+        ctx.lineTo(546, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        y += 35;
+        ctx.textAlign = 'right';
+        ctx.font = '22px Cairo, Arial';
+        ctx.fillText('المتجر: ' + data.store, 520, y);
+        y += 28;
+        ctx.font = '20px Cairo, Arial';
+        ctx.fillText('رقم: ' + data.store_phone, 520, y);
+        
+        y += 35;
+        ctx.font = '22px Cairo, Arial';
+        ctx.fillText('المسوق: ' + data.marketer, 520, y);
+        y += 28;
+        ctx.font = '20px Cairo, Arial';
+        ctx.fillText('رقم: ' + data.marketer_phone, 520, y);
+        
+        y += 40;
+        ctx.beginPath();
+        ctx.moveTo(30, y);
+        ctx.lineTo(546, y);
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.lineWidth = 1;
+        
+        y += 35;
+        ctx.font = 'bold 22px Cairo, Arial';
+        ctx.textAlign = 'right';
+        ctx.fillText('المنتج', 490, y);
+        ctx.textAlign = 'center';
+        ctx.fillText('كمية', 205, y);
+        ctx.fillText('سعر', 135, y);
+        ctx.fillText('إجمالي', 60, y);
+        
+        y += 15;
+        ctx.beginPath();
+        ctx.moveTo(20, y);
+        ctx.lineTo(556, y);
+        ctx.stroke();
+        
+        ctx.font = '24px Cairo, Arial';
+        data.items.forEach((item, index) => {
+            const nameLines = wrapText(item.name, 300, '24px Cairo, Arial');
+            const itemHeight = Math.max(nameLines.length * 28, 40) + 18;
+            const startY = y + (itemHeight / 2) + 5;
+            
+            ctx.strokeRect(20, y, 536, itemHeight);
+            ctx.beginPath();
+            ctx.moveTo(240, y);
+            ctx.lineTo(240, y + itemHeight);
+            ctx.moveTo(170, y);
+            ctx.lineTo(170, y + itemHeight);
+            ctx.moveTo(100, y);
+            ctx.lineTo(100, y + itemHeight);
+            ctx.stroke();
+            
+            ctx.textAlign = 'right';
+            nameLines.forEach((line, idx) => {
+                ctx.fillText(line, 550, y + 32 + (idx * 28));
+            });
+            
+            ctx.font = '20px Cairo, Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(item.quantity, 205, startY);
+            ctx.fillText(item.price, 135, startY);
+            ctx.fillText(item.total, 60, startY);
+            ctx.font = '24px Cairo, Arial';
+            
+            y += itemHeight;
+        });
+        
+        y += 25;
+        ctx.beginPath();
+        ctx.setLineDash([10, 5]);
+        ctx.moveTo(30, y);
+        ctx.lineTo(546, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        y += 50;
+        ctx.beginPath();
+        ctx.moveTo(30, y);
+        ctx.lineTo(546, y);
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.lineWidth = 1;
+        
+        y += 35;
+        ctx.font = 'bold 24px Cairo, Arial';
+        ctx.textAlign = 'right';
+        ctx.fillText('المجموع النهائي', 480, y);
+        ctx.font = 'bold 32px Cairo, Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('' + data.total + ' دينار', 169, y);
+        
+        y += 50;
+        ctx.font = '20px Cairo, Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('شكراً لتعاملكم معنا', 288, y);
+        
+        y += 30;
+        ctx.font = '16px Cairo, Arial';
+        ctx.fillStyle = '#666666';
+        const now = new Date();
+        const printDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        ctx.fillText('تاريخ الطباعة: ' + printDate, 288, y);
+        
+        return canvas;
+    }
+
+    function wrapText(text, maxWidth, font) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.font = font;
+        
+        const words = text.split(' ');
+        const lines = [];
+        let currentLine = '';
+        
+        words.forEach(word => {
+            const testLine = currentLine ? currentLine + ' ' + word : word;
+            const metrics = ctx.measureText(testLine);
+            
+            if (metrics.width > maxWidth && currentLine) {
+                lines.push(currentLine);
+                currentLine = word;
+            } else {
+                currentLine = testLine;
+            }
+        });
+        
+        if (currentLine) {
+            lines.push(currentLine);
+        }
+        
+        const finalLines = [];
+        lines.forEach(line => {
+            const metrics = ctx.measureText(line);
+            if (metrics.width > maxWidth) {
+                let remaining = line;
+                while (remaining.length > 0) {
+                    let chars = remaining.length;
+                    let testStr = remaining;
+                    while (ctx.measureText(testStr).width > maxWidth && chars > 1) {
+                        chars--;
+                        testStr = remaining.substring(0, chars);
+                    }
+                    finalLines.push(testStr);
+                    remaining = remaining.substring(chars);
+                }
+            } else {
+                finalLines.push(line);
+            }
+        });
+        
+        return finalLines;
+    }
+
+    function canvasToRaster(canvas) {
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const imageData = ctx.getImageData(0, 0, width, height).data;
+        const widthBytes = Math.ceil(width / 8);
+        const raster = [];
+
+        raster.push(0x1B, 0x40);
+        raster.push(0x1D, 0x76, 0x30, 0x00);
+        raster.push(widthBytes & 0xFF, (widthBytes >> 8) & 0xFF);
+        raster.push(height & 0xFF, (height >> 8) & 0xFF);
+
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < widthBytes; x++) {
+                let byte = 0;
+                for (let bit = 0; bit < 8; bit++) {
+                    const xPos = x * 8 + bit;
+                    if (xPos < width) {
+                        const idx = (y * width + xPos) * 4;
+                        const br = imageData[idx] * 0.299 + imageData[idx + 1] * 0.587 + imageData[idx + 2] * 0.114;
+                        if (imageData[idx + 3] > 128 && br < 185) byte |= (0x80 >> bit);
+                    }
+                }
+                raster.push(byte);
+            }
+        }
+
+        raster.push(0x1B, 0x4A, 0x20, 0x1B, 0x64, 0x05, 0x1D, 0x56, 0x00);
+        return new Uint8Array(raster);
+    }
+
+    async function sendInChunks(characteristic, data) {
+        const CHUNK_SIZE = 180;
+        for (let i = 0; i < data.length; i += CHUNK_SIZE) {
+            const chunk = data.slice(i, i + CHUNK_SIZE);
+            if (characteristic.writeValueWithoutResponse) {
+                await characteristic.writeValueWithoutResponse(chunk);
+            } else {
+                await characteristic.writeValue(chunk);
+            }
+            await new Promise(r => setTimeout(r, 2));
+        }
+    }
 </script>
 @endpush
 
 @if($salesReturn->status === 'approved' && $salesReturn->stamped_image)
     @include('shared.modals.documentation-image', [
-        'imageUrl' => route('warehouse.sales-returns.documentation', $salesReturn->id),
+        'imageUrl' => asset('storage/' . $salesReturn->stamped_image),
         'invoiceNumber' => $salesReturn->return_number,
         'documentedAt' => $salesReturn->confirmed_at ?? $salesReturn->updated_at
     ])

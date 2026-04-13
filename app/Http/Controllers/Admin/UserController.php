@@ -16,8 +16,15 @@ class UserController extends Controller
     {
         $search = $request->get('search');
         $roleFilter = $request->get('role');
+        $showDeleted = $request->get('show_deleted');
         
         $users = User::with('role')
+            ->where('id', '!=', 0)
+            ->whereNotIn('username', ['system', 'superadmin'])
+            ->whereNot('role_id', 5)
+            ->when($showDeleted, function($query) {
+                $query->onlyTrashed();
+            })
             ->when($search, function($query, $search) {
                 $query->where('full_name', 'like', "%{$search}%")
                       ->orWhere('username', 'like', "%{$search}%")
@@ -40,14 +47,14 @@ class UserController extends Controller
             }
         }
 
-        $roles = Role::where('is_active', true)->get();
+        $roles = Role::where('is_active', true)->where('id', '!=', 5)->get();
 
-        return view('admin.users.index', compact('users', 'search', 'roles', 'roleFilter'));
+        return view('admin.users.index', compact('users', 'search', 'roles', 'roleFilter', 'showDeleted'));
     }
 
     public function create()
     {
-        $roles = Role::where('is_active', true)->get();
+        $roles = Role::where('is_active', true)->where('id', '!=', 5)->get();
         return view('admin.users.create', compact('roles'));
     }
 
@@ -73,7 +80,7 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $roles = Role::where('is_active', true)->get();
+        $roles = Role::where('is_active', true)->where('id', '!=', 5)->get();
         return view('admin.users.edit', compact('user', 'roles'));
     }
 
@@ -99,5 +106,40 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')
             ->with('success', 'تم تحديث بيانات المستخدم بنجاح');
+    }
+
+    public function destroy(User $user)
+    {
+        $user->delete();
+        return redirect()->route('admin.users.index')
+            ->with('success', 'تم حذف المستخدم بنجاح');
+    }
+
+    public function forceDestroy($id)
+    {
+        $user = User::withTrashed()->findOrFail($id);
+        
+        if ($user->role_id == 3) {
+            $totalCommissions = MarketerCommission::where('marketer_id', $user->id)->sum('commission_amount');
+            $totalWithdrawals = MarketerWithdrawalRequest::where('marketer_id', $user->id)
+                ->where('status', 'approved')
+                ->sum('requested_amount');
+            $availableBalance = $totalCommissions - $totalWithdrawals;
+            
+            if ($availableBalance != 0) {
+                return back()->with('error', 'لا يمكن الحذف النهائي. الرصيد المستحق: ' . number_format($availableBalance, 2) . ' دينار');
+            }
+        }
+        
+        $user->forceDelete();
+        return redirect()->route('admin.users.index')
+            ->with('success', 'تم الحذف النهائي بنجاح');
+    }
+
+    public function restore($id)
+    {
+        User::withTrashed()->findOrFail($id)->restore();
+        return redirect()->route('admin.users.index')
+            ->with('success', 'تم استعادة المستخدم بنجاح');
     }
 }

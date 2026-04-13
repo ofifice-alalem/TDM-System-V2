@@ -55,9 +55,23 @@ class CustomerInvoiceController extends Controller
             $query->where('status', $request->status);
         }
 
-        $invoices = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+        $sort = $request->input('sort', 'date_desc');
+        $query->orderBy(
+            match($sort) {
+                'amount_asc', 'amount_desc' => 'total_amount',
+                default => 'created_at',
+            },
+            match($sort) {
+                'amount_asc', 'date_asc' => 'asc',
+                default => 'desc',
+            }
+        );
 
-        return view('sales.invoices.index', compact('invoices'));
+        $invoices = $query->paginate(20)->withQueryString();
+
+        $customers = \App\Models\Customer::where('is_active', true)->orderBy('name')->get(['id', 'name', 'phone']);
+
+        return view('sales.invoices.index', compact('invoices', 'customers'));
     }
 
     public function create()
@@ -74,7 +88,11 @@ class CustomerInvoiceController extends Controller
                 ];
             });
 
-        return view('sales.invoices.create', compact('products'));
+        $customers = Customer::where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'phone']);
+
+        return view('sales.invoices.create', compact('products', 'customers'));
     }
 
     public function searchCustomers(Request $request)

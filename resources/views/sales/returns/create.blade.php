@@ -12,23 +12,23 @@
                 <i data-lucide="arrow-right" class="w-5 h-5"></i>
                 <span class="font-bold">العودة للمرتجعات</span>
             </a>
-            <h1 class="text-4xl font-black text-gray-900 dark:text-white">إضافة مرتجع جديد</h1>
+            <h1 class="text-2xl sm:text-4xl font-black text-gray-900 dark:text-white">إضافة مرتجع جديد</h1>
         </div>
 
-        <form action="{{ route('sales.returns.store') }}" method="POST" class="bg-white dark:bg-dark-card rounded-3xl p-8 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
+        <form action="{{ route('sales.returns.store') }}" method="POST" class="bg-white dark:bg-dark-card rounded-3xl p-4 sm:p-8 shadow-lg shadow-gray-200/60 dark:shadow-none border border-gray-200 dark:border-dark-border">
             @csrf
 
             {{-- Invoice Selection --}}
             <div class="mb-6">
                 <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">اختر الفاتورة</label>
-                <div class="flex gap-2">
+                <div class="flex flex-col sm:flex-row gap-2">
                     <input type="text" 
                            id="invoice-search" 
                            placeholder="ابحث برقم الفاتورة أو اسم العميل..." 
                            class="flex-1 px-4 py-3 bg-white dark:bg-dark-bg border-2 border-gray-200 dark:border-dark-border rounded-xl text-gray-900 dark:text-white focus:border-primary-500 dark:focus:border-primary-500 focus:ring-4 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all">
                     <button type="button" 
                             id="search-btn" 
-                            class="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all flex items-center gap-2">
+                            class="w-full sm:w-auto px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
                         <i data-lucide="search" class="w-5 h-5"></i>
                         بحث
                     </button>
@@ -60,11 +60,11 @@
             </div>
 
             {{-- Submit --}}
-            <div class="flex gap-3">
+            <div class="flex flex-col sm:flex-row gap-3">
                 <button type="submit" id="submit-btn" disabled class="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                     إضافة مرتجع
                 </button>
-                <a href="{{ route('sales.returns.index') }}" class="px-6 py-3 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all">
+                <a href="{{ route('sales.returns.index') }}" class="w-full sm:w-auto text-center px-6 py-3 bg-gray-200 dark:bg-dark-bg hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all">
                     إلغاء
                 </a>
             </div>
@@ -103,7 +103,7 @@
             submitBtn.disabled = true;
 
             try {
-                const response = await fetch(`/sales/returns/search-invoices?q=${encodeURIComponent(query)}`);
+                const response = await fetch(`{{ route('sales.returns.search.invoices') }}?q=${encodeURIComponent(query)}`);
                 const data = await response.json();
                 
                 if (data.invoices.length === 0) {
@@ -148,7 +148,7 @@
             customerIdInput.value = selectedOption.dataset.customerId;
 
             try {
-                const response = await fetch(`/sales/returns/invoice/${invoiceId}/items`);
+                const response = await fetch(`{{ url('sales/returns/invoice') }}/${invoiceId}/items`);
                 const data = await response.json();
                 invoiceItems = data.items;
                 
@@ -174,54 +174,89 @@
                 const itemDiv = document.createElement('div');
                 itemDiv.className = '';
                 itemDiv.innerHTML = `
-                    <div class="bg-gray-50 dark:bg-dark-bg rounded-xl p-4 border border-gray-200 dark:border-dark-border">
-                        <div class="flex items-start justify-between gap-4 mb-3">
-                            <div class="flex-1">
-                                <p class="font-bold text-gray-900 dark:text-white text-lg mb-2">${item.product_name}</p>
-                                <div class="grid grid-cols-2 gap-2 text-sm">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-gray-500 dark:text-gray-400">الكمية الأصلية:</span>
-                                        <span class="font-bold text-gray-900 dark:text-white">${item.quantity}</span>
+                    <div class="bg-white dark:bg-dark-card rounded-2xl p-4 sm:p-5 border-2 border-gray-200 dark:border-dark-border hover:border-primary-300 dark:hover:border-primary-600/50 transition-all shadow-sm hover:shadow-md">
+                        <div class="flex flex-col lg:flex-row items-start justify-between gap-4">
+                            <div class="flex-1 w-full">
+                                <div class="flex items-start gap-3 mb-4">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-50 dark:from-orange-600/20 dark:to-orange-600/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <i data-lucide="package" class="w-6 h-6 text-orange-600 dark:text-orange-400"></i>
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-gray-500 dark:text-gray-400">السعر:</span>
-                                        <span class="font-bold text-gray-900 dark:text-white">${Number(item.unit_price).toLocaleString()} دينار</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-gray-500 dark:text-gray-400">المُرجع سابقاً:</span>
-                                        <span class="font-bold text-red-600 dark:text-red-400">${item.returned_quantity}</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-gray-500 dark:text-gray-400">المتاح للإرجاع:</span>
-                                        <span class="font-bold text-orange-600 dark:text-orange-400">${item.available_quantity}</span>
+                                    <div class="flex-1">
+                                        <h3 class="font-black text-gray-900 dark:text-white text-lg sm:text-xl mb-1">${item.product_name}</h3>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">رقم المنتج: #${item.id}</p>
                                     </div>
                                 </div>
+                                
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3 border border-blue-100 dark:border-blue-800/30">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <i data-lucide="package-check" class="w-4 h-4 text-blue-600 dark:text-blue-400"></i>
+                                            <span class="text-xs text-blue-600 dark:text-blue-400 font-bold">الكمية الأصلية</span>
+                                        </div>
+                                        <p class="text-xl font-black text-blue-700 dark:text-blue-300">${item.quantity}</p>
+                                    </div>
+                                    
+                                    <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-3 border border-green-100 dark:border-green-800/30">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <i data-lucide="banknote" class="w-4 h-4 text-green-600 dark:text-green-400"></i>
+                                            <span class="text-xs text-green-600 dark:text-green-400 font-bold">السعر</span>
+                                        </div>
+                                        <p class="text-xl font-black text-green-700 dark:text-green-300">${Number(item.unit_price).toLocaleString()}<span class="text-sm mr-1">د</span></p>
+                                    </div>
+                                    
+                                    <div class="bg-red-50 dark:bg-red-900/20 rounded-xl p-3 border border-red-100 dark:border-red-800/30">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <i data-lucide="package-x" class="w-4 h-4 text-red-600 dark:text-red-400"></i>
+                                            <span class="text-xs text-red-600 dark:text-red-400 font-bold">المُرجع سابقاً</span>
+                                        </div>
+                                        <p class="text-xl font-black text-red-700 dark:text-red-300">${item.returned_quantity}</p>
+                                    </div>
+                                    
+                                    <div class="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-3 border border-orange-100 dark:border-orange-800/30">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <i data-lucide="package-open" class="w-4 h-4 text-orange-600 dark:text-orange-400"></i>
+                                            <span class="text-xs text-orange-600 dark:text-orange-400 font-bold">المتاح للإرجاع</span>
+                                        </div>
+                                        <p class="text-xl font-black text-orange-700 dark:text-orange-300">${item.available_quantity}</p>
+                                    </div>
+                                </div>
+                                
                                 ${item.previous_returns.length > 0 ? `
-                                    <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">مرتجعات سابقة:</p>
+                                    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i data-lucide="history" class="w-4 h-4 text-gray-500 dark:text-gray-400"></i>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400 font-bold">مرتجعات سابقة:</p>
+                                        </div>
                                         <div class="flex flex-wrap gap-2">
-                                            ${item.previous_returns.map(r => `<a href="/sales/returns/${r.id}" target="_blank" class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
-                                                <i data-lucide="external-link" class="w-3 h-3"></i>
+                                            ${item.previous_returns.map(r => `<a href="/sales/returns/${r.id}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all border border-blue-200 dark:border-blue-800/30">
+                                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
                                                 ${r.number}
                                             </a>`).join('')}
                                         </div>
                                     </div>
                                 ` : ''}
                             </div>
-                            <div class="flex items-center gap-3">
-                                <input type="checkbox" 
-                                       id="item-check-${index}" 
-                                       class="item-checkbox w-5 h-5 text-primary-600 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500 dark:focus:ring-primary-600" 
-                                       data-index="${index}">
-                                <input type="number" 
-                                       id="item-qty-${index}" 
-                                       class="item-quantity w-24 px-3 py-2.5 border-2 border-gray-200 dark:border-dark-border rounded-lg text-center font-bold bg-white dark:bg-dark-bg text-gray-900 dark:text-white" 
-                                       min="1" 
-                                       max="${item.available_quantity}" 
-                                       value="1" 
-                                       disabled 
-                                       data-index="${index}" 
-                                       data-price="${item.unit_price}">
+                            
+                            <div class="flex lg:flex-col items-center gap-3 w-full lg:w-auto bg-gray-50 dark:bg-dark-bg rounded-xl p-3 border border-gray-200 dark:border-dark-border">
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" 
+                                           id="item-check-${index}" 
+                                           class="item-checkbox w-6 h-6 text-primary-600 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 cursor-pointer transition-all" 
+                                           data-index="${index}">
+                                    <label for="item-check-${index}" class="text-sm font-bold text-gray-700 dark:text-gray-300 cursor-pointer lg:hidden">تحديد</label>
+                                </div>
+                                <div class="flex-1 lg:flex-none w-full lg:w-auto">
+                                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5 text-center">الكمية</label>
+                                    <input type="number" 
+                                           id="item-qty-${index}" 
+                                           class="item-quantity w-full lg:w-28 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-center text-lg font-black bg-white dark:bg-dark-card text-gray-900 dark:text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-500/20 transition-all" 
+                                           min="1" 
+                                           max="${item.available_quantity}" 
+                                           value="1" 
+                                           disabled 
+                                           data-index="${index}" 
+                                           data-price="${item.unit_price}">
+                                </div>
                                 <input type="hidden" name="items[${index}][invoice_item_id]" value="${item.id}" disabled id="hidden-${index}">
                                 <input type="hidden" name="items[${index}][quantity]" value="1" disabled id="hidden-qty-${index}">
                             </div>

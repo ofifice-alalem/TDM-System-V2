@@ -15,6 +15,14 @@ class DatabaseSeeder extends Seeder
             ['id' => 1, 'name' => 'admin', 'display_name' => 'مدير النظام', 'description' => 'صلاحيات كاملة', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['id' => 2, 'name' => 'warehouse_keeper', 'display_name' => 'أمين المخزن', 'description' => 'إدارة المخزون', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['id' => 3, 'name' => 'marketer', 'display_name' => 'مسوق', 'description' => 'البيع والتوزيع', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 4, 'name' => 'sales', 'display_name' => 'مبيعات', 'description' => 'المبيعات المباشرة', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 5, 'name' => 'super_admin', 'display_name' => 'Super Admin', 'description' => 'إدارة الميزات', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        // System user (id=0) — used for old debt invoices
+        DB::statement('SET SESSION sql_mode="NO_AUTO_VALUE_ON_ZERO"');
+        DB::table('users')->insert([
+            ['id' => 0, 'username' => 'system', 'password_hash' => 'N/A', 'full_name' => 'النظام', 'role_id' => 3, 'is_active' => false, 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         // Users
@@ -23,7 +31,10 @@ class DatabaseSeeder extends Seeder
             ['username' => 'keeper1', 'password_hash' => Hash::make('password'), 'full_name' => 'أحمد أمين المخزن', 'role_id' => 2, 'commission_rate' => null, 'phone' => '0500000001', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['username' => 'marketer1', 'password_hash' => Hash::make('password'), 'full_name' => 'محمد المسوق', 'role_id' => 3, 'commission_rate' => 5.00, 'phone' => '0500000002', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['username' => 'marketer2', 'password_hash' => Hash::make('password'), 'full_name' => 'خالد المسوق', 'role_id' => 3, 'commission_rate' => 3.50, 'phone' => '0500000003', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['username' => 'superadmin', 'password_hash' => Hash::make('password'), 'full_name' => 'Super Admin', 'role_id' => 5, 'commission_rate' => null, 'phone' => null, 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
         ]);
+
+        $this->call(FeatureSeeder::class);
 
         // Products
         DB::table('products')->insert([

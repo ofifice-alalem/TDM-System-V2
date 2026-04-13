@@ -91,7 +91,6 @@ class CustomerInvoiceService
     {
         return DB::transaction(function () use ($invoiceId, $salesUserId, $cancelNotes) {
             $invoice = CustomerInvoice::where('id', $invoiceId)
-                ->where('sales_user_id', $salesUserId)
                 ->where('status', 'completed')
                 ->firstOrFail();
 

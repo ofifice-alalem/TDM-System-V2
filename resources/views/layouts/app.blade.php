@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title') - TDM System</title>
     
     {{-- Include Premium Theme & Tailwind --}}
@@ -35,29 +36,27 @@
 </head>
 <body class="bg-[#f1f5f9] dark:bg-[#0b1121] font-sans antialiased text-gray-900 dark:text-gray-100 transition-colors duration-300 overflow-x-hidden">
 
+    @php
+        $features = \App\Models\Feature::all()->keyBy('key')->map(fn($f) => $f->isCurrentlyEnabled());
+    @endphp
+
     {{-- SIDEBAR --}}
     <aside id="sidebar" class="fixed top-0 right-0 h-screen w-80 lg:w-72 bg-white dark:bg-[#151f32] border-l border-gray-100 dark:border-[#2a354c] z-50 flex flex-col transition-transform duration-300 translate-x-full lg:translate-x-0 shadow-sm dark:shadow-none">
         
         {{-- Logo Section --}}
-        <div class="h-28 flex items-center justify-between px-8 border-b border-gray-50 dark:border-dark-border">
-            <div class="flex items-center gap-4 group cursor-pointer">
-                <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 dark:from-accent-500 dark:to-accent-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-200/50 dark:shadow-accent-500/20 transform group-hover:rotate-6 transition-all duration-300">
-                    <i data-lucide="zap" class="w-6 h-6 fill-current"></i>
-                </div>
-                <div>
-                    <h1 class="font-black text-2xl text-gray-900 dark:text-white tracking-tight leading-none group-hover:text-amber-600 dark:group-hover:text-accent-400 transition-colors">تقنية</h1>
-                    <span class="text-[0.65rem] text-gray-400 dark:text-dark-muted font-bold tracking-[0.2em] uppercase mt-1 block">Distribution Sys</span>
-                </div>
-            </div>
-            <button id="sidebar-close-btn" class="lg:hidden w-10 h-10 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-border transition-colors">
+        <div class="h-28 flex flex-col items-center justify-center px-8 border-b border-gray-50 dark:border-dark-border">
+            <img src="/logo.png" alt="Logo" class="object-contain" style="width: 150px;">
+            <p class="text-[0.7rem] font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500 mt-2 tracking-wider uppercase" style="font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif; letter-spacing: 0.1em;">Taqnia Distribution Manager</p>
+            <button id="sidebar-close-btn" class="lg:hidden absolute left-8 w-10 h-10 bg-gray-100 dark:bg-dark-bg rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-border transition-colors">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
 
         {{-- Navigation Links --}}
-        <nav class="flex-1 overflow-y-auto sidebar-scroll py-8 px-5 space-y-2">
+        <nav class="flex-1 overflow-y-auto sidebar-scroll py-4 px-5 space-y-2">
             
-            {{-- Dashboard --}}
+            {{-- Dashboard - Not for admin and sales --}}
+            @if(!request()->routeIs('admin.*') && !request()->routeIs('sales.*'))
             <a href="{{ url('/dashboard') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->is('dashboard') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                 <i data-lucide="layout-dashboard" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->is('dashboard') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
                 <span>لوحة التحكم</span>
@@ -65,6 +64,7 @@
                     <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
                 @endif
             </a>
+            @endif
 
             @if(request()->routeIs('marketer.*'))
                 @if(Route::has('marketer.stock.index'))
@@ -76,6 +76,14 @@
                     @endif
                 </a>
                 @endif
+
+                <a href="{{ route('marketer.stores.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('marketer.stores.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="store" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.stores.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>المتاجر</span>
+                    @if(request()->routeIs('marketer.stores.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
 
                 {{-- Divider --}}
                 <div class="pt-6 pb-2 px-5">
@@ -178,6 +186,13 @@
                     <i data-lucide="warehouse" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.main-stock.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
                     <span>المخزن الرئيسي</span>
                     @if(request()->routeIs('marketer.main-stock.*'))
+                        <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                    @endif
+                </a>
+                <a href="{{ route('marketer.statistics.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('marketer.statistics.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="bar-chart-3" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('marketer.statistics.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>إحصائياتي</span>
+                    @if(request()->routeIs('marketer.statistics.*'))
                         <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
                     @endif
                 </a>
@@ -343,6 +358,50 @@
                     @endif
                 </a>
 
+                {{-- Old Debts Dropdown --}}
+                @php $oldDebtActive = request()->routeIs('admin.old-debts.*') || request()->routeIs('admin.old-customer-debts.*'); @endphp
+                <div x-data="{ open: {{ $oldDebtActive ? 'true' : 'false' }} }">
+                    <button @click="open = !open" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ $oldDebtActive ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                        <i data-lucide="history" class="w-[1.35rem] h-[1.35rem] transition-colors {{ $oldDebtActive ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                        <span>الديون السابقة</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 mr-auto transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <div x-show="open" x-cloak class="mt-1 mr-4 space-y-1 border-r-2 border-gray-100 dark:border-dark-border pr-2">
+                        <a href="{{ route('admin.old-debts.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.old-debts.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                            <i data-lucide="store" class="w-4 h-4"></i>
+                            <span>ديون المتاجر</span>
+                            @if(request()->routeIs('admin.old-debts.*'))
+                                <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                            @endif
+                        </a>
+                        <a href="{{ route('admin.old-customer-debts.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.old-customer-debts.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                            <span>ديون العملاء</span>
+                            @if(request()->routeIs('admin.old-customer-debts.*'))
+                                <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                            @endif
+                        </a>
+                        @if(($features['admin.customer-merge'] ?? true))
+                        <a href="{{ route('admin.customer-merge.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.customer-merge.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                            <i data-lucide="git-merge" class="w-4 h-4"></i>
+                            <span>دمج العملاء</span>
+                            @if(request()->routeIs('admin.customer-merge.*'))
+                                <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                            @endif
+                        </a>
+                        @endif
+                        @if(($features['admin.store-merge'] ?? true))
+                        <a href="{{ route('admin.store-merge.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200 text-sm {{ request()->routeIs('admin.store-merge.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                            <i data-lucide="git-merge" class="w-4 h-4"></i>
+                            <span>دمج المتاجر</span>
+                            @if(request()->routeIs('admin.store-merge.*'))
+                                <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
+                            @endif
+                        </a>
+                        @endif
+                    </div>
+                </div>
+
                 @if(Route::has('admin.promotions.index'))
                 <a href="{{ route('admin.promotions.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('admin.promotions.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                     <i data-lucide="gift" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('admin.promotions.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
@@ -359,9 +418,6 @@
                 <div class="h-px bg-gradient-to-r from-transparent via-gray-100 to-transparent"></div>
             </div>
 
-            {{-- Placeholder Links --}}
-            <div class="px-5 text-[0.65rem] font-black text-gray-300 uppercase tracking-widest mb-1">أخرى</div>
-            
             {{-- Users Link - Admin only --}}
             @if(request()->routeIs('admin.*'))
             <a href="{{ route('admin.users.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('admin.users.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
@@ -380,28 +436,56 @@
                 @endif
             </a>
 
-            <a href="{{ route('admin.statistics.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('admin.statistics.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
-                <i data-lucide="bar-chart-3" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('admin.statistics.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
-                <span>الإحصائيات</span>
-                @if(request()->routeIs('admin.statistics.*'))
-                    <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
-                @endif
-            </a>
+            <div x-data="{ open: {{ request()->routeIs('admin.statistics.*') || request()->routeIs('admin.customer-statistics.*') || request()->routeIs('admin.combined-summary.*') || request()->routeIs('admin.products-pricing.*') || request()->routeIs('admin.staff-pricing.*') ? 'true' : 'false' }} }">
+                <button @click="open = !open" class="w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('admin.statistics.*') || request()->routeIs('admin.customer-statistics.*') || request()->routeIs('admin.combined-summary.*') || request()->routeIs('admin.products-pricing.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                    <i data-lucide="bar-chart-3" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('admin.statistics.*') || request()->routeIs('admin.customer-statistics.*') || request()->routeIs('admin.combined-summary.*') || request()->routeIs('admin.products-pricing.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
+                    <span>الإحصائيات</span>
+                    <i data-lucide="chevron-down" class="w-4 h-4 mr-auto transition-transform" :class="open ? 'rotate-180' : ''"></i>
+                </button>
+                <div x-show="open" x-collapse class="mt-1 mr-4 space-y-1">
+                    <a href="{{ route('admin.statistics.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.statistics.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                        <i data-lucide="store" class="w-4 h-4"></i>
+                        <span>المتاجر</span>
+                    </a>
+                    <a href="{{ route('admin.customer-statistics.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.customer-statistics.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span>العملاء</span>
+                    </a>
+                    @if(($features['admin.combined-summary'] ?? true))
+                    <a href="{{ route('admin.combined-summary.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.combined-summary.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                        <i data-lucide="layout-list" class="w-4 h-4"></i>
+                        <span>الملخص الشامل</span>
+                        @if(request()->routeIs('admin.combined-summary.*'))<div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>@endif
+                    </a>
+                    @endif
+                    @if(($features['admin.products-pricing'] ?? true))
+                    <a href="{{ route('admin.products-pricing.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.products-pricing.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                        <i data-lucide="tag" class="w-4 h-4"></i>
+                        <span>تسعير المنتجات</span>
+                        @if(request()->routeIs('admin.products-pricing.*'))<div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>@endif
+                    </a>
+                    @endif
+                    @if(($features['admin.staff-pricing'] ?? true))
+                    <a href="{{ route('admin.staff-pricing.index') }}" class="flex items-center gap-3 px-5 py-3 rounded-xl font-bold transition-all text-sm {{ request()->routeIs('admin.staff-pricing.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+                        <i data-lucide="user-check" class="w-4 h-4"></i>
+                        <span>معدل الموظفين</span>
+                        @if(request()->routeIs('admin.staff-pricing.*'))<div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>@endif
+                    </a>
+                    @endif
+                </div>
+            </div>
             @endif
             
-            {{-- Stores Link - Available for all users --}}
-            <a href="{{ request()->routeIs('marketer.*') ? route('marketer.stores.index') : (request()->routeIs('warehouse.*') ? route('warehouse.stores.index') : route('admin.stores.index')) }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('*.stores.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
+            {{-- Stores Link - Available for warehouse and admin only --}}
+            @if(!request()->routeIs('marketer.*') && !request()->routeIs('sales.*'))
+            <a href="{{ request()->routeIs('warehouse.*') ? route('warehouse.stores.index') : route('admin.stores.index') }}" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold transition-all duration-300 group {{ request()->routeIs('*.stores.*') ? 'bg-amber-50 dark:bg-accent-500/10 text-amber-700 dark:text-accent-400 shadow-sm ring-1 ring-amber-100 dark:ring-accent-500/20' : 'text-gray-500 dark:text-dark-muted hover:bg-gray-50 dark:hover:bg-dark-bg hover:text-gray-900 dark:hover:text-white' }}">
                 <i data-lucide="store" class="w-[1.35rem] h-[1.35rem] transition-colors {{ request()->routeIs('*.stores.*') ? 'text-amber-600 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white' }}"></i>
                 <span>المتاجر</span>
                 @if(request()->routeIs('*.stores.*'))
                     <div class="mr-auto w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-accent-400 shadow-[0_0_10px_currentColor]"></div>
                 @endif
             </a>
-            
-            <a href="#" class="flex items-center gap-4 px-5 py-4 rounded-2xl font-bold text-gray-400 transition-all opacity-60 cursor-not-allowed hover:bg-gray-50">
-                <i data-lucide="settings" class="w-[1.35rem] h-[1.35rem]"></i>
-                <span>الإعدادات</span>
-            </a>
+            @endif
            
         </nav>
 
@@ -463,7 +547,7 @@
         </header>
 
         {{-- CONTENT --}}
-        <main class="flex-1 px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+        <main class="flex-1 px-2 sm:px-6 lg:px-8 py-8 animate-fade-in">
             @if(session('success'))
                 <div class="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 rounded-2xl flex items-center transform transition-all hover:scale-[1.01] shadow-sm">
                     <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 ml-4 shrink-0 shadow-sm">
@@ -497,6 +581,8 @@
     <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40 hidden transition-opacity" id="mobile-overlay"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>axios.defaults.headers.common['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]')?.content;</script>
     <script>
         // Theme Toggle Logic
         const themeToggleBtn = document.getElementById('theme-toggle');
@@ -542,6 +628,22 @@
             mobileOverlay.classList.add('hidden');
             document.body.classList.remove('overflow-hidden');
         });
+    </script>
+    
+    <script>
+        // Prevent 419 error after session expiry
+        if (performance.navigation.type === 2 || document.referrer.includes('/login')) {
+            // Page loaded from back/forward or after login - reload to get fresh CSRF
+            if (sessionStorage.getItem('needsReload') === 'true') {
+                sessionStorage.removeItem('needsReload');
+                window.location.reload(true);
+            }
+        }
+        
+        // Mark for reload on next visit if coming from login
+        if (window.location.pathname !== '/login' && document.referrer.includes('/login')) {
+            sessionStorage.setItem('needsReload', 'true');
+        }
     </script>
     @stack('scripts')
 </body>

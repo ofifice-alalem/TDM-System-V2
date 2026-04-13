@@ -1,0 +1,561 @@
+================================================================================
+                    المسارات والـControllers - بيع بضاعة للمتجر
+                              (البنية المشتركة المثالية)
+================================================================================
+
+📋 نظرة عامة:
+--------------
+هذا الملف يوثق البنية المثالية للمسارات والـControllers باستخدام نهج مشترك
+لتقليل التكرار مع الحفاظ على الأمان والوضوح.
+
+✅ فلسفة التصميم:
+- Controller واحد مشترك
+- Policies للتحكم بالصلاحيات
+- Middleware للمصادقة فقط
+- Views مشتركة
+
+================================================================================
+                        🛣️ المسارات (Routes)
+================================================================================
+
+📁 الملف: routes/web.php
+🔒 Middleware: ['auth']
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ المسارات المشتركة                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Route::middleware('auth')->group(function () {
+    
+    // Resource Routes
+    Route::resource('sales-invoices', SalesInvoiceController::class)
+        ->except(['edit', 'update', 'destroy']);
+    
+    // Custom Actions
+    Route::post('sales-invoices/{invoice}/approve', [SalesInvoiceController::class, 'approve'])
+        ->name('sales-invoices.approve')
+        ->can('approve', 'invoice');
+    
+    Route::post('sales-invoices/{invoice}/cancel', [SalesInvoiceController::class, 'cancel'])
+        ->name('sales-invoices.cancel')
+        ->can('cancel', 'invoice');
+    
+    // Additional Routes
+    Route::get('sales-invoices/{invoice}/pdf', [SalesInvoiceController::class, 'pdf'])
+        ->name('sales-invoices.pdf');
+    
+    Route::get('sales-invoices/{invoice}/documentation', [SalesInvoiceController::class, 'viewDocumentation'])
+        ->name('sales-invoices.documentation');
+});
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ جدول المسارات                                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+GET     /sales-invoices
+        الاسم: sales-invoices.index
+        الصلاحية: @can('viewAny', SalesInvoice::class)
+        الغرض: عرض قائمة فواتير البيع (حسب الدور)
+
+GET     /sales-invoices/create
+        الاسم: sales-invoices.create
+        الصلاحية: @can('create', SalesInvoice::class)
+        الغرض: عرض صفحة إنشاء فاتورة (للمسوق فقط)
+
+POST    /sales-invoices
+        الاسم: sales-invoices.store
+        الصلاحية: @can('create', SalesInvoice::class)
+        الغرض: حفظ فاتورة جديدة
+
+GET     /sales-invoices/{invoice}
+        الاسم: sales-invoices.show
+        الصلاحية: @can('view', $invoice)
+        الغرض: عرض تفاصيل فاتورة معينة
+
+POST    /sales-invoices/{invoice}/approve
+        الاسم: sales-invoices.approve
+        الصلاحية: @can('approve', $invoice)
+        الغرض: توثيق فاتورة (لأمين المخزن)
+
+POST    /sales-invoices/{invoice}/cancel
+        الاسم: sales-invoices.cancel
+        الصلاحية: @can('cancel', $invoice)
+        الغرض: إلغاء فاتورة (للمسوق)
+
+GET     /sales-invoices/{invoice}/pdf
+        الاسم: sales-invoices.pdf
+        الصلاحية: @can('view', $invoice)
+        الغرض: طباعة PDF
+
+GET     /sales-invoices/{invoice}/documentation
+        الاسم: sales-invoices.documentation
+        الصلاحية: @can('view', $invoice)
+        الغرض: عرض صورة الفاتورة المختومة
+
+
+================================================================================
+                        🎮 Controller
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ SalesInvoiceController (مشترك)                                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Controllers/SalesInvoiceController.php
+🎯 المسؤولية: إدارة جميع عمليات فواتير البيع لجميع الأدوار
+
+📋 الـMethods:
+
+1️⃣ index(Request $request)
+   - الغرض: عرض قائمة فواتير البيع حسب صلاحيات المستخدم
+   - الصلاحية: $this->authorize('viewAny', SalesInvoice::class)
+   - المعاملات:
+     • status (optional): الفلترة حسب الحالة
+     • marketer_id (optional): الفلترة حسب المسوق (لأمين المخزن)
+     • store_id (optional): الفلترة حسب المتجر
+     • invoice_number (optional): البحث برقم الفاتورة
+     • from_date, to_date (optional): الفلترة حسب التاريخ
+   
+   - المنطق:
+     ```php
+     $query = SalesInvoice::with('items.product', 'marketer', 'store');
+     
+     // الفرق الوحيد بين الأدوار
+     if (auth()->user()->isMarketer()) {
+         $query->where('marketer_id', auth()->id());
+     }
+     
+     // باقي الفلاتر مشتركة
+     $this->applyFilters($query, $request);
+     
+     // البيانات الإضافية
+     $marketers = auth()->user()->isWarehouse() 
+         ? User::where('role_id', 3)->where('is_active', true)->get() 
+         : null;
+     
+     $stores = Store::where('is_active', true)->get();
+     
+     return view('shared.sales-invoices.index', [
+         'invoices' => $query->paginate(20),
+         'marketers' => $marketers,
+         'stores' => $stores
+     ]);
+     ```
+   
+   - الـView: shared/sales-invoices/index.blade.php
+
+2️⃣ create()
+   - الغرض: عرض صفحة إنشاء فاتورة بيع جديدة
+   - الصلاحية: $this->authorize('create', SalesInvoice::class)
+   - البيانات المرسلة:
+     • stores: المتاجر النشطة
+     • products: المنتجات في مخزون المسوق الفعلي
+     • promotions: العروض الترويجية النشطة
+     • discountTiers: خصومات الفواتير
+     ```php
+     $products = Product::whereHas('marketerActualStock', function($q) {
+             $q->where('marketer_id', auth()->id())
+               ->where('quantity', '>', 0);
+         })
+         ->with(['marketerActualStock' => function($q) {
+             $q->where('marketer_id', auth()->id());
+         }])
+         ->get();
+     
+     $promotions = ProductPromotion::where('is_active', true)
+         ->where('start_date', '<=', now())
+         ->where('end_date', '>=', now())
+         ->get();
+     
+     $discountTiers = InvoiceDiscountTier::orderBy('min_amount')->get();
+     ```
+   - الـView: marketer/sales-invoices/create.blade.php
+
+3️⃣ store(StoreSalesInvoiceRequest $request)
+   - الغرض: حفظ فاتورة بيع جديدة
+   - الـForm Request: StoreSalesInvoiceRequest
+   - الـService: SalesInvoiceService::createInvoice()
+   - الإرجاع: redirect()->route('sales-invoices.show', $invoice)
+
+4️⃣ show(SalesInvoice $invoice)
+   - الغرض: عرض تفاصيل فاتورة معينة
+   - الصلاحية: $this->authorize('view', $invoice)
+   - الـEager Loading: items.product.promotion, marketer, store, keeper
+   - الـView: shared/sales-invoices/show.blade.php
+
+5️⃣ approve(ApproveSalesInvoiceRequest $request, SalesInvoice $invoice)
+   - الغرض: توثيق فاتورة بيع معلقة
+   - الـForm Request: ApproveSalesInvoiceRequest
+   - رفع الملف:
+     ```php
+     $path = $request->file('stamped_invoice_image')
+         ->store('sales_invoices', 'public');
+     ```
+   - الـService: SalesInvoiceService::approveInvoice($invoice->id, auth()->id(), $path)
+   - الإرجاع: redirect()->back()->with('success', 'تم توثيق الفاتورة بنجاح')
+
+6️⃣ cancel(SalesInvoice $invoice)
+   - الغرض: إلغاء فاتورة بيع معلقة
+   - الصلاحية: $this->authorize('cancel', $invoice)
+   - الـService: SalesInvoiceService::cancelInvoice($invoice->id)
+   - الإرجاع: redirect()->route('sales-invoices.index')->with('success', 'تم إلغاء الفاتورة بنجاح')
+
+7️⃣ pdf(SalesInvoice $invoice)
+   - الغرض: طباعة PDF للفاتورة
+   - الصلاحية: $this->authorize('view', $invoice)
+   - الـService: InvoiceService::generateSalesInvoicePdf($invoice)
+   - الإرجاع: PDF file
+
+8️⃣ viewDocumentation(SalesInvoice $invoice)
+   - الغرض: عرض صورة الفاتورة المختومة
+   - الصلاحية: $this->authorize('view', $invoice)
+   - التحقق:
+     • status === 'approved'
+     • stamped_invoice_image exists
+   - الإرجاع: response()->file(storage_path('app/public/' . $invoice->stamped_invoice_image))
+
+9️⃣ applyFilters($query, $request) - private
+   - الغرض: تطبيق الفلاتر المشتركة
+   - المنطق:
+     ```php
+     if ($request->filled('invoice_number')) {
+         $query->where('invoice_number', 'like', '%' . $request->invoice_number . '%');
+     }
+     
+     if ($request->filled('status')) {
+         $query->where('status', $request->status);
+     }
+     
+     if ($request->filled('marketer_id') && auth()->user()->isWarehouse()) {
+         $query->where('marketer_id', $request->marketer_id);
+     }
+     
+     if ($request->filled('store_id')) {
+         $query->where('store_id', $request->store_id);
+     }
+     
+     if ($request->filled('from_date')) {
+         $query->whereDate('created_at', '>=', $request->from_date);
+     }
+     
+     if ($request->filled('to_date')) {
+         $query->whereDate('created_at', '<=', $request->to_date);
+     }
+     
+     // الترتيب
+     if ($request->status === 'pending') {
+         $query->oldest('created_at');
+     } else {
+         $query->latest('created_at');
+     }
+     ```
+
+
+================================================================================
+                        ⚙️ Service
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ SalesInvoiceService (مشترك)                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Services/SalesInvoiceService.php
+🎯 المسؤولية: منطق الأعمال لجميع عمليات فواتير البيع
+
+📋 الـMethods:
+
+1️⃣ createInvoice($marketerId, $storeId, array $items, $notes = null)
+   - الغرض: إنشاء فاتورة بيع جديدة
+   - التحقق: الكمية لا تتجاوز marketer_actual_stock
+   - الخطوات:
+     1. حساب العروض الترويجية
+     2. حساب الخصومات
+     3. إنشاء سجل في sales_invoices
+     4. إنشاء سجلات في sales_invoice_items
+     5. خصم من marketer_actual_stock
+     6. إضافة إلى store_pending_stock
+     7. إرسال إشعار لأمناء المخزن
+   - الإرجاع: SalesInvoice
+   - الـTransaction: DB::transaction()
+
+2️⃣ approveInvoice($invoiceId, $keeperId, $stampedImage)
+   - الغرض: توثيق فاتورة بيع معلقة
+   - التحقق: status === 'pending'
+   - الخطوات:
+     1. moveStockToActual()
+     2. recordDebt()
+     3. recordCommission()
+     4. تحديث sales_invoices
+     5. إرسال إشعار للمسوق
+   - الإرجاع: SalesInvoice
+   - الـTransaction: DB::transaction()
+
+3️⃣ cancelInvoice($invoiceId)
+   - الغرض: إلغاء فاتورة بيع معلقة
+   - التحقق: status === 'pending'
+   - الخطوات:
+     1. returnStockToMarketer()
+     2. تحديث sales_invoices
+   - الإرجاع: SalesInvoice
+   - الـTransaction: DB::transaction()
+
+4️⃣ calculatePromotions(array $items) - private
+   - الغرض: حساب الكميات المجانية من العروض
+   - الإرجاع: array with free quantities
+
+5️⃣ calculateDiscounts($subtotal) - private
+   - الغرض: حساب خصم الفاتورة التلقائي
+   - الإرجاع: array with discount details
+
+6️⃣ moveStockToActual($invoice) - private
+   - الغرض: نقل من مخزون مرحلي إلى فعلي
+   - الخطوات:
+     • delete from store_pending_stock
+     • increment store_actual_stock
+
+7️⃣ returnStockToMarketer($invoice) - private
+   - الغرض: إرجاع من مخزون مرحلي إلى المسوق
+   - الخطوات:
+     • delete from store_pending_stock
+     • increment marketer_actual_stock
+
+8️⃣ recordDebt($invoice) - private
+   - الغرض: تسجيل الدين على المتجر
+   - الخطوات:
+     • insert into store_debt_ledger
+
+9️⃣ recordCommission($invoice) - private
+   - الغرض: تسجيل عمولة المسوق
+   - الخطوات:
+     • calculate commission
+     • insert into marketer_commissions
+
+
+================================================================================
+                        🔐 Policy
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ SalesInvoicePolicy                                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Policies/SalesInvoicePolicy.php
+🎯 المسؤولية: التحكم بالصلاحيات لجميع الأدوار
+
+📋 الـMethods:
+
+viewAny(User $user): bool
+   - الجميع يمكنهم رؤية القائمة
+   - return true;
+
+viewAll(User $user): bool
+   - أمين المخزن فقط يرى جميع الفواتير
+   - return $user->role_id === 2;
+
+view(User $user, SalesInvoice $invoice): bool
+   - المسوق يرى فواتيره فقط
+   - أمين المخزن يرى الكل
+   - return $user->role_id === 2 || $user->id === $invoice->marketer_id;
+
+create(User $user): bool
+   - المسوق فقط ينشئ فواتير
+   - return $user->role_id === 3;
+
+approve(User $user, SalesInvoice $invoice): bool
+   - أمين المخزن فقط + الحالة pending
+   - return $user->role_id === 2 && $invoice->status === InvoiceStatus::PENDING;
+
+cancel(User $user, SalesInvoice $invoice): bool
+   - المسوق صاحب الفاتورة فقط + الحالة pending
+   - return $user->id === $invoice->marketer_id 
+       && $invoice->status === InvoiceStatus::PENDING;
+
+
+================================================================================
+                        📦 Models & Enums
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ InvoiceStatus Enum                                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Enums/InvoiceStatus.php
+
+```php
+enum InvoiceStatus: string
+{
+    case PENDING = 'pending';
+    case APPROVED = 'approved';
+    case CANCELLED = 'cancelled';
+    
+    public function label(): string
+    {
+        return match($this) {
+            self::PENDING => 'معلق',
+            self::APPROVED => 'موثق',
+            self::CANCELLED => 'ملغي',
+        };
+    }
+    
+    public function color(): string
+    {
+        return match($this) {
+            self::PENDING => 'orange',
+            self::APPROVED => 'green',
+            self::CANCELLED => 'gray',
+        };
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ SalesInvoice Model                                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Models/SalesInvoice.php
+
+📋 الـCasts:
+```php
+protected $casts = [
+    'status' => InvoiceStatus::class,
+    'total_amount' => 'decimal:2',
+    'subtotal' => 'decimal:2',
+    'product_discount' => 'decimal:2',
+    'invoice_discount_value' => 'decimal:2',
+    'invoice_discount_amount' => 'decimal:2',
+    'confirmed_at' => 'datetime',
+];
+```
+
+📋 الـRelationships:
+- marketer(): belongsTo(User::class, 'marketer_id')
+- store(): belongsTo(Store::class)
+- keeper(): belongsTo(User::class, 'keeper_id')
+- items(): hasMany(SalesInvoiceItem::class, 'invoice_id')
+- debtLedger(): hasOne(StoreDebtLedger::class, 'sales_invoice_id')
+- commission(): hasOne(MarketerCommission::class, 'sales_invoice_id')
+
+
+================================================================================
+                        📝 Form Requests
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1️⃣ StoreSalesInvoiceRequest                                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/StoreSalesInvoiceRequest.php
+
+```php
+class StoreSalesInvoiceRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('create', SalesInvoice::class);
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'store_id' => 'required|exists:stores,id',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'notes' => 'nullable|string|max:1000',
+        ];
+    }
+    
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            foreach ($this->items as $index => $item) {
+                $stock = MarketerActualStock::where('marketer_id', $this->user()->id)
+                    ->where('product_id', $item['product_id'])
+                    ->value('quantity') ?? 0;
+                    
+                if ($item['quantity'] > $stock) {
+                    $validator->errors()->add(
+                        "items.{$index}.quantity",
+                        'الكمية أكبر من المتاح في مخزونك'
+                    );
+                }
+            }
+        });
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'store_id.required' => 'يجب اختيار متجر',
+            'items.required' => 'يجب اختيار منتج واحد على الأقل',
+        ];
+    }
+}
+```
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2️⃣ ApproveSalesInvoiceRequest                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+📁 المسار: app/Http/Requests/ApproveSalesInvoiceRequest.php
+
+```php
+class ApproveSalesInvoiceRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('approve', $this->route('invoice'));
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'stamped_invoice_image' => 'required|image|mimes:jpg,jpeg,png,pdf|max:5120',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'stamped_invoice_image.required' => 'يجب رفع صورة الفاتورة المختومة',
+            'stamped_invoice_image.max' => 'حجم الملف يجب ألا يتجاوز 5MB',
+        ];
+    }
+}
+```
+
+
+================================================================================
+                        📝 Validation Rules
+================================================================================
+
+إنشاء فاتورة (store):
+- store_id: required|exists:stores,id
+- items: required|array|min:1
+- items.*.product_id: required|exists:products,id
+- items.*.quantity: required|integer|min:1
+- notes: nullable|string
+
+توثيق (approve):
+- stamped_invoice_image: required|image|mimes:jpg,jpeg,png,pdf|max:5120
+
+
+================================================================================
+                        ✅ مزايا البنية المشتركة
+================================================================================
+
+1. ✅ Controller واحد بدلاً من اثنين
+2. ✅ لا تكرار في الكود (DRY)
+3. ✅ Policies واضحة ومركزية
+4. ✅ صيانة أسهل
+5. ✅ Views مشتركة
+6. ✅ Routes أقل وأوضح
+7. ✅ سهولة إضافة أدوار جديدة
+
+
+================================================================================
+انتهى التوثيق
+================================================================================

@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\ProductPromotionController;
 use App\Http\Controllers\Admin\AdminWithdrawalController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Shared\MainStockController;
+use App\Http\Controllers\Admin\OldDebtController;
+use App\Http\Controllers\Admin\OldCustomerDebtController;
 
 Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     
@@ -16,6 +18,9 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
         Route::post('/', [\App\Http\Controllers\Admin\UserController::class, 'store'])->name('store');
         Route::get('/{user}/edit', [\App\Http\Controllers\Admin\UserController::class, 'edit'])->name('edit');
         Route::patch('/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])->name('update');
+        Route::delete('/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/restore', [\App\Http\Controllers\Admin\UserController::class, 'restore'])->name('restore');
+        Route::delete('/{id}/force', [\App\Http\Controllers\Admin\UserController::class, 'forceDestroy'])->name('force-destroy');
         Route::get('/{user}/details', [\App\Http\Controllers\Admin\MarketerDetailsController::class, 'show'])->name('details');
     });
     
@@ -51,6 +56,7 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
     Route::prefix('withdrawals')->name('withdrawals.')->group(function () {
         Route::get('/', [AdminWithdrawalController::class, 'index'])->name('index');
         Route::get('/{withdrawal}', [AdminWithdrawalController::class, 'show'])->name('show');
+        Route::get('/{withdrawal}/invoice-data', [\App\Http\Controllers\Shared\Withdrawal\InvoiceController::class, 'getWithdrawalData'])->name('invoice-data');
         Route::get('/{withdrawal}/pdf', [\App\Http\Controllers\Shared\Withdrawal\InvoiceController::class, 'generateWithdrawalInvoicePdf'])->name('pdf');
         Route::post('/{withdrawal}/approve', [AdminWithdrawalController::class, 'approve'])->name('approve');
         Route::post('/{withdrawal}/reject', [AdminWithdrawalController::class, 'reject'])->name('reject');
@@ -78,22 +84,80 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
         Route::get('/{factoryInvoice}', [\App\Http\Controllers\Admin\AdminFactoryInvoiceController::class, 'show'])->name('show');
         Route::post('/{factoryInvoice}/document', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'document'])->name('document');
         Route::post('/{factoryInvoice}/cancel', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'cancel'])->name('cancel');
+        Route::post('/{factoryInvoice}/force-cancel', [\App\Http\Controllers\Shared\FactoryInvoiceController::class, 'forceCancel'])->name('force-cancel');
         Route::get('/{factoryInvoice}/pdf', [\App\Http\Controllers\Admin\AdminFactoryInvoiceController::class, 'pdf'])->name('pdf');
+    });
+
+    // Old Debts
+    Route::prefix('old-debts')->name('old-debts.')->group(function () {
+        Route::get('/', [OldDebtController::class, 'index'])->name('index');
+        Route::get('/create', [OldDebtController::class, 'create'])->name('create');
+        Route::post('/', [OldDebtController::class, 'store'])->name('store');
+        Route::patch('/{oldDebt}', [OldDebtController::class, 'update'])->name('update');
+        Route::delete('/{oldDebt}', [OldDebtController::class, 'destroy'])->name('destroy');
+    });
+
+    // Old Customer Debts
+    Route::prefix('old-customer-debts')->name('old-customer-debts.')->group(function () {
+        Route::get('/', [OldCustomerDebtController::class, 'index'])->name('index');
+        Route::get('/create', [OldCustomerDebtController::class, 'create'])->name('create');
+        Route::post('/', [OldCustomerDebtController::class, 'store'])->name('store');
+        Route::patch('/{oldCustomerDebt}', [OldCustomerDebtController::class, 'update'])->name('update');
+        Route::delete('/{oldCustomerDebt}', [OldCustomerDebtController::class, 'destroy'])->name('destroy');
     });
 
     // Backups Management
     Route::prefix('backups')->name('backups.')->group(function () {
         Route::get('/', [BackupController::class, 'index'])->name('index');
         Route::post('/create', [BackupController::class, 'create'])->name('create');
+        Route::post('/upload', [BackupController::class, 'upload'])->name('upload');
         Route::post('/restore/{filename}', [BackupController::class, 'restore'])->name('restore');
         Route::get('/download/{filename}', [BackupController::class, 'download'])->name('download');
         Route::delete('/{filename}', [BackupController::class, 'delete'])->name('delete');
+    });
+
+    // Products Pricing
+    Route::get('products-pricing', [\App\Http\Controllers\Admin\ProductsPricingController::class, 'index'])->name('products-pricing.index')->middleware('feature:admin.products-pricing');
+
+    // Staff Pricing
+    Route::get('staff-pricing', [\App\Http\Controllers\Admin\StaffPricingController::class, 'index'])->name('staff-pricing.index')->middleware('feature:admin.staff-pricing');
+
+    // Customer Merge
+    Route::get('customer-merge', [\App\Http\Controllers\Admin\CustomerMergeController::class, 'index'])->name('customer-merge.index')->middleware('feature:admin.customer-merge');
+    Route::post('customer-merge', [\App\Http\Controllers\Admin\CustomerMergeController::class, 'store'])->name('customer-merge.store')->middleware('feature:admin.customer-merge');
+
+    // Store Merge
+    Route::get('store-merge', [\App\Http\Controllers\Admin\StoreMergeController::class, 'index'])->name('store-merge.index')->middleware('feature:admin.store-merge');
+    Route::post('store-merge', [\App\Http\Controllers\Admin\StoreMergeController::class, 'store'])->name('store-merge.store')->middleware('feature:admin.store-merge');
+
+    // Combined Summary
+    Route::get('combined-summary', [\App\Http\Controllers\Admin\CombinedSummaryController::class, 'index'])->name('combined-summary.index')->middleware('feature:admin.combined-summary');
+    Route::get('combined-summary/client-bulk-count', [\App\Http\Controllers\Admin\CombinedSummaryController::class, 'clientBulkCount'])->name('combined-summary.client-bulk-count');
+    Route::get('combined-summary/client-bulk-pdf', [\App\Http\Controllers\Admin\CombinedSummaryController::class, 'clientBulkPdf'])->name('combined-summary.client-bulk-pdf');
+
+    // Customer Statistics
+    Route::prefix('customer-statistics')->name('customer-statistics.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'index'])->name('index');
+        Route::get('/quick-invoices', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'quickInvoices'])->name('quick-invoices');
+        Route::get('/quick-payments', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'quickPayments'])->name('quick-payments');
+        Route::get('/quick-returns', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'quickReturns'])->name('quick-returns');
+        Route::get('/quick-summary', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'quickSummary'])->name('quick-summary');
+        Route::get('/bulk-invoices-count', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'bulkInvoicesCount'])->name('bulk-invoices-count');
+        Route::get('/bulk-invoices-pdf', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'bulkInvoicesPdf'])->name('bulk-invoices-pdf');
+        Route::get('/invoice-data/{invoice}', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'invoiceData'])->name('invoice-data');
+        Route::get('/payment-data/{payment}', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'paymentData'])->name('payment-data');
+        Route::get('/return-data/{return}', [\App\Http\Controllers\Admin\CustomerStatisticsController::class, 'returnData'])->name('return-data');
+        Route::get('/invoice-pdf/{invoice}', [\App\Http\Controllers\Shared\Sales\CustomerInvoiceController::class, 'generateInvoicePdf'])->name('invoice-pdf');
+        Route::get('/payment-pdf/{payment}', [\App\Http\Controllers\Shared\Sales\CustomerPaymentController::class, 'generatePaymentPdf'])->name('payment-pdf');
+        Route::get('/return-pdf/{return}', [\App\Http\Controllers\Shared\Sales\CustomerReturnController::class, 'generateReturnPdf'])->name('return-pdf');
     });
 
     // Statistics
     Route::prefix('statistics')->name('statistics.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Shared\StatisticsController::class, 'index'])->name('index');
         Route::get('/marketer-stores/{marketer}', [\App\Http\Controllers\Shared\StatisticsController::class, 'getMarketerStores'])->name('marketer-stores');
+        Route::get('/bulk-invoices-pdf', [\App\Http\Controllers\Shared\StatisticsController::class, 'bulkInvoicesPdf'])->name('bulk-invoices-pdf');
+        Route::get('/bulk-invoices-count', [\App\Http\Controllers\Shared\StatisticsController::class, 'bulkInvoicesCount'])->name('bulk-invoices-count');
     });
     
 });

@@ -9,12 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class DiscountController extends Controller
 {
-    public function __construct()
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(3); // Marketer
-        }
-    }
 
     public function index(Request $request)
     {

@@ -14,11 +14,7 @@ use Illuminate\Support\Facades\DB;
 class SalesController extends Controller
 {
     public function __construct(private SalesService $service)
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(3);
-        }
-    }
+    {}
 
     public function index(Request $request)
     {
@@ -67,7 +63,9 @@ class SalesController extends Controller
 
         $invoices = $query->paginate(20)->withQueryString();
 
-        return view('marketer.sales.index', compact('invoices'));
+        $stores = Store::where('marketer_id', auth()->id())->where('is_active', true)->get(['id', 'name', 'owner_name']);
+
+        return view('marketer.sales.index', compact('invoices', 'stores'));
     }
 
     public function create()
@@ -81,6 +79,7 @@ class SalesController extends Controller
                     ->where('marketer_actual_stock.marketer_id', auth()->id());
             })
             ->select('products.*', 'marketer_actual_stock.quantity as stock')
+            ->orderBy('products.name', 'asc')
             ->get();
 
         return view('marketer.sales.create', compact('stores', 'products'));
@@ -113,12 +112,90 @@ class SalesController extends Controller
 
     public function show(SalesInvoice $sale)
     {
-        if ($sale->marketer_id !== auth()->id()) {
+        if ($sale->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذه الفاتورة');
         }
-        
+
         $sale->load('items.product', 'store', 'keeper');
-        return view('marketer.sales.show', ['invoice' => $sale]);
+        $stores = Store::where('is_active', true)->get(['id', 'name', 'owner_name']);
+        $products = Product::with('activePromotion')
+            ->where('is_active', true)
+            ->leftJoin('marketer_actual_stock', function ($join) {
+                $join->on('products.id', '=', 'marketer_actual_stock.product_id')
+                    ->where('marketer_actual_stock.marketer_id', auth()->id());
+            })
+            ->select('products.*', 'marketer_actual_stock.quantity as stock')
+            ->orderBy('products.name', 'asc')
+            ->get();
+
+        $storesJson = $stores->map(fn($s) => [
+            'id'    => $s->id,
+            'name'  => $s->name,
+            'owner' => $s->owner_name,
+        ])->values();
+
+        $productsJson = $products->map(fn($p) => [
+            'id'    => $p->id,
+            'name'  => $p->name,
+            'stock' => $p->stock ?? 0,
+            'price' => $p->current_price,
+        ])->values();
+
+        $invoiceItemsQty = $sale->items->pluck('quantity', 'product_id');
+
+        return view('marketer.sales.show', compact('sale', 'stores', 'products', 'storesJson', 'productsJson', 'invoiceItemsQty')
+            + ['invoice' => $sale]);
+    }
+
+    public function adjust(SalesInvoice $sale, Request $request)
+    {
+        if ($sale->marketer_id != auth()->id()) {
+            abort(403, 'غير مصرح لك بالوصول لهذه الفاتورة');
+        }
+        if (!in_array($sale->status, ['pending', 'approved'])) {
+            return back()->with('error', 'لا يمكن تعديل هذه الفاتورة');
+        }
+
+        $validated = $request->validate([
+            'store_id'           => 'required|exists:stores,id',
+            'items'              => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity'   => 'required|integer|min:1',
+            'notes'              => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $this->service->adjustInvoice(
+                $sale->id,
+                auth()->id(),
+                $validated['store_id'],
+                $validated['items'],
+                $validated['notes'] ?? null
+            );
+            return back()->with('success', 'تم تعديل الفاتورة بنجاح');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function cancelApproved(SalesInvoice $sale, Request $request)
+    {
+        if ($sale->marketer_id != auth()->id()) {
+            abort(403, 'غير مصرح لك بالوصول لهذه الفاتورة');
+        }
+
+        $validated = $request->validate([
+            'notes' => 'required|string|max:500'
+        ]);
+
+        try {
+            $this->service->cancelApprovedInvoice($sale->id, auth()->id());
+            $sale->update(['notes' => $validated['notes']]);
+            return redirect()->route('marketer.sales.index')
+                ->with('success', 'تم إلغاء الفاتورة بنجاح');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function cancel(SalesInvoice $sale, Request $request)
@@ -140,7 +217,7 @@ class SalesController extends Controller
 
     public function viewDocumentation(SalesInvoice $sale)
     {
-        if ($sale->marketer_id !== auth()->id()) {
+        if ($sale->marketer_id != auth()->id()) {
             abort(403, 'غير مصرح لك بالوصول لهذه الفاتورة');
         }
 

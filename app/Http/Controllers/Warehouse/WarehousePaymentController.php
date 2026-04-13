@@ -12,17 +12,13 @@ use Illuminate\Support\Facades\Storage;
 class WarehousePaymentController extends Controller
 {
     public function __construct(private WarehousePaymentService $service)
-    {
-        if (!Auth::check()) {
-            Auth::loginUsingId(2);
-        }
-    }
+    {}
 
     public function index(Request $request)
     {
         $query = StorePayment::with('store', 'marketer', 'keeper');
 
-        $hasFilter = $request->filled('payment_number') || $request->filled('from_date') || $request->filled('to_date') || $request->filled('search');
+        $hasFilter = $request->filled('payment_number') || $request->filled('from_date') || $request->filled('to_date') || $request->filled('marketer_id') || $request->filled('store_id');
 
         if (!$hasFilter && $request->has('status')) {
             $query->where('status', $request->status);
@@ -48,20 +44,19 @@ class WarehousePaymentController extends Controller
             } catch (\Exception $e) {}
         }
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->whereHas('marketer', function($q) use ($search) {
-                    $q->where('full_name', 'like', '%' . $search . '%');
-                })->orWhereHas('store', function($q) use ($search) {
-                    $q->where('name', 'like', '%' . $search . '%');
-                });
-            });
+        if ($request->filled('marketer_id')) {
+            $query->where('marketer_id', $request->marketer_id);
         }
 
-        $payments = $query->latest('id')->paginate(20)->withQueryString();
+        if ($request->filled('store_id')) {
+            $query->where('store_id', $request->store_id);
+        }
 
-        return view('warehouse.payments.index', compact('payments'));
+        $payments  = $query->latest('id')->paginate(20)->withQueryString();
+        $marketers = \App\Models\User::where('role_id', 3)->where('is_active', true)->get();
+        $stores    = \App\Models\Store::orderBy('name')->get(['id', 'name']);
+
+        return view('warehouse.payments.index', compact('payments', 'marketers', 'stores'));
     }
 
     public function show(StorePayment $payment)

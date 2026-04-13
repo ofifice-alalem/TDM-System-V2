@@ -22,6 +22,7 @@ Route::get('/dashboard', function () {
         2 => redirect()->route('warehouse.dashboard'),
         3 => redirect()->route('marketer.stock.index'),
         4 => redirect()->route('sales.customers.index'),
+        5 => redirect()->route('super-admin.features.index'),
         default => abort(403, 'دور غير معروف - Role ID: ' . $roleId),
     };
 })->middleware('auth')->name('dashboard');
@@ -30,38 +31,38 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', function() { return view('profile.edit'); })->name('profile.edit');
     Route::patch('/profile', function() { return back(); })->name('profile.update');
     Route::delete('/profile', function() { return back(); })->name('profile.destroy');
-});
-
-Route::get('/calculate-invoice-discount', function () {
-    $amount = request('amount', 0);
     
-    $tier = InvoiceDiscountTier::where('is_active', true)
-        ->where('min_amount', '<=', $amount)
-        ->where('start_date', '<=', now())
-        ->where('end_date', '>=', now())
-        ->orderBy('min_amount', 'desc')
-        ->first();
-    
-    if (!$tier) {
+    Route::get('/calculate-invoice-discount', function () {
+        $amount = request('amount', 0);
+        
+        $tier = InvoiceDiscountTier::where('is_active', true)
+            ->where('min_amount', '<=', $amount)
+            ->whereDate('start_date', '<=', now())
+            ->whereDate('end_date', '>=', now())
+            ->orderBy('min_amount', 'desc')
+            ->first();
+        
+        if (!$tier) {
+            return response()->json([
+                'discount_amount' => 0,
+                'discount_type' => null,
+                'discount_value' => null
+            ]);
+        }
+        
+        $discountAmount = 0;
+        if ($tier->discount_type === 'percentage') {
+            $discountAmount = $amount * ($tier->discount_percentage / 100);
+        } else {
+            $discountAmount = $tier->discount_amount;
+        }
+        
         return response()->json([
-            'discount_amount' => 0,
-            'discount_type' => null,
-            'discount_value' => null
+            'discount_amount' => round($discountAmount, 2),
+            'discount_type' => $tier->discount_type,
+            'discount_value' => $tier->discount_type === 'percentage' ? $tier->discount_percentage : $tier->discount_amount
         ]);
-    }
-    
-    $discountAmount = 0;
-    if ($tier->discount_type === 'percentage') {
-        $discountAmount = $amount * ($tier->discount_percentage / 100);
-    } else {
-        $discountAmount = $tier->discount_amount;
-    }
-    
-    return response()->json([
-        'discount_amount' => round($discountAmount, 2),
-        'discount_type' => $tier->discount_type,
-        'discount_value' => $tier->discount_type === 'percentage' ? $tier->discount_percentage : $tier->discount_amount
-    ]);
+    });
 });
 
 require __DIR__.'/auth.php';
@@ -69,3 +70,8 @@ require __DIR__.'/marketer.php';
 require __DIR__.'/warehouse.php';
 require __DIR__.'/admin.php';
 require __DIR__.'/sales.php';
+require __DIR__.'/super-admin.php';
+
+Route::middleware('auth')->get('/feature-disabled', fn() => view('errors.feature-disabled'))->name('feature.disabled');
+
+

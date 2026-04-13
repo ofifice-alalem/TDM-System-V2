@@ -91,24 +91,24 @@
     function addProductRow() {
         const container = document.getElementById('products-container');
         const row = document.createElement('div');
-        row.className = 'flex gap-3 items-start bg-gray-50 dark:bg-dark-bg p-4 rounded-xl border border-gray-200 dark:border-dark-border';
+        row.className = 'flex flex-col gap-2 bg-gray-50 dark:bg-dark-bg p-4 rounded-xl border border-gray-200 dark:border-dark-border';
         row.id = `product-row-${rowIndex}`;
         
         const availableProducts = products.filter(p => !selectedProducts.has(p.id));
         
         row.innerHTML = `
-            <div class="flex-1">
+            <div class="w-full mb-2">
                 <select name="items[${rowIndex}][product_id]" required onchange="handleProductSelect(${rowIndex}, this.value)" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
                     <option value="">اختر المنتج</option>
                     ${availableProducts.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
                 </select>
             </div>
-            <div class="w-32">
-                <input type="number" name="items[${rowIndex}][quantity]" min="1" required placeholder="الكمية" class="w-full bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <div class="flex gap-3 items-center w-full">
+                <input type="number" name="items[${rowIndex}][quantity]" min="1" required placeholder="الكمية" class="flex-1 bg-white dark:bg-dark-card border border-gray-200 dark:border-dark-border rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <button type="button" onclick="removeProductRow(${rowIndex})" class="w-10 h-10 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
             </div>
-            <button type="button" onclick="removeProductRow(${rowIndex})" class="w-10 h-10 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center justify-center">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-            </button>
         `;
         
         row.dataset.selectedProduct = '';

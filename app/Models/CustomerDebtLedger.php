@@ -15,6 +15,8 @@ class CustomerDebtLedger extends Model
         'return_id',
         'payment_id',
         'amount',
+        'balance_after',
+        'sales_user_id',
     ];
 
     protected $casts = [

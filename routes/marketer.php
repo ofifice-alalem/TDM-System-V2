@@ -47,8 +47,11 @@ Route::middleware(['web', 'auth', 'role:marketer'])->group(function () {
             Route::post('/', [SalesController::class, 'store'])->name('store');
             Route::get('/{sale}', [SalesController::class, 'show'])->name('show');
             Route::delete('/{sale}/cancel', [SalesController::class, 'cancel'])->name('cancel');
+            Route::patch('/{sale}/cancel-approved', [SalesController::class, 'cancelApproved'])->name('cancel-approved');
+            Route::patch('/{sale}/adjust', [SalesController::class, 'adjust'])->name('adjust');
             Route::get('/{sale}/pdf', [\App\Http\Controllers\Shared\Sales\InvoiceController::class, 'generateSalesInvoicePdf'])->name('pdf');
             Route::get('/{sale}/pdf-thermal', [\App\Http\Controllers\Shared\Sales\InvoiceController::class, 'generateSalesInvoiceThermalPdf'])->name('pdf-thermal');
+            Route::get('/{sale}/invoice-data', [\App\Http\Controllers\Shared\Sales\InvoiceController::class, 'getInvoiceData'])->name('invoice-data');
             Route::get('/{sale}/documentation', [SalesController::class, 'viewDocumentation'])->name('documentation');
         });
 
@@ -60,11 +63,13 @@ Route::middleware(['web', 'auth', 'role:marketer'])->group(function () {
         Route::prefix('payments')->name('payments.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Marketer\PaymentController::class, 'index'])->name('index');
             Route::get('/create', [\App\Http\Controllers\Marketer\PaymentController::class, 'create'])->name('create');
+            Route::get('/store/{storeId}/debt', [\App\Http\Controllers\Marketer\PaymentController::class, 'getStoreDebt'])->name('store.debt');
             Route::post('/', [\App\Http\Controllers\Marketer\PaymentController::class, 'store'])->name('store');
             Route::get('/{payment}', [\App\Http\Controllers\Marketer\PaymentController::class, 'show'])->name('show');
             Route::get('/{payment}/pdf', [\App\Http\Controllers\Shared\Payment\InvoiceController::class, 'generatePaymentInvoicePdf'])->name('pdf');
+            Route::get('/{payment}/payment-data', [\App\Http\Controllers\Shared\Payments\PaymentReceiptController::class, 'getPaymentData'])->name('payment-data');
             Route::patch('/{payment}/cancel', [\App\Http\Controllers\Marketer\PaymentController::class, 'cancel'])->name('cancel');
-            Route::get('/store/{storeId}/debt', [\App\Http\Controllers\Marketer\PaymentController::class, 'getStoreDebt'])->name('store.debt');
+            Route::patch('/{payment}/adjust', [\App\Http\Controllers\Marketer\PaymentController::class, 'adjust'])->name('adjust');
         });
 
         Route::prefix('commissions')->name('commissions.')->group(function () {
@@ -87,10 +92,16 @@ Route::middleware(['web', 'auth', 'role:marketer'])->group(function () {
             Route::get('/{salesReturn}', [\App\Http\Controllers\Marketer\SalesReturnController::class, 'show'])->name('show');
             Route::patch('/{salesReturn}/cancel', [\App\Http\Controllers\Marketer\SalesReturnController::class, 'cancel'])->name('cancel');
             Route::get('/{salesReturn}/pdf', [\App\Http\Controllers\Shared\SalesReturn\InvoiceController::class, 'generateSalesReturnInvoicePdf'])->name('pdf');
+            Route::get('/{salesReturn}/return-data', [\App\Http\Controllers\Shared\SalesReturn\InvoiceController::class, 'getReturnData'])->name('return-data');
         });
 
         Route::prefix('main-stock')->name('main-stock.')->group(function () {
             Route::get('/', [MainStockController::class, 'index'])->name('index');
+        });
+
+        Route::prefix('statistics')->name('statistics.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Marketer\StatisticsController::class, 'index'])->name('index');
+            Route::get('/my-stores', [\App\Http\Controllers\Marketer\StatisticsController::class, 'marketerStores'])->name('stores');
         });
     });
 });
