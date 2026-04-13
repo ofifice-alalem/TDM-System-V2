@@ -132,6 +132,8 @@ Route::middleware(['web', 'auth', 'role:admin'])->prefix('admin')->name('admin.'
 
     // Combined Summary
     Route::get('combined-summary', [\App\Http\Controllers\Admin\CombinedSummaryController::class, 'index'])->name('combined-summary.index')->middleware('feature:admin.combined-summary');
+    Route::get('combined-summary/client-bulk-count', [\App\Http\Controllers\Admin\CombinedSummaryController::class, 'clientBulkCount'])->name('combined-summary.client-bulk-count');
+    Route::get('combined-summary/client-bulk-pdf', [\App\Http\Controllers\Admin\CombinedSummaryController::class, 'clientBulkPdf'])->name('combined-summary.client-bulk-pdf');
 
     // Customer Statistics
     Route::prefix('customer-statistics')->name('customer-statistics.')->group(function () {

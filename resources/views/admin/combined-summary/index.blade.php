@@ -432,6 +432,12 @@
                                 <p class="text-xs text-gray-400 dark:text-gray-500">مبلغ</p>
                                 <p class="text-sm font-black text-indigo-600 dark:text-indigo-400">{{ number_format($entry['total_amount'], 0) }}</p>
                             </div>
+                            <button type="button"
+                                @click.stop="openClientBulkModal('{{ $isStore ? 'store' : 'customer' }}', {{ $entry['id'] }}, '{{ addslashes($entry['name']) }}')"
+                                class="px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shrink-0">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                PDF
+                            </button>
                             <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="open ? 'rotate-180' : ''"></i>
                         </div>
                     </button>
@@ -772,9 +778,131 @@
 
         @endif {{-- end tab financial --}}
 
+{{-- Client Bulk PDF Modal --}}
+@if($tab === 'invoices')
+<div id="clientBulkModal" class="fixed inset-0 z-[9999] items-center justify-center p-4" style="display:none">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeClientBulkModal()"></div>
+    <div class="relative bg-white dark:bg-dark-card rounded-2xl shadow-2xl w-full max-w-md">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-dark-border">
+            <h3 class="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+                <i data-lucide="files" class="w-5 h-5 text-violet-500"></i>
+                <span id="clientBulkTitle">تحميل الفواتير</span>
+            </h3>
+            <button onclick="closeClientBulkModal()" class="w-9 h-9 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-dark-bg text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <div id="clientBulkLoading" class="flex items-center justify-center py-12">
+            <div class="w-8 h-8 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin"></div>
+        </div>
+        <div id="clientBulkContent" class="px-6 py-5 space-y-4" style="display:none">
+            <p class="text-sm text-gray-600 dark:text-gray-400">عدد النتائج: <span id="clientBulkCount" class="font-black text-gray-900 dark:text-white"></span></p>
+            <a id="clientBulkSingleBtn" href="#" target="_blank"
+               class="flex items-center gap-3 w-full px-4 py-3 bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/30 rounded-xl hover:bg-violet-100 transition-colors">
+                <i data-lucide="file-down" class="w-5 h-5 text-violet-600 shrink-0"></i>
+                <div>
+                    <div class="font-bold text-sm text-violet-700 dark:text-violet-300">تحميل في ملف واحد</div>
+                    <div class="text-xs text-gray-500">جميع الفواتير في PDF واحد</div>
+                </div>
+            </a>
+            <div id="clientBulkChunksSection">
+                <button type="button" onclick="toggleClientChunks()"
+                        class="flex items-center gap-3 w-full px-4 py-3 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-xl hover:bg-gray-100 transition-colors text-right">
+                    <i data-lucide="layers" class="w-5 h-5 text-gray-500 shrink-0"></i>
+                    <div class="flex-1">
+                        <div class="font-bold text-sm text-gray-700 dark:text-gray-300">تحميل على أجزاء</div>
+                        <div class="text-xs text-gray-500">تقسيم الفواتير إلى ملفات أصغر</div>
+                    </div>
+                    <i data-lucide="chevron-down" id="clientChunksChevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
+                </button>
+                <div id="clientChunksPanel" style="display:none" class="mt-3 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <label class="text-xs font-bold text-gray-600 shrink-0">فواتير لكل ملف:</label>
+                        <input type="number" id="clientChunkSize" min="50" max="70" value="70"
+                               oninput="clampClientChunkSize(this); renderClientChunks()"
+                               class="w-24 bg-gray-50 dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-900 dark:text-white rounded-lg px-3 py-1.5 text-sm text-center font-bold focus:outline-none focus:ring-2 focus:ring-violet-500">
+                        <span class="text-xs text-gray-400">(50 - 70)</span>
+                    </div>
+                    <div id="clientChunksList" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
+
+    @if($tab === 'invoices')
+    let _clientBulkBaseUrl, _clientBulkCount, _clientChunksOpen = false;
+
+    function openClientBulkModal(type, clientId, clientName) {
+        const modal = document.getElementById('clientBulkModal');
+        document.getElementById('clientBulkLoading').style.display = 'flex';
+        document.getElementById('clientBulkContent').style.display = 'none';
+        document.getElementById('clientChunksPanel').style.display = 'none';
+        document.getElementById('clientBulkTitle').textContent = 'تحميل فواتير ' + clientName;
+        _clientChunksOpen = false;
+        document.getElementById('clientChunksChevron').style.transform = '';
+        modal.style.display = 'flex';
+        lucide.createIcons();
+
+        const params = new URLSearchParams(window.location.search);
+        params.set('client_type', type);
+        params.set('client_id', clientId);
+
+        const countUrl = new URL('{{ route("admin.combined-summary.client-bulk-count") }}', window.location.origin);
+        params.forEach((v, k) => countUrl.searchParams.set(k, v));
+
+        _clientBulkBaseUrl = new URL('{{ route("admin.combined-summary.client-bulk-pdf") }}', window.location.origin);
+        params.forEach((v, k) => _clientBulkBaseUrl.searchParams.set(k, v));
+
+        fetch(countUrl)
+            .then(r => r.json())
+            .then(data => {
+                _clientBulkCount = data.count;
+                document.getElementById('clientBulkCount').textContent = _clientBulkCount;
+                document.getElementById('clientBulkSingleBtn').href = _clientBulkBaseUrl.toString();
+                document.getElementById('clientBulkLoading').style.display = 'none';
+                document.getElementById('clientBulkContent').style.display = 'block';
+                lucide.createIcons();
+            });
+    }
+    function closeClientBulkModal() { document.getElementById('clientBulkModal').style.display = 'none'; }
+    function toggleClientChunks() {
+        _clientChunksOpen = !_clientChunksOpen;
+        document.getElementById('clientChunksPanel').style.display = _clientChunksOpen ? 'block' : 'none';
+        document.getElementById('clientChunksChevron').style.transform = _clientChunksOpen ? 'rotate(180deg)' : '';
+        if (_clientChunksOpen) renderClientChunks();
+    }
+    function clampClientChunkSize(el) {
+        let v = el.value.replace(/[^0-9]/g, '');
+        if (!v) { el.value = ''; return; }
+        const n = parseInt(v);
+        if (v.length >= 2) { el.value = String(Math.min(70, Math.max(50, n))); }
+        else { el.value = v; }
+    }
+    function renderClientChunks() {
+        const size = Math.min(70, Math.max(50, parseInt(document.getElementById('clientChunkSize').value) || 70));
+        const list = document.getElementById('clientChunksList');
+        list.innerHTML = '';
+        for (let offset = 0; offset < _clientBulkCount; offset += size) {
+            const end = Math.min(offset + size, _clientBulkCount);
+            const url = new URL(_clientBulkBaseUrl.toString());
+            url.searchParams.set('offset', offset);
+            url.searchParams.set('limit', size);
+            const a = document.createElement('a');
+            a.href = url.toString();
+            a.target = '_blank';
+            a.className = 'flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-dark-bg border border-gray-200 dark:border-dark-border text-gray-700 dark:text-gray-300 rounded-xl hover:bg-violet-50 hover:border-violet-300 transition-colors';
+            a.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-violet-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><span class="text-sm font-bold">فواتير ${offset + 1} - ${end}</span><span class="text-xs text-gray-400 mr-auto">(${end - offset} فاتورة)</span>`;
+            list.appendChild(a);
+        }
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeClientBulkModal(); });
+    @endif
 </script>
 @endpush
 @endsection

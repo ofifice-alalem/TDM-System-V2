@@ -244,6 +244,153 @@ class CombinedSummaryController extends Controller
         return $result;
     }
 
+    public function clientBulkCount(Request $request)
+    {
+        $type       = $request->input('client_type'); // store | customer
+        $clientId   = (int) $request->input('client_id');
+        $fromDate   = $request->input('from_date', now()->startOfMonth()->format('Y-m-d'));
+        $toDate     = $request->input('to_date', now()->format('Y-m-d'));
+        $staffId    = $request->input('staff_id');
+        $productId  = $request->input('product_id');
+
+        $count = $this->getClientInvoiceIds($type, $clientId, $fromDate, $toDate, $staffId, $productId)->count();
+        return response()->json(['count' => $count]);
+    }
+
+    public function clientBulkPdf(Request $request)
+    {
+        $type      = $request->input('client_type');
+        $clientId  = (int) $request->input('client_id');
+        $fromDate  = $request->input('from_date', now()->startOfMonth()->format('Y-m-d'));
+        $toDate    = $request->input('to_date', now()->format('Y-m-d'));
+        $staffId   = $request->input('staff_id');
+        $productId = $request->input('product_id');
+        $offset    = max(0, (int) $request->input('offset', 0));
+        $limit     = min(70, max(50, (int) $request->input('limit', 0))) ?: null;
+
+        $ids = $this->getClientInvoiceIds($type, $clientId, $fromDate, $toDate, $staffId, $productId);
+        if ($ids->isEmpty()) abort(404, 'لا توجد بيانات');
+        if ($limit) $ids = $ids->slice($offset, $limit)->values();
+
+        $arabic = new \ArPHP\I18N\Arabic();
+        $g = fn($t) => $arabic->utf8Glyphs($t);
+        $logoPath   = public_path('images/company.png');
+        $logoBase64 = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : null;
+        $companyName = $g('شركة المتفوقون الأوائل للصناعات البلاستيكية');
+
+        if ($type === 'store') {
+            $items = \App\Models\SalesInvoice::with(['items.product', 'store', 'marketer'])
+                ->whereIn('id', $ids)->orderBy('created_at')->get();
+            $invoices = $items->map(fn($item) => (object)[
+                'operation'      => 'sales',
+                'status'         => $g($item->status === 'approved' ? 'معتمد' : 'معلق'),
+                'statusValue'    => $item->status,
+                'isInvalid'      => false,
+                'date'           => $item->created_at->format('Y-m-d H:i'),
+                'logoBase64'     => $logoBase64,
+                'companyName'    => $companyName,
+                'invoiceNumber'  => $item->invoice_number,
+                'title'          => $g('فاتورة مبيعات'),
+                'storeName'      => $g($item->store->name ?? '-'),
+                'storePhone'     => $item->store->phone ?? '-',
+                'marketerName'   => $g($item->marketer->full_name ?? '-'),
+                'keeperName'     => null,
+                'rejectedByName' => null,
+                'confirmedDate'  => null,
+                'rejectedDate'   => null,
+                'subtotal'       => number_format($item->subtotal ?? $item->total_amount, 2),
+                'productDiscount'=> 0,
+                'invoiceDiscount'=> number_format($item->discount_amount ?? 0, 2),
+                'totalAmount'    => number_format($item->total_amount, 2),
+                'totalProducts'  => $item->items->sum('quantity'),
+                'items'          => $item->items->map(fn($i) => (object)[
+                    'name'          => $g($i->product->name ?? '-'),
+                    'quantity'      => $i->quantity,
+                    'freeQuantity'  => 0,
+                    'totalQuantity' => $i->quantity,
+                    'unitPrice'     => number_format($i->unit_price, 2),
+                    'totalPrice'    => number_format($i->unit_price * $i->quantity, 2),
+                ]),
+            ]);
+        } else {
+            $items = \App\Models\CustomerInvoice::with(['items.product', 'customer', 'salesUser'])
+                ->whereIn('id', $ids)->orderBy('created_at')->get();
+            $invoices = $items->map(fn($item) => (object)[
+                'operation'      => 'sales',
+                'status'         => $g('مكتمل'),
+                'statusValue'    => 'approved',
+                'isInvalid'      => false,
+                'date'           => $item->created_at->format('Y-m-d H:i'),
+                'logoBase64'     => $logoBase64,
+                'companyName'    => $companyName,
+                'invoiceNumber'  => $item->invoice_number,
+                'title'          => $g('فاتورة مبيعات'),
+                'storeName'      => $g($item->customer->name ?? '-'),
+                'storePhone'     => $item->customer->phone ?? '-',
+                'marketerName'   => $g($item->salesUser->full_name ?? '-'),
+                'keeperName'     => null,
+                'rejectedByName' => null,
+                'confirmedDate'  => null,
+                'rejectedDate'   => null,
+                'subtotal'       => number_format($item->subtotal ?? $item->total_amount, 2),
+                'productDiscount'=> 0,
+                'invoiceDiscount'=> number_format($item->discount_amount ?? 0, 2),
+                'totalAmount'    => number_format($item->total_amount, 2),
+                'totalProducts'  => $item->items->sum('quantity'),
+                'items'          => $item->items->map(fn($i) => (object)[
+                    'name'          => $g($i->product->name ?? '-'),
+                    'quantity'      => $i->quantity,
+                    'freeQuantity'  => 0,
+                    'totalQuantity' => $i->quantity,
+                    'unitPrice'     => number_format($i->unit_price, 2),
+                    'totalPrice'    => number_format($i->unit_price * $i->quantity, 2),
+                ]),
+            ]);
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('shared.statistics.bulk-invoices-pdf', [
+            'invoices'  => $invoices->map(function($inv) {
+                $arr = (array) $inv;
+                $arr['items'] = collect($arr['items'])->map(fn($i) => (object)(array)$i);
+                return $arr;
+            })->values(),
+            'operation' => 'sales',
+            'g'         => $g,
+        ])->setPaper('a4')
+          ->setOption('isHtml5ParserEnabled', true)
+          ->setOption('isFontSubsettingEnabled', true);
+
+        $suffix = $limit ? ('-' . ($offset + 1) . '-' . ($offset + count($invoices))) : '';
+        return $pdf->stream('invoices-' . $clientId . '-' . $fromDate . $suffix . '.pdf');
+    }
+
+    private function getClientInvoiceIds(string $type, int $clientId, string $fromDate, string $toDate, $staffId, $productId): \Illuminate\Support\Collection
+    {
+        if ($type === 'store') {
+            $query = DB::table('sales_invoices as inv')
+                ->whereIn('inv.status', ['approved', 'pending'])
+                ->where('inv.store_id', $clientId)
+                ->whereDate('inv.created_at', '>=', $fromDate)
+                ->whereDate('inv.created_at', '<=', $toDate)
+                ->when($staffId, fn($q) => $q->where('inv.marketer_id', $staffId));
+            if ($productId) {
+                $query->whereExists(fn($q) => $q->from('sales_invoice_items')->whereColumn('invoice_id', 'inv.id')->where('product_id', $productId));
+            }
+            return $query->orderBy('inv.created_at')->pluck('inv.id');
+        } else {
+            $query = DB::table('customer_invoices as inv')
+                ->where('inv.status', 'completed')
+                ->where('inv.customer_id', $clientId)
+                ->whereDate('inv.created_at', '>=', $fromDate)
+                ->whereDate('inv.created_at', '<=', $toDate)
+                ->when($staffId, fn($q) => $q->where('inv.sales_user_id', $staffId));
+            if ($productId) {
+                $query->whereExists(fn($q) => $q->from('customer_invoice_items')->whereColumn('invoice_id', 'inv.id')->where('product_id', $productId));
+            }
+            return $query->orderBy('inv.created_at')->pluck('inv.id');
+        }
+    }
+
     private function buildClientInvoicesData(
         string $fromDate, string $toDate,
         ?int $storeId = null, ?int $customerId = null, ?string $productId = null,
