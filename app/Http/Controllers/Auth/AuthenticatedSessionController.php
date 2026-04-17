@@ -31,7 +31,10 @@ class AuthenticatedSessionController extends Controller
         // تحديد الصفحة بناءً على دور المستخدم
         $user = Auth::user();
         $redirectUrl = match($user->role_id) {
-            3 => route('marketer.stock.index'), // مسوق
+            1 => route('admin.main-stock.index'),
+            2 => route('warehouse.main-stock.index'),
+            3 => route('marketer.main-stock.index'),
+            4 => route('sales.main-stock.index'),
             default => route('dashboard')
         };
 
