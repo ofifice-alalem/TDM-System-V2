@@ -19,20 +19,8 @@ class DatabaseSeeder extends Seeder
             ['id' => 5, 'name' => 'super_admin', 'display_name' => 'Super Admin', 'description' => 'إدارة الميزات', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
         ]);
 
-        // System user (id=0) — used for old debt invoices
-        DB::statement('SET SESSION sql_mode="NO_AUTO_VALUE_ON_ZERO"');
-        DB::table('users')->insert([
-            ['id' => 0, 'username' => 'system', 'password_hash' => 'N/A', 'full_name' => 'النظام', 'role_id' => 3, 'is_active' => false, 'created_at' => now(), 'updated_at' => now()],
-        ]);
-
         // Users
-        DB::table('users')->insert([
-            ['username' => 'admin', 'password_hash' => Hash::make('password'), 'full_name' => 'المدير العام', 'role_id' => 1, 'commission_rate' => null, 'phone' => '0500000000', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['username' => 'keeper1', 'password_hash' => Hash::make('password'), 'full_name' => 'أحمد أمين المخزن', 'role_id' => 2, 'commission_rate' => null, 'phone' => '0500000001', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['username' => 'marketer1', 'password_hash' => Hash::make('password'), 'full_name' => 'محمد المسوق', 'role_id' => 3, 'commission_rate' => 5.00, 'phone' => '0500000002', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['username' => 'marketer2', 'password_hash' => Hash::make('password'), 'full_name' => 'خالد المسوق', 'role_id' => 3, 'commission_rate' => 3.50, 'phone' => '0500000003', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['username' => 'superadmin', 'password_hash' => Hash::make('password'), 'full_name' => 'Super Admin', 'role_id' => 5, 'commission_rate' => null, 'phone' => null, 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-        ]);
+        $this->call(UserSeeder::class);
 
         $this->call(FeatureSeeder::class);
 
